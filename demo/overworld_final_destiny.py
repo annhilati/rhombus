@@ -70,3 +70,4 @@ def overworld():
     )
 
 print(overworld())
+print(overworld().as_density_function())

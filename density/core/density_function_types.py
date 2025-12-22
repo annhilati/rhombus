@@ -1,29 +1,30 @@
 from typing import Any, TypeAlias, ClassVar, Literal
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, fields
 
 DensityExpression: TypeAlias = Any
 
 class DensityFunctionTypeBase:
     "Base class for density function types."
 
-    @classmethod
     def as_density_function(self) -> dict[str, Any]:
         return {
             "type": self.id,
             **{
                 key: value.as_density_function() if getattr(value, "as_density_function", None) else value
                 for key, value
-                in asdict(self).items()
+                in {f.name: getattr(self, f.name) for f in fields(self)}.items()
             }
         }
+    
+    def __repr__(self):
+        return f"{type(self).__name__}({", ".join([f'{key}={value}' for key, value in {f.name: getattr(self, f.name) for f in fields(self)}.items()])})"
 
 @dataclass    
 class Reference(DensityFunctionTypeBase):
     identifier: str
     
-    @classmethod
-    def as_density_function(cls, parameters: dict[str: Any]) -> str:
-        return parameters["argument"]
+    def as_density_function(self) -> str:
+        return self.identifier
 
 @dataclass
 class abs(DensityFunctionTypeBase):

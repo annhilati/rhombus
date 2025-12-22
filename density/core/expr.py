@@ -16,7 +16,7 @@ class Density(Generic[T]):
     content: T
 
     def __repr__(self) -> str:
-        return f"{type(self.content).__name__}({", ".join([f'{key}={value}' for key, value in asdict(self.content).items()])})"
+        return self.content.__repr__()
     
     def as_density_function(self) -> dict[str, Any]:
         return self.content.as_density_function()

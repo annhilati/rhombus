@@ -6,7 +6,7 @@ def check_for_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]
     out = []
     for arg in args:
         if isinstance(arg, str):
-            out.append(Density(dft.Reference, argument=arg))
+            out.append(Density(dft.Reference(arg)))
             continue
         out.append(arg)
     return tuple(out)
