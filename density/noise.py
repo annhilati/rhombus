@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 @dataclass
 class Noise():
@@ -20,8 +21,21 @@ class Noise():
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Noise)
     """
-    # 
-
+ 
+    reference:   str         | None = field(init=False, default=None)
     firstOctave: int
-    amplitudes: list[float]
-    name: str
+    amplitudes:  list[float]
+
+    def as_file(self) -> dict[str: Any]:
+        if self.firstOctave is None or self.amplitudes is None:
+            raise Exception
+        return {
+            "firstOctave": self.firstOctave,
+            "amplitudes": self.amplitudes
+        }
+    
+def NoiseReference(identifier: str, /) -> Noise:
+    "Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`."
+    n = Noise(None, None)
+    n.reference = identifier
+    return n

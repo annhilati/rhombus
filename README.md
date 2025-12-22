@@ -1,4 +1,4 @@
-The first transpiled domain specific language for Minecraft terrain generation
+A Python embedded domain specific language for Minecraft terrain generation
 
 - 📝 **Comments:** Since we're writing in Python, you can comment how much you want or need
 - 📖 **Documentation:** The docstrings of the functions and classes contain crucial information on the usage

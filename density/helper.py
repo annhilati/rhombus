@@ -1,7 +1,7 @@
 from typing import Any
 from density.core.expr import Density, dft
 
-def replace_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]]:
+def check_for_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]]:
     "Takes a list of arguments and gives it back as a tuple, but with all str replaced by a DensityExpression[Reference]"
     out = []
     for arg in args:

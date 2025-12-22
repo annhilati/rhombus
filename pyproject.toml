@@ -1,0 +1,28 @@
+[project]
+name = "density"
+version = "0.0.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.8"
+license = "EUPL-1.2"
+authors = [
+  { name = "Annhilati"},
+]
+dependencies = [
+]
+
+[project.urls]
+# "Homepage" = "https://github.com/annhilati/vpmobil-py"
+# "Documentation" = "https://annhilati.gitbook.com/vpmobil"
+# "Changelog" = "https://annhilati.gitbook.io/vpmobil/anderes/changelog"
+# "Repository" = "https://github.com/annhilati/vpmobil-py"
+# "Bug Tracker" = "https://github.com/annhilati/vpmobil-py/issues"
+# "Download" = "https://pypi.org/project/vpmobil/"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["density", "density.core"]
+include-package-data = true
