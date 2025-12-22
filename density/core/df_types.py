@@ -4,13 +4,16 @@ from dataclasses import dataclass, fields
 DensityExpression: TypeAlias = Any
 
 class DensityFunctionTypeBase:
-    "Base class for density function types."
+    """Base class for density function types.
+    
+    To add new types, create a sublass and set a ClassVar `id` or override the `as_json` method."""
+    id: str
 
-    def as_density_function(self) -> dict[str, Any]:
+    def as_json(self) -> dict[str, Any]:
         return {
             "type": self.id,
             **{
-                key: value.as_density_function() if getattr(value, "as_density_function", None) else value
+                key: value.as_json() if getattr(value, "as_json", None) else value
                 for key, value
                 in {f.name: getattr(self, f.name) for f in fields(self)}.items()
             }
@@ -23,7 +26,7 @@ class DensityFunctionTypeBase:
 class Reference(DensityFunctionTypeBase):
     identifier: str
     
-    def as_density_function(self) -> str:
+    def as_json(self) -> str:
         return self.identifier
 
 @dataclass
@@ -81,7 +84,7 @@ class constant(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
 
-    def as_density_function(self):
+    def as_json(self):
         return self.argument
 
 @dataclass
@@ -146,7 +149,7 @@ class noise(DensityFunctionTypeBase):
     xz_scale: Any
     y_scale: Any
 
-    def as_density_function(self):
+    def as_json(self):
         return {
             "type": self.id,
             "noise": self.noise.reference if self.noise.reference is not None else ...,
@@ -213,7 +216,7 @@ class spline(DensityFunctionTypeBase):
     coordinate: Any
     points: list[tuple[float, float | Any, float]]
 
-    def as_density_function(self) -> dict[str, Any]:
+    def as_json(self) -> dict[str, Any]:
         return {
             "type": self.id,
             "spline": {
@@ -221,7 +224,7 @@ class spline(DensityFunctionTypeBase):
                 "points": [
                     {
                         "location": point[0],
-                        "value": point[1].as_density_function() if getattr(point[1], "as_density_function", None) else point[1],
+                        "value": point[1].as_json() if getattr(point[1], "as_json", None) else point[1],
                         "derivative": point[2], 
                     }
                     for point in self.points

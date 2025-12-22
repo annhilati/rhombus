@@ -3,10 +3,10 @@
 Note, that importing `*` from here is helpfull, but will overwrite some builtin Python functions like `abs()`. You can get them again from the `builtins` package.
 """
 
-from density.core.expr import Density
-from density.core import density_function_types as dft 
+from density.core.density import Density
+from density.core import df_types as dft 
 from density.noise import Noise
-from density.helper import check_for_references as _check_references
+from density.core.helper import check_for_references as _check_references
 from typing import Literal, TypeAlias
 import warnings
 

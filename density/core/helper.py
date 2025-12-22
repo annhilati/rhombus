@@ -1,5 +1,5 @@
 from typing import Any
-from density.core.expr import Density, dft
+from density.core.density import Density, dft
 
 def check_for_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]]:
     "Takes a list of arguments and gives it back as a tuple, but with all str replaced by a DensityExpression[Reference]"

@@ -70,4 +70,4 @@ def overworld():
     )
 
 print(overworld())
-print(overworld().as_density_function())
+print(overworld().as_json())

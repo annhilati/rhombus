@@ -1,25 +1,25 @@
 from __future__ import annotations
-from dataclasses import dataclass, asdict
-from typing import Any, Generic, TypeVar, Type
-from density.core import density_function_types as dft
+from dataclasses import dataclass
+from typing import Any, Generic, TypeVar
+from density.core import df_types as dft
 
-T = TypeVar("T", bound=dft.DensityFunctionTypeBase)
+DFType = TypeVar("DFType", bound=dft.DensityFunctionTypeBase)
 
 # things to respect when building the JSON
 # - Don't create multiple equivalent noises and use references
 # - Respect caching functions and split into multiples and use references
 
 @dataclass
-class Density(Generic[T]):
+class Density(Generic[DFType]):
     """Class representing a density function tree."""
 
-    content: T
+    content: DFType
 
     def __repr__(self) -> str:
         return self.content.__repr__()
     
-    def as_density_function(self) -> dict[str, Any]:
-        return self.content.as_density_function()
+    def as_json(self) -> dict[str, Any]:
+        return self.content.as_json()
     
     #======// Arithmetic Magic //====================================================================//
     
