@@ -10,7 +10,7 @@ T = TypeVar("T", bound=dft.DensityFunctionTypeBase)
 # - Respect caching functions and split into multiples and use references
 
 @dataclass
-class DensityExpression(Generic[T]):
+class Density(Generic[T]):
     """Class representing a density function tree."""
 
     type:       Type[T]
@@ -28,70 +28,70 @@ class DensityExpression(Generic[T]):
     
     #======// Arithmetic Magic //====================================================================//
     
-    def __add__(self, other) -> DensityExpression[dft.add]:
-        return DensityExpression(dft.add, argument1=self, argument2=other)
+    def __add__(self, other) -> Density[dft.add]:
+        return Density(dft.add, argument1=self, argument2=other)
     
-    def __radd__(self, other) -> DensityExpression[dft.add]:
+    def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
-    def __sub__(self, other) -> DensityExpression[dft.add]:
-        return DensityExpression(
+    def __sub__(self, other) -> Density[dft.add]:
+        return Density(
             dft.add,
             argument1=self,
-            argument2=DensityExpression(
+            argument2=Density(
                 dft.mul,
                 argument1=other,
                 argument2=-1
             )
             )
     
-    def __rsub__(self, other) -> DensityExpression[dft.add]:
-        return DensityExpression(
+    def __rsub__(self, other) -> Density[dft.add]:
+        return Density(
             dft.add,
             argument1=other,
-            argument2=DensityExpression(
+            argument2=Density(
                 dft.mul,
                 argument1=self,
                 argument2=-1,
                 )
             )
     
-    def __mul__(self, other) -> DensityExpression[dft.mul]:
-        return DensityExpression(dft.mul, argument1=self, argument2=other)
+    def __mul__(self, other) -> Density[dft.mul]:
+        return Density(dft.mul, argument1=self, argument2=other)
     
-    def __rmul__(self, other) -> DensityExpression[dft.mul]:
+    def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other) -> DensityExpression[dft.mul]:
-        return DensityExpression(
+    def __truediv__(self, other) -> Density[dft.mul]:
+        return Density(
             dft.mul,
             argument1=self,
-            argument2=DensityExpression(dft.invert, argument=other)
+            argument2=Density(dft.invert, argument=other)
         )
     
-    def __rtruediv__(self, other) -> DensityExpression[dft.mul]:
-        return DensityExpression(
+    def __rtruediv__(self, other) -> Density[dft.mul]:
+        return Density(
             dft.mul,
             argument1=other,
-            argument2=DensityExpression(dft.invert, argument=self)
+            argument2=Density(dft.invert, argument=self)
         )
     
-    def __pow__(self, other) -> DensityExpression[dft.square | dft.cube | dft.mul]:
+    def __pow__(self, other) -> Density[dft.square | dft.cube | dft.mul]:
         if type(other) is not int:
             raise ValueError("Can't raise to non integer powers")
         if other == 0:
-            return DensityExpression(dft.constant, argument=1)
+            return Density(dft.constant, argument=1)
         elif other == 1:
             return self
         elif other == 2:
-            return DensityExpression(dft.square, argument=self)
+            return Density(dft.square, argument=self)
         elif other == 3:
-            return DensityExpression(dft.cube, argument=self)
+            return Density(dft.cube, argument=self)
         elif other > 3:
-            s = DensityExpression(dft.mul, argument1=self, argument2=self)
+            s = Density(dft.mul, argument1=self, argument2=self)
             for i in range(other - 2):
-                s = DensityExpression(dft.mul, argument1=s, argument2=self)
+                s = Density(dft.mul, argument1=s, argument2=self)
             return s
     
-    def __abs__(self) -> DensityExpression[dft.abs]:
-        return DensityExpression(dft.abs, argument=self)
+    def __abs__(self) -> Density[dft.abs]:
+        return Density(dft.abs, argument=self)

@@ -1,8 +1,9 @@
 from density.functions import constant
 from density.noise import Noise
+from density.core.expr import Density
 from density import functions
 
-_symbols = [constant, Noise, functions]
+_symbols = [constant, Noise, functions, Density]
 _constants = []
 
 __all__ = [obj.__name__ for obj in _symbols].extend(_constants)
