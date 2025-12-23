@@ -1,13 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 from density.core import df_types as dft
 
 DFType = TypeVar("DFType", bound=dft.DensityFunctionTypeBase)
-
-# things to respect when building the JSON
-# - Don't create multiple equivalent noises and use references
-# - Respect caching functions and split into multiples and use references
 
 @dataclass
 class Density(Generic[DFType]):

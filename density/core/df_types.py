@@ -1,7 +1,7 @@
-from typing import Any, TypeAlias, ClassVar, Literal
+from typing import Any, ClassVar, Literal
 from dataclasses import dataclass, fields
 
-DensityExpression: TypeAlias = Any
+# DensityExpression: TypeAlias = Any
 
 class DensityFunctionTypeBase:
     """Base class for density function types.
@@ -32,7 +32,7 @@ class Reference(DensityFunctionTypeBase):
 @dataclass
 class abs(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:abs" 
-    argument: DensityExpression
+    argument: Any
 
 @dataclass
 class add(DensityFunctionTypeBase): 
@@ -146,13 +146,13 @@ class mul(DensityFunctionTypeBase):
 class noise(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:noise"
     noise: Any
-    xz_scale: Any
-    y_scale: Any
+    xz_scale: float
+    y_scale: float
 
     def as_json(self):
         return {
             "type": self.id,
-            "noise": self.noise.reference if self.noise.reference is not None else ...,
+            "noise": self.noise.reference if self.noise.reference is not None else self.noise.as_json(),
             "xz_scale": self.xz_scale,
             "y_scale": self.y_scale,
         }
@@ -204,6 +204,17 @@ class shifted_noise(DensityFunctionTypeBase):
     shift_x: Any
     shift_y: Any
     shift_z: Any
+
+    def as_json(self):
+        return {
+            "type": self.id,
+            "noise": self.noise.reference if self.noise.reference is not None else ...,
+            "xz_scale": self.xz_scale,
+            "y_scale": self.y_scale,
+            "shift_x": self.shift_x.value.as_json() if getattr(self.shift_x, "as_json", None) else self.shift_x,
+            "shift_y": self.shift_y.value.as_json() if getattr(self.shift_y, "as_json", None) else self.shift_y,
+            "shift_z": self.shift_z.value.as_json() if getattr(self.shift_z, "as_json", None) else self.shift_z,
+        }
 
 @dataclass
 class slide(DensityFunctionTypeBase):
@@ -258,6 +269,14 @@ class weird_scaled_sampler(DensityFunctionTypeBase):
     rarity_value_mapper: Literal["type_1", "type_2"]
     noise: Any
     input: Any
+
+    def as_json(self):
+        return {
+            "type": self.id,
+            "rarity_value_mapper": self.rarity_value_mapper,
+            "noise": self.noise.reference if self.noise.reference is not None else ...,
+            "input": self.input.value.as_json() if getattr(self.input, "as_json", None) else self.input,
+        }
 
 @dataclass
 class y_clamped_gradient(DensityFunctionTypeBase):
