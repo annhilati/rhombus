@@ -1,9 +1,12 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Optional, ClassVar
+from beet.contrib.worldgen import WorldgenNoise
+
+from density.core.external_resource import ExternalResourceBase
 
 @dataclass
-class Noise():
+class Noise(ExternalResourceBase):
     """Declares a perlin noise.
 
     To add a reference to an existing noise, use `NoiseReference()` instead.
@@ -23,12 +26,13 @@ class Noise():
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Noise)
     """
  
-    firstOctave: int         | None
-    amplitudes:  list[float] | None
-    reference:   str         | None
+    fileclass:   ClassVar = WorldgenNoise
+    firstOctave: Optional[int]         = field(init=True, default=None)
+    amplitudes:  Optional[list[float]] = field(init=True, default=None)
+    reference:   Optional[str]         = field(init=True, default=None)
     "When given, the Noise object is a reference to an externally declared noise."
 
-    def as_file(self) -> dict[str: Any]:
+    def as_json(self) -> dict[str: Any]:
         if self.firstOctave is None or self.amplitudes is None:
             raise Exception
         return {

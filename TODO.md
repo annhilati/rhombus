@@ -14,3 +14,6 @@
 ## Dynamically generated files and references
 - How shall noise DFT be transpiled to json, when it is not a reference and files can't be created in the context?
 - Shall any declaration of a non-referencing Noise invoke a file creation?
+
+
+- Should noises and noise references really be the same class?

@@ -14,8 +14,8 @@ class Density(Generic[DFType]):
     def __repr__(self) -> str:
         return self.content.__repr__()
     
-    def as_json(self) -> dict[str, Any]:
-        return self.content.as_json()
+    def as_dict(self) -> dict[str, Any]:
+        return self.content.as_dict()
     
     #======// Arithmetic Magic //====================================================================//
     

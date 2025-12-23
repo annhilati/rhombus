@@ -10,7 +10,7 @@ from beet.contrib.worldgen import WorldgenDensityFunction, WorldgenNoise
 def compile(density: Density, datapack: DataPack, location: str) -> None:
     """Compiles a density tree into a beet datapack"""
 
-    raw = density.as_json()
+    raw = density.as_dict()
     noise_namespace = location.split(":")[0]
     noises: dict[str, dict] = {}
 

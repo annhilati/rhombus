@@ -9,7 +9,7 @@ class DensityFunctionTypeBase:
     To add new types, create a sublass and set a ClassVar `id` or override the `as_json` method."""
     id: str
 
-    def as_json(self) -> dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "type": self.id,
             **{
@@ -26,7 +26,7 @@ class DensityFunctionTypeBase:
 class Reference(DensityFunctionTypeBase):
     identifier: str
     
-    def as_json(self) -> str:
+    def as_dict(self) -> str:
         return self.identifier
 
 @dataclass
@@ -84,7 +84,7 @@ class constant(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
 
-    def as_json(self):
+    def as_dict(self):
         return self.argument
 
 @dataclass
@@ -149,7 +149,7 @@ class noise(DensityFunctionTypeBase):
     xz_scale: float
     y_scale: float
 
-    def as_json(self):
+    def as_dict(self):
         return {
             "type": self.id,
             "noise": self.noise.reference if self.noise.reference is not None else self.noise.as_json(),
@@ -205,10 +205,12 @@ class shifted_noise(DensityFunctionTypeBase):
     shift_y: Any
     shift_z: Any
 
-    def as_json(self):
+    def as_dict(self):
+        if self.noise.reference is None:
+            raise Exception
         return {
             "type": self.id,
-            "noise": self.noise.reference if self.noise.reference is not None else ...,
+            "noise": self.noise.reference,
             "xz_scale": self.xz_scale,
             "y_scale": self.y_scale,
             "shift_x": self.shift_x.value.as_json() if getattr(self.shift_x, "as_json", None) else self.shift_x,
@@ -227,7 +229,7 @@ class spline(DensityFunctionTypeBase):
     coordinate: Any
     points: list[tuple[float, float | Any, float]]
 
-    def as_json(self) -> dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "type": self.id,
             "spline": {
@@ -270,7 +272,7 @@ class weird_scaled_sampler(DensityFunctionTypeBase):
     noise: Any
     input: Any
 
-    def as_json(self):
+    def as_dict(self):
         return {
             "type": self.id,
             "rarity_value_mapper": self.rarity_value_mapper,

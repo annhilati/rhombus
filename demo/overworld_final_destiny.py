@@ -70,4 +70,4 @@ def overworld():
     )
 
 print(overworld())
-print(overworld().as_json())
+print(overworld().as_dict())
