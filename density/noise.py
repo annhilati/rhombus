@@ -32,7 +32,7 @@ class Noise(ExternalResourceBase):
     reference:   Optional[str]         = field(init=True, default=None)
     "When given, the Noise object is a reference to an externally declared noise."
 
-    def as_json(self) -> dict[str: Any]:
+    def as_dict(self) -> dict[str: Any]:
         if self.firstOctave is None or self.amplitudes is None:
             raise Exception
         return {

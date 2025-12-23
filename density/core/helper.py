@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, TypeAlias
 from density.core.density import Density, dft
 
 def check_for_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]]:
@@ -10,3 +10,6 @@ def check_for_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]
             continue
         out.append(arg)
     return tuple(out)
+
+HOLDER_HELPER_CODEC: TypeAlias = dict | str | float
+DIRECT_CODEC       : TypeAlias = dict | float

@@ -15,7 +15,7 @@ class Density(Generic[DFType]):
         return self.content.__repr__()
     
     def as_dict(self) -> dict[str, Any]:
-        return self.content.as_dict()
+        return self.content.encode()
     
     #======// Arithmetic Magic //====================================================================//
     
@@ -60,18 +60,18 @@ class Density(Generic[DFType]):
     def __truediv__(self, other) -> Density[dft.mul]:
         if isinstance(other, Density):
             other = other.content
-        return Density(dft.mul,
-            argument1=self.content,
-            argument2=dft.invert(other)
-        )
+        return Density(dft.mul(
+            self.content,
+            dft.invert(other)
+        ))
     
     def __rtruediv__(self, other) -> Density[dft.mul]:
         if isinstance(other, Density):
             other = other.content
-        return Density(dft.mul,
-            argument1=other,
-            argument2=dft.invert(self.content)
-        )
+        return Density(dft.mul(
+            other,
+            dft.invert(self.content)
+        ))
     
     def __pow__(self, other) -> Density[dft.square | dft.cube | dft.mul]:
         if not isinstance(other, int):
