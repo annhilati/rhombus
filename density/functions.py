@@ -6,13 +6,22 @@ Note, that importing `*` from here is helpfull, but will overwrite some builtin 
 from density.core.density import Density
 from density.core import df_types as dft 
 from density.noise import Noise
-from density.core.helper import check_for_references as _check_references
-from typing import Literal, TypeAlias
+from typing import Literal, TypeAlias, Any
 import warnings
 
 import builtins as _bi
 
 DFReference: TypeAlias = str
+
+def _check_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]]:
+    "Takes a list of arguments and gives it back as a tuple, but with all str replaced by a DensityExpression[Reference]"
+    out = []
+    for arg in args:
+        if isinstance(arg, str):
+            out.append(Density(dft.Reference(arg)))
+            continue
+        out.append(arg)
+    return tuple(out)
 
 def abs(argument: Density | DFReference | float) -> Density[dft.abs]:
     """Calculates the absolute value of the input.

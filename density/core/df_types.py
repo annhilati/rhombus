@@ -1,13 +1,35 @@
+"""It is complicated ..."""
+
 from __future__ import annotations
 from typing import Any, ClassVar, Literal, Self, TypeVar, Callable
 from dataclasses import dataclass, fields, asdict
-from density.core.helper import HOLDER_HELPER_CODEC
 
-# DensityExpression: TypeAlias = Any
+DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
+"Type variable for all subclasses of `DensityFunctionTypeBase`."
 
-T = TypeVar("T", bound=DensityFunctionTypeBase)
+REGISTERED_DENSITY_FUNCTION_TYPES: list[type[DFType]] = []
+"List of all defined classes inheriting from `DensityFunctionTypeBase`."
 
-def major_decoder_placeholder(): ...
+def decode_HOLDER_HELPER_CODEC(o: dict | float | str) -> DFType:
+    "Decodes any JSON value that can be used as a HOLDER_HELPER_CODEC type argument in a density function."
+    REGISTRY = {t.id: t for t in REGISTERED_DENSITY_FUNCTION_TYPES}
+    if isinstance(o, dict):
+        t: str = o.get("type")
+        if not ":" in t:
+            t = "minecraft:" + t
+        if t is None:
+            raise ValueError("Cannot decode dict as HOLDER_HELPER_CODEC without key 'type'")
+        if REGISTRY.get(t) is None:
+            raise TypeError(f"Cannot decode dict as HOLDER_HELPER_CODEC with type id '{t}' because no DensityFunctionType with id adequate id is defined")
+        return REGISTRY.get(t).decode(o)
+    elif isinstance(o, (int, float)):
+        return constant(float(o))
+    elif isinstance(o, str):
+        return Reference(o)
+    else:
+        raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC")
+
+
 
 #======// Function Type Base Classes //==========================================================//
 
@@ -18,7 +40,7 @@ class DensityFunctionTypeBase:
     id: str
 
     encode: ClassVar[Callable[[Self], dict]]
-    decode: ClassVar[Callable[[type[T], dict], T]]
+    decode: ClassVar[Callable[[type[Self], dict], Self]]
     
     @property
     def params(self):
@@ -26,7 +48,7 @@ class DensityFunctionTypeBase:
     
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        # Hier Hook für den Decoder
+        REGISTERED_DENSITY_FUNCTION_TYPES.append(cls)
     
     def __repr__(self):
         return f"{type(self).__name__}({", ".join([f'{key}={value}' for key, value in self.params.items()])})"
@@ -43,28 +65,28 @@ class MakeFunctionBase(DensityFunctionTypeBase):
     
 @dataclass
 class MappedFunctionBase(DensityFunctionTypeBase):
-    argument: Any
+    argument: DFType
 
     @classmethod
     def decode(cls, data: dict) -> Self:
         argument = data["argument"]
-        return cls(major_decoder_placeholder(argument) if isinstance(argument, dict) else argument)
+        return cls(decode_HOLDER_HELPER_CODEC(argument))
     
     def encode(self) -> dict:
         return {"type": self.id, "argument": self.argument}
 
 @dataclass
 class DoubleArgumentFunctionBase(DensityFunctionTypeBase):
-    argument1: Any
-    argument2: Any
+    argument1: DFType
+    argument2: DFType
 
     @classmethod
     def decode(cls, data: dict) -> Self:
         argument1 = data["argument1"]
         argument2 = data["argument2"]
         return cls(
-            major_decoder_placeholder(argument1) if isinstance(argument1, dict) else argument1,
-            major_decoder_placeholder(argument2) if isinstance(argument2, dict) else argument2
+            decode_HOLDER_HELPER_CODEC(argument1),
+            decode_HOLDER_HELPER_CODEC(argument2)
         )
     
     def encode(self) -> dict:
@@ -77,14 +99,22 @@ class ManyArgumentsFunctionBase(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> Self:
+        fs = {f.name: f for f in fields(cls)}
         cls(**{
-            parameter: (major_decoder_placeholder(value) if isinstance(value, dict) else value)
+            parameter: decode_HOLDER_HELPER_CODEC(value) if fs[parameter].type is DFType else value
             for parameter, value in data.items()
             if parameter in {f.name for f in fields(cls) if f.init}
         })
 
     def encode(self) -> dict:
-        return {"type": self.id, **{parameter: value for parameter, value in asdict(self).items() if parameter in {f.name for f in fields(self) if f.init}}}
+        fs = {f.name: f for f in fields(self)}
+        return {"type": self.id, **{
+            parameter: value.as_dict() if getattr(value, "as_dict") else value
+            for parameter, value
+            in asdict(self).items()
+            if fs[parameter].init
+        }}
+
 
 #======// Function Type Classes //===============================================================//
 
@@ -127,9 +157,9 @@ class cache_once(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_once"
 
 @dataclass
-class clamp(ManyArgumentsFunctionBase):
+class clamp(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:clamp"
-    input: Any
+    input: DFType
     min: float
     max:float
 
@@ -154,8 +184,8 @@ class end_islands(MakeFunctionBase):
 @dataclass
 class find_top_surface(ManyArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:find_top_surface"
-    density: Any
-    upper_bound: Any
+    density: DFType
+    upper_bound: DFType
     lower_bound: int
     cell_height: int
 
@@ -187,20 +217,24 @@ class noise(DensityFunctionTypeBase):
     xz_scale: float
     y_scale: float
 
-    TODO
+    @classmethod
+    def decode(cls, data: dict) -> noise:
+        from density.noise import Noise
+        return cls(
+            Noise(None, None, data["noise"]),
+            data["xz_scale"],
+            data["y_scale"],
+        )
 
-    # def encode(self):
-    #     return {
-    #         "type": self.id,
-    #         "noise": self.noise.reference if self.noise.reference is not None else self.noise.as_dict(),
-    #         "xz_scale": self.xz_scale,
-    #         "y_scale": self.y_scale,
-    #     }
-    
-    # @classmethod
-    # def decode(cls, data: dict) -> noise:
-    #     from density.noise import Noise
-    #     return cls(Noise(None, None, data["noise"]), data["xz_scale"], data["y_scale"])
+    def encode(self):
+        if self.noise.reference is None:
+            raise NotImplementedError
+        return {
+            "type": self.id,
+            "noise": self.noise.reference,
+            "xz_scale": self.xz_scale,
+            "y_scale": self.y_scale,
+        }
 
 @dataclass
 class old_blended_noise(ManyArgumentsFunctionBase):
@@ -217,32 +251,71 @@ class quarter_negative(MappedFunctionBase):
 @dataclass
 class range_choice(ManyArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:range_choice"
-    input: Any
+    input: DFType
     min_inclusive: float
     max_exclusive: float
-    when_in_range: Any
-    when_out_of_range: Any
+    when_in_range: DFType
+    when_out_of_range: DFType
 
 @dataclass
 class shift(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift"
     argument: Any
 
-    TODO
+    @classmethod
+    def decode(cls, data: dict) -> shift:
+        from density.noise import Noise
+        return cls(
+            Noise(None, None, data["argument"])
+        )
+
+    def encode(self):
+        if self.argument.reference is None:
+            raise NotImplementedError
+        return {
+            "type": self.id,
+            "argument": self.argument.reference,
+        }
 
 @dataclass
 class shift_a(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift_a"
     argument: Any
 
-    TODO
+    @classmethod
+    def decode(cls, data: dict) -> shift_a:
+        from density.noise import Noise
+        return cls(
+            Noise(None, None, data["argument"])
+        )
+
+    def encode(self):
+        if self.argument.reference is None:
+            raise NotImplementedError
+        return {
+            "type": self.id,
+            "argument": self.argument.reference,
+        }
 
 @dataclass
 class shift_b(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift_b"
     argument: Any
 
-    TODO
+    @classmethod
+    def decode(cls, data: dict) -> shift_b:
+        from density.noise import Noise
+        return cls(
+            Noise(None, None, data["argument"])
+        )
+
+    def encode(self):
+        if self.argument.reference is None:
+            raise NotImplementedError
+        return {
+            "type": self.id,
+            "argument": self.argument.reference,
+        }
 
 @dataclass
 class shifted_noise(DensityFunctionTypeBase):
@@ -250,29 +323,32 @@ class shifted_noise(DensityFunctionTypeBase):
     noise: Any
     xz_scale: float
     y_scale: float
-    shift_x: Any
-    shift_y: Any
-    shift_z: Any
+    shift_x: DFType
+    shift_y: DFType
+    shift_z: DFType
 
-    TODO
-
-    # def encode(self):
-    #     if self.noise.reference is None:
-    #         raise Exception
-    #     return {
-    #         "type": self.id,
-    #         "noise": self.noise.reference,
-    #         "xz_scale": self.xz_scale,
-    #         "y_scale": self.y_scale,
-    #         "shift_x": self.shift_x.as_dict() if getattr(self.shift_x, "as_dict", None) else self.shift_x,
-    #         "shift_y": self.shift_y.as_dict() if getattr(self.shift_y, "as_dict", None) else self.shift_y,
-    #         "shift_z": self.shift_z.as_dict() if getattr(self.shift_z, "as_dict", None) else self.shift_z,
-    #     }
+    def encode(self):
+        if self.noise.reference is None:
+            raise NotImplementedError
+        return {
+            "type": self.id,
+            "noise": self.noise.reference,
+            "xz_scale": self.xz_scale,
+            "y_scale": self.y_scale,
+            "shift_x": self.shift_x.as_dict() if getattr(self.shift_x, "as_dict") else self.shift_x,
+            "shift_y": self.shift_y.as_dict() if getattr(self.shift_y, "as_dict") else self.shift_y,
+            "shift_z": self.shift_z.as_dict() if getattr(self.shift_z, "as_dict") else self.shift_z,
+        }
     
-    # @classmethod
-    # def decode(cls, data: dict) -> shifted_noise:
-    #     from density.noise import Noise
-    #     return cls(Noise(None, None, data["noise"]), **{k: v for k, v in data.items() if k not in ["type", "noise"]})
+    @classmethod
+    def decode(cls, data: dict) -> shifted_noise:
+        from density.noise import Noise
+        return cls(Noise(None, None, data["noise"]), **{
+            k: v
+            for k, v
+            in data.items()
+            if k in {f.name for f in fields(cls) if f.init} and k not in ["type", "noise"]
+        })
 
 class slide(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:slide"
@@ -280,30 +356,34 @@ class slide(MappedFunctionBase):
 @dataclass
 class spline(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:spline"
-    coordinate: Any
-    points: list[tuple[float, float | Any, float]]
+    coordinate: DFType
+    points: list[tuple[float, float | DFType, float]]
 
-    TODO
-
-    # def encode(self) -> dict[str, Any]:
-    #     return {
-    #         "type": self.id,
-    #         "spline": {
-    #             "coordinate": self.coordinate,
-    #             "points": [
-    #                 {
-    #                     "location": point[0],
-    #                     "value": point[1].as_dict() if getattr(point[1], "as_dict", None) else point[1],
-    #                     "derivative": point[2], 
-    #                 }
-    #                 for point in self.points
-    #             ]
-    #         }
-    #     }
+    def encode(self) -> dict[str, Any]:
+        return {
+            "type": self.id,
+            "spline": {
+                "coordinate": self.coordinate,
+                "points": [
+                    {
+                        "location": point[0],
+                        "value": point[1].as_dict() if getattr(point[1], "as_dict") else point[1],
+                        "derivative": point[2], 
+                    }
+                    for point in self.points
+                ]
+            }
+        }
     
-    # @classmethod
-    # def decode(cls, data: dict) -> spline:
-    #     return cls(data["spline"]["coordinate"], )
+    @classmethod
+    def decode(cls, data: dict) -> spline:
+        return cls(
+            decode_HOLDER_HELPER_CODEC(data["spline"]["coordinate"]),
+            [
+                (point["location"], decode_HOLDER_HELPER_CODEC(point["value"]), point["derivative"])
+                for point in data["spline"]["points"]
+            ]
+        )
 
 class square(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:square"
@@ -317,26 +397,35 @@ class terrain_shaper_spline(ManyArgumentsFunctionBase):
     spline: Literal["offset", "factor", "jaggedness"]
     min_value: float
     max_value: float
-    continentalness: Any
-    erosion: Any
-    weirdness: Any
+    continentalness: DFType
+    erosion: DFType
+    weirdness: DFType
 
 @dataclass
 class weird_scaled_sampler(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
     noise: Any
-    input: Any
+    input: DFType
 
-    TODO
+    @classmethod
+    def decode(cls, data: dict) -> weird_scaled_sampler:
+        from density.noise import Noise
+        return cls(
+            data["rarity_value_mapper"],
+            Noise(None, None, data["noise"]),
+            decode_HOLDER_HELPER_CODEC(data["input"])
+        )
 
-    # def encode(self):
-    #     return {
-    #         "type": self.id,
-    #         "rarity_value_mapper": self.rarity_value_mapper,
-    #         "noise": self.noise.reference if self.noise.reference is not None else ...,
-    #         "input": self.input.as_dict() if getattr(self.input, "as_dict", None) else self.input,
-    #     }
+    def encode(self):
+        if self.noise.reference is None:
+            raise NotImplementedError
+        return {
+            "type": self.id,
+            "rarity_value_mapper": self.rarity_value_mapper,
+            "noise": self.noise.reference,
+            "input": self.input.as_dict() if getattr(self.input, "as_dict", None) else self.input,
+        }
 
 @dataclass
 class y_clamped_gradient(ManyArgumentsFunctionBase):
