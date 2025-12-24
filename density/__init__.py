@@ -1,7 +1,7 @@
-from density.functions import constant
-from density.noise import Noise, NoiseReference
+from density.language.functions import constant
+from density.language.noise import Noise, NoiseReference
 from density.core import Density, DensityReference
-from density import functions
+from density.old_language import functions
 
 _symbols = [constant, Noise, NoiseReference, functions, Density]
 _constants = []

@@ -1,5 +1,6 @@
-from density.functions import *
-from density import Density, Noise, NoiseReference, functions
+from density.language.functions import *
+from density import Density, Noise, NoiseReference
+from density.old_language import functions
 
 def overworld():
     cave_layer = NoiseReference("minecraft:cave_layer")

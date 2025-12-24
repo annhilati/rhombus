@@ -1,4 +1,4 @@
-from density.core.density import Density
+from density.language.density import Density
 from typing import Any
 from uuid import uuid4
 from beet import DataPack
