@@ -1,34 +1,48 @@
 """It is complicated ..."""
 
 from __future__ import annotations
-from typing import Any, ClassVar, Literal, Self, TypeVar, Callable
 from dataclasses import dataclass, fields, asdict
+from typing import Any, ClassVar, Literal, Self, TypeVar, Callable
 
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
+
+#======// Main Decoding Function //==============================================================//
+
 REGISTERED_DENSITY_FUNCTION_TYPES: set[type[DFType]] = set()
 "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
 
-def decode_HOLDER_HELPER_CODEC(o: dict | float | str, /) -> DFType:
-    "Decodes any JSON value that can be used as a HOLDER_HELPER_CODEC type argument in a density function."
+def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /) -> DFType:
+    """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
+    (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
+    
+    Raises
+    -------
+    ValueError : When the dictionary has no key `'type'`
+    TypeError : When no subclass of `DensityFunctionTypeBase` is defined, that has it's attribute `id` equal to `o["type"]` and thus, it is not known how to decode the dictionary
+    """
+
+    # `HOLDER_HELPER_CODEC` is a term used in the density function codebase for handling arguments,
+    # that can either be a constant number, a reference to another density function, or a fully defined inline density function.<br>
+    # There are other codecs for that too (see `clamp`), but for clarity and supportiveness we will only use this one.
+
     REGISTRY = {t.id: t for t in REGISTERED_DENSITY_FUNCTION_TYPES if hasattr(t, "id")}
     if isinstance(o, dict):
         t: str = o.get("type")
+        if t is None:
+            raise ValueError("Cannot decode dict as HOLDER_HELPER_CODEC argument without key 'type'")
         if not ":" in t:
             t = "minecraft:" + t
-        if t is None:
-            raise ValueError("Cannot decode dict as HOLDER_HELPER_CODEC without key 'type'")
         if REGISTRY.get(t) is None:
-            raise TypeError(f"Cannot decode dict as HOLDER_HELPER_CODEC with type id '{t}'. No density function type class with adequate id is defined")
+            raise TypeError(f"Cannot decode dict as HOLDER_HELPER_CODEC argument with type id '{t}'. No density function type class with adequate id is defined")
         return REGISTRY.get(t).decode(o)
     elif isinstance(o, (int, float)):
         return constant(float(o))
     elif isinstance(o, str):
         return Reference(o)
     else:
-        raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC")
-
+        raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument")
 
 
 #======// Function Type Base Classes //==========================================================//
@@ -100,7 +114,7 @@ class ManyArgumentsFunctionBase(DensityFunctionTypeBase):
     @classmethod
     def decode(cls, data: dict) -> Self:
         fs = {f.name: f for f in fields(cls)}
-        cls(**{
+        return cls(**{
             parameter: decode_HOLDER_HELPER_CODEC(value) if fs[parameter].type is DFType else value
             for parameter, value in data.items()
             if parameter in {f.name for f in fields(cls) if f.init}
@@ -158,7 +172,7 @@ class cache_once(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_once"
 
 @dataclass
-class clamp(DensityFunctionTypeBase):
+class clamp(ManyArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:clamp"
     input: DFType
     min: float

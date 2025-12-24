@@ -46,6 +46,7 @@ _symbols = [
     NoiseReference,
     Density,
     DensityReference,
+    
     abs,
     add,
     beardifier,

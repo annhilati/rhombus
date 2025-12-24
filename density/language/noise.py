@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional, ClassVar
 from beet.contrib.worldgen import WorldgenNoise
 
@@ -7,7 +7,7 @@ from density.core.external_resource import ExternalResourceBase
 
 @dataclass
 class Noise(ExternalResourceBase):
-    """Declares a perlin noise.
+    """Defines a perlin noise.
 
     To add a reference to an existing noise, use `NoiseReference()` instead.
     
@@ -27,18 +27,22 @@ class Noise(ExternalResourceBase):
     """
  
     fileclass:   ClassVar = WorldgenNoise
-    firstOctave: Optional[int]         = field(init=True, default=None)
-    amplitudes:  Optional[list[float]] = field(init=True, default=None)
-    reference:   Optional[str]         = field(init=True, default=None)
+    firstOctave: Optional[int]
+    amplitudes:  Optional[list[float]]
+    reference:   Optional[str]
     "When given, the Noise object is a reference to an externally declared noise."
 
-    def as_dict(self) -> dict[str: Any]:
+    def encode(self) -> dict[str: Any]:
         if self.firstOctave is None or self.amplitudes is None:
             raise Exception
         return {
             "firstOctave": self.firstOctave,
             "amplitudes": self.amplitudes
         }
+    
+    @classmethod
+    def decode(cls, data: dict) -> Noise:
+        cls(firstOctave=data["firstoctave"], amplitudes=data["amplitudes"])
 
     def __eq__(self, other: Noise):
         if self.reference is None and other.reference is None:

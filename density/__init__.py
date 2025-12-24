@@ -1,16 +1,13 @@
 from density.language.functions import constant
 from density.language.noise import Noise, NoiseReference
-from density.core import Density, DensityReference
-from density.old_language import functions
+from density.language import Density, DensityReference
 
-_symbols = [constant, Noise, NoiseReference, functions, Density]
+_symbols = [constant, Noise, NoiseReference, Density]
 _constants = []
 
 __all__ = [obj.__name__ for obj in _symbols].extend(_constants)
 
-# ╭───────────────────────────────────────────────────────────────────────────────╮
-# │                                     Config                                    │ 
-# ╰───────────────────────────────────────────────────────────────────────────────╯
+#======// Config //==============================================================================//
 
 import warnings as _warnings
 def warning(message, category, filename, lineno, file=None, line=None):

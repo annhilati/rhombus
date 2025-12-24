@@ -6,7 +6,7 @@ Note, that importing `*` from here is helpfull, but will overwrite some builtin 
 from density.language.density import Density
 from density.core import df_types as dft 
 from density.language.noise import Noise
-from typing import Literal, TypeAlias, Any
+from typing import Literal, TypeAlias, Any, TypeVar
 import warnings
 
 import builtins as _bi
@@ -22,6 +22,11 @@ def _check_references(*args: list[Any]) -> tuple[Any | Density[dft.Reference]]:
             continue
         out.append(arg)
     return tuple(out)
+
+#======// Typing //==============================================================================//
+
+
+#======// Builtin Functions //===================================================================//
 
 def abs(argument: Density | DFReference | float) -> Density[dft.abs]:
     """Calculates the absolute value of the input.
@@ -130,7 +135,7 @@ def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
     Also notice [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
     """
     input = _check_references(input)[0]
-    if isinstance(input, Density) and isinstance(input.content, dft.Reference):
+    if isinstance(input, Density) and isinstance(input.function, dft.Reference):
         warnings.warn(
             "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
             "A syntax error might be raised when loading a world.\n    "
@@ -385,7 +390,7 @@ def squeeze(argument: Density | DFReference | float) -> Density[dft.squeeze]:
         return x/2 - ((x**3) / 24)
     return Density(dft.squeeze(argument))
 
-def terrain_shaper_spline(spline: Literal["offset", "factor", "jaggedness"], min_value: float, max_value: float, continentalness: Density | DFReference | float, erosion: Density | float, weirdness: Density | DFReference | float) -> Density[dft.terrain_shaper_spline]:
+def terrain_shaper_spline(spline: Literal["offset", "factor", "jaggedness"], min_value: float, max_value: float, continentalness: Density | DFReference | float, erosion: Density | DFReference | float, weirdness: Density | DFReference | float) -> Density[dft.terrain_shaper_spline]:
     """Calculate the spline from the noise settings.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmF5LXNoYXBlIHsKICAgICAgZmlsbDogI0M2QzZDNjsgLyogTGlnaHQgbW9kZSAqLwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmdyYXktc2hhcGUgewogICAgICAgIGZpbGw6ICM1NjU2NTY7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNMTUwIDBMMjQwIDkwTDIxMCAxMjBMMTIwIDMwTDE1MCAwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik00MjAgMzBMNTQwIDE1MEw0MjAgMjcwTDM5MCAyNDBMNDgwIDE1MEwzOTAgNjBMNDIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzMwIDE4MEwzMDAgMjEwTDM5MCAzMDBMNDIwIDI3MEwzMzAgMTgwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzBMMTUwIDYwTDYwIDE1MEwxNTAgMjQwTDEyMCAyNzBMMCAxNTBMMTIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDBMNDIwIDMwTDE1MCAzMDBMMTIwIDI3MEwzOTAgMFoiIGZpbGw9IiNGMDk0MDkiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre1 to 1.18.2).
