@@ -91,5 +91,11 @@ class Density(Generic[DFType]):
     def __abs__(self) -> Density[dft.abs]:
         return Density(dft.abs(argument=self.function))
     
+    def __neg__(self) -> Density[dft.mul]:
+        return Density(dft.mul(self.function, dft.constant(-1)))
+    
 def DensityReference(identifier: str, /) -> Density[dft.Reference]:
+    return Density(dft.Reference(identifier))
+
+def r(identifier: str, /) -> Density[dft.Reference]:
     return Density(dft.Reference(identifier))
