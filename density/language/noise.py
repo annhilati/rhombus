@@ -1,12 +1,13 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional, ClassVar
+import base64, struct
 from beet.contrib.worldgen import WorldgenNoise
 
-from density.core.external_resource import ExternalResourceBase
+from density.core.additional_resource import AdditionalResourceBase
 
 @dataclass
-class Noise(ExternalResourceBase):
+class Noise(AdditionalResourceBase):
     """Defines a perlin noise.
 
     To add a reference to an existing noise, use `NoiseReference()` instead.
@@ -29,7 +30,7 @@ class Noise(ExternalResourceBase):
     fileclass:   ClassVar = WorldgenNoise
     firstOctave: Optional[int]
     amplitudes:  Optional[list[float]]
-    reference:   Optional[str]
+    reference:   Optional[str]          = None
     "When given, the Noise object is a reference to an externally declared noise."
 
     def encode(self) -> dict[str: Any]:
@@ -43,6 +44,25 @@ class Noise(ExternalResourceBase):
     @classmethod
     def decode(cls, data: dict) -> Noise:
         cls(firstOctave=data["firstoctave"], amplitudes=data["amplitudes"])
+
+    def generate_name(self) -> str:
+        data = struct.pack(">qI", self.firstOctave, len(self.amplitudes))
+        for v in self.amplitudes:
+            data += struct.pack(">d", float(v))
+
+        return base64.b32encode(data).decode("ascii").rstrip("=")
+
+    @classmethod
+    def from_encoded_string(cls, string: str) -> Noise:
+        padding = "=" * (-len(string) % 8)
+        data = base64.b32decode((string + padding).encode("ascii"))
+
+        n, length = struct.unpack_from(">qI", data, 0)
+        offset = struct.calcsize(">qI")
+
+        values = list(struct.unpack_from(f">{length}d", data, offset))
+        return cls(n, values)
+    
 
     def __eq__(self, other: Noise):
         if self.reference is None and other.reference is None:
