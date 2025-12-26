@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, asdict
 from typing import Any, ClassVar, Literal, Self, TypeVar, Callable
 
+from density.core.additional_resource import AdditionalResource
+
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
@@ -53,22 +55,15 @@ class DensityFunctionTypeBase:
     To add new types, create a sublass and set a ClassVar `id` or override the `as_dict` method."""
     id: str
 
-    encode: ClassVar[Callable[[Self], dict]]
     decode: ClassVar[Callable[[type[Self], dict], Self]]
-    
-    @property
-    def params(self):
-        return {f.name: getattr(self, f.name) for f in fields(self)}
-    
+    encode: ClassVar[Callable[[Self], dict]]
+      
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         REGISTERED_DENSITY_FUNCTION_TYPES.add(cls)
     
-    def __repr__(self):
-        return f"{type(self).__name__}({", ".join([f'{key}={value}' for key, value in self.params.items()])})"
-
 @dataclass 
-class MakeFunctionBase(DensityFunctionTypeBase):
+class SimpleFunctionBase(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> Self:
@@ -87,9 +82,9 @@ class MappedFunctionBase(DensityFunctionTypeBase):
         return cls(decode_HOLDER_HELPER_CODEC(argument))
     
     def encode(self) -> dict:
-        return {"type": self.id, "argument": self.argument}
+        return {"type": self.id, "argument": self.argument.encode()}
 
-@dataclass
+@dataclass()
 class DoubleArgumentFunctionBase(DensityFunctionTypeBase):
     argument1: DFType
     argument2: DFType
@@ -104,9 +99,9 @@ class DoubleArgumentFunctionBase(DensityFunctionTypeBase):
         )
     
     def encode(self) -> dict:
-        return {"type": self.id, "argument1": self.argument1, "argument2": self.argument2}
+        return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
     
-class ManyArgumentsFunctionBase(DensityFunctionTypeBase):
+class MultiArgumentsFunctionBase(DensityFunctionTypeBase):
     """Only inherit from this class, when the parameters in JSON-format are the same in the class.<br>
     When inheriting from this class, don't forget to add the @dataclass decorator, because the init has to be generated from the parameters.
     """
@@ -123,7 +118,7 @@ class ManyArgumentsFunctionBase(DensityFunctionTypeBase):
     def encode(self) -> dict:
         fs = {f.name: f for f in fields(self)}
         return {"type": self.id, **{
-            parameter: value.as_dict() if getattr(value, "as_dict") else value
+            parameter: value.encode() if isinstance(value, DensityFunctionTypeBase) else value
             for parameter, value
             in asdict(self).items()
             if fs[parameter].init
@@ -150,16 +145,16 @@ class abs(MappedFunctionBase):
 class add(DoubleArgumentFunctionBase): 
     id: ClassVar[str] = "minecraft:add"
 
-class beardifier(MakeFunctionBase):
+class beardifier(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:beardifier"
 
-class blend_alpha(MakeFunctionBase):
+class blend_alpha(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:blend_alpha"
 
 class blend_density(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:blend_density"
 
-class blend_offset(MakeFunctionBase):
+class blend_offset(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:blend_offset"
 
 class cache_2d(MappedFunctionBase):
@@ -172,7 +167,7 @@ class cache_once(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_once"
 
 @dataclass
-class clamp(ManyArgumentsFunctionBase):
+class clamp(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:clamp"
     input: DFType
     min: float
@@ -193,11 +188,11 @@ class constant(DensityFunctionTypeBase):
 class cube(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:cube"
 
-class end_islands(MakeFunctionBase):
+class end_islands(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:end_islands"
 
 @dataclass
-class find_top_surface(ManyArgumentsFunctionBase):
+class find_top_surface(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:find_top_surface"
     density: DFType
     upper_bound: DFType
@@ -228,7 +223,7 @@ class mul(DoubleArgumentFunctionBase):
 @dataclass
 class noise(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:noise"
-    noise: Any
+    noise: AdditionalResource
     xz_scale: float
     y_scale: float
 
@@ -242,17 +237,15 @@ class noise(DensityFunctionTypeBase):
         )
 
     def encode(self):
-        if self.noise.reference is None:
-            raise NotImplementedError
         return {
             "type": self.id,
-            "noise": self.noise.reference,
+            "noise": self.noise.identifier,
             "xz_scale": self.xz_scale,
             "y_scale": self.y_scale,
         }
 
 @dataclass
-class old_blended_noise(ManyArgumentsFunctionBase):
+class old_blended_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:old_blended_noise"
     xz_scale: float
     y_scale: float
@@ -264,7 +257,7 @@ class quarter_negative(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:quarter_negative"
 
 @dataclass
-class range_choice(ManyArgumentsFunctionBase):
+class range_choice(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:range_choice"
     input: DFType
     min_inclusive: float
@@ -275,7 +268,7 @@ class range_choice(ManyArgumentsFunctionBase):
 @dataclass
 class shift(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift"
-    argument: Any
+    argument: AdditionalResource
 
     @classmethod
     def decode(cls, data: dict) -> shift:
@@ -295,7 +288,7 @@ class shift(DensityFunctionTypeBase):
 @dataclass
 class shift_a(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift_a"
-    argument: Any
+    argument: AdditionalResource
 
     @classmethod
     def decode(cls, data: dict) -> shift_a:
@@ -315,7 +308,7 @@ class shift_a(DensityFunctionTypeBase):
 @dataclass
 class shift_b(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift_b"
-    argument: Any
+    argument: AdditionalResource
 
     @classmethod
     def decode(cls, data: dict) -> shift_b:
@@ -335,7 +328,7 @@ class shift_b(DensityFunctionTypeBase):
 @dataclass
 class shifted_noise(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shifted_noise"
-    noise: Any
+    noise: AdditionalResource
     xz_scale: float
     y_scale: float
     shift_x: DFType
@@ -353,16 +346,14 @@ class shifted_noise(DensityFunctionTypeBase):
         })
 
     def encode(self):
-        if self.noise.reference is None:
-            raise NotImplementedError
         return {
             "type": self.id,
-            "noise": self.noise.reference,
+            "noise": self.noise.identifier,
             "xz_scale": self.xz_scale,
             "y_scale": self.y_scale,
-            "shift_x": self.shift_x.as_dict() if getattr(self.shift_x, "as_dict") else self.shift_x,
-            "shift_y": self.shift_y.as_dict() if getattr(self.shift_y, "as_dict") else self.shift_y,
-            "shift_z": self.shift_z.as_dict() if getattr(self.shift_z, "as_dict") else self.shift_z,
+            "shift_x": self.shift_x.encode(),
+            "shift_y": self.shift_y.encode(),
+            "shift_z": self.shift_z.encode(),
         }
 
 class slide(MappedFunctionBase):
@@ -393,7 +384,7 @@ class spline(DensityFunctionTypeBase):
                 "points": [
                     {
                         "location": point[0],
-                        "value": point[1].as_dict() if getattr(point[1], "as_dict") else point[1],
+                        "value": point[1].encode() if isinstance(point[1], DensityFunctionTypeBase) else point[1],
                         "derivative": point[2], 
                     }
                     for point in self.points
@@ -408,7 +399,7 @@ class squeeze(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:squeeze"
 
 @dataclass
-class terrain_shaper_spline(ManyArgumentsFunctionBase):
+class terrain_shaper_spline(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:terrain_shaper_spline"
     spline: Literal["offset", "factor", "jaggedness"]
     min_value: float
@@ -421,7 +412,7 @@ class terrain_shaper_spline(ManyArgumentsFunctionBase):
 class weird_scaled_sampler(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
-    noise: Any
+    noise: AdditionalResource
     input: DFType
 
     @classmethod
@@ -434,17 +425,15 @@ class weird_scaled_sampler(DensityFunctionTypeBase):
         )
 
     def encode(self):
-        if self.noise.reference is None:
-            raise NotImplementedError
         return {
             "type": self.id,
             "rarity_value_mapper": self.rarity_value_mapper,
-            "noise": self.noise.reference,
-            "input": self.input.as_dict() if getattr(self.input, "as_dict", None) else self.input,
+            "noise": self.noise.identifier,
+            "input": self.input.encode(),
         }
 
 @dataclass
-class y_clamped_gradient(ManyArgumentsFunctionBase):
+class y_clamped_gradient(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
     from_y: int
     to_y: int
