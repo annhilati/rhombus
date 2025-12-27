@@ -25,19 +25,19 @@ def _interpret_args(*args: tuple[Density | float | str]) -> tuple[Density[Any | 
 class Density(Generic[DFType]):
     """Class representing a density calculation."""
 
-    function: DFType
+    wrapped: DFType
 
     def __repr__(self) -> str:
-        return self.function.__repr__()
+        return self.wrapped.__repr__()
     
     def as_dict(self) -> dict[str, Any]:
-        return self.function.encode()
+        return self.wrapped.encode()
     
     #======// Arithmetic Magic //====================================================================//
     
     def __add__(self, other) -> Density[dft.add]:
         other = _interpret_args(other)
-        return Density(dft.add(self.function, other))
+        return Density(dft.add(self.wrapped, other))
     
     def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
@@ -46,7 +46,7 @@ class Density(Generic[DFType]):
         other = _interpret_args(other)
         return Density(
             dft.add(
-                argument1=self.function,
+                argument1=self.wrapped,
                 argument2=dft.mul(
                     argument1=other,
                     argument2=-1
@@ -58,13 +58,13 @@ class Density(Generic[DFType]):
             dft.add(
                 argument1=other,
                 argument2=dft.mul(
-                    argument1=self.function,
+                    argument1=self.wrapped,
                     argument2=-1
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
         other = _interpret_args(other)
-        return Density(dft.mul(self.function, other))
+        return Density(dft.mul(self.wrapped, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
@@ -72,7 +72,7 @@ class Density(Generic[DFType]):
     def __truediv__(self, other) -> Density[dft.mul]:
         other = _interpret_args(other)
         return Density(dft.mul(
-            self.function,
+            self.wrapped,
             dft.invert(other)
         ))
     
@@ -80,7 +80,7 @@ class Density(Generic[DFType]):
         other = _interpret_args(other)
         return Density(dft.mul(
             other,
-            dft.invert(self.function)
+            dft.invert(self.wrapped)
         ))
     
     def __pow__(self, other) -> Density[dft.square | dft.cube | dft.mul]:
@@ -91,20 +91,20 @@ class Density(Generic[DFType]):
         elif other == 1:
             return self
         elif other == 2:
-            return Density(dft.square(self.function))
+            return Density(dft.square(self.wrapped))
         elif other == 3:
-            return Density(dft.cube(self.function))
+            return Density(dft.cube(self.wrapped))
         elif other > 3:
-            s = Density(dft.mul(self.function, self.function))
+            s = Density(dft.mul(self.wrapped, self.wrapped))
             for i in range(other - 2):
-                s = Density(dft.mul(s, self.function))
+                s = Density(dft.mul(s, self.wrapped))
             return s
     
     def __abs__(self) -> Density[dft.abs]:
-        return Density(dft.abs(argument=self.function))
+        return Density(dft.abs(argument=self.wrapped))
     
     def __neg__(self) -> Density[dft.mul]:
-        return Density(dft.mul(self.function, dft.constant(-1)))
+        return Density(dft.mul(self.wrapped, dft.constant(-1)))
     
 def DensityReference(identifier: str, /) -> Density[dft.Reference]:
     return Density(dft.Reference(identifier))
