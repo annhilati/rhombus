@@ -1,3 +1,6 @@
+"""A Python embedded DSL for writing Density Functions for Minecraft Datapacks
+"""
+
 from rhombus.language.functions import constant
 from rhombus.language.noise import Noise, NoiseReference
 from rhombus.language import Density, DensityReference

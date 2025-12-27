@@ -1,7 +1,25 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic
 from rhombus.core import df_types as dft, DFType
+
+#======// Helpers //=============================================================================//
+
+def _interpret_args(*args: tuple[Density | float | str]) -> tuple[Density[Any | dft.Reference | dft.constant]]:
+    "Replaces strings with density function references and numbers with constant densities in a list of arguments."
+    out = []
+    for arg in args:
+        if isinstance(arg, str):
+            out.append(Density(dft.Reference(arg)))
+            continue
+        if isinstance(arg, (int, float)):
+            out.append(Density(dft.constant(float(arg))))
+        out.append(arg)
+    return out[0] if len(out) <= 1 else tuple(out)
+
+
+
+#======// Density Type //========================================================================//
 
 @dataclass
 class Density(Generic[DFType]):
@@ -18,16 +36,14 @@ class Density(Generic[DFType]):
     #======// Arithmetic Magic //====================================================================//
     
     def __add__(self, other) -> Density[dft.add]:
-        if isinstance(other, Density):
-            other = other.function
+        other = _interpret_args(other)
         return Density(dft.add(self.function, other))
     
     def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[dft.add]:
-        if isinstance(other, Density):
-            other = other.function
+        other = _interpret_args(other)
         return Density(
             dft.add(
                 argument1=self.function,
@@ -37,8 +53,7 @@ class Density(Generic[DFType]):
             )))
     
     def __rsub__(self, other) -> Density[dft.add]:
-        if isinstance(other, Density):
-            other = other.function
+        other = _interpret_args(other)
         return Density(
             dft.add(
                 argument1=other,
@@ -48,24 +63,21 @@ class Density(Generic[DFType]):
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
-        if isinstance(other, Density):
-            other = other.function
+        other = _interpret_args(other)
         return Density(dft.mul(self.function, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[dft.mul]:
-        if isinstance(other, Density):
-            other = other.function
+        other = _interpret_args(other)
         return Density(dft.mul(
             self.function,
             dft.invert(other)
         ))
     
     def __rtruediv__(self, other) -> Density[dft.mul]:
-        if isinstance(other, Density):
-            other = other.function
+        other = _interpret_args(other)
         return Density(dft.mul(
             other,
             dft.invert(self.function)
@@ -97,5 +109,4 @@ class Density(Generic[DFType]):
 def DensityReference(identifier: str, /) -> Density[dft.Reference]:
     return Density(dft.Reference(identifier))
 
-def r(identifier: str, /) -> Density[dft.Reference]:
-    return Density(dft.Reference(identifier))
+r = DensityReference

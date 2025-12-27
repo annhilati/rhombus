@@ -3,25 +3,11 @@
 Note, that importing `*` from here is helpfull, but will overwrite some builtin Python functions like `abs()`. You can get them again from the `builtins` package.
 """
 
-from rhombus.language.density import Density
+from rhombus.language.density import Density, _interpret_args
 from rhombus.language.noise import Noise
 from rhombus.core import df_types as dft
 from typing import Literal, Any
 import warnings
-
-#======// Helpers //=============================================================================//
-
-def _interpret_args(*args: tuple[Density | float | str]) -> tuple[Density[Any | dft.Reference | dft.constant]]:
-    "Replaces strings with density function references and numbers with constant densities in a list of arguments."
-    out = []
-    for arg in args:
-        if isinstance(arg, str):
-            out.append(Density(dft.Reference(arg)))
-            continue
-        if isinstance(arg, (int, float)):
-            out.append(Density(dft.constant(float(arg))))
-        out.append(arg)
-    return out[0] if len(out) <= 1 else tuple(out)
 
 
 #======// Builtin Functions //===================================================================//

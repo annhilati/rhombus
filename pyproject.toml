@@ -1,5 +1,5 @@
 [project]
-name = "density"
+name = "rhombus"
 version = "0.0.0"
 description = ""
 readme = "README.md"
@@ -24,5 +24,5 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["density", "density.core"]
+packages = ["rhombus"]
 include-package-data = true

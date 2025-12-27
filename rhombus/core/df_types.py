@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, fields, asdict
-from typing import Any, ClassVar, Literal, Self, TypeVar, Callable
+from typing import Any, ClassVar, Literal, Self, TypeVar, Callable, Literal
 
 from rhombus.core.additional_resource import AdditionalResource
 
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
-MAX_REASONABLE_VALUE = 1000000.0
-MIN_REASONABLE_VALUE = -1000000.0
+MAX_REASONABLE_VALUE: Literal[1000000] = 1000000.0
+MIN_REASONABLE_VALUE: Literal[-1000000] = -1000000.0
 
 #======// Main Decoding Function //==============================================================//
 

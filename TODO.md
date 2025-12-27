@@ -5,15 +5,11 @@
 
 - Are classitems really needed?
 
-- Doing basic arithmetic with the functions still annotates Density types.
-  - Overloaded functions are clunky
-
-- Handle density data raw without Densiy class; Density only as wrapper?
-  - Currently, both should work anywhere, because both have .as_json()
-
 ## Dynamically generated files and references
 - How shall noise DFT be transpiled to json, when it is not a reference and files can't be created in the context?
 - Shall any declaration of a non-referencing Noise invoke a file creation?
+
+    - We encode the data in the name!
 
 
 - Should noises and noise references really be the same class?

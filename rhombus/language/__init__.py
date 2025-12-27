@@ -1,6 +1,7 @@
 "Collection of all symbols needed for Density DSL"
 
-from rhombus.language.density import Density, DensityReference
+from rhombus.core.df_types import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
+from rhombus.language.density import Density, DensityReference, r
 from rhombus.language.noise import Noise, NoiseReference
 from rhombus.language.functions import (
     abs,
@@ -45,7 +46,7 @@ _symbols = [
     Noise,
     NoiseReference,
     Density,
-    DensityReference,
+    DensityReference, r,
     
     abs,
     add,
