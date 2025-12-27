@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
-from density.core import df_types as dft, DFType
+from rhombus.core import df_types as dft, DFType
 
 @dataclass
 class Density(Generic[DFType]):

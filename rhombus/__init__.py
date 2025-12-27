@@ -1,6 +1,6 @@
-from density.language.functions import constant
-from density.language.noise import Noise, NoiseReference
-from density.language import Density, DensityReference
+from rhombus.language.functions import constant
+from rhombus.language.noise import Noise, NoiseReference
+from rhombus.language import Density, DensityReference
 
 _symbols = [constant, Noise, NoiseReference, Density]
 _constants = []

@@ -1,8 +1,8 @@
 "Collection of all symbols needed for Density DSL"
 
-from density.language.density import Density, DensityReference
-from density.language.noise import Noise, NoiseReference
-from density.language.functions import (
+from rhombus.language.density import Density, DensityReference
+from rhombus.language.noise import Noise, NoiseReference
+from rhombus.language.functions import (
     abs,
     add,
     beardifier,

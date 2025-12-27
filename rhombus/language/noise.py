@@ -4,7 +4,7 @@ from typing import Any, ClassVar, Optional
 import base64, struct
 from beet.contrib.worldgen import WorldgenNoise
 
-from density.core.additional_resource import AdditionalResourceBase
+from rhombus.core.additional_resource import AdditionalResourceBase
 
 @dataclass(frozen=True, repr=False)
 class Noise(AdditionalResourceBase):

@@ -3,9 +3,9 @@
 Note, that importing `*` from here is helpfull, but will overwrite some builtin Python functions like `abs()`. You can get them again from the `builtins` package.
 """
 
-from density.language.density import Density
-from density.core import df_types as dft
-from density.language.noise import Noise
+from rhombus.language.density import Density
+from rhombus.language.noise import Noise
+from rhombus.core import df_types as dft
 from typing import Literal, Any
 import warnings
 
@@ -75,7 +75,7 @@ def blend_alpha() -> Density[dft.blend_alpha]:
 def blend_density(argument: Density | str | float) -> Density[dft.blend_density]:
     """Used in vanilla for smooth transition to chunks generated in old versions.
 
-    Density per se is not affected
+    Density per se is not affected.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre1) and forward.
     

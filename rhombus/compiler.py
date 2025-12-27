@@ -1,4 +1,4 @@
-from density.language.density import Density
+from rhombus.language.density import Density
 from typing import Any
 from uuid import uuid4
 from beet import DataPack

@@ -4,11 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass, fields, asdict
 from typing import Any, ClassVar, Literal, Self, TypeVar, Callable
 
-from density.core.additional_resource import AdditionalResource
+from rhombus.core.additional_resource import AdditionalResource
 
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
+MAX_REASONABLE_VALUE = 1000000.0
+MIN_REASONABLE_VALUE = -1000000.0
 
 #======// Main Decoding Function //==============================================================//
 
@@ -229,7 +231,7 @@ class noise(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> noise:
-        from density.language.noise import Noise
+        from rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["noise"]),
             data["xz_scale"],
@@ -272,7 +274,7 @@ class shift(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> shift:
-        from density.language.noise import Noise
+        from rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -292,7 +294,7 @@ class shift_a(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> shift_a:
-        from density.language.noise import Noise
+        from rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -312,7 +314,7 @@ class shift_b(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> shift_b:
-        from density.language.noise import Noise
+        from rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -337,7 +339,7 @@ class shifted_noise(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> shifted_noise:
-        from density.language.noise import Noise
+        from rhombus.language.noise import Noise
         return cls(Noise(None, None, data["noise"]), **{
             k: v
             for k, v
@@ -417,7 +419,7 @@ class weird_scaled_sampler(DensityFunctionTypeBase):
 
     @classmethod
     def decode(cls, data: dict) -> weird_scaled_sampler:
-        from density.language.noise import Noise
+        from rhombus.language.noise import Noise
         return cls(
             data["rarity_value_mapper"],
             Noise(None, None, data["noise"]),
