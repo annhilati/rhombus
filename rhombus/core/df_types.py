@@ -84,7 +84,6 @@ class MappedFunctionBase(DensityFunctionTypeBase):
         return cls(decode_HOLDER_HELPER_CODEC(argument))
     
     def encode(self) -> dict:
-        print(type(self), self)
         return {"type": self.id, "argument": self.argument.encode()}
 
 @dataclass()
@@ -102,7 +101,6 @@ class DoubleArgumentFunctionBase(DensityFunctionTypeBase):
         )
     
     def encode(self) -> dict:
-        print("\n", self.argument2)
         return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
     
 class MultiArgumentsFunctionBase(DensityFunctionTypeBase):

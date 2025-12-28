@@ -58,4 +58,5 @@ def overworld():
     )
 
 print(overworld())
-print(overworld().as_dict())
+import json
+print(json.dumps(overworld().TEMP()))
