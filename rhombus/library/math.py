@@ -5,7 +5,8 @@ from rhombus.core.df_types import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
 
 def sign(argument: Density | float | str):
     "Returns `-1` when the input is negative, `1` when it is positive and `0` if it is neither."
-    argument = _interpret_args(argument)[0]
+    # Something is wrong here
+    argument = _interpret_args(argument)
     return range_choice(
         input=argument,
         max_exclusive=0,

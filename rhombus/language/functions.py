@@ -20,7 +20,7 @@ def abs(argument: Density | str | float) -> Density[dft.abs]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#abs)
     """
     argument = _interpret_args(argument)
-    return Density(dft.abs(argument))
+    return Density(dft.abs(argument.wrapped))
 
 def add(argument1: Density | str | float, argument2: Density | str | float) -> Density[dft.add]:
     """Adds two inputs together.
@@ -68,7 +68,7 @@ def blend_density(argument: Density | str | float) -> Density[dft.blend_density]
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_density)
     """
     argument = _interpret_args(argument)
-    return Density(dft.blend_density(argument))
+    return Density(dft.blend_density(argument.wrapped))
 
 def blend_offset() -> Density[dft.blend_offset]:
     """Used in vanilla for smooth transition to chunks generated in old versions.
@@ -90,7 +90,7 @@ def cache_2d(argument: Density | str | float) -> Density[dft.cache_2d]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
     argument = _interpret_args(argument)
-    return Density(dft.cache_2d(argument))
+    return Density(dft.cache_2d(argument.wrapped))
 
 def cache_all_in_cell(argument: Density | str | float) -> Density[dft.cache_all_in_cell]:
     """🚨 Should not be used in datapacks.
@@ -104,7 +104,7 @@ def cache_all_in_cell(argument: Density | str | float) -> Density[dft.cache_all_
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
     argument = _interpret_args(argument)
-    return Density(dft.cache_all_in_cell(argument))
+    return Density(dft.cache_all_in_cell(argument.wrapped))
 
 def cache_once(argument: Density | str | float) -> Density[dft.cache_once]:
     """If this density function is referenced twice, it is only computed once per block position.
@@ -116,7 +116,7 @@ def cache_once(argument: Density | str | float) -> Density[dft.cache_once]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
     argument = _interpret_args(argument)
-    return Density(dft.cache_once(argument))
+    return Density(dft.cache_once(argument.wrapped))
 
 def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
@@ -134,7 +134,7 @@ def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
             "A syntax error might be raised when loading a world.\n    "
             "More information at https://bugs.mojang.com/browse/MC/issues/MC-252814"
         )
-    return Density(dft.clamp(input, max, min))
+    return Density(dft.clamp(input.wrapped, max, min))
 
 def constant(argument: float) -> Density[dft.constant]:
     """Declares a constant float value.
@@ -175,7 +175,7 @@ def find_top_surface(density: Density | str | float, upper_bound: Density | str 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#find_top_surface)
     """
     density, upper_bound = _interpret_args(density, upper_bound)
-    return Density(dft.find_top_surface(density, upper_bound, lower_bound, cell_height))
+    return Density(dft.find_top_surface(density.wrapped, upper_bound.wrapped, lower_bound, cell_height))
 
 def flat_cache(argument: Density | str | float) -> Density[dft.flat_cache]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with interpolated.
@@ -184,7 +184,7 @@ def flat_cache(argument: Density | str | float) -> Density[dft.flat_cache]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    return Density(dft.flat_cache(argument))
+    return Density(dft.flat_cache(argument.wrapped))
 
 def half_negative(argument: Density | str | float) -> Density[dft.half_negative]:
     """If the input is negative, returns half of the input. Otherwise returns the input.
@@ -194,7 +194,7 @@ def half_negative(argument: Density | str | float) -> Density[dft.half_negative]
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#half_negative)
     """
     argument = _interpret_args(argument)
-    return Density(dft.half_negative(argument))
+    return Density(dft.half_negative(argument.wrapped))
 
 def interpolated(argument: Density | str | float) -> Density[dft.interpolated]:
     """Interpolates at each block in one cell based on the input density function value of some cells around. The size of each cell is 4 by 4. Used often in combination with `flat_cache`.
@@ -204,7 +204,7 @@ def interpolated(argument: Density | str | float) -> Density[dft.interpolated]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
     """
     argument = _interpret_args(argument)
-    return Density(dft.interpolated(argument))
+    return Density(dft.interpolated(argument.wrapped))
 
 def invert(argument: Density | str | float) -> Density[dft.invert]:
     """Calculates `1/x`.
@@ -214,7 +214,7 @@ def invert(argument: Density | str | float) -> Density[dft.invert]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#invert)
     """
     argument = _interpret_args(argument)
-    return Density(dft.invert(argument))
+    return Density(dft.invert(argument.wrapped))
 
 def max(argument1: Density | str | float, argument2: Density | str | float) -> Density[dft.max]:
     """Returns the maximum of two inputs.
@@ -226,7 +226,7 @@ def max(argument1: Density | str | float, argument2: Density | str | float) -> D
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#max)
     """
     argument1, argument2 = _interpret_args(argument1, argument2)
-    return Density(dft.max(argument1, argument2))
+    return Density(dft.max(argument1.wrapped, argument2.wrapped))
 
 def min(argument1: Density | str | float, argument2: Density | str | float) -> Density[dft.min]:
     """Returns the minimum of two inputs.
@@ -238,7 +238,7 @@ def min(argument1: Density | str | float, argument2: Density | str | float) -> D
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#min)
     """
     argument1, argument2 = _interpret_args(argument1, argument2)
-    return Density(dft.min(argument1, argument2))
+    return Density(dft.min(argument1.wrapped, argument2.wrapped))
 
 def mul(argument1: Density | str | float, argument2: Density | float) -> Density[dft.mul]:
     """Multiplies two inputs.
@@ -295,7 +295,7 @@ def quarter_negative(argument: Density | str | float) -> Density[dft.quarter_neg
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#quarter_negative)
     """
     argument = _interpret_args(argument)
-    return Density(dft.quarter_negative(argument))
+    return Density(dft.quarter_negative(argument.wrapped))
 
 def range_choice(input: Density | str | float, max_exclusive: float, min_inclusive: float, when_in_range: Density | str | float, when_out_of_range: Density | str | float) -> Density[dft.range_choice]:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
@@ -305,7 +305,7 @@ def range_choice(input: Density | str | float, max_exclusive: float, min_inclusi
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
     """
     input, when_in_range, when_out_of_range = _interpret_args(input, when_in_range, when_out_of_range)
-    return Density(dft.range_choice(input, max_exclusive, min_inclusive, when_in_range, when_out_of_range))
+    return Density(dft.range_choice(input.wrapped, max_exclusive, min_inclusive, when_in_range.wrapped, when_out_of_range.wrapped))
 
 def shift(argument: Noise) -> Density[dft.shift]:
     """Samples a noise at `(x/4, y/4, z/4)`, then multiplies it by `4`.
@@ -342,7 +342,7 @@ def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: Densit
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shifted_noise)
     """
     shift_x, shift_y, shift_z = _interpret_args(shift_x, shift_y, shift_z)
-    return Density(dft.shifted_noise(noise, xz_scale, y_scale, shift_x, shift_y, shift_z))
+    return Density(dft.shifted_noise(noise, xz_scale, y_scale, shift_x.wrapped, shift_y.wrapped, shift_z.wrapped))
 
 def slide(argument: Density | str | float) -> Density[dft.slide]:
     """*No technical description*
@@ -355,7 +355,7 @@ def slide(argument: Density | str | float) -> Density[dft.slide]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#slide)
     """
     argument = _interpret_args(argument)
-    return Density(dft.slide(argument))
+    return Density(dft.slide(argument.wrapped))
 
 def spline(coordinate: Density | str | float, points: list[tuple[float, float | str | Density, float]]) -> Density[dft.spline]:
     """Computes a cubic spline.
@@ -367,8 +367,8 @@ def spline(coordinate: Density | str | float, points: list[tuple[float, float | 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline)
     """
     coordinate = _interpret_args(coordinate)
-    points = [(p[0], _interpret_args(p[1]), p[2]) for p in points]
-    return Density(dft.spline(coordinate, points))
+    points = [(p[0], _interpret_args(p[1]).wrapped, p[2]) for p in points]
+    return Density(dft.spline(coordinate.wrapped, points))
 
 def square(argument: Density | str | float) -> Density[dft.square]:
     """Raises the input to the power of 2.
@@ -388,7 +388,7 @@ def squeeze(argument: Density | str | float) -> Density[dft.squeeze]:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#squeeze)
     """
     argument = _interpret_args(argument)
-    return Density(dft.squeeze(argument))
+    return Density(dft.squeeze(argument.wrapped))
 
 def terrain_shaper_spline(spline: Literal["offset", "factor", "jaggedness"], min_value: float, max_value: float, continentalness: Density | str | float, erosion: Density | str | float, weirdness: Density | str | float) -> Density[dft.terrain_shaper_spline]:
     """Calculate the spline from the noise settings.
@@ -398,7 +398,7 @@ def terrain_shaper_spline(spline: Literal["offset", "factor", "jaggedness"], min
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#terrain_shaper_spline)
     """
     continentalness, erosion, weirdness = _interpret_args(continentalness, erosion, weirdness)
-    return Density(dft.terrain_shaper_spline(spline, min_value, max_value, continentalness, erosion, weirdness))
+    return Density(dft.terrain_shaper_spline(spline, min_value, max_value, continentalness.wrapped, erosion.wrapped, weirdness.wrapped))
 
 def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input: Density | str | float, noise: Noise) -> Density[dft.weird_scaled_sampler]:
     """According to the input value, scales and enhances (or weakens) some regions of the specified noise, and then returns the absolute value.
@@ -408,7 +408,7 @@ def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#weird_scaled_sampler)
     """
     input = _interpret_args(input)
-    return Density(dft.weird_scaled_sampler(noise, rarity_value_mapper, input))
+    return Density(dft.weird_scaled_sampler(noise, rarity_value_mapper, input.wrapped))
 
 def y_clamped_gradient(from_y: int, to_y: int, from_value: float, to_value: float) -> Density[dft.y_clamped_gradient]:
     """Clamps the Y coordinate between `from_y` and `to_y` and then linearly maps it to a range.

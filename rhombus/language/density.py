@@ -14,6 +14,7 @@ def _interpret_args(*args: tuple[Density | float | str]) -> tuple[Density[Any | 
             continue
         if isinstance(arg, (int, float)):
             out.append(Density(dft.constant(float(arg))))
+            continue
         out.append(arg)
     return out[0] if len(out) <= 1 else tuple(out)
 

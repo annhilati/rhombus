@@ -1,4 +1,5 @@
 from rhombus.language import *
+from rhombus.core.df_types import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
 
 def overworld():
     cave_layer = NoiseReference("minecraft:cave_layer")
@@ -21,7 +22,7 @@ def overworld():
                         min=-1,
                         max=1
                     ) + clamp(
-                        1.5 + (-0.64 * r("minecraft:overworld/sloped_cheese")),
+                        1.5 + (-0.64 * DensityReference("minecraft:overworld/sloped_cheese")),
                         min=0,
                         max=0.5
                     )
@@ -29,7 +30,7 @@ def overworld():
                 ),
                 "minecraft:overworld/caves/entrances"
             ),
-            r("minecraft:overworld/caves/spaghetti_2d") + r("minecraft:overworld/caves/spaghetti_roughness_function")
+            DensityReference("minecraft:overworld/caves/spaghetti_2d") + DensityReference("minecraft:overworld/caves/spaghetti_roughness_function")
         ),
         cave_pillars
     )
@@ -38,7 +39,7 @@ def overworld():
         input="minecraft:overworld/sloped_cheese",
         max_exclusive=1.5625,
         min_inclusive=MIN_REASONABLE_VALUE,
-        when_in_range=min("minecraft:overworld/sloped_cheese", 5 * r("minecraft:overworld/caves/entrances")),
+        when_in_range=min("minecraft:overworld/sloped_cheese", 5 * DensityReference("minecraft:overworld/caves/entrances")),
         when_out_of_range=caves
     )
 

@@ -1,10 +1,10 @@
 """It is complicated ..."""
 
 from __future__ import annotations
-from dataclasses import dataclass, fields, asdict
+from dataclasses import dataclass, fields
 from typing import Any, ClassVar, Literal, Self, TypeVar, Callable, Literal
 
-from rhombus.core.additional_resource import AdditionalResource
+from rhombus.core.additional_resource import AdditionalResource, AdditionalResourceBase
 
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
@@ -101,6 +101,7 @@ class DoubleArgumentFunctionBase(DensityFunctionTypeBase):
         )
     
     def encode(self) -> dict:
+        print("\n", self.argument2)
         return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
     
 class MultiArgumentsFunctionBase(DensityFunctionTypeBase):
@@ -118,12 +119,10 @@ class MultiArgumentsFunctionBase(DensityFunctionTypeBase):
         })
 
     def encode(self) -> dict:
-        fs = {f.name: f for f in fields(self)}
         return {"type": self.id, **{
-            parameter: value.encode() if isinstance(value, DensityFunctionTypeBase) else value
+            parameter: value.encode() if isinstance(value, (DensityFunctionTypeBase, AdditionalResourceBase)) else value
             for parameter, value
-            in asdict(self).items()
-            if fs[parameter].init
+            in {f.name: getattr(self, f.name) for f in fields(self) if f.init}.items()
         }}
 
 

@@ -8,7 +8,7 @@ from rhombus.language import Density, DensityReference
 _symbols = [constant, Noise, NoiseReference, Density]
 _constants = []
 
-__all__ = [obj.__name__ for obj in _symbols].extend(_constants)
+__all__ = [obj.__name__ for obj in _symbols] + _constants
 
 #======// Config //==============================================================================//
 
