@@ -1,12 +1,12 @@
 from rhombus.language.density import Density
 from rhombus.language.functions import *
-from rhombus.language.functions import _interpret_args
+from rhombus.language.functions import _arg_unwrapper
 from rhombus.core.df_types import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
 
 def sign(argument: Density | float | str):
     "Returns `-1` when the input is negative, `1` when it is positive and `0` if it is neither."
     # Something is wrong here
-    argument = _interpret_args(argument)
+    argument = _arg_unwrapper(argument)
     return range_choice(
         input=argument,
         max_exclusive=0,

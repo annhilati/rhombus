@@ -10,7 +10,7 @@ AdditionalResource = TypeVar("AdditionalResource", bound="AdditionalResourceBase
 class AdditionalResourceBase(ABC):
     "Base class for resources that have to be declared outside of a density function."
 
-    fileclass:           ClassVar[type[BeetFileClass]]
+    fileclass: ClassVar[type[BeetFileClass]]
 
     @abstractmethod
     def encode(self) -> dict: ...

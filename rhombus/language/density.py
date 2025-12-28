@@ -3,21 +3,24 @@ from dataclasses import dataclass
 from typing import Any, Generic
 from rhombus.core import df_types as dft, DFType
 
+
 #======// Helpers //=============================================================================//
 
-def _interpret_args(*args: tuple[Density | float | str]) -> tuple[Density[Any | dft.Reference | dft.constant]]:
+def _arg_unwrapper(*args: Density[DFType] | float | str) -> tuple[DFType | dft.constant | dft.Reference]:
     "Replaces strings with density function references and numbers with constant densities in a list of arguments."
     out = []
     for arg in args:
-        if isinstance(arg, str):
-            out.append(Density(dft.Reference(arg)))
+        if isinstance(arg, Density):
+            out.append(arg.wrapped)
             continue
-        if isinstance(arg, (int, float)):
-            out.append(Density(dft.constant(float(arg))))
+        elif isinstance(arg, str):
+            out.append(dft.Reference(arg))
+            continue
+        elif isinstance(arg, (int, float)):
+            out.append(dft.constant(float(arg)))
             continue
         out.append(arg)
     return out[0] if len(out) <= 1 else tuple(out)
-
 
 
 #======// Density Type //========================================================================//
@@ -31,54 +34,54 @@ class Density(Generic[DFType]):
     def __repr__(self) -> str:
         return self.wrapped.__repr__()
     
-    def as_dict(self) -> dict[str, Any]:
+    def TEMP(self) -> dict[str, Any]:
         return self.wrapped.encode()
     
     #======// Arithmetic Magic //====================================================================//
     
     def __add__(self, other) -> Density[dft.add]:
-        other = _interpret_args(other)
-        return Density(dft.add(self.wrapped, other))
+        self, other = _arg_unwrapper(self, other)
+        return Density(dft.add(self, other))
     
     def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[dft.add]:
-        other = _interpret_args(other)
+        other = _arg_unwrapper(other)
         return Density(
             dft.add(
                 argument1=self.wrapped,
                 argument2=dft.mul(
                     argument1=other,
-                    argument2=-1
+                    argument2=dft.constant(-1)
             )))
     
     def __rsub__(self, other) -> Density[dft.add]:
-        other = _interpret_args(other)
+        other = _arg_unwrapper(other)
         return Density(
             dft.add(
                 argument1=other,
                 argument2=dft.mul(
                     argument1=self.wrapped,
-                    argument2=-1
+                    argument2=dft.constant(-1)
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
-        other = _interpret_args(other)
+        other = _arg_unwrapper(other)
         return Density(dft.mul(self.wrapped, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[dft.mul]:
-        other = _interpret_args(other)
+        other = _arg_unwrapper(other)
         return Density(dft.mul(
             self.wrapped,
             dft.invert(other)
         ))
     
     def __rtruediv__(self, other) -> Density[dft.mul]:
-        other = _interpret_args(other)
+        other = _arg_unwrapper(other)
         return Density(dft.mul(
             other,
             dft.invert(self.wrapped)
@@ -98,16 +101,14 @@ class Density(Generic[DFType]):
         elif other > 3:
             s = Density(dft.mul(self.wrapped, self.wrapped))
             for i in range(other - 2):
-                s = Density(dft.mul(s, self.wrapped))
+                s = Density(dft.mul(s.wrapped, self.wrapped))
             return s
     
     def __abs__(self) -> Density[dft.abs]:
-        return Density(dft.abs(argument=self.wrapped))
+        return Density(dft.abs(self.wrapped))
     
     def __neg__(self) -> Density[dft.mul]:
         return Density(dft.mul(self.wrapped, dft.constant(-1)))
     
 def DensityReference(identifier: str, /) -> Density[dft.Reference]:
     return Density(dft.Reference(identifier))
-
-r = DensityReference

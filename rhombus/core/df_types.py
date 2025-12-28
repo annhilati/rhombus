@@ -84,6 +84,7 @@ class MappedFunctionBase(DensityFunctionTypeBase):
         return cls(decode_HOLDER_HELPER_CODEC(argument))
     
     def encode(self) -> dict:
+        print(type(self), self)
         return {"type": self.id, "argument": self.argument.encode()}
 
 @dataclass()
