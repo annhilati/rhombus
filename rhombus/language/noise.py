@@ -6,6 +6,7 @@ import base64, struct
 from beet.contrib.worldgen import WorldgenNoise
 from rhombus.core.additional_resource import AdditionalResourceBase
 
+@dataclass(frozen=True, )
 class Noise(AdditionalResourceBase):
     """Defines a perlin noise.
 
@@ -33,9 +34,12 @@ class Noise(AdditionalResourceBase):
     referenced:  Optional[str] = field(init=True, default=None)
     "When given, the Noise object is a reference to an externally declared noise."
 
-    def __post_innit__(self):
+    def __post_init__(self):
         if self.referenced is None and (self.firstOctave is None or self.amplitudes is None):
-            raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or a reference.")
+            raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or reference an externally defined noise")
+        
+
+    #======// Methods required by AdditionalResourceBase //================================//
 
     @property    
     def reference(self) -> str:
@@ -58,6 +62,12 @@ class Noise(AdditionalResourceBase):
             "firstOctave": self.firstOctave,
             "amplitudes": self.amplitudes
         }
+    
+    def __hash__(self) -> int:
+        return hash(self.reference)
+    
+
+    #======// Utility //===================================================================//
 
     @classmethod
     def from_encoded_string(cls, string: str) -> Noise:
@@ -74,7 +84,8 @@ class Noise(AdditionalResourceBase):
         if self.referenced is None and other.referenced is None:
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
         return self.referenced == other.referenced
-    
+
+
 def NoiseReference(identifier: str, /) -> Noise:
     "Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`."
     return Noise(referenced=identifier)

@@ -2,6 +2,9 @@ from typing import ClassVar, Self
 from dataclasses import dataclass
 from rhombus.core.df_types import DensityFunctionTypeBase, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, DFType, decode_HOLDER_HELPER_CODEC
 
+
+#======// Function Type Base Classes //==========================================================//
+
 @dataclass()
 class DivisionFunctionBase(DensityFunctionTypeBase):
     numerator: DFType
@@ -19,6 +22,8 @@ class DivisionFunctionBase(DensityFunctionTypeBase):
     def encode(self) -> dict:
         return {"type": self.id, "numerator": self.numerator.encode(), "denominator": self.denominator.encode()}
     
+
+#======// Function Type Classes //===============================================================//
 
 class acos(MappedFunctionBase):
     id: ClassVar[str] = "moredfs:acos"

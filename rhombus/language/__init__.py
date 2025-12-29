@@ -88,6 +88,6 @@ _symbols = [
     weird_scaled_sampler,
     y_clamped_gradient
 ]
-_constants = [MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE]
+_constants = ["MAX_REASONABLE_VALUE", "MIN_REASONABLE_VALUE"]
 
 __all__ = [obj.__name__ for obj in _symbols] + _constants

@@ -1,4 +1,4 @@
-<h1 align="center">Rhombus</h1>
+<h1 align="center"><sub><img src="logo.png" height="35"></sub> Rhombus <sub><img src="logo.png" height="35"></sub></h1>
 <p align="center">A Python embedded Domain Specific Language for Minecraft Terrain Generation</p>
 <p align="center"><code>pip install density</code></p>
 
