@@ -1,7 +1,7 @@
 """It is complicated ..."""
 
 from __future__ import annotations
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, TypeVar, Callable, Literal
 
 from rhombus.core.additional_resource import AdditionalResource, AdditionalResourceBase
@@ -9,8 +9,6 @@ from rhombus.core.additional_resource import AdditionalResource, AdditionalResou
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
-MAX_REASONABLE_VALUE: Literal[1000000] = 1000000.0
-MIN_REASONABLE_VALUE: Literal[-1000000] = -1000000.0
 
 #======// Main Decoding Function //==============================================================//
 
@@ -125,11 +123,12 @@ class MultiArgumentsFunctionBase(DensityFunctionTypeBase):
         }}
 
 
-#======// Function Type Classes //===============================================================//
+#======// Reference Classes //===================================================================//
 
 @dataclass    
 class Reference(DensityFunctionTypeBase):
     identifier: str
+    default: DFType = field(init=True, default=None)
     
     @classmethod
     def decode(cls, data: str) -> Reference:
@@ -137,7 +136,9 @@ class Reference(DensityFunctionTypeBase):
     
     def encode(self) -> str:
         return self.identifier
-    
+
+
+#======// Function Type Classes //===============================================================//
 
 class abs(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:abs" 

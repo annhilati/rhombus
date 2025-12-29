@@ -1,6 +1,5 @@
-from rhombus.core.df_types import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
 from rhombus.language.density import Density
-from rhombus.language.functions import _arg_unwrapper
+from rhombus.language.functions import _arg_unwrapper, MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
 from rhombus.language import functions as f
 
 def sign(argument: Density | float | str):

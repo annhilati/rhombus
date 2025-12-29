@@ -1,5 +1,5 @@
 from rhombus.language import *
-from rhombus.core.df_types import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
+from rhombus.language.functions import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
 
 def overworld():
     cave_layer = NoiseReference("minecraft:cave_layer")

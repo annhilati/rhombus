@@ -1,12 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, Self, overload, Tuple
 from rhombus.core import df_types as dft, DFType
 
 
 #======// Helpers //=============================================================================//
 
-def _arg_unwrapper(*args: Density[DFType] | float | str) -> tuple[dft.DensityFunctionTypeBase | dft.constant | dft.Reference]:
+@overload
+def _arg_unwrapper(args: Density | float | str) -> dft.DensityFunctionTypeBase: ...
+def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionTypeBase]:
     "Replaces strings with density function references and numbers with constant densities in a list of arguments."
     out = []
     for arg in args:
@@ -47,7 +49,7 @@ class Density(Generic[DFType]):
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[dft.add]:
-        self, other = _arg_unwrapper(other)
+        self, other = _arg_unwrapper(self, other)
         return Density(
             dft.add(
                 argument1=self,
@@ -57,7 +59,7 @@ class Density(Generic[DFType]):
             )))
     
     def __rsub__(self, other) -> Density[dft.add]:
-        self, other = _arg_unwrapper(other)
+        self, other = _arg_unwrapper(self, other)
         return Density(
             dft.add(
                 argument1=other,
@@ -67,21 +69,21 @@ class Density(Generic[DFType]):
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
-        self, other = _arg_unwrapper(other)
+        self, other = _arg_unwrapper(self, other)
         return Density(dft.mul(self, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[dft.mul]:
-        self, other = _arg_unwrapper(other)
+        self, other = _arg_unwrapper(self, other)
         return Density(dft.mul(
             self,
             dft.invert(other)
         ))
     
     def __rtruediv__(self, other) -> Density[dft.mul]:
-        self, other = _arg_unwrapper(other)
+        self, other = _arg_unwrapper(self, other)
         return Density(dft.mul(
             other,
             dft.invert(self)
@@ -111,8 +113,21 @@ class Density(Generic[DFType]):
     def __neg__(self) -> Density[dft.mul]:
         return Density(dft.mul(self.wrapped, dft.constant(-1)))
     
+    def __pos__(self) -> Self:
+        return self
+    
 
-    #======// Shortcuts //====================================================================//
+    #======// Logical Magic //===================================================================//
+    
+    def __eq__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __ne__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    
+
+    #======// Shortcuts //=======================================================================//
 
     def cache_once(self) -> None:
         self.wrapped = dft.cache_once(self.wrapped)

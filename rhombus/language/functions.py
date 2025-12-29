@@ -6,8 +6,11 @@ Note, that importing `*` from here is helpfull, but will overwrite some builtin 
 from rhombus.language.density import Density, _arg_unwrapper
 from rhombus.language.noise import Noise
 from rhombus.core import df_types as dft
-from typing import Literal, Any
+from typing import Literal
 import warnings
+
+MAX_REASONABLE_VALUE: Literal[1000000] = 1000000.0
+MIN_REASONABLE_VALUE: Literal[-1000000] = -1000000.0
 
 
 #======// Builtin Functions //===================================================================//

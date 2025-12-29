@@ -12,7 +12,4 @@
     - We encode the data in the name!
 
 
-- Should noises and noise references really be the same class?
-
-
 - Is the TypeVar arg annotation in class definitons wrong?

@@ -2,11 +2,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Optional
 import base64, struct
-from beet.contrib.worldgen import WorldgenNoise
 
+from beet.contrib.worldgen import WorldgenNoise
 from rhombus.core.additional_resource import AdditionalResourceBase
 
-@dataclass(frozen=True, repr=False)
 class Noise(AdditionalResourceBase):
     """Defines a perlin noise.
 
@@ -31,22 +30,26 @@ class Noise(AdditionalResourceBase):
 
     firstOctave: int           = field(init=True, default=None)
     amplitudes:  list[float]   = field(init=True, default=None)
-    reference:   Optional[str] = field(init=True, default=None)
+    referenced:  Optional[str] = field(init=True, default=None)
     "When given, the Noise object is a reference to an externally declared noise."
 
     def __post_innit__(self):
-        if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
+        if self.referenced is None and (self.firstOctave is None or self.amplitudes is None):
             raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or a reference.")
 
     @property    
-    def identifier(self) -> str:
-        if self.reference is not None:
-            return self.reference
+    def reference(self) -> str:
+        if self.referenced is not None:
+            return self.referenced
         
         data = struct.pack(">qI", self.firstOctave, len(self.amplitudes))
         for v in self.amplitudes:
             data += struct.pack(">d", float(v))
         return base64.b32encode(data).decode("ascii").rstrip("=")
+
+    @classmethod
+    def decode(cls, data: dict) -> Noise:
+        cls(firstOctave=data["firstoctave"], amplitudes=data["amplitudes"])
 
     def encode(self) -> dict[str: Any]:
         if self.firstOctave is None or self.amplitudes is None:
@@ -55,10 +58,6 @@ class Noise(AdditionalResourceBase):
             "firstOctave": self.firstOctave,
             "amplitudes": self.amplitudes
         }
-    
-    @classmethod
-    def decode(cls, data: dict) -> Noise:
-        cls(firstOctave=data["firstoctave"], amplitudes=data["amplitudes"])
 
     @classmethod
     def from_encoded_string(cls, string: str) -> Noise:
@@ -72,13 +71,10 @@ class Noise(AdditionalResourceBase):
         return cls(n, values)
     
     def __eq__(self, other: Noise):
-        if self.reference is None and other.reference is None:
+        if self.referenced is None and other.referenced is None:
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
-        return self.reference == other.reference
-    
-    def __hash__(self):
-        return hash(self.firstOctave) + hash(self.amplitudes)
+        return self.referenced == other.referenced
     
 def NoiseReference(identifier: str, /) -> Noise:
     "Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`."
-    return Noise(reference=identifier)
+    return Noise(referenced=identifier)
