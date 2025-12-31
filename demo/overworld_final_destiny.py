@@ -1,5 +1,5 @@
 from rhombus.language import *
-from rhombus.language.functions import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
+from rhombus.language.builtins import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
 from rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
 
 def overworld():
@@ -60,4 +60,4 @@ def overworld():
 
 print(overworld())
 import json
-print(json.dumps(overworld().TEMP()))
+print(json.dumps(overworld().as_dict()))

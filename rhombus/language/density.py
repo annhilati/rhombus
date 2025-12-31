@@ -36,19 +36,19 @@ class Density(Generic[DFType]):
     def __repr__(self) -> str:
         return self.wrapped.__repr__()
     
-    def TEMP(self) -> dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return self.wrapped.encode()
     
     #======// Arithmetic Magic //====================================================================//
     
-    def __add__(self, other) -> Density[dft.add]:
+    def __add__(self, other: Density | float | str) -> Density[dft.add]:
         self, other = _arg_unwrapper(self, other)
         return Density(dft.add(self, other))
     
-    def __radd__(self, other) -> Density[dft.add]:
+    def __radd__(self, other: Density | float | str) -> Density[dft.add]:
         return self.__add__(other)
     
-    def __sub__(self, other) -> Density[dft.add]:
+    def __sub__(self, other: Density | float | str) -> Density[dft.add]:
         self, other = _arg_unwrapper(self, other)
         return Density(
             dft.add(
@@ -58,7 +58,7 @@ class Density(Generic[DFType]):
                     argument2=dft.constant(-1)
             )))
     
-    def __rsub__(self, other) -> Density[dft.add]:
+    def __rsub__(self, other: Density | float | str) -> Density[dft.add]:
         self, other = _arg_unwrapper(self, other)
         return Density(
             dft.add(
@@ -68,28 +68,28 @@ class Density(Generic[DFType]):
                     argument2=dft.constant(-1)
             )))
     
-    def __mul__(self, other) -> Density[dft.mul]:
+    def __mul__(self, other: Density | float | str) -> Density[dft.mul]:
         self, other = _arg_unwrapper(self, other)
         return Density(dft.mul(self, other))
     
-    def __rmul__(self, other) -> Density[dft.mul]:
+    def __rmul__(self, other: Density | float | str) -> Density[dft.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other) -> Density[dft.mul]:
+    def __truediv__(self, other: Density | float | str) -> Density[dft.mul]:
         self, other = _arg_unwrapper(self, other)
         return Density(dft.mul(
             self,
             dft.invert(other)
         ))
     
-    def __rtruediv__(self, other) -> Density[dft.mul]:
+    def __rtruediv__(self, other: Density | float | str) -> Density[dft.mul]:
         self, other = _arg_unwrapper(self, other)
         return Density(dft.mul(
             other,
             dft.invert(self)
         ))
     
-    def __pow__(self, other) -> Density[dft.square | dft.cube | dft.mul]:
+    def __pow__(self, other: int) -> Density[dft.square | dft.cube | dft.mul]:
         self = _arg_unwrapper(self)
         if not isinstance(other, int):
             raise ValueError("Can't raise to non integer powers")
@@ -140,6 +140,19 @@ class Density(Generic[DFType]):
 
     def flat_cache(self) -> None:
         self.wrapped = dft.flat_cache(self.wrapped)
+
+
+#======// Additional Density Types //============================================================//
+
+@dataclass(init=False)
+class ConfiguredDensity():
+    """Creates an ensity function reference with a default value, that get's implemented when compiling the density expression. 
+    """
+
+    def __new__(cls, name: str, default: Density | float) -> Density[dft.Reference]:
+        default = _arg_unwrapper(default)
+        return Density(dft.Reference(name, default))
+
     
 def DensityReference(identifier: str, /) -> Density[dft.Reference]:
     return Density(dft.Reference(identifier))

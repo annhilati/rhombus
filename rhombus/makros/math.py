@@ -1,6 +1,6 @@
 from rhombus.language.density import Density
-from rhombus.language.functions import _arg_unwrapper, MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
-from rhombus.language import functions as f
+from rhombus.language.builtins import _arg_unwrapper, MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
+from rhombus.language import builtins as f
 
 def sign(argument: Density | float | str):
     """Returns `-1` when the input is negative, `1` when it is positive and `0` if it is `0`.

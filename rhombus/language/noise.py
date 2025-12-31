@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Optional
-import base64, struct, uuid
+import uuid, struct
 
 from beet.contrib.worldgen import WorldgenNoise
 from rhombus.core.additional_resource import AdditionalResourceBase
@@ -29,8 +29,8 @@ class Noise(AdditionalResourceBase):
  
     fileclass: ClassVar = WorldgenNoise
 
-    firstOctave: int           = field(init=True, default=None)
-    amplitudes:  list[float]   = field(init=True, default=None)
+    firstOctave: int           = field(init=True)
+    amplitudes:  list[float]   = field(init=True)
     reference:   Optional[str] = field(init=True, default=None)
     "When given, the Noise object is a reference to an externally declared noise."
 
@@ -38,9 +38,6 @@ class Noise(AdditionalResourceBase):
         if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
             raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or reference an externally defined noise")
         
-
-    #======// Methods required by AdditionalResourceBase //================================//
-
     @property
     def UUID(self) -> str | None:
         if self.reference is not None:
@@ -49,6 +46,9 @@ class Noise(AdditionalResourceBase):
         for v in self.amplitudes:
             data += struct.pack(">d", v)
         return uuid.uuid5(uuid.NAMESPACE_OID, data.hex())
+
+
+    #======// Methods required by AdditionalResourceBase //================================//
     
     @property
     def reference_identifier(self) -> str:
@@ -71,9 +71,6 @@ class Noise(AdditionalResourceBase):
     def __hash__(self) -> int:
         return hash(self.UUID)
     
-
-    #======// Utility //===================================================================//
-    
     def __eq__(self, other: Noise):
         if self.reference is None and other.reference is None:
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
@@ -82,4 +79,4 @@ class Noise(AdditionalResourceBase):
 
 def NoiseReference(identifier: str, /) -> Noise:
     "Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`."
-    return Noise(reference=identifier)
+    return Noise(firstOctave=None, amplitudes=None, reference=identifier)

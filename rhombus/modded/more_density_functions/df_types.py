@@ -5,7 +5,7 @@ from rhombus.core.df_types import DensityFunctionTypeBase, MappedFunctionBase, S
 
 #======// Function Type Base Classes //==========================================================//
 
-@dataclass()
+@dataclass
 class DivisionFunctionBase(DensityFunctionTypeBase):
     numerator: DFType
     denominator: DFType
