@@ -3,9 +3,9 @@
 Note, that importing `*` from here is helpfull, but will overwrite some builtin Python functions like `abs()`. You can get them again from the `builtins` package.
 """
 
+from rhombus.core import df_types as dft
 from rhombus.language.density import Density, _arg_unwrapper
 from rhombus.language.noise import Noise
-from rhombus.core import df_types as dft
 from typing import Literal
 import warnings
 
@@ -36,11 +36,12 @@ def add(argument1: Density | str | float, argument2: Density | str | float) -> D
     return Density(dft.add(argument1, argument2))
 
 def beardifier() -> Density[dft.beardifier]:
-    """🚨 Should not be used in datapacks.
+    """🚨 Should not be used in datapacks to avoid breaking beard generation.
 
     ---
     
-    Adds beards for structures. Its value is added to the final_density in noise setting by the game. Should not be referenced in data packs.
+    Adds beards for structures. Its value is added to `final_density` in the noise settings by the game.<br>
+    Adding more instances manually increases the beards' size.
     
     Returns a constant value of `0.0`.
 
@@ -137,7 +138,7 @@ def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
             "A syntax error might be raised when loading a world.\n    "
             "More information at https://bugs.mojang.com/browse/MC/issues/MC-252814"
         )
-    return Density(dft.clamp(input, max, min))
+    return Density(dft.clamp(input, min, max))
 
 def constant(argument: float) -> Density[dft.constant]:
     """Declares a constant float value.
@@ -267,14 +268,13 @@ def noise(noise: Noise, xz_scale: float, y_scale: float) -> Density[dft.noise]:
 def old_blended_noise(xz_scale: float, y_scale: float, xz_factor: float, y_factor: float, smear_scale_multiplier: float) -> Density[dft.old_blended_noise]:
     """Samples a legacy noise.
 
-    These noises have a blocky character, consisting of rectangular regions with different value tendencies
-    mixed with smaller, scattered structures.
-
-    A scale of `1` corresponds to `12 blocks` of region width. At `0.5` the regions are almost indistinguishable.
-    At higher scales, the repetition becomes clearly visible.
+    These noises are blocky in character, consisting of rectangular regions with varying value tendencies, interspersed with smaller, scattered structures.
 
     Parameters
     ----------
+    A scale of `1` corresponds to `12 blocks` of region width. At `0.5` the regions are almost indistinguishable.
+    At higher scales, the repetition becomes clearly visible.
+
     xz_scale: `0.001` ≤ float ≤ `1000.0`
         Controls how often the block-like structures repeat in the XZ-plane.
     y_scale: `0.001` ≤ float ≤ `1000.0`
@@ -365,7 +365,7 @@ def slide(argument: Density | str | float) -> Density[dft.slide]:
 def spline(coordinate: Density | str | float, points: list[tuple[float, float | str | Density, float]]) -> Density[dft.spline]:
     """Computes a cubic spline.
 
-    The values for the points are in order: `location`, `value` and `derivative`.
+    The values for the points represent in order: `location`, `value` and `derivative`.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre2) and forward.
     

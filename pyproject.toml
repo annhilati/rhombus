@@ -13,17 +13,16 @@ dependencies = [
 ]
 
 [project.urls]
-# "Homepage" = "https://github.com/annhilati/vpmobil-py"
-# "Documentation" = "https://annhilati.gitbook.com/vpmobil"
+"Homepage" = "https://github.com/annhilati/rhombus"
+"Documentation" = "https://github.com/annhilati/rhombus"
 # "Changelog" = "https://annhilati.gitbook.io/vpmobil/anderes/changelog"
-# "Repository" = "https://github.com/annhilati/vpmobil-py"
-# "Bug Tracker" = "https://github.com/annhilati/vpmobil-py/issues"
-# "Download" = "https://pypi.org/project/vpmobil/"
+"Repository" = "https://github.com/annhilati/rhombus"
+"Bug Tracker" = "https://github.com/annhilati/rhombus/issues"
+"Download" = "https://pypi.org/project/rhombus/"
 
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["rhombus", "rhombus.core", "rhombus.language", "rhombus.makros"]
-include-package-data = true
+packages = ["rhombus", "rhombus.core", "rhombus.language", "rhombus.makros", "rhombus.modded"]

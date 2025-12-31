@@ -76,7 +76,10 @@ class Noise(AdditionalResourceBase):
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
         return self.reference == other.reference
 
+@dataclass(init=False)
+class NoiseReference():
+    """Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`.
+    """
 
-def NoiseReference(identifier: str, /) -> Noise:
-    "Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`."
-    return Noise(firstOctave=None, amplitudes=None, reference=identifier)
+    def __new__(identifier: str, /) -> Noise:
+        return Noise(firstOctave=None, amplitudes=None, reference=identifier)

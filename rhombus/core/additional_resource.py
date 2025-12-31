@@ -1,7 +1,6 @@
-from dataclasses import dataclass, fields
-from typing import TypeVar, ClassVar, Callable, Self, TypeAlias
+from dataclasses import dataclass
+from typing import TypeVar, ClassVar, Self, TypeAlias
 from abc import ABC, abstractmethod
-import uuid
 from beet import DataModelBase
 
 BeetFileClass = TypeVar("BeetFileClass", bound=DataModelBase)
@@ -22,6 +21,9 @@ class AdditionalResourceBase(ABC):
     @property
     @abstractmethod
     def reference_identifier(self) -> str: ...
+        # Requirements for implementations of this method
+        # - formatted as resource location
+        # - same encoded value -> same reference identifier
 
     @classmethod
     @abstractmethod
@@ -29,7 +31,3 @@ class AdditionalResourceBase(ABC):
 
     @abstractmethod
     def encode(self) -> dict: ...
-
-
-    # - Generierung des Referenzennamen für etwaige Parameter in dem encoded dict
-    # - 

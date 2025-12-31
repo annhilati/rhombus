@@ -8,6 +8,8 @@ from rhombus.core import df_types as dft, DFType
 
 @overload
 def _arg_unwrapper(args: Density | float | str) -> dft.DensityFunctionTypeBase: ...
+@overload
+def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionTypeBase]: ...
 def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionTypeBase]:
     "Replaces strings with density function references and numbers with constant densities in a list of arguments."
     out = []
@@ -125,6 +127,7 @@ class Density(Generic[DFType]):
     def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __bool__(self): raise NotImplementedError
     
 
     #======// Shortcuts //=======================================================================//
@@ -146,13 +149,22 @@ class Density(Generic[DFType]):
 
 @dataclass(init=False)
 class ConfiguredDensity():
-    """Creates an ensity function reference with a default value, that get's implemented when compiling the density expression. 
+    """Creates an density function reference with a default value, that get's implemented when compiling the density expression. 
     """
 
     def __new__(cls, name: str, default: Density | float) -> Density[dft.Reference]:
         default = _arg_unwrapper(default)
         return Density(dft.Reference(name, default))
 
+@dataclass(init=False)
+class DensityReference():
+    """
     
-def DensityReference(identifier: str, /) -> Density[dft.Reference]:
+    `DensityReference(id)` is identical to `ref(id)`.
+    """
+
+    def __new__(identifier: str, /) -> Density[dft.Reference]:
+        return ref(identifier)
+    
+def ref(identifier: str, /) -> Density[dft.Reference]:
     return Density(dft.Reference(identifier))

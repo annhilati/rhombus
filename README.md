@@ -4,14 +4,29 @@
 
 ### Abstract
 
-Rhombus is a sub language for Python, delivered by a package, that can be used to create expressions that resemble abstract syntax trees of density functions for Minecraft: Java Edition.<br>
-It allows you to comfortably write density functions while also benefiting from Pythons forgiving syntax.
+Rhombus is a Python sub-language delivered as a package that can be used to create expressions resembling the abstract syntax trees of density functions for Minecraft.<br>
+It allows you to comfortably write density functions while benefiting from Python's forgiving syntax.
 
-###### <sub>This project is pretty similar to [misode/gaia-beet](https://github.com/misode/gaia-beet), which you might also find pretty useful, but I started developing Rhombus before knowing of it.<br>The similarities in concept are very frightening though. The biggest difference to Misode's gaia-beet is that I am not so much developing a beet plugin — although integration is given — but rather I view Rhombus as a coherent, albeit simple language, and am trying to further develop and improve it in this sense.</sub>
+###### <sub>This project is pretty similar to [misode/gaia-beet](https://github.com/misode/gaia-beet), which you might also find useful, but I started developing Rhombus before I knew about it.<br>The similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that I'm not primarily developing a beet plugin — although integration is possible and recommended — but rather view Rhombus as a coherent, albeit simple, language and am trying to further develop and improve it in this sense.</sub>
 
 ## Key Advantages
-- 📦 **Object Oriented:** All of Pythons features for composing values can be used
-- 📝 **Comments:** Since we're writing in Python, you can comment how much you want or need
-- 📖 **Documentation:** The docstrings of the functions and classes contain crucial information on the usage
-- ⚡ **Performance:** The Code will be transpiled into as few files as possible, so that the chunk generator doesn't waste much ressources on compiling many files every time
-- ⚙️ **Compatability:** As long as density function syntax isn't changed completely, compatability is given for all Minecraft versions. Adding support for features from mods also is not too complicated
+- 📦 **Object-oriented Design**<br>
+Full use of Python’s object model for composing, reusing, and structuring density expressions.
+- 📝 **Native Comments**<br>
+Density logic is written in Python, so comments work naturally without any custom syntax.
+- 📖 **Integrated Documentation**<br>
+Functions and classes provide detailed docstrings describing behavior, parameters, and usage.
+- ⚡ **Efficient Worldgen Performance**<br>
+Density expressions are transpiled into as few files as possible, reducing overhead during chunk generation.
+- ⚙️ **High Compatability**<br>
+As long as the density function definiton format remains unchanged in new version, generated data works across all Minecraft versions. Supporting modded extensions is straightforward.
+
+## Features
+- **Unified Density Type**: 
+Represents any computed density value, independent of its underlying implementation.
+- **Intuitive AST Construction**:
+Density function trees can be built using arithmetic operators, provided interfaces, or custom methods.
+- **Complete Vanilla Coverage**:
+High-level Python interfaces for all vanilla density function types.
+- **Advanced Macros**:
+Shortcuts for more complex, commonly needed processes.
