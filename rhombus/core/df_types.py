@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, TypeVar, Callable, Literal
 
-from rhombus.core.additional_resource import AdditionalResource, AdditionalResourceBase
+from rhombus.core.additional_resource import AdditionalResourceBase, NEUAdditionalResource
 
 DFType = TypeVar("DFType", bound="DensityFunctionTypeBase")
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
@@ -127,7 +127,7 @@ class MultiArgumentsFunctionBase(DensityFunctionTypeBase):
 
 @dataclass    
 class Reference(DensityFunctionTypeBase):
-    identifier: str
+    reference: str
     default: DFType = field(init=True, default=None)
     
     @classmethod
@@ -135,7 +135,7 @@ class Reference(DensityFunctionTypeBase):
         return cls(data)
     
     def encode(self) -> str:
-        return self.identifier
+        return self.reference
 
 
 #======// Function Type Classes //===============================================================//
@@ -224,7 +224,7 @@ class mul(DoubleArgumentFunctionBase):
 @dataclass
 class noise(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:noise"
-    noise: AdditionalResource
+    noise: NEUAdditionalResource
     xz_scale: float
     y_scale: float
 
@@ -240,7 +240,7 @@ class noise(DensityFunctionTypeBase):
     def encode(self):
         return {
             "type": self.id,
-            "noise": self.noise.identifier,
+            "noise": self.noise.reference_identifier,
             "xz_scale": self.xz_scale,
             "y_scale": self.y_scale,
         }
@@ -269,7 +269,7 @@ class range_choice(MultiArgumentsFunctionBase):
 @dataclass
 class shift(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift"
-    argument: AdditionalResource
+    argument: NEUAdditionalResource
 
     @classmethod
     def decode(cls, data: dict) -> shift:
@@ -279,17 +279,15 @@ class shift(DensityFunctionTypeBase):
         )
 
     def encode(self):
-        if self.argument.reference is None:
-            raise NotImplementedError
         return {
             "type": self.id,
-            "argument": self.argument.reference,
+            "argument": self.argument.reference_identifier,
         }
 
 @dataclass
 class shift_a(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift_a"
-    argument: AdditionalResource
+    argument: NEUAdditionalResource
 
     @classmethod
     def decode(cls, data: dict) -> shift_a:
@@ -299,17 +297,15 @@ class shift_a(DensityFunctionTypeBase):
         )
 
     def encode(self):
-        if self.argument.reference is None:
-            raise NotImplementedError
         return {
             "type": self.id,
-            "argument": self.argument.reference,
+            "argument": self.argument.reference_identifier,
         }
 
 @dataclass
 class shift_b(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shift_b"
-    argument: AdditionalResource
+    argument: NEUAdditionalResource
 
     @classmethod
     def decode(cls, data: dict) -> shift_b:
@@ -319,17 +315,15 @@ class shift_b(DensityFunctionTypeBase):
         )
 
     def encode(self):
-        if self.argument.reference is None:
-            raise NotImplementedError
         return {
             "type": self.id,
-            "argument": self.argument.reference,
+            "argument": self.argument.reference_identifier,
         }
 
 @dataclass
 class shifted_noise(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:shifted_noise"
-    noise: AdditionalResource
+    noise: NEUAdditionalResource
     xz_scale: float
     y_scale: float
     shift_x: DFType
@@ -349,7 +343,7 @@ class shifted_noise(DensityFunctionTypeBase):
     def encode(self):
         return {
             "type": self.id,
-            "noise": self.noise.identifier,
+            "noise": self.noise.reference_identifier,
             "xz_scale": self.xz_scale,
             "y_scale": self.y_scale,
             "shift_x": self.shift_x.encode(),
@@ -381,7 +375,7 @@ class spline(DensityFunctionTypeBase):
         return {
             "type": self.id,
             "spline": {
-                "coordinate": self.coordinate,
+                "coordinate": self.coordinate.encode(),
                 "points": [
                     {
                         "location": point[0],
@@ -413,7 +407,7 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
 class weird_scaled_sampler(DensityFunctionTypeBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
-    noise: AdditionalResource
+    noise: NEUAdditionalResource
     input: DFType
 
     @classmethod
@@ -429,7 +423,7 @@ class weird_scaled_sampler(DensityFunctionTypeBase):
         return {
             "type": self.id,
             "rarity_value_mapper": self.rarity_value_mapper,
-            "noise": self.noise.identifier,
+            "noise": self.noise.reference_identifier,
             "input": self.input.encode(),
         }
 

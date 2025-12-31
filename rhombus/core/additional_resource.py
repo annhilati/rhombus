@@ -1,10 +1,11 @@
 from dataclasses import dataclass, fields
-from typing import TypeVar, ClassVar, Callable, Self
+from typing import TypeVar, ClassVar, Callable, Self, TypeAlias
 from abc import ABC, abstractmethod
+import uuid
 from beet import DataModelBase
 
 BeetFileClass = TypeVar("BeetFileClass", bound=DataModelBase)
-AdditionalResource = TypeVar("AdditionalResource", bound="AdditionalResourceBase")
+NEUAdditionalResource: TypeAlias = "AdditionalResourceBase"
 
 @dataclass(frozen=True)
 class AdditionalResourceBase(ABC):
@@ -20,7 +21,7 @@ class AdditionalResourceBase(ABC):
 
     @property
     @abstractmethod
-    def reference(self) -> str: ...
+    def reference_identifier(self) -> str: ...
 
     @classmethod
     @abstractmethod
