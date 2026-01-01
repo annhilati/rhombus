@@ -2,8 +2,8 @@ from dataclasses import fields
 from beet import Context
 from beet.contrib.worldgen import WorldgenDensityFunction
 from rhombus.language.density import Density
-from rhombus.core.additional_resource import AdditionalResourceBase
-from rhombus.core.df_types import DensityFunctionTypeBase, Reference
+from rhombus.core.additional_resource import AdditionalResource
+from rhombus.core.df_types import DensityFunctionType, Reference
 
 def compile(ctx: Context, density: Density, identifier: str) -> None:
     data = ctx.data
@@ -11,11 +11,11 @@ def compile(ctx: Context, density: Density, identifier: str) -> None:
     root = density.wrapped
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
-    additional_resources: set[AdditionalResourceBase] = set()
+    additional_resources: set[AdditionalResource] = set()
     references: list[Reference] = []
 
     def search_for_additional_resources(o):
-        if isinstance(o, DensityFunctionTypeBase):
+        if isinstance(o, DensityFunctionType):
             if isinstance(o, Reference):
                 references.append(o)
             for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:
@@ -23,7 +23,7 @@ def compile(ctx: Context, density: Density, identifier: str) -> None:
         elif isinstance(o, (list, tuple)):
             for value in o:
                 search_for_additional_resources(value)
-        elif isinstance(o, AdditionalResourceBase):
+        elif isinstance(o, AdditionalResource):
             additional_resources.add(o)
 
     search_for_additional_resources(root)

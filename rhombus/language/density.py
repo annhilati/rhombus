@@ -1,16 +1,18 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, overload, Tuple
-from rhombus.core import df_types as dft, DFType
+from typing import Any, Generic, Self, overload, Tuple, TypeVar
+from rhombus.core import df_types as dft
 
+WrappedFunctionType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType)
+"Type variable for all subclasses of `DensityFunctionTypeBase`."
 
 #======// Helpers //=============================================================================//
 
 @overload
-def _arg_unwrapper(args: Density | float | str) -> dft.DensityFunctionTypeBase: ...
+def _arg_unwrapper(args: Density | float | str) -> dft.DensityFunctionType: ...
 @overload
-def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionTypeBase]: ...
-def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionTypeBase]:
+def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionType]: ...
+def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionType]:
     "Replaces strings with density function references and numbers with constant densities in a list of arguments."
     out = []
     for arg in args:
@@ -30,10 +32,10 @@ def _arg_unwrapper(*args: Density | float | str) -> Tuple[dft.DensityFunctionTyp
 #======// Density Type //========================================================================//
 
 @dataclass
-class Density(Generic[DFType]):
+class Density(Generic[WrappedFunctionType]):
     """Class representing a density calculation."""
 
-    wrapped: DFType
+    wrapped: WrappedFunctionType
 
     def __repr__(self) -> str:
         return self.wrapped.__repr__()

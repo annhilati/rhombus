@@ -1,13 +1,12 @@
 from dataclasses import dataclass
-from typing import TypeVar, ClassVar, Self, TypeAlias
+from typing import TypeVar, ClassVar, Self
 from abc import ABC, abstractmethod
 from beet import DataModelBase
 
 BeetFileClass = TypeVar("BeetFileClass", bound=DataModelBase)
-NEUAdditionalResource: TypeAlias = "AdditionalResourceBase"
 
 @dataclass(frozen=True)
-class AdditionalResourceBase(ABC):
+class AdditionalResource(ABC):
     """Base class for resources that have to be declared outside of a density function.
     
     Adding new Additional Resources

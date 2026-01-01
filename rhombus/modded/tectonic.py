@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
-from rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunctionTypeBase, DFType, decode_HOLDER_HELPER_CODEC
+from rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunctionType, DFType, decode_HOLDER_HELPER_CODEC
 from rhombus.core.additional_resource import NEUAdditionalResource
 from rhombus.language.density import Density, _arg_unwrapper
 from rhombus.language.noise import Noise
@@ -17,7 +17,7 @@ class Config_constant(MultiArgumentsFunctionBase):
     key: str
 
 @dataclass
-class Config_noise(DensityFunctionTypeBase):
+class Config_noise(DensityFunctionType):
     id: ClassVar[str] = "minecraft:noise"
     noise: NEUAdditionalResource
     key: str

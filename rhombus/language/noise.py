@@ -4,10 +4,10 @@ from typing import Any, ClassVar, Optional
 import uuid, struct
 
 from beet.contrib.worldgen import WorldgenNoise
-from rhombus.core.additional_resource import AdditionalResourceBase
+from rhombus.core.additional_resource import AdditionalResource
 
 @dataclass(frozen=True)
-class Noise(AdditionalResourceBase):
+class Noise(AdditionalResource):
     """Defines a perlin noise.
 
     To add a reference to an existing noise, use `NoiseReference()` instead.
