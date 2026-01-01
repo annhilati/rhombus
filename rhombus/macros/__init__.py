@@ -1,6 +1,6 @@
 """Predefined functions for more complex calculations."""
 
-from rhombus.makros import math 
+from rhombus.macros import math 
 
 _symbols = [math]
 _constants = []
