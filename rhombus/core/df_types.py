@@ -109,7 +109,7 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
     def decode(cls, data: dict) -> Self:
         fs = {f.name: f for f in fields(cls)}
         return cls(**{
-            parameter: decode_HOLDER_HELPER_CODEC(value) if fs[parameter].type is DensityFunctionType else value
+            parameter: decode_HOLDER_HELPER_CODEC(value)# if fs[parameter].type is DensityFunctionType else value
             for parameter, value in data.items()
             if parameter in {f.name for f in fields(cls) if f.init}
         })

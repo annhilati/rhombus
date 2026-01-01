@@ -2,3 +2,6 @@
 
 
 - Is the TypeVar arg annotation in class definitons wrong?
+
+
+- How to implement a compiler?

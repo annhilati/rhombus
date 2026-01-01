@@ -31,3 +31,18 @@ def sign2(argument: Density | float | str):
     """
     argument = Density(_arg_unwrapper(argument))
     return argument / abs(argument)
+
+def sqrt_heron(argument: Density | float | str, iterations: int):
+    """Returns the square root of the input.
+    
+    This makro uses [Heron's method](https://en.wikipedia.org/wiki/Square_root_algorithms#Heron's_method).
+    """
+    argument = Density(_arg_unwrapper(argument))
+
+    x0 = argument / 2 + 0.5
+    x = x0
+
+    for _ in range(iterations):
+        x = 0.5 * (x + (argument / x))
+
+    return x

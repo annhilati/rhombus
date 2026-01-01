@@ -188,6 +188,7 @@ def flat_cache(argument: Density | str | float) -> Density[dft.flat_cache]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
+    argument = _arg_unwrapper(argument)
     return Density(dft.flat_cache(argument))
 
 def half_negative(argument: Density | str | float) -> Density[dft.half_negative]:
