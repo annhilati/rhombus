@@ -1,10 +1,11 @@
 """Macros for reconstructing the coordinates of the block being evaluated.
 
-The techniques used were invented by *Uni* aka. *unnecessarymb*.<br> An original JSON-implementation of it can be seen at [klinbee/One-Island/.../one_island/worldgen/density_function/coord](https://github.com/klinbee/One-Island/tree/main/One_Survival_Island/data/one_island/worldgen/density_function/coord).
+The techniques used were invented by *Uni* aka. *unnecessarymb*.<br>
+An original JSON-implementation of it can be seen at [klinbee/One-Island/.../one_island/worldgen/density_function/coord](https://github.com/klinbee/One-Island/tree/main/One_Survival_Island/data/one_island/worldgen/density_function/coord).
 
 ---
 
-# Technical Explanation
+## Technical Explanation
 
 ### Background
 To patch the Far Lands, Mojang modified noise evaluation so that extremely large inputs
@@ -47,11 +48,10 @@ conditional composition, this macro reconstructs the coordinates using only vani
 density functions.
 """
 
-import rhombus
-from rhombus.language import builtins as f
+from rhombus.language import builtins as f, Noise
 
-_coord_stripe_noise = rhombus.Noise(87, [1])
-_coord_quad_noise = rhombus.Noise(88, [1])
+_coord_stripe_noise = Noise(87, [1])
+_coord_quad_noise = Noise(88, [1])
 _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-52, y_scale=0, shift_x=1.01, shift_y=0, shift_z=1.01)))
 
 
@@ -67,8 +67,8 @@ _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_n
 def x():
     """Returns the X-coordinate of the block being evaluated.
     
-    This macro works by utilizing float precision loss at extremely small noise scales. It is pretty resource-intensive.<br>
-    For more information on how it works read the docstring of `rhombus.macro.coord`.
+    ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
+    It is very resource-intensive (243 calculations). For more information on how it works read the docstring of `rhombus.macros.coord`.
     """
     innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=0.99, shift_y=0, shift_z=1.01)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
 
@@ -91,8 +91,8 @@ def x():
 def z():
     """Returns the Z-coordinate of the block being evaluated.
     
-    This macro works by utilizing float precision loss at extremely small noise scales. It is pretty resource-intensive.<br>
-    For more information on how it works read the docstring of `rhombus.macro.coord`.
+    ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
+    It is very resource-intensive (243 calculations). For more information on how it works read the docstring of `rhombus.macros.coord`.
     """
     innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=1.01, shift_y=0, shift_z=0.99)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
 
