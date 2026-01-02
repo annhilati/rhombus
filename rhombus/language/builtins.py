@@ -4,7 +4,7 @@ Note, that importing `*` from here is helpfull, but will overwrite some builtin 
 """
 
 from rhombus.core import df_types as dft
-from rhombus.language.density import Density, _arg_unwrapper
+from rhombus.language.density import Density, unwrap_resolved
 from rhombus.language.noise import Noise
 from typing import Literal
 import warnings
@@ -22,7 +22,7 @@ def abs(argument: Density | str | float) -> Density[dft.abs]:
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#abs)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.abs(argument))
 
 def add(argument1: Density | str | float, argument2: Density | str | float) -> Density[dft.add]:
@@ -32,7 +32,7 @@ def add(argument1: Density | str | float, argument2: Density | str | float) -> D
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#add)
     """
-    argument1, argument2 = _arg_unwrapper(argument1, argument2)
+    argument1, argument2 = unwrap_resolved(argument1, argument2)
     return Density(dft.add(argument1, argument2))
 
 def beardifier() -> Density[dft.beardifier]:
@@ -71,7 +71,7 @@ def blend_density(argument: Density | str | float) -> Density[dft.blend_density]
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_density)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.blend_density(argument))
 
 def blend_offset() -> Density[dft.blend_offset]:
@@ -93,7 +93,7 @@ def cache_2d(argument: Density | str | float) -> Density[dft.cache_2d]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.cache_2d(argument))
 
 def cache_all_in_cell(argument: Density | str | float) -> Density[dft.cache_all_in_cell]:
@@ -107,7 +107,7 @@ def cache_all_in_cell(argument: Density | str | float) -> Density[dft.cache_all_
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.cache_all_in_cell(argument))
 
 def cache_once(argument: Density | str | float) -> Density[dft.cache_once]:
@@ -119,7 +119,7 @@ def cache_once(argument: Density | str | float) -> Density[dft.cache_once]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.cache_once(argument))
 
 def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
@@ -131,7 +131,7 @@ def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
 
     Also notice [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
     """
-    input = _arg_unwrapper(input)
+    input = unwrap_resolved(input)
     if isinstance(input, Density) and isinstance(input, dft.Reference):
         warnings.warn(
             "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
@@ -156,7 +156,7 @@ def cube(argument: Density | str | float) -> Density[dft.cube]:
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cube)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.cube(argument))
 
 def end_islands() -> Density[dft.end_islands]:
@@ -178,7 +178,7 @@ def find_top_surface(density: Density | str | float, upper_bound: Density | str 
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#find_top_surface)
     """
-    density, upper_bound = _arg_unwrapper(density, upper_bound)
+    density, upper_bound = unwrap_resolved(density, upper_bound)
     return Density(dft.find_top_surface(density, upper_bound, lower_bound, cell_height))
 
 def flat_cache(argument: Density | str | float) -> Density[dft.flat_cache]:
@@ -188,7 +188,7 @@ def flat_cache(argument: Density | str | float) -> Density[dft.flat_cache]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.flat_cache(argument))
 
 def half_negative(argument: Density | str | float) -> Density[dft.half_negative]:
@@ -198,7 +198,7 @@ def half_negative(argument: Density | str | float) -> Density[dft.half_negative]
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#half_negative)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.half_negative(argument))
 
 def interpolated(argument: Density | str | float) -> Density[dft.interpolated]:
@@ -208,7 +208,7 @@ def interpolated(argument: Density | str | float) -> Density[dft.interpolated]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.interpolated(argument))
 
 def invert(argument: Density | str | float) -> Density[dft.invert]:
@@ -220,7 +220,7 @@ def invert(argument: Density | str | float) -> Density[dft.invert]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#invert)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.invert(argument))
 
 def max(argument1: Density | str | float, argument2: Density | str | float) -> Density[dft.max]:
@@ -232,7 +232,7 @@ def max(argument1: Density | str | float, argument2: Density | str | float) -> D
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#max)
     """
-    argument1, argument2 = _arg_unwrapper(argument1, argument2)
+    argument1, argument2 = unwrap_resolved(argument1, argument2)
     return Density(dft.max(argument1, argument2))
 
 def min(argument1: Density | str | float, argument2: Density | str | float) -> Density[dft.min]:
@@ -244,7 +244,7 @@ def min(argument1: Density | str | float, argument2: Density | str | float) -> D
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#min)
     """
-    argument1, argument2 = _arg_unwrapper(argument1, argument2)
+    argument1, argument2 = unwrap_resolved(argument1, argument2)
     return Density(dft.min(argument1, argument2))
 
 def mul(argument1: Density | str | float, argument2: Density | float) -> Density[dft.mul]:
@@ -254,7 +254,7 @@ def mul(argument1: Density | str | float, argument2: Density | float) -> Density
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#mul)
     """
-    argument1, argument2 = _arg_unwrapper(argument1, argument2)
+    argument1, argument2 = unwrap_resolved(argument1, argument2)
     return Density(dft.mul(argument1, argument2))
 
 def noise(noise: Noise, xz_scale: float, y_scale: float) -> Density[dft.noise]:
@@ -300,7 +300,7 @@ def quarter_negative(argument: Density | str | float) -> Density[dft.quarter_neg
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#quarter_negative)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.quarter_negative(argument))
 
 def range_choice(input: Density | str | float, min_inclusive: float, max_exclusive: float, when_in_range: Density | str | float, when_out_of_range: Density | str | float) -> Density[dft.range_choice]:
@@ -310,7 +310,7 @@ def range_choice(input: Density | str | float, min_inclusive: float, max_exclusi
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
     """
-    input, when_in_range, when_out_of_range = _arg_unwrapper(input, when_in_range, when_out_of_range)
+    input, when_in_range, when_out_of_range = unwrap_resolved(input, when_in_range, when_out_of_range)
     return Density(dft.range_choice(input, min_inclusive, max_exclusive, when_in_range, when_out_of_range))
 
 def shift(argument: Noise) -> Density[dft.shift]:
@@ -347,7 +347,7 @@ def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: Densit
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shifted_noise)
     """
-    shift_x, shift_y, shift_z = _arg_unwrapper(shift_x, shift_y, shift_z)
+    shift_x, shift_y, shift_z = unwrap_resolved(shift_x, shift_y, shift_z)
     return Density(dft.shifted_noise(noise, xz_scale, y_scale, shift_x, shift_y, shift_z))
 
 def slide(argument: Density | str | float) -> Density[dft.slide]:
@@ -360,7 +360,7 @@ def slide(argument: Density | str | float) -> Density[dft.slide]:
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#slide)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.slide(argument))
 
 def spline(coordinate: Density | str | float, points: list[tuple[float, float | str | Density, float]]) -> Density[dft.spline]:
@@ -372,8 +372,8 @@ def spline(coordinate: Density | str | float, points: list[tuple[float, float | 
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline)
     """
-    coordinate = _arg_unwrapper(coordinate)
-    points = [(p[0], _arg_unwrapper(p[1]), p[2]) for p in points]
+    coordinate = unwrap_resolved(coordinate)
+    points = [(p[0], unwrap_resolved(p[1]), p[2]) for p in points]
     return Density(dft.spline(coordinate, points))
 
 def square(argument: Density | str | float) -> Density[dft.square]:
@@ -383,7 +383,7 @@ def square(argument: Density | str | float) -> Density[dft.square]:
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#sqquare)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.square(argument))
 
 def squeeze(argument: Density | str | float) -> Density[dft.squeeze]:
@@ -393,7 +393,7 @@ def squeeze(argument: Density | str | float) -> Density[dft.squeeze]:
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#squeeze)
     """
-    argument = _arg_unwrapper(argument)
+    argument = unwrap_resolved(argument)
     return Density(dft.squeeze(argument))
 
 def terrain_shaper_spline(spline: Literal["offset", "factor", "jaggedness"], min_value: float, max_value: float, continentalness: Density | str | float, erosion: Density | str | float, weirdness: Density | str | float) -> Density[dft.terrain_shaper_spline]:
@@ -403,7 +403,7 @@ def terrain_shaper_spline(spline: Literal["offset", "factor", "jaggedness"], min
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#terrain_shaper_spline)
     """
-    continentalness, erosion, weirdness = _arg_unwrapper(continentalness, erosion, weirdness)
+    continentalness, erosion, weirdness = unwrap_resolved(continentalness, erosion, weirdness)
     return Density(dft.terrain_shaper_spline(spline, min_value, max_value, continentalness, erosion, weirdness))
 
 def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input: Density | str | float, noise: Noise) -> Density[dft.weird_scaled_sampler]:
@@ -413,7 +413,7 @@ def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#weird_scaled_sampler)
     """
-    input = _arg_unwrapper(input)
+    input = unwrap_resolved(input)
     return Density(dft.weird_scaled_sampler(noise, rarity_value_mapper, input))
 
 def y_clamped_gradient(from_y: int, to_y: int, from_value: float, to_value: float) -> Density[dft.y_clamped_gradient]:

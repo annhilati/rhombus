@@ -6,14 +6,12 @@ The techniques used were invented by *Uni* aka. *unnecessarymb*.<br> An original
 
 # Technical Explanation
 
-Background
-----------
+### Background
 To patch the Far Lands, Mojang modified noise evaluation so that extremely large inputs
 *wrap around* instead of diverging. Internally, this wraparound is triggered by loss of
 floating-point precision at very large magnitudes.
 
-Core idea
----------
+### Core idea
 We deliberately scale a noise input to such an extreme magnitude that the wraparound
 behavior becomes predictable. By doing so, the noise enters a regime where flipping the
 lowest bits of the floating-point representation causes the value to alternate between
@@ -23,8 +21,7 @@ two stable states:
 
 This creates a binary signal that can be detected and reused.
 
-Stripe construction
--------------------
+### Stripe construction
 A second modulo operation is applied, but only *after* adding an offset. Because floating-
 point rounding occurs at multiple internal stages, the same mathematical value may round
 differently depending on where the precision loss happens. This produces repeating
@@ -35,8 +32,7 @@ conditionally inverting the accumulated result at each scale, then adding a cons
 we can compose increasingly coarse positional information. Conceptually, this is the
 inverse of building a triangle wave from absolute-value functions.
 
-Recovering the sign
--------------------
+### Recovering the sign
 To distinguish positive from negative coordinates, we sample the noise at even higher
 magnitudes. Beyond a certain threshold, the Far Lands fix breaks down completely and the
 noise returns effectively garbage values.
@@ -45,8 +41,7 @@ By carefully aligning the noise offset, this breakdown point can be positioned e
 on the plane dividing the world into hemispheres. The resulting discontinuity provides
 reliable sign information for the coordinate.
 
-Result
-------
+### Result
 Through controlled exploitation of floating-point wraparound, precision loss, and
 conditional composition, this macro reconstructs the coordinates using only vanilla
 density functions.
