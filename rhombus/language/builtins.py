@@ -3,6 +3,26 @@
 Note, that importing `*` from here is helpfull, but will overwrite some builtin Python functions like `abs()`. You can get them again from the `builtins` package.
 """
 
+__all__ = [
+    "abs", "add", "beardifier",
+    "blend_alpha", "blend_density",
+    "blend_offset", "cache_2d",
+    "cache_all_in_cell", "cache_once",
+    "clamp", "constant", "cube",
+    "end_islands", "find_top_surface",
+    "flat_cache", "half_negative",
+    "interpolated", "invert", "max",
+    "min", "mul", "noise",
+    "old_blended_noise", 
+    "quarter_negative", "range_choice",
+    "shift", "shift_a", "shift_b",
+    "shifted_noise", "slide",
+    "spline", "square", "squeeze",
+    "terrain_shaper_spline",
+    "weird_scaled_sampler",
+    "y_clamped_gradient"
+]
+
 from rhombus.core import df_types as dft
 from rhombus.language.density import Density, unwrap_resolved
 from rhombus.language.noise import Noise

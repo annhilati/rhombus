@@ -3,6 +3,8 @@ from typing import TypeVar, ClassVar, Self
 from abc import ABC, abstractmethod
 from beet import DataModelBase
 
+__all__ = ["AdditionalResource"]
+
 BeetFileClass = TypeVar("BeetFileClass", bound=DataModelBase)
 
 @dataclass(frozen=True)

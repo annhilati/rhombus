@@ -1,0 +1,1 @@
+from rhombus.toolchain.beet import compile

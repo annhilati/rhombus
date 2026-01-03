@@ -30,7 +30,10 @@ def unwrap_resolved(*args: Density | dft.DensityFunctionType | float | str) -> t
 
 @dataclass
 class Density(Generic[WrappedDFType]):
-    """Class representing a density calculation."""
+    """Class representing a density calculation.
+    
+    Don't use the constructor of this class. Use `rhombus.constant()` or any methods in `rhombus.language.builtins` instead.
+    """
 
     wrapped: WrappedDFType
 

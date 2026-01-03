@@ -6,6 +6,11 @@ from typing import Any, ClassVar, Literal, Self, Callable, Literal
 
 from rhombus.core.additional_resource import AdditionalResource
 
+__all__ = [
+    "REGISTERED_DENSITY_FUNCTION_TYPES", "decode_HOLDER_HELPER_CODEC", "DensityFunctionType",
+    "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase", "MultiArgumentsFunctionBase"
+]
+
 #======// Main Decoding Function //==============================================================//
 
 REGISTERED_DENSITY_FUNCTION_TYPES: set[type[DensityFunctionType]] = set()
@@ -47,9 +52,8 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /) -> DensityFunctionType:
 
 class DensityFunctionType:
     """Base class for density function types.
-    
-    To add new types, create a sublass and set a ClassVar `id` or override the `as_dict` method."""
-    id: str
+    """
+    id: ClassVar[str]
 
     decode: ClassVar[Callable[[type[Self], dict], Self]]
     encode: ClassVar[Callable[[Self], dict]]
@@ -59,7 +63,8 @@ class DensityFunctionType:
         REGISTERED_DENSITY_FUNCTION_TYPES.add(cls)
     
 @dataclass 
-class SimpleFunctionBase(DensityFunctionType):
+class SimpleFunctionBase(DensityFunctionType):#
+    "Base class for density function types with no arguments."
 
     @classmethod
     def decode(cls, data: dict) -> Self:
@@ -70,6 +75,7 @@ class SimpleFunctionBase(DensityFunctionType):
     
 @dataclass
 class MappedFunctionBase(DensityFunctionType):
+    "Base class for density function types that map an argument `argument` to a value."
     argument: DensityFunctionType
 
     @classmethod
@@ -82,6 +88,7 @@ class MappedFunctionBase(DensityFunctionType):
 
 @dataclass()
 class DoubleArgumentFunctionBase(DensityFunctionType):
+    "Base class for density function types with two arguments `argument1` and `argument2`."
     argument1: DensityFunctionType
     argument2: DensityFunctionType
 
@@ -98,13 +105,15 @@ class DoubleArgumentFunctionBase(DensityFunctionType):
         return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
     
 class MultiArgumentsFunctionBase(DensityFunctionType):
-    """Only inherit from this class, when the parameters in JSON-format are the same in the class.<br>
-    When inheriting from this class, don't forget to add the @dataclass decorator, because the init has to be generated from the parameters.
+    """Base class for density function types with any number of arguments of primitive types.
+
+    When inheriting from this class, add the `@dataclass` decorator to the new class<br>
+    and add fields with the same keys as required in the density function JSON definition.<br>
     """
 
     @classmethod
     def decode(cls, data: dict) -> Self:
-        fs = {f.name: f for f in fields(cls)}
+        # fs = {f.name: f for f in fields(cls)}
         return cls(**{
             parameter: decode_HOLDER_HELPER_CODEC(value)# if fs[parameter].type is DensityFunctionType else value
             for parameter, value in data.items()
