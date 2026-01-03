@@ -1,11 +1,17 @@
 from dataclasses import dataclass
-from typing import TypeVar, ClassVar, Self
+from typing import TypeVar, ClassVar, Self, Protocol, Callable, Any
 from abc import ABC, abstractmethod
 from beet import DataModelBase
 
-__all__ = ["AdditionalResource"]
+__all__ = ["AdditionalResource", "BeetFileClass"]
 
-BeetFileClass = TypeVar("BeetFileClass", bound=DataModelBase)
+class BeetFileClass(Protocol):
+    "Protocol for beet file classes."
+    encoder: Callable[[Any], str]
+    data: dict
+    extension: str
+
+
 
 @dataclass(frozen=True)
 class AdditionalResource(ABC):

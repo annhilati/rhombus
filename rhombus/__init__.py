@@ -2,7 +2,7 @@
 """
 
 from rhombus.language import *
-from rhombus.toolchain.beet import compile
+from rhombus.toolchain.beet import compile, inject, summon
 from rhombus.macros import *
 
 #======// Config //==============================================================================//

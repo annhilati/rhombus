@@ -1,1 +1,1 @@
-from rhombus.toolchain.beet import compile
+from rhombus.toolchain.beet import compile, summon, inject

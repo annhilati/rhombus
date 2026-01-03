@@ -110,6 +110,14 @@ class Density(Generic[WrappedDFType]):
             for i in range(other - 2):
                 s = Density(dft.mul(s.wrapped, wrapped))
             return s
+        
+    def __and__(self, other: Density | float | str):
+        self, other = unwrap_resolved(self, other)
+        return Density(dft.max(self, other))
+    
+    def __or__(self, other: Density | float | str):
+        self, other = unwrap_resolved(self, other)
+        return Density(dft.min(self, other))
     
     def __abs__(self) -> Density[dft.abs]:
         return Density(dft.abs(self.wrapped))
