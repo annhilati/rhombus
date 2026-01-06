@@ -1,14 +1,16 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Generic, Self, TypeVar, TypeAlias
 from rhombus.core import df_types as dft
 
 WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
+DensityDescriptor: TypeAlias = "Density" | dft.DensityFunctionType | str | float
+
 #======// Formatters //==========================================================================//
 
-def resolve_shorthand(arg: Density | dft.DensityFunctionType | float | str) -> Density:
+def resolve_shorthand(arg: DensityDescriptor) -> Density:
     if isinstance(arg, Density):
         return arg
     elif isinstance(arg, dft.DensityFunctionType):
@@ -45,14 +47,14 @@ class Density(Generic[WrappedDFType]):
     
     #======// Arithmetic Magic //================================================================//
     
-    def __add__(self, other: Density | float | str) -> Density[dft.add]:
+    def __add__(self, other: DensityDescriptor) -> Density[dft.add]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.add(self, other))
     
-    def __radd__(self, other: Density | float | str) -> Density[dft.add]:
+    def __radd__(self, other: DensityDescriptor) -> Density[dft.add]:
         return self.__add__(other)
     
-    def __sub__(self, other: Density | float | str) -> Density[dft.add]:
+    def __sub__(self, other: DensityDescriptor) -> Density[dft.add]:
         self, other = unwrap_resolved(self, other)
         return Density(
             dft.add(
@@ -62,7 +64,7 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
-    def __rsub__(self, other: Density | float | str) -> Density[dft.add]:
+    def __rsub__(self, other: DensityDescriptor) -> Density[dft.add]:
         self, other = unwrap_resolved(self, other)
         return Density(
             dft.add(
@@ -72,21 +74,21 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
-    def __mul__(self, other: Density | float | str) -> Density[dft.mul]:
+    def __mul__(self, other: DensityDescriptor) -> Density[dft.mul]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.mul(self, other))
     
-    def __rmul__(self, other: Density | float | str) -> Density[dft.mul]:
+    def __rmul__(self, other: DensityDescriptor) -> Density[dft.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other: Density | float | str) -> Density[dft.mul]:
+    def __truediv__(self, other: DensityDescriptor) -> Density[dft.mul]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.mul(
             self,
             dft.invert(other)
         ))
     
-    def __rtruediv__(self, other: Density | float | str) -> Density[dft.mul]:
+    def __rtruediv__(self, other: DensityDescriptor) -> Density[dft.mul]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.mul(
             other,
@@ -111,11 +113,11 @@ class Density(Generic[WrappedDFType]):
                 s = Density(dft.mul(s.wrapped, wrapped))
             return s
         
-    def __and__(self, other: Density | float | str):
+    def __and__(self, other: DensityDescriptor):
         self, other = unwrap_resolved(self, other)
         return Density(dft.max(self, other))
     
-    def __or__(self, other: Density | float | str):
+    def __or__(self, other: DensityDescriptor):
         self, other = unwrap_resolved(self, other)
         return Density(dft.min(self, other))
     
