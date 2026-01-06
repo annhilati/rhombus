@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Generic, Self, TypeVar
 from rhombus.core import df_types as dft
 
-WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType)
+WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
 #======// Formatters //==========================================================================//

@@ -1,7 +1,9 @@
-- Are classitems really needed?
+# Every Problem
+
+- The compiling functions seem a bit random and lost
+- DensityFunctionTypes need a universal interface for parsing their fields
+- The language arg helper functions are still a bit lost
 
 
-- Is the TypeVar arg annotation in class definitons wrong?
-
-
-- How to implement a compiler?
+## Design
+- A typing shorthand for Density | str | float?

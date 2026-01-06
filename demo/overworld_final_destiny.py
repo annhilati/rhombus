@@ -3,61 +3,24 @@ from rhombus.language.builtins import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
 from rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
 
 def overworld():
-    cave_layer = NoiseReference("minecraft:cave_layer")
-    cave_cheese = NoiseReference("minecraft:cave_cheese")
+    jagged_noise                    = NoiseReference('minecraft:jagged')
+    cave_layer_noise                = NoiseReference('minecraft:cave_layer')
+    cave_cheese_noise               = NoiseReference('minecraft:cave_cheese')
+    cave_entrance_noise             = NoiseReference('minecraft:cave_entrance')
+    spaghetti_2d_noise              = NoiseReference('minecraft:spaghetti_2d')
+    spaghetti_2d_elevation          = NoiseReference('minecraft:spaghetti_2d_elevation')
+    spaghetti_2d_modulator_noise    = NoiseReference('minecraft:spaghetti_2d_modulator')
+    spaghetti_3d_1_noise            = NoiseReference('minecraft:spaghetti_3d_1')
+    spaghetti_3d_2_noise            = NoiseReference('minecraft:spaghetti_3d_2')
+    spaghetti_3d_rarity             = NoiseReference('minecraft:spaghetti_3d_rarity')
+    spaghetti_3d_thickness          = NoiseReference('minecraft:spaghetti_3d_thickness')
 
-    cave_pillars = range_choice(
-        input="minecraft:overworld/caves/pillars",
-        max_exclusive=0.03,
-        min_inclusive=MIN_REASONABLE_VALUE,
-        when_in_range=MIN_REASONABLE_VALUE,
-        when_out_of_range="minecraft:overworld/caves/pillars"
-    )
+    overworld_depth      = ref("minecraft:overworld/depth")
+    overworld_jaggedness = ref("minecraft:overworld/jaggedness")
+    overworld_caves_spaghetti_2d_thickness_modulator = ref("minecraft:overworld/caves/spaghetti_2d_thickness_modulator")
 
-    caves = max(
-        min(
-            min(
-                add(
-                    4 * noise(cave_layer, xz_scale=1, y_scale=8) ** 2,
-                    clamp(0.27 + noise(cave_cheese, xz_scale=1, y_scale=2/3),
-                        min=-1,
-                        max=1
-                    ) + clamp(
-                        1.5 + (-0.64 * DensityReference("minecraft:overworld/sloped_cheese")),
-                        min=0,
-                        max=0.5
-                    )
-                    
-                ),
-                "minecraft:overworld/caves/entrances"
-            ),
-            DensityReference("minecraft:overworld/caves/spaghetti_2d") + DensityReference("minecraft:overworld/caves/spaghetti_roughness_function")
-        ),
-        cave_pillars
-    )
+    overworld_sloped_cheese = add(argument1=mul(argument1=constant(argument=4.0), argument2=quarter_negative(argument=mul(argument1=add(argument1=overworld_depth, default=None), argument2=mul(argument1=overworld_jaggedness, default=None), argument2=half_negative(argument=noise(noise=jagged_noise, xz_scale=1500.0, y_scale=0.0)))), argument2=Reference(reference='minecraft:overworld/factor', default=None)))), argument2=Reference(reference='minecraft:overworld/base_3d_noise', default=None))
+    caves_entrances = cache_once(argument=min(argument1=add(argument1=add(argument1=constant(argument=0.37), argument2=noise(noise=cave_entrance_noise, xz_scale=0.75, y_scale=0.5)), argument2=y_clamped_gradient(from_y=constant(argument=-10.0), to_y=constant(argument=30.0), from_value=constant(argument=0.3), to_value=constant(argument=0.0))), argument2=add(argument1=Reference(reference='minecraft:overworld/caves/spaghetti_roughness_function', default=None), argument2=clamp(input=add(argument1=max(argument1=weird_scaled_sampler(rarity_value_mapper='type_1', noise=spaghetti_3d_1_noise, input=cache_once(argument=noise(noise=spaghetti_3d_rarity, xz_scale=2.0, y_scale=1.0))), argument2=weird_scaled_sampler(rarity_value_mapper='type_1', noise=spaghetti_3d_2_noise, input=cache_once(argument=noise(noise=spaghetti_3d_rarity, xz_scale=2.0, y_scale=1.0)))), argument2=add(argument1=constant(argument=-0.0765), argument2=mul(argument1=constant(argument=-0.011499999999999996), argument2=noise(noise=spaghetti_3d_thickness, xz_scale=1.0, y_scale=1.0)))), min=constant(argument=-1.0), max=constant(argument=1.0)))))
+    caves_spaghetti_2d = clamp(input=max(argument1=add(argument1=weird_scaled_sampler(rarity_value_mapper='type_2', noise=spaghetti_2d_noise, input=noise(noise=spaghetti_2d_modulator_noise, xz_scale=2.0, y_scale=1.0)), argument2=mul(argument1=constant(argument=0.083), argument2=overworld_caves_spaghetti_2d_thickness_modulator, default=None))), argument2=cube(argument=add(argument1=abs(argument=add(argument1=add(argument1=constant(argument=0.0), argument2=mul(argument1=constant(argument=8.0), argument2=noise(noise=spaghetti_2d_elevation, xz_scale=1.0, y_scale=0.0))), argument2=y_clamped_gradient(from_y=constant(argument=-64.0), to_y=constant(argument=320.0), from_value=constant(argument=8.0), to_value=constant(argument=-40.0)))), argument2=Reference(reference='minecraft:overworld/caves/spaghetti_2d_thickness_modulator', default=None)))), min=constant(argument=-1.0), max=constant(argument=1.0))
 
-    terrain_vs_cave_selector = range_choice(
-        input="minecraft:overworld/sloped_cheese",
-        max_exclusive=1.5625,
-        min_inclusive=MIN_REASONABLE_VALUE,
-        when_in_range=min("minecraft:overworld/sloped_cheese", 5 * DensityReference("minecraft:overworld/caves/entrances")),
-        when_out_of_range=caves
-    )
-
-    return min(
-        squeeze(
-            0.64 * interpolated(
-                blend_density(
-                    0.1171875 + (
-                        y_clamped_gradient(-64, -40, 0, 1)
-                        * (-0.1171875 + -0.078125 + (y_clamped_gradient(240, 256, 1, 0) * (0.078125 + terrain_vs_cave_selector)))
-                    )
-                )
-            )
-        ),
-        "minecraft:overworld/caves/noodle"
-    )
-
-print(overworld())
-import json
-print(json.dumps(overworld().as_dict()))
+    finaLdestiny = min(argument1=squeeze(argument=mul(argument1=constant(argument=0.64), argument2=interpolated(argument=blend_density(argument=add(argument1=constant(argument=0.1171875), argument2=mul(argument1=y_clamped_gradient(from_y=constant(argument=-64.0), to_y=constant(argument=-40.0), from_value=constant(argument=0.0), to_value=constant(argument=1.0)), argument2=add(argument1=constant(argument=-0.1171875), argument2=add(argument1=constant(argument=-0.078125), argument2=mul(argument1=y_clamped_gradient(from_y=constant(argument=240.0), to_y=constant(argument=256.0), from_value=constant(argument=1.0), to_value=constant(argument=0.0)), argument2=add(argument1=constant(argument=0.078125), argument2=range_choice(input=Reference(reference='minecraft:overworld/sloped_cheese', default=None), min_inclusive=constant(argument=-1000000.0), max_exclusive=constant(argument=1.5625), when_in_range=min(argument1=overworld_sloped_cheese, default=None), argument2=mul(argument1=constant(argument=5.0), argument2=Reference(reference='minecraft:overworld/caves/entrances', default=None))), when_out_of_range=max(argument1=min(argument1=min(argument1=add(argument1=mul(argument1=constant(argument=4.0), argument2=square(argument=noise(noise=cave_layer_noise, xz_scale=1.0, y_scale=8.0))), argument2=add(argument1=clamp(input=add(argument1=constant(argument=0.27), argument2=noise(noise=cave_cheese_noise, xz_scale=1.0, y_scale=0.6666666666666666)), min=constant(argument=-1.0), max=constant(argument=1.0)), argument2=clamp(input=add(argument1=constant(argument=1.5), argument2=mul(argument1=constant(argument=-0.64), argument2=Reference(reference='minecraft:overworld/sloped_cheese', default=None))), min=constant(argument=0.0), max=constant(argument=0.5)))), argument2=Reference(reference='minecraft:overworld/caves/entrances', default=None)), argument2=add(argument1=Reference(reference='minecraft:overworld/caves/spaghetti_2d', default=None), argument2=Reference(reference='minecraft:overworld/caves/spaghetti_roughness_function', default=None))), argument2=range_choice(input=Reference(reference='minecraft:overworld/caves/pillars', default=None), min_inclusive=constant(argument=-1000000.0), max_exclusive=constant(argument=0.03), when_in_range=constant(argument=-1000000.0), when_out_of_range=Reference(reference='minecraft:overworld/caves/pillars', default=None)))))))))))))), argument2=Reference(reference='minecraft:overworld/caves/noodle', default=None))

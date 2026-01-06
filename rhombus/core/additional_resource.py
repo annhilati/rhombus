@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import TypeVar, ClassVar, Self, Protocol, Callable, Any
+from typing import ClassVar, Self, Protocol, Callable, Any
 from abc import ABC, abstractmethod
-from beet import DataModelBase
 
 __all__ = ["AdditionalResource", "BeetFileClass"]
 
@@ -10,7 +9,6 @@ class BeetFileClass(Protocol):
     encoder: Callable[[Any], str]
     data: dict
     extension: str
-
 
 
 @dataclass(frozen=True)

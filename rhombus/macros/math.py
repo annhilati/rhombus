@@ -58,15 +58,14 @@ def sqrt(argument: Density | float | str, iterations: int = 3, guess: Callable[[
     ⚙️ This implementation uses [Heron's method](https://en.wikipedia.org/wiki/Square_root_algorithms#Heron's_method).
     
     ```
-    Iterations │ Decimals  │ Calculations*
+    Iterations │ Decimals  │ Calculations
     ═══════════╪═══════════╪══════════════════════════════
-    1          │ 1 – 2     │ The amount of calculations
-    2          │ 2 – 4     │ doubles with every iteration.
-    3          │ 4 – 8     │ It also depends on the 
-    4          │ 8 – 16    │ number of calculations in  
-    i          │ 2ⁱ⁻¹ – 2ⁱ │ argument and guess.
+    1          │ 1 – 2     │
+    2          │ 2 – 4     │      2ⁱ × c(guess)
+    3          │ 4 – 8     │            +
+    4          │ 8 – 16    │ (2ⁱ - 1) × (c(argument) + 3)
+    i          │ 2ⁱ⁻¹ – 2ⁱ │
     ```
-        * When using the default guess.
     """
     arg, = resolve_shorthands(argument)
 
