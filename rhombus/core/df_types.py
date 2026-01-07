@@ -65,14 +65,13 @@ class DensityFunctionType:
     @property
     def fields(self) -> dict[str, Any]:
         return {
-            f.name: getattr(self, f.name)
+            f.name: getattr(self, f.name, None)
             for f in fields(self)
             if f.init
         }
     
     @property
     def compilation_complexity(self) -> int:
-        # print(self.id) if self.id is not None else ... # DEBUG
         return 1 + sum([arg.compilation_complexity for name, arg in self.fields.items() if isinstance(arg, DensityFunctionType)])
 
     
@@ -100,7 +99,7 @@ class MappedFunctionBase(DensityFunctionType):
     def encode(self) -> dict:
         return {"type": self.id, "argument": self.argument.encode()}
 
-@dataclass()
+@dataclass
 class DoubleArgumentFunctionBase(DensityFunctionType):
     "Base class for density function types with two arguments `argument1` and `argument2`."
     argument1: DensityFunctionType

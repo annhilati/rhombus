@@ -161,7 +161,7 @@ class Density(Generic[WrappedDFType]):
 
 @dataclass(init=False)
 class ConfiguredDensity():
-    """Creates an density function reference with a default value, that get's implemented when compiling the density expression. 
+    """Defines an external density functions, that comes with a default value on compilation.
     """
 
     def __new__(cls, name: str, default: Density | float) -> Density[dft.Reference]:

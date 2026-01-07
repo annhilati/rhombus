@@ -1,3 +1,5 @@
+"Macros with mathmatical functions, that are not provided by default."
+
 from rhombus.core import df_types as dft 
 from rhombus.language.density import Density, resolve_shorthands
 from rhombus.language.builtins import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
