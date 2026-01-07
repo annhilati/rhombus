@@ -1,12 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar, TypeAlias
+from typing import Any, Generic, Self, TypeVar, TypeAlias, Union
 from rhombus.core import df_types as dft
 
 WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
 
-DensityDescriptor: TypeAlias = "Density" | dft.DensityFunctionType | str | float
+DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionType, str, float]
 
 #======// Formatters //==========================================================================//
 

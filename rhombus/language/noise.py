@@ -10,9 +10,9 @@ from rhombus.core.additional_resource import AdditionalResource
 class Noise(AdditionalResource):
     """Defines a perlin noise.
 
-    To add a reference to an existing noise, use `NoiseReference()` instead.
+    To add a reference to an existing noise, use `ReferencedNoise()` instead.
     
-    ### firsOctave
+    ### firstOctave
     `firstOctave` controls the base frequency of the noise. More negative values lead to more vast regions.<br>
     The scale in blocks over which the noise changes significantly is approximately `2^(-firstOctave)`.<br>
     E.g.: `-9` corresponds to ~512 blocks between two oppositely polarized areas.
@@ -77,7 +77,7 @@ class Noise(AdditionalResource):
         return self.reference == other.reference
 
 @dataclass(init=False)
-class NoiseReference():
+class ReferencedNoise():
     """Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`.
     """
 

@@ -14,19 +14,19 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     root = density.wrapped
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
-    def search_for_additional_resources(o):
+    def search_for_additional_files(o):
         if isinstance(o, DensityFunctionType):
             if isinstance(o, Reference) and o.default is not None:
                 files[o.reference] = WorldgenDensityFunction(o.encode())
             for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:
-                search_for_additional_resources(value)
+                search_for_additional_files(value)
         elif isinstance(o, (list, tuple)):
             for value in o:
-                search_for_additional_resources(value)
+                search_for_additional_files(value)
         elif isinstance(o, AdditionalResource):
             files[o.reference_identifier] = o.fileclass(o.encode())
 
-    search_for_additional_resources(root)
+    search_for_additional_files(root)
 
     files[identifier] = WorldgenDensityFunction(root.encode())
 

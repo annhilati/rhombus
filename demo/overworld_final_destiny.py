@@ -3,17 +3,17 @@ from rhombus.language.builtins import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
 from rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
 
 def overworld():
-    jagged_noise                    = NoiseReference('minecraft:jagged')
-    cave_layer_noise                = NoiseReference('minecraft:cave_layer')
-    cave_cheese_noise               = NoiseReference('minecraft:cave_cheese')
-    cave_entrance_noise             = NoiseReference('minecraft:cave_entrance')
-    spaghetti_2d_noise              = NoiseReference('minecraft:spaghetti_2d')
-    spaghetti_2d_elevation          = NoiseReference('minecraft:spaghetti_2d_elevation')
-    spaghetti_2d_modulator_noise    = NoiseReference('minecraft:spaghetti_2d_modulator')
-    spaghetti_3d_1_noise            = NoiseReference('minecraft:spaghetti_3d_1')
-    spaghetti_3d_2_noise            = NoiseReference('minecraft:spaghetti_3d_2')
-    spaghetti_3d_rarity             = NoiseReference('minecraft:spaghetti_3d_rarity')
-    spaghetti_3d_thickness          = NoiseReference('minecraft:spaghetti_3d_thickness')
+    jagged_noise                    = ReferencedNoise('minecraft:jagged')
+    cave_layer_noise                = ReferencedNoise('minecraft:cave_layer')
+    cave_cheese_noise               = ReferencedNoise('minecraft:cave_cheese')
+    cave_entrance_noise             = ReferencedNoise('minecraft:cave_entrance')
+    spaghetti_2d_noise              = ReferencedNoise('minecraft:spaghetti_2d')
+    spaghetti_2d_elevation          = ReferencedNoise('minecraft:spaghetti_2d_elevation')
+    spaghetti_2d_modulator_noise    = ReferencedNoise('minecraft:spaghetti_2d_modulator')
+    spaghetti_3d_1_noise            = ReferencedNoise('minecraft:spaghetti_3d_1')
+    spaghetti_3d_2_noise            = ReferencedNoise('minecraft:spaghetti_3d_2')
+    spaghetti_3d_rarity             = ReferencedNoise('minecraft:spaghetti_3d_rarity')
+    spaghetti_3d_thickness          = ReferencedNoise('minecraft:spaghetti_3d_thickness')
 
     overworld_depth      = ref("minecraft:overworld/depth")
     overworld_jaggedness = ref("minecraft:overworld/jaggedness")

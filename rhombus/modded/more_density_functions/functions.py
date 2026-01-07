@@ -1,7 +1,9 @@
 from rhombus.modded.more_density_functions import df_types as dft
-from rhombus.language.density import Density, unwrap_resolved
+from rhombus.language.density import Density, unwrap_resolved, DensityDescriptor
 
-def acos(argument: Density | str | float) -> Density[dft.acos]:
+__all__ = []
+
+def acos(argument: DensityDescriptor) -> Density[dft.acos]:
     """Returns the arc cosine of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
 
@@ -12,7 +14,7 @@ def acos(argument: Density | str | float) -> Density[dft.acos]:
     arg, = unwrap_resolved(argument)
     return Density(dft.acos(arg))
 
-def asin(argument: Density | str | float) -> Density[dft.asin]:
+def asin(argument: DensityDescriptor) -> Density[dft.asin]:
     """Returns the arc sine of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
 
@@ -23,7 +25,7 @@ def asin(argument: Density | str | float) -> Density[dft.asin]:
     arg, = unwrap_resolved(argument)
     return Density(dft.asin(arg))
 
-def atan(argument: Density | str | float) -> Density[dft.atan]:
+def atan(argument: DensityDescriptor) -> Density[dft.atan]:
     """Returns the arc tangent of the input in radians.<br>
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with mod version 2.2.0 (perhaps even earlier) and forward.

@@ -61,6 +61,20 @@ class DensityFunctionType:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         REGISTERED_DENSITY_FUNCTION_TYPES.add(cls)
+
+    @property
+    def fields(self) -> dict[str, Any]:
+        return {
+            f.name: getattr(self, f.name)
+            for f in fields(self)
+            if f.init
+        }
+    
+    @property
+    def compilation_complexity(self) -> int:
+        # print(self.id) if self.id is not None else ... # DEBUG
+        return 1 + sum([arg.compilation_complexity for name, arg in self.fields.items() if isinstance(arg, DensityFunctionType)])
+
     
 @dataclass 
 class SimpleFunctionBase(DensityFunctionType):#
@@ -124,7 +138,7 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
         return {"type": self.id, **{
             parameter: value.encode() if isinstance(value, (DensityFunctionType, AdditionalResource)) else value
             for parameter, value
-            in {f.name: getattr(self, f.name) for f in fields(self) if f.init}.items()
+            in self.fields.items()
         }}
 
 
@@ -363,7 +377,7 @@ class slide(MappedFunctionBase):
 class spline(DensityFunctionType):
     id: ClassVar[str] = "minecraft:spline"
     coordinate: DensityFunctionType
-    points: list[tuple[float, float | DensityFunctionType, float]]
+    points: list[tuple[float, DensityFunctionType, float]]
 
     
     @classmethod
@@ -391,6 +405,10 @@ class spline(DensityFunctionType):
                 ]
             }
         }
+    
+    @property
+    def compilation_complexity(self) -> int:
+        return 1 + self.coordinate.compilation_complexity + sum([p[1].compilation_complexity for p in self.points])
 
 class square(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:square"

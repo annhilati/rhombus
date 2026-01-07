@@ -47,8 +47,9 @@ Through controlled exploitation of floating-point wraparound, precision loss, an
 conditional composition, this macro reconstructs the coordinates using only vanilla
 density functions.
 """
-
 from rhombus.language import builtins as f, Noise
+
+__all__ = ["x", "z"]
 
 _coord_stripe_noise = Noise(87, [1])
 _coord_quad_noise = Noise(88, [1])
@@ -68,7 +69,7 @@ def x():
     """Returns the X-coordinate of the block being evaluated.
     
     ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
-    It is very resource-intensive (243 calculations). For more information on how it works read the docstring of `rhombus.macros.coord`.
+    It is very resource-intensive (compilation complexity = 512). For more information on how it works read the docstring of `rhombus.macros.coords`.
     """
     innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=0.99, shift_y=0, shift_z=1.01)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
 
@@ -92,7 +93,7 @@ def z():
     """Returns the Z-coordinate of the block being evaluated.
     
     ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
-    It is very resource-intensive (243 calculations). For more information on how it works read the docstring of `rhombus.macros.coord`.
+    It is very resource-intensive (compilation complexity = 512). For more information on how it works read the docstring of `rhombus.macros.coords`.
     """
     innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=1.01, shift_y=0, shift_z=0.99)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
 
