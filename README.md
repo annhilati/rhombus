@@ -9,7 +9,8 @@ It allows you to comfortably write density functions while benefiting from Pytho
 
 ###### <sub>This project is pretty similar to [misode/gaia-beet](https://github.com/misode/gaia-beet), which you might also find useful. But know that I started developing Rhombus before I knew about it.<br>The similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that Rhombus is not primarily a beet plugin — although integration is possible and recommended — but rather it is to be seen as a coherent, albeit simple language and it will be further developed and improved in exactly this sense.</sub>
 
-> [!note] State of Development
+> [!note]
+> **State of Development**<br>
 > Rhombus already has most features I imagined it to have *somewhere*. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API. 
 
 ## Key Advantages
