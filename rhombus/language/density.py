@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar, TypeAlias, Union
+from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, overload, Literal
 from rhombus.core import df_types as dft
 
 WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
@@ -47,14 +47,14 @@ class Density(Generic[WrappedDFType]):
     
     #======// Arithmetic Magic //================================================================//
     
-    def __add__(self, other: DensityDescriptor) -> Density[dft.add]:
+    def __add__(self, other) -> Density[dft.add]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.add(self, other))
     
-    def __radd__(self, other: DensityDescriptor) -> Density[dft.add]:
+    def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
-    def __sub__(self, other: DensityDescriptor) -> Density[dft.add]:
+    def __sub__(self, other) -> Density[dft.add]:
         self, other = unwrap_resolved(self, other)
         return Density(
             dft.add(
@@ -64,7 +64,7 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
-    def __rsub__(self, other: DensityDescriptor) -> Density[dft.add]:
+    def __rsub__(self, other) -> Density[dft.add]:
         self, other = unwrap_resolved(self, other)
         return Density(
             dft.add(
@@ -74,28 +74,34 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
-    def __mul__(self, other: DensityDescriptor) -> Density[dft.mul]:
+    def __mul__(self, other) -> Density[dft.mul]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.mul(self, other))
     
-    def __rmul__(self, other: DensityDescriptor) -> Density[dft.mul]:
+    def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other: DensityDescriptor) -> Density[dft.mul]:
+    def __truediv__(self, other) -> Density[dft.mul]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.mul(
             self,
             dft.invert(other)
         ))
     
-    def __rtruediv__(self, other: DensityDescriptor) -> Density[dft.mul]:
+    def __rtruediv__(self, other) -> Density[dft.mul]:
         self, other = unwrap_resolved(self, other)
         return Density(dft.mul(
             other,
             dft.invert(self)
         ))
     
-    def __pow__(self, other: int) -> Density[dft.square | dft.cube | dft.mul]:
+    @overload
+    def __pow__(self, other: Literal[2]) -> Density[dft.square]: ...
+    @overload
+    def __pow__(self, other: Literal[3]) -> Density[dft.cube]: ...
+    @overload
+    def __pow__(self, other: int) -> Density[dft.mul]: ...
+    def __pow__(self, other):
         wrapped = self.wrapped
         if not isinstance(other, int):
             raise ValueError("Can't raise to non integer powers")
@@ -113,11 +119,11 @@ class Density(Generic[WrappedDFType]):
                 s = Density(dft.mul(s.wrapped, wrapped))
             return s
         
-    def __and__(self, other: DensityDescriptor):
+    def __and__(self, other):
         self, other = unwrap_resolved(self, other)
         return Density(dft.max(self, other))
     
-    def __or__(self, other: DensityDescriptor):
+    def __or__(self, other):
         self, other = unwrap_resolved(self, other)
         return Density(dft.min(self, other))
     
@@ -133,12 +139,12 @@ class Density(Generic[WrappedDFType]):
 
     #======// Logical Magic //===================================================================//
     
-    def __eq__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __ne__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate makro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __eq__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __ne__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
+    def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __bool__(self): raise NotImplementedError
     
 
@@ -160,16 +166,18 @@ class Density(Generic[WrappedDFType]):
 #======// Additional Density Types //============================================================//
 
 @dataclass(init=False)
-class ConfiguredDensity():
+class ConfiguredDensity:
     """Defines an external density functions, that comes with a default value on compilation.
     """
 
-    def __new__(cls, name: str, default: Density | float) -> Density[dft.Reference]:
+    def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
         wrapped = resolve_shorthand(default).wrapped
+        if isinstance(wrapped, dft.Reference):
+            wrapped = dft.add(wrapped, 0)
         return Density(dft.Reference(name, wrapped))
 
 @dataclass(init=False)
-class DensityReference():
+class DensityReference:
     """
     
     `DensityReference(id)` is identical to `ref(id)`.

@@ -2,6 +2,7 @@ from typing import ClassVar, Self
 from dataclasses import dataclass
 from rhombus.core.df_types import DensityFunctionType, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
 
+TODO = "TODO"
 
 #======// Function Type Base Classes //==========================================================//
 
