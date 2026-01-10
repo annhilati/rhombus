@@ -5,6 +5,7 @@ from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
 
 from rhombus.core.additional_resource import AdditionalResource
+from rhombus.core import config
 
 __all__ = [
     "REGISTERED_DENSITY_FUNCTION_TYPES", "decode_HOLDER_HELPER_CODEC", "DensityFunctionType",
@@ -192,10 +193,25 @@ class clamp(MultiArgumentsFunctionBase):
     min: float
     max:float
 
+    def __post_init__(self) -> None:
+        if isinstance(self.input, Reference) and config.warn_on_reference_in_clamp:
+            import warnings
+            warnings.warn(
+                "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
+                "An error might be thrown when loading a world.\n    "
+                "For more information see https://bugs.mojang.com/browse/MC/issues/MC-252814"
+            )
+
 @dataclass
 class constant(DensityFunctionType):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
+
+    def __post_init__(self) -> None:
+        limit = config.constant_number_limit
+        if self.argument > limit or self.argument < -limit:
+            import warnings
+            warnings.warn(f"A constant with a value of {self.argument} lies outside the limit of ± {float(limit)}. An error might be thrown when loading a world.")
 
     @classmethod
     def decode(cls, data: dict | float) -> constant:

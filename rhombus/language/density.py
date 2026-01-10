@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, overload, Literal
+from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, Literal, overload
 from rhombus.core import df_types as dft
 
 WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
@@ -16,6 +16,7 @@ def resolve_shorthand(arg: DensityDescriptor) -> Density:
     elif isinstance(arg, dft.DensityFunctionType):
         return Density(arg)
     elif isinstance(arg, str):
+        if not ":" in arg: arg = "minecraft:" + arg
         return Density(dft.Reference(arg))
     elif isinstance(arg, (int, float)):
         return Density(dft.constant(float(arg)))

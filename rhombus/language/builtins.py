@@ -152,12 +152,6 @@ def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
     Also notice [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
     """
     input, = unwrap_resolved(input)
-    if isinstance(input, Density) and isinstance(input, dft.Reference):
-        warnings.warn(
-            "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
-            "A syntax error might be raised when loading a world.\n    "
-            "More information at https://bugs.mojang.com/browse/MC/issues/MC-252814"
-        )
     return Density(dft.clamp(input, min, max))
 
 def constant(argument: float) -> Density[dft.constant]:
