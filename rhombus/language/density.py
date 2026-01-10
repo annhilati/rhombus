@@ -19,6 +19,7 @@ def resolve_shorthand(arg: DensityDescriptor) -> Density:
         return Density(dft.Reference(arg))
     elif isinstance(arg, (int, float)):
         return Density(dft.constant(float(arg)))
+    raise ValueError(arg, type(arg))
 
 def resolve_shorthands(*args: Density | dft.DensityFunctionType | float | str) -> tuple[Density, ...]:
     "Resolves all expressions to Densities that are possible."

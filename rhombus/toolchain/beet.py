@@ -47,7 +47,7 @@ def inject(ctx: Context, density: Density, name: str):
 
     files = compile(density, name)
 
-    for id, file in files:
+    for id, file in files.items():
         data[id] = file
         print(f"Implemented {type(file).__name__} '{id}'")
 
