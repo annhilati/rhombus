@@ -46,41 +46,61 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
         out.wrapped.argument = result
     return out
 
-def resolve_inputs(fn, unwrap: bool = False):
-    "Use this decorator to automatically resolve shorthands from inputs to Densities, if their annotated with DensityDescriptor"
-    import inspect
+from typing import Callable, TypeVar, ParamSpec
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
+def resolve_inputs(*, unwrap: bool = False):
+    def decorator(fn: Callable[P, R]) -> Callable[P, R]:
+        import inspect
+        from functools import wraps
+        from typing import get_origin, get_args
+
+        def _is_density_descriptor(annotation) -> bool:
+            if annotation is DensityDescriptor:
+                return True
+            origin = get_origin(annotation)
+            return origin is DensityDescriptor or (
+                origin is not None and DensityDescriptor in get_args(annotation)
+            )
+
+        sig = inspect.signature(fn)
+        params = {
+            name for name, param in sig.parameters.items()
+            if _is_density_descriptor(param.annotation)
+        }
+
+        @wraps(fn)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+
+            for name in params:
+                if name in bound.arguments:
+                    value = resolve_DensityDescriptor(bound.arguments[name])
+                    bound.arguments[name] = value.wrapped if unwrap else value
+
+            return fn(*bound.args, **bound.kwargs)
+
+        wrapper.__signature__ = sig
+        return wrapper
+
+    return decorator
+
+
+
+def resolve_and_unwrap_inputs(fn):
+    "Use this dec"
     from functools import wraps
-    from typing import get_origin, get_args
-
-    def _is_density_descriptor(annotation) -> bool:
-        if annotation is DensityDescriptor:
-            return True
-
-        return (origin := get_origin(annotation)) is DensityDescriptor or (
-            origin is not None and DensityDescriptor in get_args(annotation)
-        )
-
-    sig = inspect.signature(fn)
-
-    params = {name for name, param in sig.parameters.items() if _is_density_descriptor(param.annotation)}
+    decorated = resolve_inputs(fn, unwrap=True)
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        bound = sig.bind(*args, **kwargs)
-        bound.apply_defaults()
+        return decorated(*args, **kwargs)
 
-        for name in params:
-            if name in bound.arguments:
-                bound.arguments[name] = resolve_DensityDescriptor(bound.arguments[name])
-                if unwrap:
-                    bound.arguments[name] = bound.arguments[name].wrapped
-
-        return fn(*bound.args, **bound.kwargs)
-
+    wrapper.__signature__ = getattr(decorated, "__signature__", None)
     return wrapper
-
-def resolve_and_unwrap_inputs(fn):
-    return resolve_inputs(fn, unwrap=True)
 
 
 #======// Density Type //========================================================================//

@@ -24,10 +24,9 @@ __all__ = [
 ]
 
 from rhombus.core import df_types as dft
-from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs
+from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs, resolve_DensityDescriptor
 from rhombus.language.noise import Noise
 from typing import Literal
-import warnings
 
 MAX_REASONABLE_VALUE: Literal[1000000] = 1000000.0
 MIN_REASONABLE_VALUE: Literal[-1000000] = -1000000.0
@@ -143,7 +142,7 @@ def cache_once(argument: DensityDescriptor) -> Density[dft.cache_once]:
     return Density(dft.cache_once(argument))
 
 @resolve_and_unwrap_inputs
-def clamp(input: Density | float, min: float, max: float) -> Density[dft.clamp]:
+def clamp(input: DensityDescriptor, min: float, max: float) -> Density[dft.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre1) and forward.
@@ -389,7 +388,7 @@ def spline(coordinate: DensityDescriptor, points: list[tuple[float, DensityDescr
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline)
     """
-    points = [(p[0], unwrap_resolved(p[1])[0], p[2]) for p in points]
+    points = [(p[0], resolve_DensityDescriptor(p[1])[0], p[2]) for p in points]
     return Density(dft.spline(coordinate, points))
 
 @resolve_and_unwrap_inputs
