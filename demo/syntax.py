@@ -15,3 +15,5 @@ hopper = radius() * distance_scale + y_clamped_gradient(from_y=0, to_y=100, from
 
 out = hopper | noise(n, xz_scale=1, y_scale=1)
 # Cut the shape of the sampled noise from the hopper
+
+print(out)

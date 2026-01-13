@@ -31,7 +31,13 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /) -> DensityFunctionType:
     # that can either be a constant number, a reference to another density function, or a fully defined inline density function.<br>
     # There are other codecs for that too (see `clamp`), but for clarity and supportiveness we will only use this one.
 
-    REGISTRY = {t.id: t for t in REGISTERED_DENSITY_FUNCTION_TYPES if hasattr(t, "id")}
+    REGISTRY: dict[str, DensityFunctionType] = {}
+    for t in REGISTERED_DENSITY_FUNCTION_TYPES:
+        if not hasattr(t, "id"): continue
+        if t.id in REGISTRY:
+            raise ValueError(f"There are multiple DensityFunctionTypes with id '{t.id}' defined ({t.__name__} and {REGISTRY[t.id].__name__}).")
+        REGISTRY[t.id] = t
+
     if isinstance(o, dict):
         t: str = o.get("type")
         if t is None:
@@ -211,7 +217,8 @@ class constant(DensityFunctionType):
         limit = config.constant_number_limit
         if self.argument > limit or self.argument < -limit:
             import warnings
-            warnings.warn(f"A constant with a value of {self.argument} lies outside the limit of ± {float(limit)}. An error might be thrown when loading a world.")
+            warnings.warn(f"A constant with a value of {self.argument} lies outside the limit of ± {float(limit)}.\n    "
+                          "An error might be thrown when loading a world.")
 
     @classmethod
     def decode(cls, data: dict | float) -> constant:
@@ -287,6 +294,17 @@ class old_blended_noise(MultiArgumentsFunctionBase):
     xz_factor: float
     y_factor: float
     smear_scale_multiplier: float
+
+    def __post_init__(self) -> None:
+        import warnings
+        for param, value in {k: v for k, v in self.fields.items() if k != "smear_scale_multiplier"}.items():
+            if value > 1000 or value < 0.001:
+                warnings.warn(f"A value of {value} in the '{param}' field of 'old_blended_noise' lies outside the limit of 0.001 ≤ value ≤ 1000.0.\n    "
+                              "An error might be thrown when loading a world.")
+        if self.smear_scale_multiplier > 8 or self.smear_scale_multiplier < 1:
+                warnings.warn(f"A value of {self.smear_scale_multiplier} in the 'smear_scale_multiplier' field of 'old_blended_noise' lies outside the limit of 1.0 ≤ value ≤ 8.0.\n    "
+                              "An error might be thrown when loading a world.")
+
 
 class quarter_negative(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:quarter_negative"

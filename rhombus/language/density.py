@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, Literal, overload
 from rhombus.core import df_types as dft
+from rhombus.core import config
 
 WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
 "Type variable for all subclasses of `DensityFunctionTypeBase`."
@@ -10,25 +11,77 @@ DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionType, str, fl
 
 #======// Formatters //==========================================================================//
 
-def resolve_shorthand(arg: DensityDescriptor) -> Density:
+def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     if isinstance(arg, Density):
-        return arg
+        out = arg
     elif isinstance(arg, dft.DensityFunctionType):
-        return Density(arg)
+        out = Density(arg)
     elif isinstance(arg, str):
         if not ":" in arg: arg = "minecraft:" + arg
-        return Density(dft.Reference(arg))
+        out = Density(dft.Reference(arg))
     elif isinstance(arg, (int, float)):
-        return Density(dft.constant(float(arg)))
-    raise ValueError(arg, type(arg))
+        out = Density(dft.constant(float(arg)))
+    else:
+        raise ValueError(arg, type(arg))
+    
+    limit = config.constant_number_limit
+    if isinstance(out.wrapped, dft.constant) and (v := out.wrapped.argument) > limit:
 
-def resolve_shorthands(*args: Density | dft.DensityFunctionType | float | str) -> tuple[Density, ...]:
-    "Resolves all expressions to Densities that are possible."
-    return tuple([resolve_shorthand(a) for a in args])
+        if v == 0: return out
 
-def unwrap_resolved(*args: Density | dft.DensityFunctionType | float | str) -> tuple[dft.DensityFunctionType, ...]:
-    "Replaces strings with density function references and numbers with constant densities in a list of arguments."
-    return tuple([resolve_shorthand(a).wrapped for a in args])
+        factors: list[float] = []
+        v = abs(v)
+
+        while v > limit:
+            factors.append(float(limit))
+            v /= limit
+
+        factors.append(float(v * (-1.0 if v < 0 else 1.0)))
+        
+        it = iter([Density(dft.constant(f)) for f in factors])
+        result = next(it) * next(it)
+
+        for x in it:
+            result = result * x
+        out.wrapped.argument = result
+    return out
+
+def resolve_inputs(fn, unwrap: bool = False):
+    "Use this decorator to automatically resolve shorthands from inputs to Densities, if their annotated with DensityDescriptor"
+    import inspect
+    from functools import wraps
+    from typing import get_origin, get_args
+
+    def _is_density_descriptor(annotation) -> bool:
+        if annotation is DensityDescriptor:
+            return True
+
+        return (origin := get_origin(annotation)) is DensityDescriptor or (
+            origin is not None and DensityDescriptor in get_args(annotation)
+        )
+
+    sig = inspect.signature(fn)
+
+    params = {name for name, param in sig.parameters.items() if _is_density_descriptor(param.annotation)}
+
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        bound = sig.bind(*args, **kwargs)
+        bound.apply_defaults()
+
+        for name in params:
+            if name in bound.arguments:
+                bound.arguments[name] = resolve_DensityDescriptor(bound.arguments[name])
+                if unwrap:
+                    bound.arguments[name] = bound.arguments[name].wrapped
+
+        return fn(*bound.args, **bound.kwargs)
+
+    return wrapper
+
+def resolve_and_unwrap_inputs(fn):
+    return resolve_inputs(fn, unwrap=True)
+
 
 #======// Density Type //========================================================================//
 
@@ -45,19 +98,25 @@ class Density(Generic[WrappedDFType]):
         return self.wrapped.__repr__()
     
     def as_dict(self) -> dict[str, Any]:
+        "Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
         return self.wrapped.encode()
+    
+    @property
+    def cc(self) -> int:
+        "Returns the compilation complexity of the density function AST."
+        return self.wrapped.compilation_complexity
     
     #======// Arithmetic Magic //================================================================//
     
+    @resolve_and_unwrap_inputs
     def __add__(self, other) -> Density[dft.add]:
-        self, other = unwrap_resolved(self, other)
         return Density(dft.add(self, other))
     
     def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
+    @resolve_and_unwrap_inputs
     def __sub__(self, other) -> Density[dft.add]:
-        self, other = unwrap_resolved(self, other)
         return Density(
             dft.add(
                 argument1=self,
@@ -66,8 +125,8 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
+    @resolve_and_unwrap_inputs
     def __rsub__(self, other) -> Density[dft.add]:
-        self, other = unwrap_resolved(self, other)
         return Density(
             dft.add(
                 argument1=other,
@@ -76,22 +135,22 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
+    @resolve_and_unwrap_inputs
     def __mul__(self, other) -> Density[dft.mul]:
-        self, other = unwrap_resolved(self, other)
         return Density(dft.mul(self, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
+    @resolve_and_unwrap_inputs
     def __truediv__(self, other) -> Density[dft.mul]:
-        self, other = unwrap_resolved(self, other)
         return Density(dft.mul(
             self,
             dft.invert(other)
         ))
     
+    @resolve_and_unwrap_inputs
     def __rtruediv__(self, other) -> Density[dft.mul]:
-        self, other = unwrap_resolved(self, other)
         return Density(dft.mul(
             other,
             dft.invert(self)
@@ -120,13 +179,13 @@ class Density(Generic[WrappedDFType]):
             for i in range(other - 2):
                 s = Density(dft.mul(s.wrapped, wrapped))
             return s
-        
+
+    @resolve_and_unwrap_inputs    
     def __and__(self, other):
-        self, other = unwrap_resolved(self, other)
         return Density(dft.max(self, other))
     
+    @resolve_and_unwrap_inputs
     def __or__(self, other):
-        self, other = unwrap_resolved(self, other)
         return Density(dft.min(self, other))
     
     def __abs__(self) -> Density[dft.abs]:
@@ -172,11 +231,11 @@ class ConfiguredDensity:
     """Defines an external density functions, that comes with a default value on compilation.
     """
 
+    @resolve_and_unwrap_inputs
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
-        wrapped = resolve_shorthand(default).wrapped
-        if isinstance(wrapped, dft.Reference):
-            wrapped = dft.add(wrapped, 0)
-        return Density(dft.Reference(name, wrapped))
+        if isinstance(default, dft.Reference):
+            default = dft.add(default, 0)
+        return Density(dft.Reference(name, default))
 
 @dataclass(init=False)
 class DensityReference:
