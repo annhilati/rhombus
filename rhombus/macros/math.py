@@ -21,8 +21,6 @@ def heaviside(argument: DensityDescriptor):
     """
     return 0.5 * (sgn(argument) + 1)
 
-"https://en.wikipedia.org/wiki/Stirling%27s_approximation"
-
 @resolve_inputs
 def ramp(argument: DensityDescriptor):
     """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
@@ -59,6 +57,7 @@ def sgn_ranged(argument: DensityDescriptor):
 @resolve_inputs
 def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[dft.mul]:
     """Returns the square root of the input.<br>
+    ❗`sqrt(x)` is nonesense, if `x < 0`
 
     ⚙️ This implementation uses [Heron's method](https://en.wikipedia.org/wiki/Square_root_algorithms#Heron's_method).<br>
     ⚠️ Bigger inputs need more iterations before converging.

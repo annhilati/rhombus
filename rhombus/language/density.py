@@ -49,62 +49,78 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 P = ParamSpec("P")
 R = TypeVar("R")
 
-def resolve_inputs(fn=None, *, unwrap: bool = False):
-    def decorator(fn):
-        import inspect
-        from functools import wraps
-        from typing import get_origin, get_args
+import inspect
+from functools import wraps
+from typing import TypeVar, ParamSpec, Callable, Any, get_origin, get_args
 
-        def _is_density_descriptor(annotation) -> bool:
-            if annotation is DensityDescriptor:
-                return True
-            origin = get_origin(annotation)
-            return origin is DensityDescriptor or (
-                origin is not None and DensityDescriptor in get_args(annotation)
-            )
+# Platzhalter für deine Typen/Funktionen (müssen in deinem Scope existieren)
+# from dein_modul import DensityDescriptor, resolve_DensityDescriptor
 
-        sig = inspect.signature(fn)
-        params = {
+P = ParamSpec("P")
+R = TypeVar("R")
+
+def _is_density_descriptor(annotation) -> bool:
+    """Hilfsfunktion zur Typprüfung von Annotationen."""
+    if annotation is None:
+        return False
+    if annotation is DensityDescriptor:
+        return True
+    origin = get_origin(annotation)
+    # Prüft auf Union-Types oder Generic Aliases
+    return origin is DensityDescriptor or (
+        origin is not None and DensityDescriptor in get_args(annotation)
+    )
+
+def resolve_inputs(fn: Callable[P, R] = None, *, unwrap: bool = False):
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        # Signatur des Originals extrahieren
+        sig = inspect.signature(func)
+        
+        # Parameter identifizieren, die aufgelöst werden müssen
+        params_to_resolve = {
             name for name, param in sig.parameters.items()
             if _is_density_descriptor(param.annotation)
         }
 
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            # Argumente binden, um Namen zu Werten zuzuordnen
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
 
-            for name in params:
+            for name in params_to_resolve:
                 if name in bound.arguments:
-                    resolved = resolve_DensityDescriptor(bound.arguments[name])
-                    value = resolved.wrapped if unwrap else resolved
-                    bound.arguments[name] = value
+                    current_val = bound.arguments[name]
+                    # Nur auflösen, wenn es tatsächlich ein Descriptor ist
+                    # (optional, je nachdem ob resolve_DensityDescriptor das selbst prüft)
+                    resolved = resolve_DensityDescriptor(current_val)
+                    
+                    if unwrap:
+                        # Annahme: .wrapped ist das Attribut des aufgelösten Objekts
+                        bound.arguments[name] = getattr(resolved, "wrapped", resolved)
+                    else:
+                        bound.arguments[name] = resolved
 
-            return fn(*bound.args, **bound.kwargs)
+            return func(*bound.args, **bound.kwargs)
 
+        # Wichtig: Die Signatur explizit setzen für IDEs und inspect
         wrapper.__signature__ = sig
         return wrapper
 
-    # ← entscheidender Teil
-    if fn is not None and callable(fn):
+    # Ermöglicht @resolve_inputs (ohne Klammern)
+    if fn is not None:
         return decorator(fn)
 
+    # Ermöglicht @resolve_inputs(unwrap=True) (mit Klammern)
     return decorator
 
+def resolve_and_unwrap_inputs(fn: Callable[P, R]) -> Callable[P, R]:
+    """
+    Convenience-Dekorator, der resolve_inputs mit unwrap=True aufruft.
+    Nutzt direkt die Logik von resolve_inputs, um Metadaten-Verlust zu vermeiden.
+    """
+    return resolve_inputs(unwrap=True)(fn)
 
-
-
-def resolve_and_unwrap_inputs(fn):
-    from functools import wraps
-
-    decorated = resolve_inputs(unwrap=True)(fn)
-
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        return decorated(*args, **kwargs)
-
-    wrapper.__signature__ = getattr(decorated, "__signature__", None)
-    return wrapper
 
 
 #======// Density Type //========================================================================//
