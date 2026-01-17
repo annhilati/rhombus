@@ -49,7 +49,7 @@ density functions.
 """
 from rhombus.language import builtins as f, Noise
 
-__all__ = ["x", "z"]
+__all__ = ["x", "z", "y"]
 
 _coord_stripe_noise = Noise(87, [1])
 _coord_quad_noise = Noise(88, [1])
@@ -112,3 +112,6 @@ def z():
     )
 
     return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
+
+def y():
+    return f.y_clamped_gradient(-4060, 4060, -4060, 4060)

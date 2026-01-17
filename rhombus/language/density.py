@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, Literal, overload
+from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, Literal, overload, ParamSpec
 from rhombus.core import df_types as dft
 from rhombus.core import config
 
@@ -46,13 +46,11 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
         out.wrapped.argument = result
     return out
 
-from typing import Callable, TypeVar, ParamSpec
-
 P = ParamSpec("P")
 R = TypeVar("R")
 
-def resolve_inputs(*, unwrap: bool = False):
-    def decorator(fn: Callable[P, R]) -> Callable[P, R]:
+def resolve_inputs(fn=None, *, unwrap: bool = False):
+    def decorator(fn):
         import inspect
         from functools import wraps
         from typing import get_origin, get_args
@@ -72,28 +70,34 @@ def resolve_inputs(*, unwrap: bool = False):
         }
 
         @wraps(fn)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper(*args, **kwargs):
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
 
             for name in params:
                 if name in bound.arguments:
-                    value = resolve_DensityDescriptor(bound.arguments[name])
-                    bound.arguments[name] = value.wrapped if unwrap else value
+                    resolved = resolve_DensityDescriptor(bound.arguments[name])
+                    value = resolved.wrapped if unwrap else resolved
+                    bound.arguments[name] = value
 
             return fn(*bound.args, **bound.kwargs)
 
         wrapper.__signature__ = sig
         return wrapper
 
+    # ← entscheidender Teil
+    if fn is not None and callable(fn):
+        return decorator(fn)
+
     return decorator
 
 
 
+
 def resolve_and_unwrap_inputs(fn):
-    "Use this dec"
     from functools import wraps
-    decorated = resolve_inputs(fn, unwrap=True)
+
+    decorated = resolve_inputs(unwrap=True)(fn)
 
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -128,15 +132,17 @@ class Density(Generic[WrappedDFType]):
     
     #======// Arithmetic Magic //================================================================//
     
-    @resolve_and_unwrap_inputs
     def __add__(self, other) -> Density[dft.add]:
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(dft.add(self, other))
     
     def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
-    @resolve_and_unwrap_inputs
     def __sub__(self, other) -> Density[dft.add]:
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(
             dft.add(
                 argument1=self,
@@ -145,8 +151,9 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
-    @resolve_and_unwrap_inputs
     def __rsub__(self, other) -> Density[dft.add]:
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(
             dft.add(
                 argument1=other,
@@ -155,22 +162,26 @@ class Density(Generic[WrappedDFType]):
                     argument2=dft.constant(-1)
             )))
     
-    @resolve_and_unwrap_inputs
     def __mul__(self, other) -> Density[dft.mul]:
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
+        print(type)
         return Density(dft.mul(self, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
-    @resolve_and_unwrap_inputs
     def __truediv__(self, other) -> Density[dft.mul]:
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(dft.mul(
             self,
             dft.invert(other)
         ))
     
-    @resolve_and_unwrap_inputs
     def __rtruediv__(self, other) -> Density[dft.mul]:
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(dft.mul(
             other,
             dft.invert(self)
@@ -200,12 +211,14 @@ class Density(Generic[WrappedDFType]):
                 s = Density(dft.mul(s.wrapped, wrapped))
             return s
 
-    @resolve_and_unwrap_inputs    
     def __and__(self, other):
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(dft.max(self, other))
     
-    @resolve_and_unwrap_inputs
     def __or__(self, other):
+        other = resolve_DensityDescriptor(other).wrapped
+        self = self.wrapped
         return Density(dft.min(self, other))
     
     def __abs__(self) -> Density[dft.abs]:

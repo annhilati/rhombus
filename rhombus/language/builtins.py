@@ -260,7 +260,7 @@ def min(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[d
     return Density(dft.min(argument1, argument2))
 
 @resolve_and_unwrap_inputs
-def mul(argument1: DensityDescriptor, argument2: Density | float) -> Density[dft.mul]:
+def mul(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[dft.mul]:
     """Multiplies two inputs.<br>
     ❗`mul(Infinity, 0) = NaN`
 
@@ -388,7 +388,7 @@ def spline(coordinate: DensityDescriptor, points: list[tuple[float, DensityDescr
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline)
     """
-    points = [(p[0], resolve_DensityDescriptor(p[1])[0], p[2]) for p in points]
+    points = [(p[0], resolve_DensityDescriptor(p[1]).wrapped, p[2]) for p in points]
     return Density(dft.spline(coordinate, points))
 
 @resolve_and_unwrap_inputs
