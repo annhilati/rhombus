@@ -1,17 +1,16 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, TypeVar, TypeAlias, Union, Literal, overload, ParamSpec
-from rhombus.core import df_types as dft
-from rhombus.core import config
+from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
+from rhombus.core import df_types as dft, config
 
-WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
-"Type variable for all subclasses of `DensityFunctionTypeBase`."
-
-DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionType, str, float]
 
 #======// Formatters //==========================================================================//
 
+DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionType, str, float]
+"UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
+
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
+    """Interprets a QoL argument input and returns a Density object. Additionally applies logic like splitting large literal constants into calculations."""
     if isinstance(arg, Density):
         out = arg
     elif isinstance(arg, dft.DensityFunctionType):
@@ -46,19 +45,6 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
         out.wrapped.argument = result
     return out
 
-P = ParamSpec("P")
-R = TypeVar("R")
-
-import inspect
-from functools import wraps
-from typing import TypeVar, ParamSpec, Callable, Any, get_origin, get_args
-
-# Platzhalter für deine Typen/Funktionen (müssen in deinem Scope existieren)
-# from dein_modul import DensityDescriptor, resolve_DensityDescriptor
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
 def _is_density_descriptor(annotation) -> bool:
     """Hilfsfunktion zur Typprüfung von Annotationen."""
     if annotation is None:
@@ -71,65 +57,62 @@ def _is_density_descriptor(annotation) -> bool:
         origin is not None and DensityDescriptor in get_args(annotation)
     )
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
 def resolve_inputs(fn: Callable[P, R] = None, *, unwrap: bool = False):
+    import inspect, functools
+
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        # Signatur des Originals extrahieren
         sig = inspect.signature(func)
         
-        # Parameter identifizieren, die aufgelöst werden müssen
         params_to_resolve = {
             name for name, param in sig.parameters.items()
             if _is_density_descriptor(param.annotation)
         }
 
-        @wraps(func)
+        @functools.wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            # Argumente binden, um Namen zu Werten zuzuordnen
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
 
             for name in params_to_resolve:
                 if name in bound.arguments:
                     current_val = bound.arguments[name]
-                    # Nur auflösen, wenn es tatsächlich ein Descriptor ist
-                    # (optional, je nachdem ob resolve_DensityDescriptor das selbst prüft)
                     resolved = resolve_DensityDescriptor(current_val)
                     
                     if unwrap:
-                        # Annahme: .wrapped ist das Attribut des aufgelösten Objekts
                         bound.arguments[name] = getattr(resolved, "wrapped", resolved)
                     else:
                         bound.arguments[name] = resolved
 
             return func(*bound.args, **bound.kwargs)
 
-        # Wichtig: Die Signatur explizit setzen für IDEs und inspect
         wrapper.__signature__ = sig
         return wrapper
 
-    # Ermöglicht @resolve_inputs (ohne Klammern)
     if fn is not None:
         return decorator(fn)
 
-    # Ermöglicht @resolve_inputs(unwrap=True) (mit Klammern)
     return decorator
 
 def resolve_and_unwrap_inputs(fn: Callable[P, R]) -> Callable[P, R]:
-    """
-    Convenience-Dekorator, der resolve_inputs mit unwrap=True aufruft.
-    Nutzt direkt die Logik von resolve_inputs, um Metadaten-Verlust zu vermeiden.
-    """
     return resolve_inputs(unwrap=True)(fn)
 
 
-
 #======// Density Type //========================================================================//
+
+WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
 
 @dataclass
 class Density(Generic[WrappedDFType]):
     """Class representing a density calculation.
     
-    Don't use the constructor of this class. Use `rhombus.constant()` or any methods in `rhombus.language.builtins` instead.
+    Don't use the constructor of this class. To define a new density instead use:<br>
+    - Methods from `rhombus.language.builtins` or other methods that return a `Density` for calculations
+    - `ConfiguredDensity` if a value is needed that can be easily altered in the compiled datapack later
+    - `ExternalDensity` if a density function has to be compiled to a separate file, but it is not important what this file is
+    - `DensityReference` to reference a density function that is provided externally, like by another datapack
     """
 
     wrapped: WrappedDFType
@@ -181,7 +164,6 @@ class Density(Generic[WrappedDFType]):
     def __mul__(self, other) -> Density[dft.mul]:
         other = resolve_DensityDescriptor(other).wrapped
         self = self.wrapped
-        print(type)
         return Density(dft.mul(self, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
@@ -249,6 +231,7 @@ class Density(Generic[WrappedDFType]):
 
     #======// Logical Magic //===================================================================//
     
+    
     def __eq__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __ne__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
@@ -275,26 +258,48 @@ class Density(Generic[WrappedDFType]):
 
 #======// Additional Density Types //============================================================//
 
+def ref(identifier: str, /) -> Density[dft.Reference]:
+    return Density(dft.Reference(identifier))
+
+
 @dataclass(init=False)
 class ConfiguredDensity:
-    """Defines an external density functions, that comes with a default value on compilation.
-    """
+    """Creates a Density that will be casted into a specific file when compiling."""
 
     @resolve_and_unwrap_inputs
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
+        default = resolve_DensityDescriptor(default).wrapped # This somehow is neccesarry
         if isinstance(default, dft.Reference):
             default = dft.add(default, 0)
         return Density(dft.Reference(name, default))
 
+
+@dataclass(init=False)
+class ExternalDensity:
+    """Creates a Density whose value will be casted into a separate file when compiling."""
+
+    @staticmethod
+    def get_dictionary_uuid(data: dict[str, Any]) -> str:
+        """Creates a UUID string (no `-`) based of a JSON dictionary."""
+        import hashlib, uuid, json
+
+        encoded_str = json.dumps(
+            data, 
+            sort_keys=True, 
+            ensure_ascii=True, 
+            separators=(',', ':')
+        ).encode('utf-8')
+        hash_digest = hashlib.sha256(encoded_str).digest()
+        return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
+
+    @resolve_and_unwrap_inputs
+    def __new__(cls, value: DensityDescriptor):
+        return Density(dft.Reference("rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()), value))
+
+
 @dataclass(init=False)
 class DensityReference:
-    """
-    
-    `DensityReference(id)` is identical to `ref(id)`.
-    """
+    """Creates a Density refering to an externally provided density function."""
 
-    def __new__(identifier: str, /) -> Density[dft.Reference]:
+    def __new__(cls, identifier: str, /) -> Density[dft.Reference]:
         return ref(identifier)
-    
-def ref(identifier: str, /) -> Density[dft.Reference]:
-    return Density(dft.Reference(identifier))

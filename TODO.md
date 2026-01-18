@@ -9,4 +9,4 @@
 # Design
 - What kind of methods are attributes of Density objects?
 - What do with non-DSL symbols? Where provide them
-- How call arguments in builtins vs macros? Technical or scientific?
+- How to name arguments in builtins vs macros? Technical or scientific?

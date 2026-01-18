@@ -114,4 +114,7 @@ def z():
     return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
 def y():
-    return f.y_clamped_gradient(-4060, 4060, -4060, 4060)
+    """Returns the Y-coordinate of the block being evaluated.
+    
+    ⚙️ This implementation uses `y_clamped_gradient`."""
+    return f.y_clamped_gradient(-4062, 4062, -4062, 4062)

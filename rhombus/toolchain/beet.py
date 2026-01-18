@@ -17,7 +17,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     def search_for_additional_files(o):
         if isinstance(o, DensityFunctionType):
             if isinstance(o, Reference) and o.default is not None:
-                files[o.reference] = WorldgenDensityFunction(o.encode())
+                files[o.reference] = WorldgenDensityFunction(o.default.encode())
             for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:
                 search_for_additional_files(value)
         elif isinstance(o, (list, tuple)):
@@ -32,7 +32,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
 
     return files
 
-def summon(files: dict[str, BeetFileClass], path: str | Path = "/compiled") -> None:
+def summon(files: dict[str, BeetFileClass], path: str | Path = Path.cwd() / "compiled") -> None:
     "Writes a bunch of Beet file instances to actual files."
     for id, f in files.items():
         p = Path(path) / (id.replace(":", ".").replace("/", ".") + f.extension)

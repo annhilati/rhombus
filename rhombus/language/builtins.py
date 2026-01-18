@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 from rhombus.core import df_types as dft
-from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs, resolve_DensityDescriptor
+from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs, resolve_DensityDescriptor, get_dictionary_uuid, ExternalDensity
 from rhombus.language.noise import Noise
 from typing import Literal
 
@@ -195,14 +195,14 @@ def find_top_surface(density: DensityDescriptor, upper_bound: DensityDescriptor,
     return Density(dft.find_top_surface(density, upper_bound, lower_bound, cell_height))
 
 @resolve_and_unwrap_inputs
-def flat_cache(argument: DensityDescriptor) -> Density[dft.flat_cache]:
+def flat_cache(argument: DensityDescriptor) -> Density[dft.Reference]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with interpolated.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre1) and forward.
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    return Density(dft.flat_cache(argument))
+    return ExternalDensity(argument)
 
 @resolve_and_unwrap_inputs
 def half_negative(argument: DensityDescriptor) -> Density[dft.half_negative]:

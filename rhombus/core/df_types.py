@@ -3,9 +3,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
-
 from rhombus.core.additional_resource import AdditionalResource
 from rhombus.core import config
+import warnings
 
 __all__ = [
     "REGISTERED_DENSITY_FUNCTION_TYPES", "decode_HOLDER_HELPER_CODEC", "DensityFunctionType",
@@ -58,8 +58,7 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /) -> DensityFunctionType:
 #======// Function Type Base Classes //==========================================================//
 
 class DensityFunctionType:
-    """Base class for density function types.
-    """
+    """Base class for density function types."""
     id: ClassVar[str]
 
     decode: ClassVar[Callable[[type[Self], dict], Self]]
@@ -133,9 +132,8 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> Self:
-        # fs = {f.name: f for f in fields(cls)}
         return cls(**{
-            parameter: decode_HOLDER_HELPER_CODEC(value)# if fs[parameter].type is DensityFunctionType else value
+            parameter: decode_HOLDER_HELPER_CODEC(value)
             for parameter, value in data.items()
             if parameter in {f.name for f in fields(cls) if f.init}
         })
@@ -201,7 +199,6 @@ class clamp(MultiArgumentsFunctionBase):
 
     def __post_init__(self) -> None:
         if isinstance(self.input, Reference) and config.warn_on_reference_in_clamp:
-            import warnings
             warnings.warn(
                 "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
                 "An error might be thrown when loading a world.\n    "
@@ -216,7 +213,6 @@ class constant(DensityFunctionType):
     def __post_init__(self) -> None:
         limit = config.constant_number_limit
         if self.argument > limit or self.argument < -limit:
-            import warnings
             warnings.warn(f"A constant with a value of {self.argument} lies outside the limit of ± {float(limit)}.\n    "
                           "An error might be thrown when loading a world.")
 
@@ -296,7 +292,6 @@ class old_blended_noise(MultiArgumentsFunctionBase):
     smear_scale_multiplier: float
 
     def __post_init__(self) -> None:
-        import warnings
         for param, value in {k: v for k, v in self.fields.items() if k != "smear_scale_multiplier"}.items():
             if value > 1000 or value < 0.001:
                 warnings.warn(f"A value of {value} in the '{param}' field of 'old_blended_noise' lies outside the limit of 0.001 ≤ value ≤ 1000.0.\n    "
@@ -490,3 +485,17 @@ class y_clamped_gradient(MultiArgumentsFunctionBase):
     to_y: int
     from_value: float
     to_value: float
+
+    def __post_init__(self) -> None:
+        if self.from_y > 4062 or self.from_y < -4064:
+            warnings.warn(f"A value of {self.from_y} in the 'from_y' field of 'y_clamped_gradient' lies outside the limit of -4064 ≤ value ≤ 4062.\n    "
+                          "An error might be thrown when loading a world.")
+        if self.to_y > 4062 or self.to_y < -4064:
+            warnings.warn(f"A value of {self.to_y} in the 'to_y' field of 'y_clamped_gradient' lies outside the limit of -4064 ≤ value ≤ 4062.\n    "
+                          "An error might be thrown when loading a world.")
+        if self.from_value > 4062 or self.from_value < -4064:
+            warnings.warn(f"A value of {self.from_value} in the 'from_value' field of 'y_clamped_gradient' lies outside the limit of -1000000.0 ≤ value ≤ 1000000.0.\n    "
+                          "An error might be thrown when loading a world.")
+        if self.to_value > 4062 or self.to_value < -4064:
+            warnings.warn(f"A value of {self.to_value} in the 'to_value' field of 'y_clamped_gradient' lies outside the limit of -1000000.0 ≤ value ≤ 1000000.0.\n    "
+                          "An error might be thrown when loading a world.")
