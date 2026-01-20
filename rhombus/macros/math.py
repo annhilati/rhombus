@@ -227,6 +227,7 @@ def atan(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the arc tangent value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of arc tangent](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
+    ⚠️ Bigger inputs need more terms before converging.
     """
     result = f.constant(0)
     for k in range(terms):
@@ -241,6 +242,7 @@ def sinh(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of hyperbolic sine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
+    ⚠️ Bigger inputs need more terms before converging.
     """
     from math import factorial
 
@@ -257,6 +259,7 @@ def cosh(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of hyperbolic cosine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
+    ⚠️ Bigger inputs need more terms before converging.
     """
     from math import factorial
 

@@ -2,6 +2,6 @@
 """
 
 from rhombus.language import *
-from rhombus.toolchain.beet import compile, inject, summon
+from rhombus import toolchain
 from rhombus.macros import *
 from rhombus.core import config

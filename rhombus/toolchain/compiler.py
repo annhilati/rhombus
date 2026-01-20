@@ -1,14 +1,12 @@
 from dataclasses import fields
-from pathlib import Path
-from beet import Context
-from beet.contrib.worldgen import WorldgenDensityFunction
+from tempfile import TemporaryDirectory
 
+from beet.contrib.worldgen import WorldgenDensityFunction
 from rhombus.language.density import Density
 from rhombus.core import *
 from rhombus.core.df_types import Reference
 
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
-    "For a `Density` object creates all Beet file instances needed. Use `summon()` additionally to have a look at them."
     files: dict[str, BeetFileClass] = {}
 
     root = density.wrapped
@@ -32,24 +30,25 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
 
     return files
 
-def summon(files: dict[str, BeetFileClass], path: str | Path = Path.cwd() / "compiled") -> None:
-    "Writes a bunch of Beet file instances to actual files."
-    for id, f in files.items():
-        p = Path(path) / (id.replace(":", ".").replace("/", ".") + f.extension)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        with open(p, mode="w") as io:
-            io.write(f.encoder(f.data))
+def summon(files: dict[str, BeetFileClass]) -> None:
+    import os, sys, subprocess
+    from pathlib import Path
 
-def inject(ctx: Context, density: Density, name: str):
-    "Implements a `Density` and all additionally needed files in a Beet datapack."
-    data = ctx.data
+    def open_folder(path: Path) -> None:
+        if sys.platform == "win32":
+            os.startfile(path)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", path])
+        else:
+            subprocess.run(["xdg-open", path])
 
+    with TemporaryDirectory() as tmp:
+        path = Path(tmp)
 
-    files = compile(density, name)
+        for id, f in files.items():
+            p = path / (id.replace(":", ".").replace("/", ".") + f.extension)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(f.encoder(f.data))
 
-    for id, file in files.items():
-        data[id] = file
-        print(f"Implemented {type(file).__name__} '{id}'")
-
-        
-    print(f"Finished implementing density function '{name}'")
+        open_folder(path)
+        input("Press enter to go on and delete the temporary directory ... ")

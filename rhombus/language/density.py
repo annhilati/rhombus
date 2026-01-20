@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
 from rhombus.core import df_types as dft, config
-
+from beet import Context
 
 #======// Formatters //==========================================================================//
 
@@ -46,13 +46,11 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     return out
 
 def _is_density_descriptor(annotation) -> bool:
-    """Hilfsfunktion zur Typprüfung von Annotationen."""
     if annotation is None:
         return False
     if annotation is DensityDescriptor:
         return True
     origin = get_origin(annotation)
-    # Prüft auf Union-Types oder Generic Aliases
     return origin is DensityDescriptor or (
         origin is not None and DensityDescriptor in get_args(annotation)
     )
@@ -116,6 +114,7 @@ class Density(Generic[WrappedDFType]):
     """
 
     wrapped: WrappedDFType
+    "The density function AST represented by this Density."
 
     def __repr__(self) -> str:
         return self.wrapped.__repr__()
@@ -129,6 +128,32 @@ class Density(Generic[WrappedDFType]):
         "Returns the compilation complexity of the density function AST."
         return self.wrapped.compilation_complexity
     
+
+    #======// Toolchain //=======================================================================//
+    
+
+    def compile(self, with_name: str, /):
+        "Compiles the Density into Beet file class instances."
+        from rhombus import toolchain
+        return toolchain.compile(density=self, identifier=with_name)
+
+    def inject(self, ctx: Context, with_name: str, /, log: bool = True) -> None:
+        "Implements the Density and all additionally needed files in a Beet datapack."
+        data = ctx.data
+
+        files = self.compile(with_name)
+
+        for id, file in files.items():
+            data[id] = file
+            if log: print(f"Implemented {type(file).__name__} '{id}'")
+            
+        if log: print(f"Finished implementing density function '{with_name}'")
+
+    def show_in_dir(self, with_name: str = "test"):
+        "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
+        from rhombus import toolchain
+        files = self.compile(with_name)
+        toolchain.summon(files)
     
     #======// Arithmetic Magic //================================================================//
     
@@ -148,7 +173,7 @@ class Density(Generic[WrappedDFType]):
                 argument1=self,
                 argument2=dft.mul(
                     argument1=other,
-                    argument2=dft.constant(-1)
+                    argument2=dft.constant(-1.0)
             )))
     
     def __rsub__(self, other) -> Density[dft.add]:
@@ -159,7 +184,7 @@ class Density(Generic[WrappedDFType]):
                 argument1=other,
                 argument2=dft.mul(
                     argument1=self,
-                    argument2=dft.constant(-1)
+                    argument2=dft.constant(-1.0)
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
@@ -189,7 +214,7 @@ class Density(Generic[WrappedDFType]):
     def __pow__(self, other):
         wrapped = self.wrapped
         if not isinstance(other, int):
-            raise ValueError("Can't raise to non integer powers")
+            raise ValueError("Can't raise to non-integer powers")
         if other == 0:
             return 1
         elif other == 1:
@@ -218,7 +243,7 @@ class Density(Generic[WrappedDFType]):
         return Density(dft.abs(self.wrapped))
     
     def __neg__(self) -> Density[dft.mul]:
-        return Density(dft.mul(self.wrapped, dft.constant(-1)))
+        return Density(dft.mul(self.wrapped, dft.constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self
@@ -248,13 +273,6 @@ class Density(Generic[WrappedDFType]):
 
     # def flat_cache(self) -> None:
     #     self.wrapped = dft.flat_cache(self.wrapped)
-
-    #======// Toolchain //=======================================================================//
-    
-    from beet import Context
-    def inject(self, ctx: Context, identifier: str) -> None:
-        from rhombus import toolchain
-        toolchain.inject(ctx=ctx, density=self, name=identifier)
 
 
 #======// Additional Density Types //============================================================//

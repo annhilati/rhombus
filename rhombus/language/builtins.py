@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 from rhombus.core import df_types as dft
-from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs, resolve_DensityDescriptor, get_dictionary_uuid, ExternalDensity
+from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs, resolve_DensityDescriptor, ExternalDensity
 from rhombus.language.noise import Noise
 from typing import Literal
 
