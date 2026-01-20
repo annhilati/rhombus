@@ -81,7 +81,7 @@ class DensityFunctionType:
         return 1 + sum([arg.compilation_complexity for name, arg in self.fields.items() if isinstance(arg, DensityFunctionType)])
 
     
-@dataclass 
+@dataclass
 class SimpleFunctionBase(DensityFunctionType):#
     "Base class for density function types with no arguments."
 

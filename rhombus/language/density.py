@@ -129,6 +129,7 @@ class Density(Generic[WrappedDFType]):
         "Returns the compilation complexity of the density function AST."
         return self.wrapped.compilation_complexity
     
+    
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[dft.add]:
@@ -172,18 +173,12 @@ class Density(Generic[WrappedDFType]):
     def __truediv__(self, other) -> Density[dft.mul]:
         other = resolve_DensityDescriptor(other).wrapped
         self = self.wrapped
-        return Density(dft.mul(
-            self,
-            dft.invert(other)
-        ))
+        return Density(dft.mul(self, dft.invert(other)))
     
     def __rtruediv__(self, other) -> Density[dft.mul]:
         other = resolve_DensityDescriptor(other).wrapped
         self = self.wrapped
-        return Density(dft.mul(
-            other,
-            dft.invert(self)
-        ))
+        return Density(dft.mul(other, dft.invert(self)))
     
     @overload
     def __pow__(self, other: Literal[2]) -> Density[dft.square]: ...
@@ -231,7 +226,6 @@ class Density(Generic[WrappedDFType]):
 
     #======// Logical Magic //===================================================================//
     
-    
     def __eq__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __ne__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
@@ -243,17 +237,24 @@ class Density(Generic[WrappedDFType]):
 
     #======// Shortcuts //=======================================================================//
 
-    def cache_once(self) -> None:
-        self.wrapped = dft.cache_once(self.wrapped)
+    # def cache_once(self) -> None:
+    #     self.wrapped = dft.cache_once(self.wrapped)
 
-    def interpolated(self) -> None:
-        self.wrapped = dft.interpolated(self.wrapped)
+    # def interpolated(self) -> None:
+    #     self.wrapped = dft.interpolated(self.wrapped)
 
-    def cache_2d(self) -> None:
-        self.wrapped = dft.cache_2d(self.wrapped)
+    # def cache_2d(self) -> None:
+    #     self.wrapped = dft.cache_2d(self.wrapped)
 
-    def flat_cache(self) -> None:
-        self.wrapped = dft.flat_cache(self.wrapped)
+    # def flat_cache(self) -> None:
+    #     self.wrapped = dft.flat_cache(self.wrapped)
+
+    #======// Toolchain //=======================================================================//
+    
+    from beet import Context
+    def inject(self, ctx: Context, identifier: str) -> None:
+        from rhombus import toolchain
+        toolchain.inject(ctx=ctx, density=self, name=identifier)
 
 
 #======// Additional Density Types //============================================================//
@@ -293,7 +294,7 @@ class ExternalDensity:
         return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
 
     @resolve_and_unwrap_inputs
-    def __new__(cls, value: DensityDescriptor):
+    def __new__(cls, value: DensityDescriptor, /):
         return Density(dft.Reference("rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()), value))
 
 

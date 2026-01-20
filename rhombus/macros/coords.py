@@ -63,10 +63,10 @@ _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_n
 #       Minecraft doesn’t allow literals over 1 million
 
 
-# Differences between the two: shift_x and shift_z are swapped in every shifted_noise-sampler
+# Differences between the x and z: shift_x and shift_z are swapped in every shifted_noise-sampler
 
 def x():
-    """Returns the X-coordinate of the block being evaluated.
+    """Returns the X-coordinate of the current block.
     
     ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
     It is very resource-intensive (compilation complexity = 512). For more information on how it works read the docstring of `rhombus.macros.coords`.
@@ -90,7 +90,7 @@ def x():
     return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
 def z():
-    """Returns the Z-coordinate of the block being evaluated.
+    """Returns the Z-coordinate of the current block.
     
     ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
     It is very resource-intensive (compilation complexity = 512). For more information on how it works read the docstring of `rhombus.macros.coords`.
@@ -114,7 +114,7 @@ def z():
     return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
 def y():
-    """Returns the Y-coordinate of the block being evaluated.
+    """Returns the Y-coordinate of the current block.
     
     ⚙️ This implementation uses `y_clamped_gradient`."""
     return f.y_clamped_gradient(-4062, 4062, -4062, 4062)
