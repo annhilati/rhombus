@@ -388,7 +388,7 @@ def spline(coordinate: DensityDescriptor, points: list[tuple[float, DensityDescr
     
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline)
     """
-    points = [(p[0], resolve_DensityDescriptor(p[1]).wrapped, p[2]) for p in points]
+    points = [(p[0], resolve_DensityDescriptor(p[1]).AST, p[2]) for p in points]
     return Density(dft.spline(coordinate, points))
 
 @resolve_and_unwrap_inputs

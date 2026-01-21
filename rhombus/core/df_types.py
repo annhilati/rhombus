@@ -82,7 +82,7 @@ class DensityFunctionType:
 
     
 @dataclass
-class SimpleFunctionBase(DensityFunctionType):#
+class SimpleFunctionBase(DensityFunctionType):
     "Base class for density function types with no arguments."
 
     @classmethod
@@ -128,6 +128,8 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
 
     When inheriting from this class, add the `@dataclass` decorator to the new class<br>
     and add fields with the same keys as required in the density function JSON definition.<br>
+
+    If more non-primitive types are needed, inherit from `DensityFunctionType` instead and implement the methods manually.
     """
 
     @classmethod

@@ -9,7 +9,7 @@ from rhombus.core.df_types import Reference
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     files: dict[str, BeetFileClass] = {}
 
-    root = density.wrapped
+    root = density.AST
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
     def search_for_additional_files(o):

@@ -24,7 +24,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
         raise ValueError(arg, type(arg))
     
     limit = config.constant_number_limit
-    if isinstance(out.wrapped, dft.constant) and (v := out.wrapped.argument) > limit:
+    if isinstance(out.AST, dft.constant) and (v := out.AST.argument) > limit:
 
         if v == 0: return out
 
@@ -42,7 +42,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 
         for x in it:
             result = result * x
-        out.wrapped.argument = result
+        out.AST.argument = result
     return out
 
 def _is_density_descriptor(annotation) -> bool:
@@ -113,20 +113,20 @@ class Density(Generic[WrappedDFType]):
     - `DensityReference` to reference a density function that is provided externally, like by another datapack
     """
 
-    wrapped: WrappedDFType
+    AST: WrappedDFType
     "The density function AST represented by this Density."
 
     def __repr__(self) -> str:
-        return self.wrapped.__repr__()
+        return self.AST.__repr__()
     
     def as_dict(self) -> dict[str, Any]:
         "Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
-        return self.wrapped.encode()
+        return self.AST.encode()
     
     @property
     def cc(self) -> int:
-        "Returns the compilation complexity of the density function AST."
-        return self.wrapped.compilation_complexity
+        "Returns the **compilation complexity** of the density function AST."
+        return self.AST.compilation_complexity
     
 
     #======// Toolchain //=======================================================================//
@@ -158,16 +158,16 @@ class Density(Generic[WrappedDFType]):
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[dft.add]:
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(dft.add(self, other))
     
     def __radd__(self, other) -> Density[dft.add]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[dft.add]:
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(
             dft.add(
                 argument1=self,
@@ -177,8 +177,8 @@ class Density(Generic[WrappedDFType]):
             )))
     
     def __rsub__(self, other) -> Density[dft.add]:
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(
             dft.add(
                 argument1=other,
@@ -188,21 +188,21 @@ class Density(Generic[WrappedDFType]):
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(dft.mul(self, other))
     
     def __rmul__(self, other) -> Density[dft.mul]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[dft.mul]:
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(dft.mul(self, dft.invert(other)))
     
     def __rtruediv__(self, other) -> Density[dft.mul]:
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(dft.mul(other, dft.invert(self)))
     
     @overload
@@ -212,7 +212,7 @@ class Density(Generic[WrappedDFType]):
     @overload
     def __pow__(self, other: int) -> Density[dft.mul]: ...
     def __pow__(self, other):
-        wrapped = self.wrapped
+        wrapped = self.AST
         if not isinstance(other, int):
             raise ValueError("Can't raise to non-integer powers")
         if other == 0:
@@ -226,24 +226,24 @@ class Density(Generic[WrappedDFType]):
         elif other > 3:
             s = Density(dft.mul(wrapped, wrapped))
             for i in range(other - 2):
-                s = Density(dft.mul(s.wrapped, wrapped))
+                s = Density(dft.mul(s.AST, wrapped))
             return s
 
     def __and__(self, other):
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(dft.max(self, other))
     
     def __or__(self, other):
-        other = resolve_DensityDescriptor(other).wrapped
-        self = self.wrapped
+        other = resolve_DensityDescriptor(other).AST
+        self = self.AST
         return Density(dft.min(self, other))
     
     def __abs__(self) -> Density[dft.abs]:
-        return Density(dft.abs(self.wrapped))
+        return Density(dft.abs(self.AST))
     
     def __neg__(self) -> Density[dft.mul]:
-        return Density(dft.mul(self.wrapped, dft.constant(-1.0)))
+        return Density(dft.mul(self.AST, dft.constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self
@@ -287,7 +287,7 @@ class ConfiguredDensity:
 
     @resolve_and_unwrap_inputs
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
-        default = resolve_DensityDescriptor(default).wrapped # This somehow is neccesarry
+        default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
         if isinstance(default, dft.Reference):
             default = dft.add(default, 0)
         return Density(dft.Reference(name, default))

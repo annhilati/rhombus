@@ -13,12 +13,14 @@ class BeetFileClass(Protocol):
 
 @dataclass(frozen=True)
 class AdditionalResource(ABC):
-    """Base class for resources that have to be declared outside of a density function.
+    """Base class for resources that have to be declared in a datapack outside of a density function.
     
-    Adding new Additional Resources
-    - make it a dataclass
-    - make it frozen
-    - make it hashable
+    When defining new AdditionalResource types ensure the following:
+    - It is a frozen dataclass
+    - It is hashable (through sensible implementations of `__hash__` and `__eq__`)
+    - A classmethod `decode(cls, dict) -> Self`
+    - A method `encode(self) -> dict` that produces a JSON dictionary
+    - A property `reference_identifier(self) -> str` that produces a consistent resource identifier.
     """
 
     fileclass: ClassVar[type[BeetFileClass]]
@@ -26,9 +28,6 @@ class AdditionalResource(ABC):
     @property
     @abstractmethod
     def reference_identifier(self) -> str: ...
-        # Requirements for implementations of this method
-        # - formatted as resource location
-        # - same encoded value -> same reference identifier
 
     @classmethod
     @abstractmethod
@@ -36,3 +35,9 @@ class AdditionalResource(ABC):
 
     @abstractmethod
     def encode(self) -> dict: ...
+
+    @abstractmethod
+    def __hash__(self) -> int: ...
+
+    @abstractmethod
+    def __eq__(self, other) -> bool: ...
