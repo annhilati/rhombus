@@ -1,9 +1,9 @@
-from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs
+from rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
 from rhombus.support.more_density_functions import df_types as dft
 
 __all__ = []
 
-@resolve_and_unwrap_inputs
+@coerce_density_ASTs
 def acos(argument: DensityDescriptor) -> Density[dft.acos]:
     """Returns the arc cosine of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
@@ -14,7 +14,7 @@ def acos(argument: DensityDescriptor) -> Density[dft.acos]:
     """
     return Density(dft.acos(argument))
 
-@resolve_and_unwrap_inputs
+@coerce_density_ASTs
 def asin(argument: DensityDescriptor) -> Density[dft.asin]:
     """Returns the arc sine of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
@@ -25,7 +25,7 @@ def asin(argument: DensityDescriptor) -> Density[dft.asin]:
     """
     return Density(dft.asin(argument))
 
-@resolve_and_unwrap_inputs
+@coerce_density_ASTs
 def atan(argument: DensityDescriptor) -> Density[dft.atan]:
     """Returns the arc tangent of the input in radians.<br>
 

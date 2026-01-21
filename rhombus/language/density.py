@@ -58,7 +58,8 @@ def _is_density_descriptor(annotation) -> bool:
 P = ParamSpec("P")
 R = TypeVar("R")
 
-def resolve_inputs(fn: Callable[P, R] = None, *, unwrap: bool = False):
+def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
+    """Decorator that can be used on functions to resolve inputs annotated with `DensityDescriptor` to `Density` or `DensityFunctionType` objects."""
     import inspect, functools
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
@@ -94,8 +95,8 @@ def resolve_inputs(fn: Callable[P, R] = None, *, unwrap: bool = False):
 
     return decorator
 
-def resolve_and_unwrap_inputs(fn: Callable[P, R]) -> Callable[P, R]:
-    return resolve_inputs(unwrap=True)(fn)
+def coerce_density_ASTs(fn: Callable[P, R], /) -> Callable[P, R]:
+    return coerce_densities(unwrap=True)(fn)
 
 
 #======// Density Type //========================================================================//
@@ -285,7 +286,7 @@ def ref(identifier: str, /) -> Density[dft.Reference]:
 class ConfiguredDensity:
     """Creates a Density that will be casted into a specific file when compiling."""
 
-    @resolve_and_unwrap_inputs
+    @coerce_density_ASTs
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
         default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
         if isinstance(default, dft.Reference):
@@ -311,7 +312,7 @@ class ExternalDensity:
         hash_digest = hashlib.sha256(encoded_str).digest()
         return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
 
-    @resolve_and_unwrap_inputs
+    @coerce_density_ASTs
     def __new__(cls, value: DensityDescriptor, /):
         return Density(dft.Reference("rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()), value))
 

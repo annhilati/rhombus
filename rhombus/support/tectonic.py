@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 from rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunctionType, decode_HOLDER_HELPER_CODEC
 from rhombus.core.additional_resource import AdditionalResource
-from rhombus.language.density import Density, DensityDescriptor, resolve_and_unwrap_inputs
+from rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
 from rhombus.language.noise import Noise
 
 __all__ = ["invert", "config_constant", "config_noise"]
@@ -46,7 +46,7 @@ class df_types:
                 "y_scale": self.shift_z.encode(),
             }
 
-@resolve_and_unwrap_inputs
+@coerce_density_ASTs
 def invert(argument: DensityDescriptor) -> Density[df_types.invert]:
     """Calculates `1/x`.
     """
@@ -56,7 +56,7 @@ def config_constant(key: str) -> Density[df_types.config_constant]:
     "References a constant from the Tectonic configuration."
     return Density(df_types.config_constant(key))
 
-@resolve_and_unwrap_inputs
+@coerce_density_ASTs
 def config_noise(noise: Noise, key: str, shift_x: DensityDescriptor, shift_z: DensityDescriptor) -> Density[df_types.config_noise]:
     ""
     return Density(df_types.config_noise(noise, key, shift_x, shift_z))
