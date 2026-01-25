@@ -1,10 +1,10 @@
 "Macros with mathmatical functions, that are not provided by default."
 
+from typing import Callable
 from Rhombus.core import df_types as dft 
-from Rhombus.language.density import Density, DensityDescriptor, coerce_densities
+from Rhombus.language.density import Density, DensityDescriptor, MacroAssistent
 from Rhombus.language.builtins import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
 from Rhombus.language import builtins as f
-from typing import Callable
 
 pi = 3.14159265359
 "The constant π to 11 decimals."
@@ -14,10 +14,12 @@ e = 2.71828182846
 
 #======// Number Theory //=======================================================================//
 
-@coerce_densities
-def heaviside(argument: DensityDescriptor):
+@MacroAssistent
+def heaviside(argument: DensityDescriptor) -> Density[dft.range_choice]:
     """Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive.<br>
     ❗`heaviside(0) = 0.5`
+
+    ⚙️ This implementation uses `range_choice`.
     """
     return f.range_choice(
         input=argument,
@@ -32,13 +34,13 @@ def heaviside(argument: DensityDescriptor):
             when_out_of_range=1.0
         ))
 
-@coerce_densities
-def ramp(argument: DensityDescriptor):
+@MacroAssistent
+def ramp(argument: DensityDescriptor) -> Density[dft.max]:
     """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
     return f.max(argument, 0)
 
-@coerce_densities
-def sgn(argument: DensityDescriptor):
+@MacroAssistent
+def sgn(argument: DensityDescriptor) -> Density[dft.range_choice]:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`<br>
 
     ⚙️ This implementation uses `range_choice`.
@@ -56,7 +58,7 @@ def sgn(argument: DensityDescriptor):
             when_out_of_range=1.0
         ))
 
-@coerce_densities
+@MacroAssistent
 def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[dft.mul]:
     """Returns the square root of the input.<br>
     ❗`sqrt(x)` is nonesense, if `x < 0`
@@ -82,7 +84,7 @@ def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Dens
 
     return x
 
-@coerce_densities
+@MacroAssistent
 def exp(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns `e` exponentiated to the input.<br>
 
@@ -97,7 +99,7 @@ def exp(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def ln(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the natual logarithm value of the input.<br>
 
@@ -115,12 +117,12 @@ def ln(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
 #======// Arithmetic //==========================================================================//
 
-@coerce_densities
+@MacroAssistent
 def monus(argument1: DensityDescriptor, argument2: DensityDescriptor):
     """Returns `argument1 - argument2`, but when that's negative, returns `0.0` instead."""
     return f.max(argument1 - argument2, 0.0)
 
-@coerce_densities
+@MacroAssistent
 def sum(*arguments: DensityDescriptor) -> Density[dft.add]:
     "Returns the sum of any number of arguments."
     if len(arguments) == 1:
@@ -134,7 +136,7 @@ def sum(*arguments: DensityDescriptor) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def prod(*arguments: DensityDescriptor) -> Density[dft.mul]:
     "Returns the product of any number of arguments."
     if len(arguments) == 1:
@@ -151,7 +153,7 @@ def prod(*arguments: DensityDescriptor) -> Density[dft.mul]:
 
 #======// Trigonometry //========================================================================//
 
-@coerce_densities
+@MacroAssistent
 def sin(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the sine value of the input in radians.<br>
 
@@ -169,7 +171,7 @@ def sin(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def cos(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the cosine value of the input in radians.<br>
 
@@ -187,7 +189,7 @@ def cos(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def tan(argument: DensityDescriptor, terms: int = 4) -> Density[dft.mul]:
     """Returns the tangent value of the input in radians.<br>
     ❗`tan((2n - 1) * x) = NaN` where `x` is near π/2.
@@ -198,7 +200,7 @@ def tan(argument: DensityDescriptor, terms: int = 4) -> Density[dft.mul]:
 
     return sin(argument, terms) / cos(argument, terms)
 
-@coerce_densities
+@MacroAssistent
 def asin(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the arc sine value of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
@@ -215,7 +217,7 @@ def asin(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def acos(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the arc cosine value of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
@@ -224,7 +226,7 @@ def acos(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """
     return (pi / 2) - asin(argument, terms)
 
-@coerce_densities
+@MacroAssistent
 def atan(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the arc tangent value of the input in radians.<br>
 
@@ -239,7 +241,7 @@ def atan(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def sinh(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
 
@@ -256,7 +258,7 @@ def sinh(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 
     return result
 
-@coerce_densities
+@MacroAssistent
 def cosh(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
 

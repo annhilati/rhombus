@@ -1,9 +1,9 @@
-from Rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
+from Rhombus.language.density import Density, DensityDescriptor, BuiltinAssistent
 from Rhombus.support.more_density_functions import df_types as dft
 
 __all__ = []
 
-@coerce_density_ASTs
+@BuiltinAssistent
 def acos(argument: DensityDescriptor) -> Density[dft.acos]:
     """Returns the arc cosine of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
@@ -14,7 +14,7 @@ def acos(argument: DensityDescriptor) -> Density[dft.acos]:
     """
     return Density(dft.acos(argument))
 
-@coerce_density_ASTs
+@BuiltinAssistent
 def asin(argument: DensityDescriptor) -> Density[dft.asin]:
     """Returns the arc sine of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
@@ -25,7 +25,7 @@ def asin(argument: DensityDescriptor) -> Density[dft.asin]:
     """
     return Density(dft.asin(argument))
 
-@coerce_density_ASTs
+@BuiltinAssistent
 def atan(argument: DensityDescriptor) -> Density[dft.atan]:
     """Returns the arc tangent of the input in radians.<br>
 

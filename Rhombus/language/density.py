@@ -10,40 +10,51 @@ DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionType, str, fl
 "UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
-    """Interprets a QoL argument input and returns a Density object. Additionally applies logic like splitting large literal constants into calculations."""
-    if isinstance(arg, Density):
-        out = arg
-    elif isinstance(arg, dft.DensityFunctionType):
-        out = Density(arg)
-    elif isinstance(arg, str):
-        if not ":" in arg: arg = "minecraft:" + arg
-        out = Density(dft.Reference(arg))
-    elif isinstance(arg, (int, float)):
-        out = Density(dft.constant(float(arg)))
-    else:
-        raise ValueError(arg, type(arg))
-    
+    """Interprets a QoL argument input and returns a Density object.
+    Applies logic like splitting large literal constants into calculations
+    before constructing constant AST nodes.
+    """
+
     limit = config.constant_number_limit
-    if isinstance(out.AST, dft.constant) and (v := out.AST.argument) > limit:
 
-        if v == 0: return out
+    if isinstance(arg, (int, float)):
+        v = float(arg)
 
-        factors: list[float] = []
+        if abs(v) <= limit:
+            return Density(dft.constant(v))
+
+        if v == 0.0:
+            return Density(dft.constant(0.0))
+
+        sign = -1.0 if v < 0 else 1.0
         v = abs(v)
 
+        factors: list[float] = []
         while v > limit:
             factors.append(float(limit))
             v /= limit
 
-        factors.append(float(v * (-1.0 if v < 0 else 1.0)))
-        
-        it = iter([Density(dft.constant(f)) for f in factors])
-        result = next(it) * next(it)
+        factors.append(v * sign)
 
+        it = iter(dft.constant(f) for f in factors)
+        result = dft.mul(next(it), next(it))
         for x in it:
-            result = result * x
-        out.AST.argument = result
-    return out
+            result = dft.mul(result, x)
+
+        return Density(result)
+
+    if isinstance(arg, Density):
+        return arg
+
+    if isinstance(arg, dft.DensityFunctionType):
+        return Density(arg)
+
+    if isinstance(arg, str):
+        if ":" not in arg:
+            arg = "minecraft:" + arg
+        return Density(dft.Reference(arg))
+
+    raise ValueError(f"Cannot resolve type {type(arg)} to a density function")
 
 def _is_density_descriptor(annotation) -> bool:
     if annotation is None:
@@ -55,10 +66,20 @@ def _is_density_descriptor(annotation) -> bool:
         origin is not None and DensityDescriptor in get_args(annotation)
     )
 
-P = ParamSpec("P")
-R = TypeVar("R")
+_P = ParamSpec("Params")
+_R = TypeVar("Result")
 
-def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
+def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
+    """A helper decorator for macros, that take (among other) density function inputs.
+
+    The following effects are applied:
+    - Function arguments annotated with `DensityDescriptor` are canonicalized (see the `unwrap` parameter)
+
+    Parameters
+    -------
+    unwrap : bool
+        Whether to pass the resolved `DensityDescriptor` arguments of the function as `DensityFunctionType` objects instead of `Density` objects
+    """
     import inspect, functools
 
     def _to_ast(obj: Any) -> Any:
@@ -76,7 +97,7 @@ def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
 
         return wrapped
 
-    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         sig = inspect.signature(func)
         
         params_to_resolve = {
@@ -85,7 +106,7 @@ def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
         }
 
         @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
 
@@ -111,8 +132,9 @@ def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
 
     return decorator
 
-def coerce_density_ASTs(fn: Callable[P, R], /) -> Callable[P, R]:
-    return coerce_densities(unwrap=True)(fn)
+def BuiltinAssistent(fn: Callable[_P, _R], /) -> Callable[_P, _R]:
+    "Shortcut for `MacroAssistent(unwrap=True)`"
+    return MacroAssistent(unwrap=True)(fn)
 
 
 #======// Density Type //========================================================================//
@@ -135,14 +157,10 @@ class Density(Generic[WrappedDFType]):
 
     def __post_init__(self):
         if isinstance(self.AST, Density):
-            raise Exception("A Density object was initialized, with another Density object as its contents. This can be an error made during development.")
+            raise Exception("A Density object was initialized, with another Density object as its contents")
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
-    
-    def as_dict(self) -> dict[str, Any]:
-        "Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
-        return self.AST.encode()
     
     @property
     def cc(self) -> int:
@@ -158,7 +176,17 @@ class Density(Generic[WrappedDFType]):
         return toolchain.compile(density=self, identifier=with_name)
 
     def inject(self, ctx: Context, with_name: str, /, log: bool = True) -> None:
-        "Implements the Density and all additionally needed files in a Beet datapack."
+        """Implements the Density and all additionally needed files in a Beet datapack.
+        
+        Parameters
+        -------
+        ctx : Context
+            The beet pipeline context into whose datapack the density function is to be implemented
+        with_name : str
+            A resource identifier under which the density function will be available
+        log : bool
+            Whether the progress of the injection will be printed to the console
+        """
         data = ctx.data
 
         files = self.compile(with_name)
@@ -168,6 +196,10 @@ class Density(Generic[WrappedDFType]):
             if log: print(f"Implemented {type(file).__name__} '{id}'")
             
         if log: print(f"Finished implementing density function '{with_name}'")
+    
+    def as_dict(self) -> dict[str, Any]:
+        "Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
+        return self.AST.encode()
 
     def show_in_dir(self, with_name: str = "test"):
         "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
@@ -299,14 +331,14 @@ class Density(Generic[WrappedDFType]):
 #======// Additional Density Types //============================================================//
 
 def ref(identifier: str, /) -> Density[dft.Reference]:
-    return Density(dft.Reference(identifier))
+    return resolve_DensityDescriptor(identifier)
 
 
 @dataclass(init=False)
 class ConfiguredDensity:
     """Creates a Density that will be casted into a specific file when compiling."""
 
-    @coerce_density_ASTs
+    @BuiltinAssistent
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
         default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
         if isinstance(default, dft.Reference):
@@ -332,7 +364,7 @@ class ExternalDensity:
         hash_digest = hashlib.sha256(encoded_str).digest()
         return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
 
-    @coerce_density_ASTs
+    @BuiltinAssistent
     def __new__(cls, value: DensityDescriptor, /):
         return Density(dft.Reference(
             reference="rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()),
