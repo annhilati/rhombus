@@ -1,5 +1,5 @@
-from rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
-from rhombus.support.more_density_functions import df_types as dft
+from Rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
+from Rhombus.support.more_density_functions import df_types as dft
 
 __all__ = []
 

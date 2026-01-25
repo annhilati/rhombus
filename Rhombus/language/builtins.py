@@ -23,9 +23,9 @@ __all__ = [
     "y_clamped_gradient"
 ]
 
-from rhombus.core import df_types as dft
-from rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs, resolve_DensityDescriptor, ExternalDensity
-from rhombus.language.noise import Noise
+from Rhombus.core import df_types as dft
+from Rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs, resolve_DensityDescriptor, ExternalDensity
+from Rhombus.language.noise import Noise
 from typing import Literal
 
 MAX_REASONABLE_VALUE: Literal[1000000] = 1000000.0

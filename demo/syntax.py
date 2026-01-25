@@ -1,4 +1,4 @@
-from rhombus import *
+from Rhombus import *
 
 distance_scale = ConfiguredDensity("config:distance_scale", default=1.0)
 

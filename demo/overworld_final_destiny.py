@@ -1,5 +1,5 @@
-from rhombus import *
-from rhombus.language.builtins import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
+from Rhombus import *
+from Rhombus.language.builtins import MIN_REASONABLE_VALUE, MAX_REASONABLE_VALUE
 
 def overworld():
     jagged_noise                    = ReferencedNoise('minecraft:jagged')

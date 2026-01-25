@@ -3,10 +3,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
-from rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunctionType, decode_HOLDER_HELPER_CODEC
-from rhombus.core.additional_resource import AdditionalResource
-from rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
-from rhombus.language.noise import Noise
+from Rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunctionType, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.additional_resource import AdditionalResource
+from Rhombus.language.density import Density, DensityDescriptor, coerce_density_ASTs
+from Rhombus.language.noise import Noise
 
 __all__ = ["invert", "config_constant", "config_noise"]
 

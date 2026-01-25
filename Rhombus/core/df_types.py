@@ -3,8 +3,8 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
-from rhombus.core.additional_resource import AdditionalResource
-from rhombus.core import config
+from Rhombus.core.additional_resource import AdditionalResource
+from Rhombus.core import config
 import warnings
 
 __all__ = [
@@ -269,7 +269,7 @@ class noise(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> noise:
-        from rhombus.language.noise import Noise
+        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["noise"]),
             data["xz_scale"],
@@ -322,7 +322,7 @@ class shift(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> shift:
-        from rhombus.language.noise import Noise
+        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -340,7 +340,7 @@ class shift_a(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> shift_a:
-        from rhombus.language.noise import Noise
+        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -358,7 +358,7 @@ class shift_b(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> shift_b:
-        from rhombus.language.noise import Noise
+        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -381,7 +381,7 @@ class shifted_noise(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> shifted_noise:
-        from rhombus.language.noise import Noise
+        from Rhombus.language.noise import Noise
         return cls(Noise(None, None, data["noise"]), **{
             k: v
             for k, v
@@ -465,7 +465,7 @@ class weird_scaled_sampler(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> weird_scaled_sampler:
-        from rhombus.language.noise import Noise
+        from Rhombus.language.noise import Noise
         return cls(
             data["rarity_value_mapper"],
             Noise(None, None, data["noise"]),

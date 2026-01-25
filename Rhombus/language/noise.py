@@ -4,7 +4,7 @@ from typing import Any, ClassVar, Optional
 import uuid, struct
 
 from beet.contrib.worldgen import WorldgenNoise
-from rhombus.core.additional_resource import AdditionalResource
+from Rhombus.core.additional_resource import AdditionalResource
 
 @dataclass(frozen=True)
 class Noise(AdditionalResource):

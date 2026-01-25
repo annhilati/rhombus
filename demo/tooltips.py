@@ -1,6 +1,6 @@
 from rhombus import *
-from rhombus.core import *
-from rhombus.toolchain import *
+from Rhombus.core import *
+from Rhombus.toolchain import *
 
 #======// Language //============================================================================//
 

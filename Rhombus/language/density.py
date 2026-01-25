@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
-from rhombus.core import df_types as dft, config
+from Rhombus.core import df_types as dft, config
 from beet import Context
 
 #======// Formatters //==========================================================================//
@@ -109,7 +109,7 @@ class Density(Generic[WrappedDFType]):
     """Class representing a density calculation.
     
     Don't use the constructor of this class. To define a new density instead use:<br>
-    - Methods from `rhombus.language.builtins` or other methods that return a `Density` for calculations
+    - Methods from `Rhombus.language.builtins` or other methods that return a `Density` for calculations
     - `ConfiguredDensity` if a value is needed that can be easily altered in the compiled datapack later
     - `ExternalDensity` if a density function has to be compiled to a separate file, but it is not important what this file is
     - `DensityReference` to reference a density function that is provided externally, like by another datapack

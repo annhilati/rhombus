@@ -1,5 +1,5 @@
 [project]
-name = "rhombus"
+name = "Rhombus"
 version = "0.0.0"
 description = ""
 readme = "README.md"
@@ -25,4 +25,4 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["rhombus", "rhombus.core", "rhombus.language", "rhombus.macros", "rhombus.support", "rhombus.toolchain"]
+packages = ["Rhombus", "Rhombus.core", "Rhombus.language", "Rhombus.macros", "Rhombus.support", "Rhombus.toolchain"]

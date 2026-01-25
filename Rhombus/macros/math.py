@@ -1,9 +1,9 @@
 "Macros with mathmatical functions, that are not provided by default."
 
-from rhombus.core import df_types as dft 
-from rhombus.language.density import Density, DensityDescriptor, coerce_densities
-from rhombus.language.builtins import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
-from rhombus.language import builtins as f
+from Rhombus.core import df_types as dft 
+from Rhombus.language.density import Density, DensityDescriptor, coerce_densities
+from Rhombus.language.builtins import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
+from Rhombus.language import builtins as f
 from typing import Callable
 
 pi = 3.14159265359
