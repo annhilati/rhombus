@@ -39,7 +39,7 @@ class Noise(AdditionalResource):
             raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or reference an externally defined noise")
         
     @property
-    def UUID(self) -> str | None:
+    def UUID(self) -> uuid.UUID:
         if self.reference is not None:
             return None
         data = struct.pack(">qI", self.firstOctave, len(self.amplitudes))
@@ -54,7 +54,7 @@ class Noise(AdditionalResource):
     def reference_identifier(self) -> str:
         if self.reference is not None:
             return self.reference if ":" in self.reference else "minecraft:" + self.reference
-        return f"rhombus:generated/{str(self.UUID)}"
+        return f"rhombus:generated/{str(self.UUID).replace("-", "")}"
 
     @classmethod
     def decode(cls, data: dict) -> Noise:

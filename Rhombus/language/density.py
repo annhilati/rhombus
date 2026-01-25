@@ -59,8 +59,22 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
-    """Decorator that can be used on functions to resolve inputs annotated with `DensityDescriptor` to `Density` or `DensityFunctionType` objects."""
     import inspect, functools
+
+    def _to_ast(obj: Any) -> Any:
+        try:
+            DensityType = globals().get("Density")
+        except Exception:
+            DensityType = None
+
+        if DensityType is not None and isinstance(obj, DensityType):
+            return obj.AST
+
+        wrapped = getattr(obj, "wrapped", obj)
+        if DensityType is not None and isinstance(wrapped, DensityType):
+            return wrapped.AST
+
+        return wrapped
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         sig = inspect.signature(func)
@@ -79,10 +93,12 @@ def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
                 if name in bound.arguments:
                     current_val = bound.arguments[name]
                     resolved = resolve_DensityDescriptor(current_val)
-                    
+
                     if unwrap:
-                        bound.arguments[name] = getattr(resolved, "wrapped", resolved)
+                        # guarantee: always return the AST (not ein Density-Objekt)
+                        bound.arguments[name] = _to_ast(resolved)
                     else:
+                        # guarantee: return exactly das, was resolve_DensityDescriptor geliefert hat
                         bound.arguments[name] = resolved
 
             return func(*bound.args, **bound.kwargs)
@@ -96,7 +112,6 @@ def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
     return decorator
 
 def coerce_density_ASTs(fn: Callable[P, R], /) -> Callable[P, R]:
-    "(unwrap=true)"
     return coerce_densities(unwrap=True)(fn)
 
 
@@ -120,14 +135,13 @@ class Density(Generic[WrappedDFType]):
 
     def __post_init__(self):
         if isinstance(self.AST, Density):
-            raise Exception(self.AST)
+            raise Exception("A Density object was initialized, with another Density object as its contents. This can be an error made during development.")
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
     
     def as_dict(self) -> dict[str, Any]:
         "Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
-        print(self.AST.as_dict() if hasattr(self.AST, "as_dict") else None)
         return self.AST.encode()
     
     @property
@@ -140,7 +154,7 @@ class Density(Generic[WrappedDFType]):
     
     def compile(self, with_name: str, /):
         "Compiles the Density into Beet file class instances."
-        from rhombus import toolchain
+        from Rhombus import toolchain
         return toolchain.compile(density=self, identifier=with_name)
 
     def inject(self, ctx: Context, with_name: str, /, log: bool = True) -> None:
@@ -157,7 +171,7 @@ class Density(Generic[WrappedDFType]):
 
     def show_in_dir(self, with_name: str = "test"):
         "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
-        from rhombus import toolchain
+        from Rhombus import toolchain
         files = self.compile(with_name)
         toolchain.summon(files)
         
@@ -320,7 +334,10 @@ class ExternalDensity:
 
     @coerce_density_ASTs
     def __new__(cls, value: DensityDescriptor, /):
-        return Density(dft.Reference("rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()), value))
+        return Density(dft.Reference(
+            reference="rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()),
+            default=value)
+        )
 
 
 @dataclass(init=False)

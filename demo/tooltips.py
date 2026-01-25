@@ -1,4 +1,4 @@
-from rhombus import *
+from Rhombus import *
 from Rhombus.core import *
 from Rhombus.toolchain import *
 

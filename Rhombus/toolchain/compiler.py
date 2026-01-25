@@ -46,9 +46,9 @@ def summon(files: dict[str, BeetFileClass]) -> None:
         path = Path(tmp)
 
         for id, f in files.items():
-            p = path / (id.replace(":", ".").replace("/", ".") + f.extension)
+            p = path / (f.scope[-1] + "." + (id.replace(":", ".").replace("/", ".") + f.extension))
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(f.encoder(f.data))
 
         open_folder(path)
-        input("Press enter to go on and delete the temporary directory ... ")
+        input("Press enter to let go the temporary directory ... ")

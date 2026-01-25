@@ -9,6 +9,7 @@ class BeetFileClass(Protocol):
     encoder: Callable[[Any], str]
     data: dict
     extension: str
+    scope: tuple[str, ...]
 
 
 @dataclass(frozen=True)
