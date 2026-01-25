@@ -16,14 +16,14 @@ DensityDescriptor
 math.x
 coords.x
 
+Density.AST
+Density.compile
+Density.inject
+Density.as_dict
+Density.show_in_dir
+
 #======// Core //================================================================================//
 
 AdditionalResource
 
 DensityFunctionType
-
-#======// Toolchain //===========================================================================//
-
-compile
-summon
-inject

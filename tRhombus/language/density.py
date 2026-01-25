@@ -96,6 +96,7 @@ def coerce_densities(fn: Callable[P, R] = None, *, unwrap: bool = False):
     return decorator
 
 def coerce_density_ASTs(fn: Callable[P, R], /) -> Callable[P, R]:
+    "(unwrap=true)"
     return coerce_densities(unwrap=True)(fn)
 
 
@@ -117,11 +118,16 @@ class Density(Generic[WrappedDFType]):
     AST: WrappedDFType
     "The density function AST represented by this Density."
 
+    def __post_init__(self):
+        if isinstance(self.AST, Density):
+            raise Exception(self.AST)
+
     def __repr__(self) -> str:
         return self.AST.__repr__()
     
     def as_dict(self) -> dict[str, Any]:
-        "Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
+        "Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
+        print(self.AST.as_dict() if hasattr(self.AST, "as_dict") else None)
         return self.AST.encode()
     
     @property
@@ -132,7 +138,6 @@ class Density(Generic[WrappedDFType]):
 
     #======// Toolchain //=======================================================================//
     
-
     def compile(self, with_name: str, /):
         "Compiles the Density into Beet file class instances."
         from rhombus import toolchain
@@ -155,6 +160,7 @@ class Density(Generic[WrappedDFType]):
         from rhombus import toolchain
         files = self.compile(with_name)
         toolchain.summon(files)
+        
     
     #======// Arithmetic Magic //================================================================//
     
