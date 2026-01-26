@@ -116,5 +116,6 @@ def z():
 def y():
     """Returns the Y-coordinate of the current block.
     
-    ⚙️ This implementation uses `y_clamped_gradient`."""
+    ⚙️ This implementation uses `y_clamped_gradient`.
+    """
     return f.y_clamped_gradient(-4062, 4062, -4062, 4062)

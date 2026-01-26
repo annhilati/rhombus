@@ -6,7 +6,7 @@ def radius() -> Density:
     x = coords.x()
     z = coords.z()
 
-    return math.sqrt(abs(x)**2 + abs(z)**2, iterations=1)
+    return math.sqrt(x**2 + z**2, iterations=1)
 
 
 n = Noise(-6, [1, 0.5, 0.25, 0.125])

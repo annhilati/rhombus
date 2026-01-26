@@ -77,7 +77,7 @@ class Noise(AdditionalResource):
         return self.reference == other.reference
 
 @dataclass(init=False)
-class ReferencedNoise():
+class ReferenceNoise():
     """Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`.
     """
 

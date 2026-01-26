@@ -132,7 +132,7 @@ def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
 
     return decorator
 
-def BuiltinAssistent(fn: Callable[_P, _R], /) -> Callable[_P, _R]:
+def BuiltinAssistent(fn: Callable[_P, _R]) -> Callable[_P, _R]:
     "Shortcut for `MacroAssistent(unwrap=True)`"
     return MacroAssistent(unwrap=True)(fn)
 

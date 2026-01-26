@@ -15,6 +15,7 @@ DensityDescriptor
 
 math.x
 coords.x
+builtins.x
 
 Density.AST
 Density.compile

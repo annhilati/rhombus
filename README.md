@@ -11,7 +11,7 @@ It allows you to comfortably write density functions while benefiting from Pytho
 
 > [!note]
 > **State of Development**<br>
-> Rhombus already has most features I imagined it to have *somewhere*. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API. 
+> Rhombus already has most features I imagined it to have. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API. 
 
 ## Key Advantages
 - 📦 **Object-oriented Design**<br>
