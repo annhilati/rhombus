@@ -173,7 +173,7 @@ class Density(Generic[WrappedDFType]):
 
     @classmethod
     def from_datapack(cls, ctx: beet.Context, identifier: str) -> Density:
-        "Creates a `Density` object from a density function in a Beet datapack."
+        "⚠️ Currently experimental.<br>Creates a `Density` object from a density function in a Beet datapack."
         from Rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
 
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier

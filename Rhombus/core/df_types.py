@@ -8,14 +8,11 @@ from Rhombus.core import config
 import warnings
 
 __all__ = [
-    "REGISTERED_DENSITY_FUNCTION_TYPES", "decode_HOLDER_HELPER_CODEC", "DensityFunctionType",
+    "decode_HOLDER_HELPER_CODEC", "DensityFunctionType",
     "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase", "MultiArgumentsFunctionBase"
 ]
 
 #======// Main Decoding Function //==============================================================//
-
-REGISTERED_DENSITY_FUNCTION_TYPES: set[type[DensityFunctionType]] = set()
-"Set of all defined classes inheriting from `DensityFunctionTypeBase`."
 
 def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], Reference] = lambda s: Reference(s)) -> DensityFunctionType:
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
@@ -31,12 +28,7 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[
     # that can either be a constant number, a reference to another density function, or a fully defined inline density function.<br>
     # There are other codecs for that too (see `clamp`), but for clarity and supportiveness we will only use this one.
 
-    REGISTRY: dict[str, DensityFunctionType] = {}
-    for t in REGISTERED_DENSITY_FUNCTION_TYPES:
-        if not hasattr(t, "id"): continue
-        if t.id in REGISTRY:
-            raise ValueError(f"There are multiple DensityFunctionTypes with id '{t.id}' defined ({t.__name__} and {REGISTRY[t.id].__name__}).")
-        REGISTRY[t.id] = t
+    REGISTRY = DensityFunctionType.REGISTERED_DENSITY_FUNCTION_TYPES
 
     if isinstance(o, dict):
         t: str = o.get("type")
@@ -63,14 +55,23 @@ class DensityFunctionType:
     id: ClassVar[str]
 
     decode: ClassVar[Callable[[type[Self], dict], Self]]
-    encode: ClassVar[Callable[[Self], dict]]
+    encode: ClassVar[Callable[[Self], dict | float | str]]
+
+    REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type[DensityFunctionType]]] = {}
+    "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
       
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        REGISTERED_DENSITY_FUNCTION_TYPES.add(cls)
+        if hasattr(cls, "id"):
+            DensityFunctionType.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
+
+    def __post_init__(self):
+        if hasattr(self, "validate"):
+            self.validate()
 
     @property
     def fields(self) -> dict[str, Any]:
+        "Returns the fields of the density function type with their values."
         return {
             f.name: getattr(self, f.name, None)
             for f in fields(self)
@@ -79,7 +80,7 @@ class DensityFunctionType:
     
     @property
     def compilation_complexity(self) -> int:
-        return 1 + sum([arg.compilation_complexity for name, arg in self.fields.items() if isinstance(arg, DensityFunctionType)])
+        return 1 + sum([value.compilation_complexity for name, value in self.fields.items() if isinstance(value, DensityFunctionType)])
 
     
 @dataclass
@@ -93,6 +94,7 @@ class SimpleFunctionBase(DensityFunctionType):
     def encode(self) -> dict:
         return {"type": self.id}
     
+
 @dataclass
 class MappedFunctionBase(DensityFunctionType):
     "Base class for density function types that map an argument `argument` to a value."
@@ -105,6 +107,7 @@ class MappedFunctionBase(DensityFunctionType):
     
     def encode(self) -> dict:
         return {"type": self.id, "argument": self.argument.encode()}
+
 
 @dataclass
 class DoubleArgumentFunctionBase(DensityFunctionType):
@@ -124,13 +127,14 @@ class DoubleArgumentFunctionBase(DensityFunctionType):
     def encode(self) -> dict:
         return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
     
+
 class MultiArgumentsFunctionBase(DensityFunctionType):
     """Base class for density function types with any number of arguments of primitive types.
 
     When inheriting from this class, add the `@dataclass` decorator to the new class<br>
     and add fields with the same keys as required in the density function JSON definition.<br>
 
-    If more non-primitive types are needed, inherit from `DensityFunctionType` instead and implement the methods manually.
+    If types are needed in the fields that are not `DensityFunctionType`, `AdditionalResource` or primitive, inherit from `DensityFunctionType` instead and implement the methods manually.
     """
 
     @classmethod
@@ -141,20 +145,16 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
             if f.init
         }
         return cls(**{
-            name: (
-                decode_HOLDER_HELPER_CODEC(value)
-                if tp is DensityFunctionType
-                else value
-            )
-            for name, value in data.items()
-            if name in init_fields
-            for tp in (init_fields[name],)
+            parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunctionType else value
+            # AdditionalResources cannot be decoded dynamically, because they don't have an intrinsic identifier. DF types with those in fields need a custom decoder instead.
+            for parameter, value in data.items()
+            if parameter in init_fields
+            for tp in (init_fields[parameter],)
         })
-
 
     def encode(self) -> dict:
         return {"type": self.id, **{
-            parameter: value.encode() if isinstance(value, (DensityFunctionType, AdditionalResource)) else value
+            parameter: value.encode() if isinstance(value, DensityFunctionType) else value.reference_identifier if isinstance(value, AdditionalResource) else value
             for parameter, value
             in self.fields.items()
         }}
@@ -211,7 +211,7 @@ class clamp(MultiArgumentsFunctionBase):
     min: float
     max:float
 
-    def __post_init__(self) -> None:
+    def validate(self) -> None:
         if isinstance(self.input, Reference) and config.warn_on_reference_in_clamp:
             warnings.warn(
                 "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
@@ -224,7 +224,7 @@ class constant(DensityFunctionType):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
 
-    def __post_init__(self) -> None:
+    def validate(self) -> None:
         limit = config.constant_number_limit
         if self.argument > limit or self.argument < -limit:
             warnings.warn(f"A constant with a value of {self.argument} lies outside the limit of ± {float(limit)}.\n    "
@@ -273,7 +273,7 @@ class mul(DoubleArgumentFunctionBase):
     id: ClassVar[str] = "minecraft:mul"
 
 @dataclass
-class noise(DensityFunctionType):
+class noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:noise"
     noise: AdditionalResource
     xz_scale: float
@@ -288,14 +288,6 @@ class noise(DensityFunctionType):
             data["y_scale"],
         )
 
-    def encode(self):
-        return {
-            "type": self.id,
-            "noise": self.noise.reference_identifier,
-            "xz_scale": self.xz_scale,
-            "y_scale": self.y_scale,
-        }
-
 @dataclass
 class old_blended_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:old_blended_noise"
@@ -305,7 +297,7 @@ class old_blended_noise(MultiArgumentsFunctionBase):
     y_factor: float
     smear_scale_multiplier: float
 
-    def __post_init__(self) -> None:
+    def validate(self) -> None:
         for param, value in {k: v for k, v in self.fields.items() if k != "smear_scale_multiplier"}.items():
             if value > 1000 or value < 0.001:
                 warnings.warn(f"A value of {value} in the '{param}' field of 'old_blended_noise' lies outside the limit of 0.001 ≤ value ≤ 1000.0.\n    "
@@ -328,7 +320,7 @@ class range_choice(MultiArgumentsFunctionBase):
     when_out_of_range: DensityFunctionType
 
 @dataclass
-class shift(DensityFunctionType):
+class shift(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift"
     argument: AdditionalResource
 
@@ -339,14 +331,8 @@ class shift(DensityFunctionType):
             Noise(None, None, data["argument"])
         )
 
-    def encode(self):
-        return {
-            "type": self.id,
-            "argument": self.argument.reference_identifier,
-        }
-
 @dataclass
-class shift_a(DensityFunctionType):
+class shift_a(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift_a"
     argument: AdditionalResource
 
@@ -357,14 +343,8 @@ class shift_a(DensityFunctionType):
             Noise(None, None, data["argument"])
         )
 
-    def encode(self):
-        return {
-            "type": self.id,
-            "argument": self.argument.reference_identifier,
-        }
-
 @dataclass
-class shift_b(DensityFunctionType):
+class shift_b(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift_b"
     argument: AdditionalResource
 
@@ -375,14 +355,8 @@ class shift_b(DensityFunctionType):
             Noise(None, None, data["argument"])
         )
 
-    def encode(self):
-        return {
-            "type": self.id,
-            "argument": self.argument.reference_identifier,
-        }
-
 @dataclass
-class shifted_noise(DensityFunctionType):
+class shifted_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shifted_noise"
     noise: AdditionalResource
     xz_scale: float
@@ -400,17 +374,6 @@ class shifted_noise(DensityFunctionType):
             in data.items()
             if k in {f.name for f in fields(cls) if f.init} and k not in ["type", "noise"]
         })
-
-    def encode(self):
-        return {
-            "type": self.id,
-            "noise": self.noise.reference_identifier,
-            "xz_scale": self.xz_scale,
-            "y_scale": self.y_scale,
-            "shift_x": self.shift_x.encode(),
-            "shift_y": self.shift_y.encode(),
-            "shift_z": self.shift_z.encode(),
-        }
 
 class slide(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:slide"
@@ -469,7 +432,7 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
     weirdness: DensityFunctionType
 
 @dataclass
-class weird_scaled_sampler(DensityFunctionType):
+class weird_scaled_sampler(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
     noise: AdditionalResource
@@ -484,14 +447,6 @@ class weird_scaled_sampler(DensityFunctionType):
             decode_HOLDER_HELPER_CODEC(data["input"])
         )
 
-    def encode(self):
-        return {
-            "type": self.id,
-            "rarity_value_mapper": self.rarity_value_mapper,
-            "noise": self.noise.reference_identifier,
-            "input": self.input.encode(),
-        }
-
 @dataclass
 class y_clamped_gradient(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
@@ -500,7 +455,7 @@ class y_clamped_gradient(MultiArgumentsFunctionBase):
     from_value: float
     to_value: float
 
-    def __post_init__(self) -> None:
+    def validate(self) -> None:
         if self.from_y > 4062 or self.from_y < -4064:
             warnings.warn(f"A value of {self.from_y} in the 'from_y' field of 'y_clamped_gradient' lies outside the limit of -4064 ≤ value ≤ 4062.\n    "
                           "An error might be thrown when loading a world.")

@@ -82,4 +82,5 @@ class ReferenceNoise():
     """
 
     def __new__(identifier: str, /) -> Noise:
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
         return Noise(firstOctave=None, amplitudes=None, reference=identifier)
