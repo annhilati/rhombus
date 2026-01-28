@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
 from Rhombus.core import df_types as dft, config
-from beet import Context
+import beet, beet.contrib.worldgen as beet_worldgen
+
 
 #======// Formatters //==========================================================================//
 
@@ -169,13 +170,34 @@ class Density(Generic[WrappedDFType]):
     
 
     #======// Toolchain //=======================================================================//
+
+    @classmethod
+    def from_datapack(cls, ctx: beet.Context, identifier: str) -> Density:
+        "Creates a `Density` object from a density function in a Beet datapack."
+        from Rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
+
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+
+        file = ctx.data[beet_worldgen.WorldgenDensityFunction].get(identifier)
+        if file is None:
+            raise Exception
+        data = file.data
+
+        def on_reference(s: str):
+            s = "minecraft:" + s if not ":" in s else s
+            file = ctx.data[beet_worldgen.WorldgenDensityFunction].get(s)
+            if file is None:
+                return dft.Reference(s)
+            return dft.Reference(s, default=decode_HOLDER_HELPER_CODEC(file.data, on_reference=on_reference))
+
+        return Density(decode_HOLDER_HELPER_CODEC(data, on_reference=on_reference))
     
     def compile(self, with_name: str, /):
         "Compiles the Density into Beet file class instances."
         from Rhombus import toolchain
         return toolchain.compile(density=self, identifier=with_name)
 
-    def inject(self, ctx: Context, with_name: str, /, log: bool = True) -> None:
+    def inject(self, ctx: beet.Context, with_name: str, /, log: bool = True) -> None:
         """Implements the Density and all additionally needed files in a Beet datapack.
         
         Parameters
@@ -185,7 +207,7 @@ class Density(Generic[WrappedDFType]):
         with_name : str
             A resource identifier under which the density function will be available
         log : bool
-            Whether the progress of the injection will be printed to the console
+            Whether to print the progress of the injection to the console
         """
         data = ctx.data
 

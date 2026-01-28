@@ -14,7 +14,7 @@ class BeetFileClass(Protocol):
 
 @dataclass(frozen=True)
 class AdditionalResource(ABC):
-    """Base class for resources that have to be declared in a datapack outside of a density function.
+    """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
     When defining new AdditionalResource types ensure the following:
     - It is a frozen dataclass

@@ -17,7 +17,7 @@ __all__ = [
 REGISTERED_DENSITY_FUNCTION_TYPES: set[type[DensityFunctionType]] = set()
 "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
 
-def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /) -> DensityFunctionType:
+def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], Reference] = lambda s: Reference(s)) -> DensityFunctionType:
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
     
@@ -50,7 +50,8 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /) -> DensityFunctionType:
     elif isinstance(o, (int, float)):
         return constant(float(o))
     elif isinstance(o, str):
-        return Reference(o)
+        print("Is string in decoder fn", o)
+        return on_reference(o)
     else:
         raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument")
 
@@ -134,11 +135,22 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
 
     @classmethod
     def decode(cls, data: dict) -> Self:
+        init_fields = {
+            f.name: f.type
+            for f in fields(cls)
+            if f.init
+        }
         return cls(**{
-            parameter: decode_HOLDER_HELPER_CODEC(value)
-            for parameter, value in data.items()
-            if parameter in {f.name for f in fields(cls) if f.init}
+            name: (
+                decode_HOLDER_HELPER_CODEC(value)
+                if tp is DensityFunctionType
+                else value
+            )
+            for name, value in data.items()
+            if name in init_fields
+            for tp in (init_fields[name],)
         })
+
 
     def encode(self) -> dict:
         return {"type": self.id, **{
@@ -157,7 +169,7 @@ class Reference(DensityFunctionType):
     
     @classmethod
     def decode(cls, data: str) -> Reference:
-        return cls(data)
+        return decode_HOLDER_HELPER_CODEC(data)
     
     def encode(self) -> str:
         return self.reference
