@@ -56,6 +56,7 @@ class DensityFunctionType:
 
     decode: ClassVar[Callable[[type[Self], dict], Self]]
     encode: ClassVar[Callable[[Self], dict | float | str]]
+    validate: ClassVar[Callable[[Self], None]]
 
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type[DensityFunctionType]]] = {}
     "Set of all defined classes inheriting from `DensityFunctionTypeBase`."

@@ -21,8 +21,8 @@ __all__ = [
     "min", "mul", "noise",
     "old_blended_noise", 
     "quarter_negative", "range_choice",
-    "shift", "shift_a", "shift_b",
-    "shifted_noise", "slide",
+    "ref", "shift", "shift_a",
+    "shift_b", "shifted_noise", "slide",
     "spline", "square", "squeeze",
     "terrain_shaper_spline",
     "weird_scaled_sampler",
@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 from Rhombus.core import df_types as dft
-from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor, BuiltinAssistent, resolve_DensityDescriptor
+from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor, BuiltinAssistent, resolve_DensityDescriptor, ref
 from Rhombus.language.noise import Noise
 from typing import Literal
 

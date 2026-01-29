@@ -75,6 +75,7 @@ def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
 
     The following effects are applied:
     - Function arguments annotated with `DensityDescriptor` are canonicalized (see the `unwrap` parameter)
+    - Literal constant values that are larger than accepted are split into multiplications
 
     Parameters
     -------
@@ -117,10 +118,8 @@ def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
                     resolved = resolve_DensityDescriptor(current_val)
 
                     if unwrap:
-                        # guarantee: always return the AST (not ein Density-Objekt)
                         bound.arguments[name] = _to_ast(resolved)
                     else:
-                        # guarantee: return exactly das, was resolve_DensityDescriptor geliefert hat
                         bound.arguments[name] = resolved
 
             return func(*bound.args, **bound.kwargs)
@@ -333,26 +332,12 @@ class Density(Generic[WrappedDFType]):
     def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __bool__(self): raise NotImplementedError
-    
-
-    #======// Shortcuts //=======================================================================//
-
-    # def cache_once(self) -> None:
-    #     self.wrapped = dft.cache_once(self.wrapped)
-
-    # def interpolated(self) -> None:
-    #     self.wrapped = dft.interpolated(self.wrapped)
-
-    # def cache_2d(self) -> None:
-    #     self.wrapped = dft.cache_2d(self.wrapped)
-
-    # def flat_cache(self) -> None:
-    #     self.wrapped = dft.flat_cache(self.wrapped)
 
 
 #======// Additional Density Types //============================================================//
 
 def ref(identifier: str, /) -> Density[dft.Reference]:
+    "Creates a Density that is a reference to an externally provided density function."
     return resolve_DensityDescriptor(identifier)
 
 
