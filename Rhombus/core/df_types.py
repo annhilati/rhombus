@@ -3,6 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
+from contextvars import ContextVar
 from Rhombus.core.additional_resource import AdditionalResource
 from Rhombus.core import config
 import warnings
@@ -14,10 +15,15 @@ __all__ = [
 
 #======// Main Decoding Function //==============================================================//
 
-def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], Reference] = lambda s: Reference(s)) -> DensityFunctionType:
+_current_on_reference: ContextVar[Callable[[str], "Reference"]] = ContextVar(
+    "_current_on_reference",
+    default=lambda s: Reference(s),
+)
+
+def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], "Reference"] | None = None) -> "DensityFunctionType":
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
-    
+
     Raises
     -------
     ValueError : When the dictionary has no key `'type'`
@@ -28,24 +34,45 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[
     # that can either be a constant number, a reference to another density function, or a fully defined inline density function.<br>
     # There are other codecs for that too (see `clamp`), but for clarity and supportiveness we will only use this one.
 
-    REGISTRY = DensityFunctionType.REGISTERED_DENSITY_FUNCTION_TYPES
+    token = None
+    if on_reference is not None:
+        token = _current_on_reference.set(on_reference)
 
-    if isinstance(o, dict):
-        t: str = o.get("type")
-        if t is None:
-            raise ValueError("Cannot decode dict as HOLDER_HELPER_CODEC argument without key 'type'")
-        if not ":" in t:
-            t = "minecraft:" + t
-        if REGISTRY.get(t) is None:
-            raise TypeError(f"Cannot decode dict as HOLDER_HELPER_CODEC argument with type id '{t}'. No density function type class with adequate id is defined")
-        return REGISTRY.get(t).decode(o)
-    elif isinstance(o, (int, float)):
-        return constant(float(o))
-    elif isinstance(o, str):
-        print("Is string in decoder fn", o)
-        return on_reference(o)
-    else:
-        raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument")
+    try:
+        fn = _current_on_reference.get()
+
+        if isinstance(o, dict):
+            t: str | None = o.get("type")
+            if t is None:
+                raise ValueError(
+                    "Cannot decode dict as HOLDER_HELPER_CODEC argument without key 'type'"
+                )
+            if ":" not in t:
+                t = "minecraft:" + t
+            cls = DensityFunctionType.REGISTERED_DENSITY_FUNCTION_TYPES.get(t)
+            if cls is None:
+                raise TypeError(
+                    f"Cannot decode dict as HOLDER_HELPER_CODEC argument with type id '{t}'. "
+                    "No density function type class with adequate id is defined"
+                )
+            out = cls.decode(o)
+
+        elif isinstance(o, (int, float)):
+            out = constant(float(o))
+
+        elif isinstance(o, str):
+            out = fn(o)
+
+        else:
+            raise TypeError(
+                f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument"
+            )
+
+        return out
+
+    finally:
+        if token is not None:
+            _current_on_reference.reset(token)
 
 
 #======// Function Type Base Classes //==========================================================//

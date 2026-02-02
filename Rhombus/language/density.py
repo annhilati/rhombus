@@ -177,26 +177,26 @@ class Density(Generic[WrappedDFType]):
 
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
 
-        file = dp[beet_worldgen.WorldgenDensityFunction].get(identifier)
+        file = dp[beet_worldgen.WorldgenDensityFunction][identifier]
         if file is None:
             raise Exception
         data = file.data
 
         def on_reference(s: str):
             s = "minecraft:" + s if not ":" in s else s
-            file = dp[beet_worldgen.WorldgenDensityFunction].get(s)
+            file = dp[beet_worldgen.WorldgenDensityFunction][s]
             if file is None:
                 return dft.Reference(s)
             return dft.Reference(s, default=decode_HOLDER_HELPER_CODEC(file.data, on_reference=on_reference))
 
         return Density(decode_HOLDER_HELPER_CODEC(data, on_reference=on_reference))
     
-    def compile(self, with_name: str, /):
+    def compile(self, with_identifier: str, /):
         "Compiles the Density into Beet file class instances."
         from Rhombus import toolchain
-        return toolchain.compile(density=self, identifier=with_name)
+        return toolchain.compile(density=self, identifier=with_identifier)
 
-    def inject(self, dp: beet.DataPack, with_name: str, /, log: bool = True) -> None:
+    def inject(self, dp: beet.DataPack, with_identifier: str, /, log: bool = True) -> None:
         """Implements the Density and all additionally needed files in a Beet datapack.
         
         Parameters
@@ -209,13 +209,13 @@ class Density(Generic[WrappedDFType]):
             Whether to print the progress of the injection to the console
         """
 
-        files = self.compile(with_name)
+        files = self.compile(with_identifier)
 
         for id, file in files.items():
             dp[id] = file
             if log: print(f"Implemented {type(file).__name__} '{id}'")
             
-        if log: print(f"Finished implementing density function '{with_name}'")
+        if log: print(f"Finished implementing density function '{with_identifier}'")
     
     def as_dict(self) -> dict[str, Any]:
         "Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
