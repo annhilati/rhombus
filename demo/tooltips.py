@@ -27,4 +27,4 @@ Density.show_in_dir
 
 AdditionalResource
 
-DensityFunctionType
+DensityFunction

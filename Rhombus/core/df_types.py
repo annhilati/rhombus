@@ -5,22 +5,19 @@ from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
 from contextvars import ContextVar
 from Rhombus.core.additional_resource import AdditionalResource
-from Rhombus.core import config
+from Rhombus.core import config, JSONDict
 import warnings
 
 __all__ = [
-    "decode_HOLDER_HELPER_CODEC", "DensityFunctionType",
+    "decode_HOLDER_HELPER_CODEC", "DensityFunction",
     "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase", "MultiArgumentsFunctionBase"
 ]
 
 #======// Main Decoding Function //==============================================================//
 
-_current_on_reference: ContextVar[Callable[[str], "Reference"]] = ContextVar(
-    "_current_on_reference",
-    default=lambda s: Reference(s),
-)
+_current_on_reference: ContextVar[Callable[[str], "Reference"]] = ContextVar("_current_on_reference", default=lambda s: Reference(s))
 
-def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], "Reference"] | None = None) -> "DensityFunctionType":
+def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], "Reference"] | None = None) -> "DensityFunction":
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
 
@@ -49,7 +46,7 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[
                 )
             if ":" not in t:
                 t = "minecraft:" + t
-            cls = DensityFunctionType.REGISTERED_DENSITY_FUNCTION_TYPES.get(t)
+            cls = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(t)
             if cls is None:
                 raise TypeError(
                     f"Cannot decode dict as HOLDER_HELPER_CODEC argument with type id '{t}'. "
@@ -77,21 +74,21 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[
 
 #======// Function Type Base Classes //==========================================================//
 
-class DensityFunctionType:
+class DensityFunction:
     """Base class for density function types."""
     id: ClassVar[str]
 
-    decode: ClassVar[Callable[[type[Self], dict], Self]]
-    encode: ClassVar[Callable[[Self], dict | float | str]]
+    decode: ClassVar[Callable[[type[Self], JSONDict], Self]]
+    encode: ClassVar[Callable[[Self], JSONDict | float | str]]
     validate: ClassVar[Callable[[Self], None]]
 
-    REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type[DensityFunctionType]]] = {}
+    REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type[DensityFunction]]] = {}
     "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
       
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         if hasattr(cls, "id"):
-            DensityFunctionType.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
+            DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
 
     def __post_init__(self):
         if hasattr(self, "validate"):
@@ -108,43 +105,43 @@ class DensityFunctionType:
     
     @property
     def compilation_complexity(self) -> int:
-        return 1 + sum([value.compilation_complexity for name, value in self.fields.items() if isinstance(value, DensityFunctionType)])
+        return 1 + sum([value.compilation_complexity for name, value in self.fields.items() if isinstance(value, DensityFunction)])
 
     
 @dataclass
-class SimpleFunctionBase(DensityFunctionType):
+class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
     @classmethod
     def decode(cls, data: dict) -> Self:
         return cls()
     
-    def encode(self) -> dict:
+    def encode(self) -> JSONDict:
         return {"type": self.id}
     
 
 @dataclass
-class MappedFunctionBase(DensityFunctionType):
+class MappedFunctionBase(DensityFunction):
     "Base class for density function types that map an argument `argument` to a value."
-    argument: DensityFunctionType
+    argument: DensityFunction
 
     @classmethod
-    def decode(cls, data: dict) -> Self:
+    def decode(cls, data: JSONDict) -> Self:
         argument = data["argument"]
         return cls(decode_HOLDER_HELPER_CODEC(argument))
     
-    def encode(self) -> dict:
+    def encode(self) -> JSONDict:
         return {"type": self.id, "argument": self.argument.encode()}
 
 
 @dataclass
-class DoubleArgumentFunctionBase(DensityFunctionType):
+class DoubleArgumentFunctionBase(DensityFunction):
     "Base class for density function types with two arguments `argument1` and `argument2`."
-    argument1: DensityFunctionType
-    argument2: DensityFunctionType
+    argument1: DensityFunction
+    argument2: DensityFunction
 
     @classmethod
-    def decode(cls, data: dict) -> Self:
+    def decode(cls, data: JSONDict) -> Self:
         argument1 = data["argument1"]
         argument2 = data["argument2"]
         return cls(
@@ -152,11 +149,11 @@ class DoubleArgumentFunctionBase(DensityFunctionType):
             decode_HOLDER_HELPER_CODEC(argument2)
         )
     
-    def encode(self) -> dict:
+    def encode(self) -> JSONDict:
         return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
     
 
-class MultiArgumentsFunctionBase(DensityFunctionType):
+class MultiArgumentsFunctionBase(DensityFunction):
     """Base class for density function types with any number of arguments of primitive types.
 
     When inheriting from this class, add the `@dataclass` decorator to the new class<br>
@@ -166,23 +163,23 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
     """
 
     @classmethod
-    def decode(cls, data: dict) -> Self:
+    def decode(cls, data: JSONDict) -> Self:
         init_fields = {
             f.name: f.type
             for f in fields(cls)
             if f.init
         }
         return cls(**{
-            parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunctionType else value
+            parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunction else value
             # AdditionalResources cannot be decoded dynamically, because they don't have an intrinsic identifier. DF types with those in fields need a custom decoder instead.
             for parameter, value in data.items()
             if parameter in init_fields
             for tp in (init_fields[parameter],)
         })
 
-    def encode(self) -> dict:
+    def encode(self) -> JSONDict:
         return {"type": self.id, **{
-            parameter: value.encode() if isinstance(value, DensityFunctionType) else value.reference_identifier if isinstance(value, AdditionalResource) else value
+            parameter: value.encode() if isinstance(value, DensityFunction) else value.reference_identifier if isinstance(value, AdditionalResource) else value
             for parameter, value
             in self.fields.items()
         }}
@@ -191,9 +188,9 @@ class MultiArgumentsFunctionBase(DensityFunctionType):
 #======// Reference Classes //===================================================================//
 
 @dataclass    
-class Reference(DensityFunctionType):
+class Reference(DensityFunction):
     reference: str
-    default: DensityFunctionType = field(init=True, default=None)
+    default: DensityFunction | None = field(init=True, default=None)
     
     @classmethod
     def decode(cls, data: str) -> Reference:
@@ -235,7 +232,7 @@ class cache_once(MappedFunctionBase):
 @dataclass
 class clamp(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:clamp"
-    input: DensityFunctionType
+    input: DensityFunction
     min: float
     max:float
 
@@ -248,7 +245,7 @@ class clamp(MultiArgumentsFunctionBase):
             )
 
 @dataclass
-class constant(DensityFunctionType):
+class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
 
@@ -259,7 +256,7 @@ class constant(DensityFunctionType):
                           "An error might be thrown when loading a world.")
 
     @classmethod
-    def decode(cls, data: dict | float) -> constant:
+    def decode(cls, data: JSONDict | float) -> constant:
         return cls(data["argument"] if isinstance(data, dict) else data)
     
     def encode(self) -> float:
@@ -274,8 +271,8 @@ class end_islands(SimpleFunctionBase):
 @dataclass
 class find_top_surface(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:find_top_surface"
-    density: DensityFunctionType
-    upper_bound: DensityFunctionType
+    density: DensityFunction
+    upper_bound: DensityFunction
     lower_bound: int
     cell_height: int
 
@@ -308,7 +305,7 @@ class noise(MultiArgumentsFunctionBase):
     y_scale: float
 
     @classmethod
-    def decode(cls, data: dict) -> noise:
+    def decode(cls, data: JSONDict) -> noise:
         from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["noise"]),
@@ -341,11 +338,11 @@ class quarter_negative(MappedFunctionBase):
 @dataclass
 class range_choice(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:range_choice"
-    input: DensityFunctionType
+    input: DensityFunction
     min_inclusive: float
     max_exclusive: float
-    when_in_range: DensityFunctionType
-    when_out_of_range: DensityFunctionType
+    when_in_range: DensityFunction
+    when_out_of_range: DensityFunction
 
 @dataclass
 class shift(MultiArgumentsFunctionBase):
@@ -353,7 +350,7 @@ class shift(MultiArgumentsFunctionBase):
     argument: AdditionalResource
 
     @classmethod
-    def decode(cls, data: dict) -> shift:
+    def decode(cls, data: JSONDict) -> shift:
         from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
@@ -365,7 +362,7 @@ class shift_a(MultiArgumentsFunctionBase):
     argument: AdditionalResource
 
     @classmethod
-    def decode(cls, data: dict) -> shift_a:
+    def decode(cls, data: JSONDict) -> shift_a:
         from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
@@ -377,7 +374,7 @@ class shift_b(MultiArgumentsFunctionBase):
     argument: AdditionalResource
 
     @classmethod
-    def decode(cls, data: dict) -> shift_b:
+    def decode(cls, data: JSONDict) -> shift_b:
         from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
@@ -389,12 +386,12 @@ class shifted_noise(MultiArgumentsFunctionBase):
     noise: AdditionalResource
     xz_scale: float
     y_scale: float
-    shift_x: DensityFunctionType
-    shift_y: DensityFunctionType
-    shift_z: DensityFunctionType
+    shift_x: DensityFunction
+    shift_y: DensityFunction
+    shift_z: DensityFunction
 
     @classmethod
-    def decode(cls, data: dict) -> shifted_noise:
+    def decode(cls, data: JSONDict) -> shifted_noise:
         from Rhombus.language.noise import Noise
         return cls(Noise(None, None, data["noise"]), **{
             k: v
@@ -407,14 +404,14 @@ class slide(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:slide"
 
 @dataclass
-class spline(DensityFunctionType):
+class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
-    coordinate: DensityFunctionType
-    points: list[tuple[float, DensityFunctionType, float]]
+    coordinate: DensityFunction
+    points: list[tuple[float, DensityFunction, float]]
 
     
     @classmethod
-    def decode(cls, data: dict) -> spline:
+    def decode(cls, data: JSONDict) -> spline:
         return cls(
             decode_HOLDER_HELPER_CODEC(data["spline"]["coordinate"]),
             [
@@ -423,7 +420,7 @@ class spline(DensityFunctionType):
             ]
         )
     
-    def encode(self) -> dict[str, Any]:
+    def encode(self) -> JSONDict:
         return {
             "type": self.id,
             "spline": {
@@ -431,7 +428,7 @@ class spline(DensityFunctionType):
                 "points": [
                     {
                         "location": point[0],
-                        "value": point[1].encode() if isinstance(point[1], DensityFunctionType) else point[1],
+                        "value": point[1].encode() if isinstance(point[1], DensityFunction) else point[1],
                         "derivative": point[2], 
                     }
                     for point in self.points
@@ -455,19 +452,19 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
     spline: Literal["offset", "factor", "jaggedness"]
     min_value: float
     max_value: float
-    continentalness: DensityFunctionType
-    erosion: DensityFunctionType
-    weirdness: DensityFunctionType
+    continentalness: DensityFunction
+    erosion: DensityFunction
+    weirdness: DensityFunction
 
 @dataclass
 class weird_scaled_sampler(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
     noise: AdditionalResource
-    input: DensityFunctionType
+    input: DensityFunction
 
     @classmethod
-    def decode(cls, data: dict) -> weird_scaled_sampler:
+    def decode(cls, data: JSONDict) -> weird_scaled_sampler:
         from Rhombus.language.noise import Noise
         return cls(
             data["rarity_value_mapper"],

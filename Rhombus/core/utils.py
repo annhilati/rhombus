@@ -1,7 +1,9 @@
 import hashlib, uuid, json
-from typing import Any
+from typing import TypeAlias
 
-def uuid_hash(data: dict[str, Any]) -> str:
+JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool | None]
+
+def uuid_hash(data: JSONDict) -> str:
     """Creates a UUID string (without `-`) based of a JSON dictionary."""
     encoded_str = json.dumps(
         data, 

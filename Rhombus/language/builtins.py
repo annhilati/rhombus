@@ -34,9 +34,6 @@ from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor
 from Rhombus.language.noise import Noise
 from typing import Literal
 
-MAX_REASONABLE_VALUE: Literal[1000000] = 1000000.0
-MIN_REASONABLE_VALUE: Literal[-1000000] = -1000000.0
-
 
 #======// Builtin Functions //===================================================================//
 

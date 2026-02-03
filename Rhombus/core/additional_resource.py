@@ -2,13 +2,13 @@ from dataclasses import dataclass
 from typing import ClassVar, Self, Protocol, Callable, Any
 from abc import ABC, abstractmethod
 
-from Rhombus.utils import uuid_hash
+from Rhombus.core.utils import uuid_hash
 
 __all__ = ["AdditionalResource", "BeetFileClass"]
 
 class BeetFileClass(Protocol):
     "Protocol for beet file classes."
-    encoder: Callable[[Any], str]
+    encoder: Callable[[dict[str, Any]], str]
     data: dict
     extension: str
     scope: tuple[str, ...]
@@ -34,13 +34,13 @@ class AdditionalResource(ABC):
 
     @classmethod
     @abstractmethod
-    def decode(cls, dict) -> Self: ...
+    def decode(cls, dict: dict[str, Any]) -> Self: ...
 
     @abstractmethod
-    def encode(self) -> dict: ...
-
-    def __hash__(self) -> int:
-        return hash(uuid_hash(self.encode()))
+    def encode(self) -> dict[str, Any]: ...
 
     @abstractmethod
     def __eq__(self, other) -> bool: ...
+    
+    def __hash__(self) -> int:
+        return hash(uuid_hash(self.encode()))

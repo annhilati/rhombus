@@ -1,15 +1,15 @@
 from typing import ClassVar, Self
 from dataclasses import dataclass
-from Rhombus.core.df_types import DensityFunctionType, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.df_types import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
 
 TODO = "TODO"
 
 #======// Function Type Base Classes //==========================================================//
 
 @dataclass
-class DivisionFunctionBase(DensityFunctionType):
-    numerator: DensityFunctionType
-    denominator: DensityFunctionType
+class DivisionFunctionBase(DensityFunction):
+    numerator: DensityFunction
+    denominator: DensityFunction
 
     @classmethod
     def decode(cls, data: dict) -> Self:
@@ -44,7 +44,7 @@ class ceil(MappedFunctionBase):
 @dataclass
 class clamp(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:clamp"
-    input: DensityFunctionType
+    input: DensityFunction
     min: float
     max:float
 
@@ -68,8 +68,8 @@ class div(DivisionFunctionBase):
 @dataclass
 class dot_product(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:dot_product"
-    argument1: DensityFunctionType
-    argument2: DensityFunctionType
+    argument1: DensityFunction
+    argument2: DensityFunction
     step_x: int = None
     step_y: int = None
     step_z: int = None
@@ -91,7 +91,7 @@ class gapped_grid_square_spiral():
 @dataclass
 class gradient_magnitude(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "mroedfs:gradient_magnitude"
-    argument: DensityFunctionType
+    argument: DensityFunction
     step_x: int = None
     step_y: int = None
     step_z: int = None
@@ -121,8 +121,8 @@ class negate(MappedFunctionBase):
 @dataclass
 class or_else(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:or_else"
-    argument: DensityFunctionType
-    fallback: DensityFunctionType
+    argument: DensityFunction
+    fallback: DensityFunction
 
 class polar_coords(SimpleFunctionBase):
     id: ClassVar[str] = "moredfs:polar_coords"
@@ -134,7 +134,7 @@ class power():
 @dataclass
 class profiler(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:profiler"
-    argument: DensityFunctionType
+    argument: DensityFunction
     warm_up: int
     iterations: int
 
@@ -147,7 +147,7 @@ class radius_3d(SimpleFunctionBase):
 @dataclass
 class reciprocal(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:reciprocal"
-    denominator: DensityFunctionType
+    denominator: DensityFunction
 
 class remainder(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:remainder"

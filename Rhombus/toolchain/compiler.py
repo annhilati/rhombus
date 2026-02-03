@@ -13,7 +13,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
     def search_for_additional_files(o):
-        if isinstance(o, DensityFunctionType):
+        if isinstance(o, DensityFunction):
             if isinstance(o, Reference) and o.default is not None:
                 files[o.reference] = WorldgenDensityFunction(o.default.encode())
             for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:

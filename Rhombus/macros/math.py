@@ -1,9 +1,8 @@
 "Macros with mathmatical functions, that are not provided by default."
 
 from typing import Callable
-from Rhombus.core import df_types as dft 
+from Rhombus.core import df_types as dft, config as cfg
 from Rhombus.language.density import Density, DensityDescriptor, MacroAssistent
-from Rhombus.language.builtins import MAX_REASONABLE_VALUE, MIN_REASONABLE_VALUE
 from Rhombus.language import builtins as f
 
 pi = 3.14159265359
@@ -24,11 +23,11 @@ def heaviside(argument: DensityDescriptor) -> Density[dft.range_choice]:
     return f.range_choice(
         input=argument,
         min_inclusive=0,
-        max_exclusive=1/MAX_REASONABLE_VALUE,
+        max_exclusive=1/cfg.constant_number_limit,
         when_in_range=0.5,
         when_out_of_range=f.range_choice(
             input=argument,
-            min_inclusive=MIN_REASONABLE_VALUE,
+            min_inclusive=-cfg.constant_number_limit,
             max_exclusive=0,
             when_in_range=0,
             when_out_of_range=1.0
@@ -48,11 +47,11 @@ def sgn(argument: DensityDescriptor) -> Density[dft.range_choice]:
     return f.range_choice(
         input=argument,
         min_inclusive=0,
-        max_exclusive=1/MAX_REASONABLE_VALUE,
+        max_exclusive=1/cfg.constant_number_limit,
         when_in_range=0,
         when_out_of_range=f.range_choice(
             input=argument,
-            min_inclusive=MIN_REASONABLE_VALUE,
+            min_inclusive=-cfg.constant_number_limit,
             max_exclusive=0,
             when_in_range=-1.0,
             when_out_of_range=1.0

@@ -2,13 +2,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
 from Rhombus.core import df_types as dft, config
-from Rhombus.utils import uuid_hash
+from Rhombus.core.utils import uuid_hash
 import beet, beet.contrib.worldgen as beet_worldgen
 
 
 #======// Formatters //==========================================================================//
 
-DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionType, str, float]
+DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunction, str, float]
 "UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
@@ -48,7 +48,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     if isinstance(arg, Density):
         return arg
 
-    if isinstance(arg, dft.DensityFunctionType):
+    if isinstance(arg, dft.DensityFunction):
         return Density(arg)
 
     if isinstance(arg, str):
@@ -140,7 +140,7 @@ def BuiltinAssistent(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 
 #======// Density Type //========================================================================//
 
-WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunctionType, default=dft.DensityFunctionType)
+WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunction, default=dft.DensityFunction)
 
 @dataclass
 class Density(Generic[WrappedDFType]):

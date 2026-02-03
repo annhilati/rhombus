@@ -1,10 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Optional
+from typing import ClassVar, Optional
 
 from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.additional_resource import AdditionalResource
-from Rhombus.utils import uuid_hash
+from Rhombus.core.utils import uuid_hash, JSONDict
 
 @dataclass(frozen=True)
 class Noise(AdditionalResource):
@@ -48,10 +48,10 @@ class Noise(AdditionalResource):
         return f"rhombus:generated/" + uuid_hash(self.encode())
 
     @classmethod
-    def decode(cls, data: dict) -> Noise:
+    def decode(cls, data: JSONDict) -> Noise:
         cls(firstOctave=data["firstoctave"], amplitudes=data["amplitudes"])
 
-    def encode(self) -> dict[str: Any]:
+    def encode(self) -> JSONDict:
         if self.firstOctave is None or self.amplitudes is None:
             raise Exception
         return {
@@ -67,7 +67,7 @@ class Noise(AdditionalResource):
 
 @dataclass(init=False)
 class ReferenceNoise():
-    """Returns a Noise with a reference to an external noise, defined somewhere in `worldgen/noise`.
+    """Returns a Noise with a reference to an externally provided noise, e.g. in `worldgen/noise`.
     """
 
     def __new__(identifier: str, /) -> Noise:

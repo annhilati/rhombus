@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
-from Rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunctionType, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction, decode_HOLDER_HELPER_CODEC
 from Rhombus.core.additional_resource import AdditionalResource
 from Rhombus.language.density import Density, DensityDescriptor, BuiltinAssistent
 from Rhombus.language.noise import Noise
@@ -21,12 +21,12 @@ class df_types:
         key: str
 
     @dataclass
-    class config_noise(DensityFunctionType):
+    class config_noise(DensityFunction):
         id: ClassVar[str] = "minecraft:noise"
         noise: AdditionalResource
         key: str
-        shift_x: DensityFunctionType
-        shift_z: DensityFunctionType
+        shift_x: DensityFunction
+        shift_z: DensityFunction
 
         @classmethod
         def decode(cls, data: dict) -> df_types.config_noise:
