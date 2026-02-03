@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
 from Rhombus.core import df_types as dft, config
+from Rhombus.utils import uuid_hash
 import beet, beet.contrib.worldgen as beet_worldgen
 
 
@@ -373,7 +374,7 @@ class ExternalDensity:
     @BuiltinAssistent
     def __new__(cls, value: DensityDescriptor, /):
         return Density(dft.Reference(
-            reference="rhombus:generated/" + ExternalDensity.get_dictionary_uuid(Density(value).as_dict()),
+            reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
             default=value)
         )
 

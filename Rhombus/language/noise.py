@@ -1,10 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Optional
-import uuid, struct
 
 from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.additional_resource import AdditionalResource
+from Rhombus.utils import uuid_hash
 
 @dataclass(frozen=True)
 class Noise(AdditionalResource):
@@ -38,15 +38,6 @@ class Noise(AdditionalResource):
         if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
             raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or reference an externally defined noise")
         
-    @property
-    def UUID(self) -> uuid.UUID:
-        if self.reference is not None:
-            return None
-        data = struct.pack(">qI", self.firstOctave, len(self.amplitudes))
-        for v in self.amplitudes:
-            data += struct.pack(">d", v)
-        return uuid.uuid5(uuid.NAMESPACE_OID, data.hex())
-
 
     #======// Methods required by AdditionalResourceBase //================================//
     
@@ -54,7 +45,7 @@ class Noise(AdditionalResource):
     def reference_identifier(self) -> str:
         if self.reference is not None:
             return self.reference if ":" in self.reference else "minecraft:" + self.reference
-        return f"rhombus:generated/{str(self.UUID).replace("-", "")}"
+        return f"rhombus:generated/" + uuid_hash(self.encode())
 
     @classmethod
     def decode(cls, data: dict) -> Noise:
@@ -67,14 +58,12 @@ class Noise(AdditionalResource):
             "firstOctave": self.firstOctave,
             "amplitudes": self.amplitudes
         }
-    
-    def __hash__(self) -> int:
-        return hash(self.UUID)
-    
+       
     def __eq__(self, other: Noise):
         if self.reference is None and other.reference is None:
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
         return self.reference == other.reference
+
 
 @dataclass(init=False)
 class ReferenceNoise():

@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import ClassVar, Self, Protocol, Callable, Any
 from abc import ABC, abstractmethod
 
+from Rhombus.utils import uuid_hash
+
 __all__ = ["AdditionalResource", "BeetFileClass"]
 
 class BeetFileClass(Protocol):
@@ -37,8 +39,8 @@ class AdditionalResource(ABC):
     @abstractmethod
     def encode(self) -> dict: ...
 
-    @abstractmethod
-    def __hash__(self) -> int: ...
+    def __hash__(self) -> int:
+        return hash(uuid_hash(self.encode()))
 
     @abstractmethod
     def __eq__(self, other) -> bool: ...
