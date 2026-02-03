@@ -142,11 +142,9 @@ class DoubleArgumentFunctionBase(DensityFunction):
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        argument1 = data["argument1"]
-        argument2 = data["argument2"]
         return cls(
-            decode_HOLDER_HELPER_CODEC(argument1),
-            decode_HOLDER_HELPER_CODEC(argument2)
+            decode_HOLDER_HELPER_CODEC(data["argument1"]),
+            decode_HOLDER_HELPER_CODEC(data["argument2"])
         )
     
     def encode(self) -> JSONDict:

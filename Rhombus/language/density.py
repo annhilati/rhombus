@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
-from Rhombus.core import df_types as dft, config
+from Rhombus.core import df_types as dft, config, JSONDict
 from Rhombus.core.utils import uuid_hash
 import beet, beet.contrib.worldgen as beet_worldgen
 
@@ -140,7 +140,7 @@ def BuiltinAssistent(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 
 #======// Density Type //========================================================================//
 
-WrappedDFType = TypeVar("WrappedFunctionType", bound=dft.DensityFunction, default=dft.DensityFunction)
+WrappedDFType = TypeVar("DensityFunctionType", bound=dft.DensityFunction, default=dft.DensityFunction)
 
 @dataclass
 class Density(Generic[WrappedDFType]):
@@ -172,7 +172,7 @@ class Density(Generic[WrappedDFType]):
     #======// Toolchain //=======================================================================//
 
     @classmethod
-    def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density:
+    def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
         "⚠️ Currently experimental.<br>Creates a `Density` object from a density function in a Beet datapack."
         from Rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
 
@@ -180,7 +180,7 @@ class Density(Generic[WrappedDFType]):
 
         file = dp[beet_worldgen.WorldgenDensityFunction][identifier]
         if file is None:
-            raise Exception
+            return None
         data = file.data
 
         def on_reference(s: str):
@@ -218,9 +218,10 @@ class Density(Generic[WrappedDFType]):
             
         if log: print(f"Finished implementing density function '{with_identifier}'")
     
-    def as_dict(self) -> dict[str, Any]:
-        "Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file."
-        return self.AST.encode()
+    def as_dict(self) -> JSONDict:
+        """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>
+        The dictionary will not be fully inline. References that require separate files will be references."""
+        return self.compile("a:a")["a:a"].data
 
     def show_in_dir(self, with_name: str = "test"):
         "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
@@ -356,20 +357,6 @@ class ConfiguredDensity:
 @dataclass(init=False)
 class ExternalDensity:
     """Creates a Density whose value will be casted into a separate file when compiling."""
-
-    @staticmethod
-    def get_dictionary_uuid(data: dict[str, Any]) -> str:
-        """Creates a UUID string (no `-`) based of a JSON dictionary."""
-        import hashlib, uuid, json
-
-        encoded_str = json.dumps(
-            data, 
-            sort_keys=True, 
-            ensure_ascii=True, 
-            separators=(',', ':')
-        ).encode('utf-8')
-        hash_digest = hashlib.sha256(encoded_str).digest()
-        return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
 
     @BuiltinAssistent
     def __new__(cls, value: DensityDescriptor, /):

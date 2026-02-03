@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from beet.contrib.worldgen import WorldgenDensityFunction
 from Rhombus.language.density import Density
 from Rhombus.core import *
-from Rhombus.core.df_types import Reference
+from Rhombus.core.df_types import Reference, add, constant
 
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     files: dict[str, BeetFileClass] = {}
@@ -26,6 +26,9 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
 
     search_for_additional_files(root)
 
+    if isinstance(root, Reference): # To not have literal strings in a JSON file
+        root = add(root, constant(0))
+        
     files[identifier] = WorldgenDensityFunction(root.encode())
 
     return files
@@ -46,7 +49,9 @@ def summon(files: dict[str, BeetFileClass]) -> None:
         path = Path(tmp)
 
         for id, f in files.items():
-            p = path / (f.scope[-1] + "." + (id.replace(":", ".").replace("/", ".") + f.extension))
+            namespace = id.split(":")[0]
+            name = id.split(":")[-1].replace("/", ".")
+            p = path / (namespace + "." + f.scope[-1] + "." + name + f.extension)
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(f.encoder(f.data))
 
