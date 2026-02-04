@@ -35,6 +35,12 @@ High-level Python interfaces for all vanilla density function types.
 - **Advanced Macros**:
 Shortcuts for more complex, commonly needed processes.
 
+## Get started
+To use Rhombus efficiently, the following is recommended:
+- A basic understanding of how to use Python and Python modules
+- A basic understanding of how to use Beet
+- A basic understanding of the meaning and use of density functions in datapacks
+
 ## What Rombus is not and what we cannot guarantee it will become
 - **A Visualizer Tool**:
 Currently, all exising density function visualizing tools are based on JavaScript, making it difficult to embed in Rhombus. But by working with Rhombus in combination with [Beet watch](https://mcbeet.dev/getting_started/#building-the-pack) and Misode's [Worldgen Tools Extension](https://marketplace.visualstudio.com/items?itemName=Misodee.worldgen-tools) you can get quite efficient anyway.

@@ -1,10 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
-from Rhombus.core import df_types as dft, config, JSONDict
-from Rhombus.core.utils import uuid_hash
+from Rhombus.core import df_types as dft, config
+from Rhombus.core.utils import JSONDict, uuid_hash
 import beet, beet.contrib.worldgen as beet_worldgen
+import inspect, functools
 
+__all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroAssistant", "BuiltinAssistent",]
 
 #======// Formatters //==========================================================================//
 
@@ -24,9 +26,6 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 
         if abs(v) <= limit:
             return Density(dft.constant(v))
-
-        if v == 0.0:
-            return Density(dft.constant(0.0))
 
         sign = -1.0 if v < 0 else 1.0
         v = abs(v)
@@ -83,7 +82,6 @@ def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
     unwrap : bool
         Whether to pass the resolved `DensityDescriptor` arguments of the function as `DensityFunctionType` objects instead of `Density` objects
     """
-    import inspect, functools
 
     def _to_ast(obj: Any) -> Any:
         try:

@@ -4,7 +4,7 @@ from typing import ClassVar, Optional
 
 from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.additional_resource import AdditionalResource
-from Rhombus.core.utils import uuid_hash, JSONDict
+from Rhombus.core.utils import JSONDict, uuid_hash
 
 @dataclass(frozen=True)
 class Noise(AdditionalResource):
@@ -36,7 +36,7 @@ class Noise(AdditionalResource):
 
     def __post_init__(self):
         if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
-            raise ValueError("Noise must have fields 'firstOctave' and 'amplitudes' or reference an externally defined noise")
+            raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
         
 
     #======// Methods required by AdditionalResourceBase //================================//
@@ -60,14 +60,16 @@ class Noise(AdditionalResource):
         }
        
     def __eq__(self, other: Noise):
+        if not isinstance(other, Noise):
+            return None
         if self.reference is None and other.reference is None:
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
         return self.reference == other.reference
 
 
 @dataclass(init=False)
-class ReferenceNoise():
-    """Returns a Noise with a reference to an externally provided noise, e.g. in `worldgen/noise`.
+class ReferenceNoise:
+    """Returns a Noise with a reference to an externally provided noise.
     """
 
     def __new__(identifier: str, /) -> Noise:
