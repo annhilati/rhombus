@@ -7,7 +7,7 @@ Note, that importing `*` from here is helpfull, but will overwrite some builtin 
 #                    The selection of functions provided here should be based on those,
 #                    but their implementation may differ if there is a specific way in which they are used in practice.
 #                    Example: Caching functions like 'flat_cache' are very often used in separate files to save performance,
-#                             so the 'flat_cache' function provided here does not return a 'flat_cache' DensityFunctionType instance, but a Reference instance, with a default value.
+#                             so the 'flat_cache' function provided here does not return a 'flat_cache' type Density instance, but a Reference type instance, with a default value.
 
 __all__ = [
     "abs", "add", "beardifier",
@@ -30,14 +30,14 @@ __all__ = [
 ]
 
 from Rhombus.core import df_types as dft
-from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor, BuiltinAssistent, resolve_DensityDescriptor, ref
+from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor, BuiltinAssistant, resolve_DensityDescriptor, ref
 from Rhombus.language.noise import Noise
 from typing import Literal
 
 
 #======// Builtin Functions //===================================================================//
 
-@BuiltinAssistent
+@BuiltinAssistant
 def abs(argument: DensityDescriptor) -> Density[dft.abs]:
     """Calculates the absolute value of the input.
 
@@ -47,7 +47,7 @@ def abs(argument: DensityDescriptor) -> Density[dft.abs]:
     """
     return Density(dft.abs(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def add(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[dft.add]:
     """Adds two inputs together.
 
@@ -84,7 +84,7 @@ def blend_alpha() -> Density[dft.blend_alpha]:
     """
     return Density(dft.blend_alpha())
 
-@BuiltinAssistent
+@BuiltinAssistant
 def blend_density(argument: DensityDescriptor) -> Density[dft.blend_density]:
     """Used in vanilla for smooth transition to chunks generated in old versions.
 
@@ -107,7 +107,7 @@ def blend_offset() -> Density[dft.blend_offset]:
     """
     return Density(dft.blend_offset())
 
-@BuiltinAssistent
+@BuiltinAssistant
 def cache_2d(argument: DensityDescriptor) -> Density[dft.cache_2d]:
     """Only computes the input density once per horizontal position.
     <br> The result is essentially a 2D-density map with all heights in a XZ-column having the same value.
@@ -118,7 +118,7 @@ def cache_2d(argument: DensityDescriptor) -> Density[dft.cache_2d]:
     """
     return Density(dft.cache_2d(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def cache_all_in_cell(argument: DensityDescriptor) -> Density[dft.cache_all_in_cell]:
     """🚨 Should not be used in datapacks.
 
@@ -132,7 +132,7 @@ def cache_all_in_cell(argument: DensityDescriptor) -> Density[dft.cache_all_in_c
     """
     return Density(dft.cache_all_in_cell(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def cache_once(argument: DensityDescriptor) -> Density[dft.cache_once]:
     """If this density function is referenced twice, it is only computed once per block position.
 
@@ -144,7 +144,7 @@ def cache_once(argument: DensityDescriptor) -> Density[dft.cache_once]:
     """
     return Density(dft.cache_once(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def clamp(input: DensityDescriptor, min: float, max: float) -> Density[dft.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
 
@@ -165,7 +165,7 @@ def constant(argument: float) -> Density[dft.constant]:
     """
     return resolve_DensityDescriptor(argument)
 
-@BuiltinAssistent
+@BuiltinAssistant
 def cube(argument: DensityDescriptor) -> Density[dft.cube]:
     """Raises the input to the power of 3.
     
@@ -187,7 +187,7 @@ def end_islands() -> Density[dft.end_islands]:
     """
     return Density(dft.end_islands())
 
-@BuiltinAssistent
+@BuiltinAssistant
 def find_top_surface(density: DensityDescriptor, upper_bound: DensityDescriptor, lower_bound: int, cell_height: int) -> Density[dft.find_top_surface]:
     """Scans through a column of a input density and returns the topmost y-level that is above `0`. If no such position exists withing the bounds, the `lower_bound` is returned.
 
@@ -197,9 +197,11 @@ def find_top_surface(density: DensityDescriptor, upper_bound: DensityDescriptor,
     """
     return Density(dft.find_top_surface(density, upper_bound, lower_bound, cell_height))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def flat_cache(argument: DensityDescriptor) -> Density[dft.Reference]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with interpolated.
+
+    💾 This function will ensure proper caching by claiming a separate file.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre1) and forward.
 
@@ -207,7 +209,7 @@ def flat_cache(argument: DensityDescriptor) -> Density[dft.Reference]:
     """
     return ExternalDensity(dft.flat_cache(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def half_negative(argument: DensityDescriptor) -> Density[dft.half_negative]:
     """If the input is negative, returns half of the input. Otherwise returns the input.
     
@@ -217,7 +219,7 @@ def half_negative(argument: DensityDescriptor) -> Density[dft.half_negative]:
     """
     return Density(dft.half_negative(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def interpolated(argument: DensityDescriptor) -> Density[dft.interpolated]:
     """Interpolates at each block in one cell based on the input density function value of some cells around. The size of each cell is 4 by 4. Used often in combination with `flat_cache`.
 
@@ -227,7 +229,7 @@ def interpolated(argument: DensityDescriptor) -> Density[dft.interpolated]:
     """
     return Density(dft.interpolated(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def invert(argument: DensityDescriptor) -> Density[dft.invert]:
     """Calculates `1/x`.<br>
     ❗`invert(0) = Infinity`
@@ -238,7 +240,7 @@ def invert(argument: DensityDescriptor) -> Density[dft.invert]:
     """
     return Density(dft.invert(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def max(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[dft.max]:
     """Returns the maximum of two inputs.
 
@@ -250,7 +252,7 @@ def max(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[d
     """
     return Density(dft.max(argument1, argument2))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def min(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[dft.min]:
     """Returns the minimum of two inputs.
 
@@ -262,7 +264,7 @@ def min(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[d
     """
     return Density(dft.min(argument1, argument2))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def mul(argument1: DensityDescriptor, argument2: DensityDescriptor) -> Density[dft.mul]:
     """Multiplies two inputs.<br>
     ❗`mul(Infinity, 0) = NaN`
@@ -319,7 +321,7 @@ def old_blended_noise(xz_scale: float, y_scale: float, xz_factor: float, y_facto
     """
     return Density(dft.old_blended_noise(xz_scale, y_scale, xz_factor, y_factor, smear_scale_multiplier))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def quarter_negative(argument: DensityDescriptor) -> Density[dft.quarter_negative]:
     """If the input is negative, returns a quarter of the input. Otherwise returns the input.
     
@@ -329,7 +331,7 @@ def quarter_negative(argument: DensityDescriptor) -> Density[dft.quarter_negativ
     """
     return Density(dft.quarter_negative(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def range_choice(input: DensityDescriptor, min_inclusive: float, max_exclusive: float, when_in_range: DensityDescriptor, when_out_of_range: DensityDescriptor) -> Density[dft.range_choice]:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
 
@@ -366,24 +368,24 @@ def shift_b(argument: Noise) -> Density[dft.shift_b]:
     """
     return Density(dft.shift_b(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: DensityDescriptor, shift_y: DensityDescriptor, shift_z: DensityDescriptor) -> Density[dft.shifted_noise]:
     """Samples a noise after shifting the input coordinates.
 
     Parameters
     --------
     noise: Noise
-        The noise to sample
+        The noise to sample.
     xz_scale : float
-        Scales the X and Z coordinates before sampling
+        Scales the X and Z coordinates before sampling.
     y_scale : float
-        Scales the Y coordinate before sampling
+        Scales the Y coordinate before sampling.
     shift_x : density function
-        Shifts the X coordinate before sampling
+        Shifts the X coordinate before sampling.
     shift_y : density function
-        Shifts the Y coordinate before sampling
+        Shifts the Y coordinate before sampling.
     shift_z : density function
-        Shifts the Z coordinate before sampling
+        Shifts the Z coordinate before sampling.
 
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+) Available with data pack format 9 (1.18.2-pre1) and forward.
     
@@ -391,9 +393,9 @@ def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: Densit
     """
     return Density(dft.shifted_noise(noise, xz_scale, y_scale, shift_x, shift_y, shift_z))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def slide(argument: DensityDescriptor) -> Density[dft.slide]:
-    """*No technical description*
+    """*Technical description missing*
 
     Somehow brings values closer to zero. Everything below `Y=7` is `0.117`, everything above `Y=191` is `-0.0781`.
     There are zones between inclusively the heights 7 & 14, 15 & 22 and 183 & 191 where the value strongly differs from the rest and is way more homogenous.  
@@ -404,7 +406,7 @@ def slide(argument: DensityDescriptor) -> Density[dft.slide]:
     """
     return Density(dft.slide(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def spline(coordinate: DensityDescriptor, points: list[tuple[float, DensityDescriptor, float]]) -> Density[dft.spline]:
     """Computes a cubic spline.
 
@@ -417,7 +419,7 @@ def spline(coordinate: DensityDescriptor, points: list[tuple[float, DensityDescr
     points = [(p[0], resolve_DensityDescriptor(p[1]).AST, p[2]) for p in points]
     return Density(dft.spline(coordinate, points))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def square(argument: DensityDescriptor) -> Density[dft.square]:
     """Raises the input to the power of 2.
     
@@ -427,7 +429,7 @@ def square(argument: DensityDescriptor) -> Density[dft.square]:
     """
     return Density(dft.square(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def squeeze(argument: DensityDescriptor) -> Density[dft.squeeze]:
     """First clamps the input between `-1` and `1`, then transforms it using `x/2 - x*x*x/24`.
 
@@ -437,7 +439,7 @@ def squeeze(argument: DensityDescriptor) -> Density[dft.squeeze]:
     """
     return Density(dft.squeeze(argument))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def terrain_shaper_spline(
     spline: Literal["offset", "factor", "jaggedness"],
     min_value: float,
@@ -454,7 +456,7 @@ def terrain_shaper_spline(
     """
     return Density(dft.terrain_shaper_spline(spline, min_value, max_value, continentalness, erosion, weirdness))
 
-@BuiltinAssistent
+@BuiltinAssistant
 def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input: DensityDescriptor, noise: Noise) -> Density[dft.weird_scaled_sampler]:
     """According to the input value, scales and enhances (or weakens) some regions of the specified noise, and then returns the absolute value.
 

@@ -14,8 +14,10 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
 
     def search_for_additional_files(o):
         if isinstance(o, DensityFunction):
-            if isinstance(o, Reference) and o.default is not None:
-                files[o.reference] = WorldgenDensityFunction(o.default.encode())
+            if isinstance(o, Reference) and (default := o.default) is not None:
+                if isinstance(default, Reference): # To not have literal strings in a JSON file
+                    default = add(default, constant(0))
+                files[o.reference] = WorldgenDensityFunction(default.encode())
             for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:
                 search_for_additional_files(value)
         elif isinstance(o, (list, tuple)):

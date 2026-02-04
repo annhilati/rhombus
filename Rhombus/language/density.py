@@ -6,7 +6,9 @@ from Rhombus.core.utils import JSONDict, uuid_hash
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
-__all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroAssistant", "BuiltinAssistent",]
+__all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroAssistant", "BuiltinAssistant",]
+
+_decode_cache: dict[str, dft.DensityFunction] = {}
 
 #======// Formatters //==========================================================================//
 
@@ -70,7 +72,7 @@ def _is_density_descriptor(annotation) -> bool:
 _P = ParamSpec("Params")
 _R = TypeVar("Result")
 
-def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
+def MacroAssistant(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
     """A helper decorator for macros, that take (among other) density function inputs.
 
     The following effects are applied:
@@ -131,9 +133,9 @@ def MacroAssistent(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
 
     return decorator
 
-def BuiltinAssistent(fn: Callable[_P, _R]) -> Callable[_P, _R]:
+def BuiltinAssistant(fn: Callable[_P, _R]) -> Callable[_P, _R]:
     "Shortcut for `MacroAssistent(unwrap=True)`"
-    return MacroAssistent(unwrap=True)(fn)
+    return MacroAssistant(unwrap=True)(fn)
 
 
 #======// Density Type //========================================================================//
@@ -182,11 +184,27 @@ class Density(Generic[WrappedDFType]):
         data = file.data
 
         def on_reference(s: str):
-            s = "minecraft:" + s if not ":" in s else s
+            s = "minecraft:" + s if ":" not in s else s
+
+            if s in _decode_cache:
+                return dft.Reference(s, default=_decode_cache[s])
+
             file = dp[beet_worldgen.WorldgenDensityFunction][s]
             if file is None:
                 return dft.Reference(s)
-            return dft.Reference(s, default=decode_HOLDER_HELPER_CODEC(file.data, on_reference=on_reference))
+
+            # Platzhalter, bevor rekursiv decodiert wird
+            placeholder = dft.Reference(s)
+            _decode_cache[s] = placeholder
+
+            decoded = decode_HOLDER_HELPER_CODEC(
+                file.data,
+                on_reference=on_reference
+            )
+
+            _decode_cache[s] = decoded
+            return dft.Reference(s, default=decoded)
+
 
         return Density(decode_HOLDER_HELPER_CODEC(data, on_reference=on_reference))
     
@@ -200,12 +218,12 @@ class Density(Generic[WrappedDFType]):
         
         Parameters
         -------
-        ctx : Context
-            The beet pipeline context into whose datapack the density function is to be implemented
+        dp : DataPack
+            The datapack the density function is to be implemented in.
         with_name : str
-            A resource identifier under which the density function will be available
+            A resource identifier under which the density function will be available.
         log : bool
-            Whether to print the progress of the injection to the console
+            Whether to print the progress of the injection to the console.
         """
 
         files = self.compile(with_identifier)
@@ -344,7 +362,7 @@ def ref(identifier: str, /) -> Density[dft.Reference]:
 class ConfiguredDensity:
     """Creates a Density that will be casted into a specific file when compiling."""
 
-    @BuiltinAssistent
+    @BuiltinAssistant
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
         default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
         if isinstance(default, dft.Reference):
@@ -356,7 +374,7 @@ class ConfiguredDensity:
 class ExternalDensity:
     """Creates a Density whose value will be casted into a separate file when compiling."""
 
-    @BuiltinAssistent
+    @BuiltinAssistant
     def __new__(cls, value: DensityDescriptor, /):
         return Density(dft.Reference(
             reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
