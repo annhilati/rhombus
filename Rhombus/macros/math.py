@@ -85,9 +85,9 @@ def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Dens
 
 @MacroAssistant
 def exp(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
-    """Returns `e` exponentiated to the input.<br>
+    """Returns the exponential function value of the input, so `e` exponentiated to the input.<br>
 
-    ⚙️ This implementation uses the [Taylor series of the exponential function](https://en.wikipedia.org/wiki/Taylor_series#Exponential_function).<br>
+    ⚙️ This implementation uses the [Taylor series of the exponential function](https://en.wikipedia.org/wiki/Taylor_series#Exponential_function).
     """
     from math import factorial
 
@@ -102,7 +102,7 @@ def exp(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 def ln(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     """Returns the natual logarithm value of the input.<br>
 
-    ⚙️ This implementation uses the [Taylor series of the natural logarithm](https://en.wikipedia.org/wiki/Taylor_series#Natural_logarithm).<br>
+    ⚙️ This implementation uses the [Taylor series of the natural logarithm](https://en.wikipedia.org/wiki/Taylor_series#Natural_logarithm).
     """
     y = argument - f.constant(1)
 
