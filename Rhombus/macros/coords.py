@@ -67,9 +67,14 @@ _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_n
 
 def x():
     """Returns the X-coordinate of the current block.
-    
-    ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
-    It is very resource-intensive (compilation complexity = 512). For more information on how it works read the docstring of `Rhombus.macros.coords`.
+
+    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+
+    💾 This macro will ensure proper caching by claiming separate files.
+
+    ---
+
+    ⚙️ Implementation utilizes float precision loss at extremely small noise scales ┃ `CC(·) = 512`
     """
     innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=0.99, shift_y=0, shift_z=1.01)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
 
@@ -91,9 +96,14 @@ def x():
 
 def z():
     """Returns the Z-coordinate of the current block.
-    
-    ⚙️ This implementation works by utilizing float precision loss at extremely small noise scales.<br>
-    It is very resource-intensive (compilation complexity = 512). For more information on how it works read the docstring of `Rhombus.macros.coords`.
+
+    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+
+    💾 This macro will ensure proper caching by claiming separate files.
+
+    ---
+
+    ⚙️ Implementation utilizes float precision loss at extremely small noise scales ┃ `CC(·) = 512`
     """
     innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=1.01, shift_y=0, shift_z=0.99)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
 
@@ -115,7 +125,8 @@ def z():
 
 def y():
     """Returns the Y-coordinate of the current block.
-    
-    ⚙️ This implementation uses `y_clamped_gradient`.
+
+    ---
+    ⚙️ Implementation utilizes `y_clamped_gradient` ┃ `CC(·) = 1`
     """
     return f.y_clamped_gradient(-4062, 4062, -4062, 4062)
