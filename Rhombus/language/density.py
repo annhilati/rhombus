@@ -6,7 +6,7 @@ from Rhombus.core.utils import JSONDict, uuid_hash
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
-__all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroAssistant", "BuiltinAssistant",]
+__all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroWizard", "BuiltinWizard",]
 
 _decode_cache: dict[str, dft.DensityFunction] = {}
 
@@ -72,7 +72,7 @@ def _is_density_descriptor(annotation) -> bool:
 _P = ParamSpec("Params")
 _R = TypeVar("Result")
 
-def MacroAssistant(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
+def MacroWizard(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
     """A helper decorator for macros, that take (among other) density function inputs.
 
     The following effects are applied:
@@ -133,9 +133,9 @@ def MacroAssistant(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
 
     return decorator
 
-def BuiltinAssistant(fn: Callable[_P, _R]) -> Callable[_P, _R]:
-    "Shortcut for `MacroAssistent(unwrap=True)`"
-    return MacroAssistant(unwrap=True)(fn)
+def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
+    "Shortcut for `MacroWizard(unwrap=True)`"
+    return MacroWizard(unwrap=True)(fn)
 
 
 #======// Density Type //========================================================================//
@@ -362,7 +362,7 @@ def ref(identifier: str, /) -> Density[dft.Reference]:
 class ConfiguredDensity:
     """Creates a Density that will be casted into a specific file when compiling."""
 
-    @BuiltinAssistant
+    @BuiltinWizard
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
         default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
         if isinstance(default, dft.Reference):
@@ -374,7 +374,7 @@ class ConfiguredDensity:
 class ExternalDensity:
     """Creates a Density whose value will be casted into a separate file when compiling."""
 
-    @BuiltinAssistant
+    @BuiltinWizard
     def __new__(cls, value: DensityDescriptor, /):
         return Density(dft.Reference(
             reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
