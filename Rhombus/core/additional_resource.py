@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import ClassVar, Self, Protocol, Callable, Any
+from typing import ClassVar, Self, TypeVar
 from abc import ABC, abstractmethod
 
 from Rhombus.core.utils import uuid_hash, JSONDict
@@ -19,20 +19,23 @@ __all__ = ["AdditionalResource", "BeetFileClass"]
 
 BeetFileClass = JsonFile
 
-def decode_additional_resource(ref: str, t: type[AdditionalResource], dp: DataPack = None) -> AdditionalResource:
+_AR = TypeVar("_AR", bound="AdditionalResource")
+
+def decode_additional_resource(ref: str, t: type[_AR], dp: DataPack = None) -> _AR:
 
     token = None
     if dp is not None:
-        token = config._current_datapack.set(dp)
+        token = config.datapack_context.set(dp)
 
     try:
-        dp = config._current_datapack.get()
+        dp = config.datapack_context.get()
 
         return t.decode(dp[t.fileclass][ref].data)
 
     finally:
         if token is not None:
-            config._current_datapack.reset(token)
+            config.datapack_context.reset(token)
+
 
 @dataclass(frozen=True)
 class AdditionalResource(ABC):

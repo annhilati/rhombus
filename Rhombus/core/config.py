@@ -5,7 +5,7 @@ constant_number_limit = 1_000_000
 warn_on_reference_in_clamp = True
 
 
-_current_datapack: ContextVar[beet.DataPack] = ContextVar("_current_datapack", default=None)
+datapack_context: ContextVar[beet.DataPack | None] = ContextVar("_current_datapack", default=None)
 
 
 def warn(message, category, filename, lineno, file=None, line=None):

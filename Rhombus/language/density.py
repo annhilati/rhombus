@@ -8,11 +8,11 @@ import inspect, functools
 
 __all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroWizard", "BuiltinWizard",]
 
-_decode_cache: dict[str, dft.DensityFunction] = {}
+_decode_cache: dict[str, dft.DensityFunctionExpression] = {}
 
 #======// Formatters //==========================================================================//
 
-DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunction, str, float]
+DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionExpression, str, float]
 "UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
@@ -49,7 +49,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     if isinstance(arg, Density):
         return arg
 
-    if isinstance(arg, dft.DensityFunction):
+    if isinstance(arg, dft.DensityFunctionExpression):
         return Density(arg)
 
     if isinstance(arg, str):
@@ -140,7 +140,7 @@ def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 
 #======// Density Type //========================================================================//
 
-WrappedDFType = TypeVar("DensityFunctionType", bound=dft.DensityFunction, default=dft.DensityFunction)
+WrappedDFType = TypeVar("DensityFunctionType", bound=dft.DensityFunctionExpression, default=dft.DensityFunctionExpression)
 
 @dataclass
 class Density(Generic[WrappedDFType]):
@@ -183,30 +183,7 @@ class Density(Generic[WrappedDFType]):
             return None
         data = file.data
 
-        def on_reference(s: str):
-            s = "minecraft:" + s if ":" not in s else s
-
-            if s in _decode_cache:
-                return dft.Reference(s, default=_decode_cache[s])
-
-            file = dp[beet_worldgen.WorldgenDensityFunction][s]
-            if file is None:
-                return dft.Reference(s)
-
-            # Platzhalter, bevor rekursiv decodiert wird
-            placeholder = dft.Reference(s)
-            _decode_cache[s] = placeholder
-
-            decoded = decode_HOLDER_HELPER_CODEC(
-                file.data,
-                on_reference=on_reference
-            )
-
-            _decode_cache[s] = decoded
-            return dft.Reference(s, default=decoded)
-
-
-        return Density(decode_HOLDER_HELPER_CODEC(data, on_reference=on_reference))
+        return Density(decode_HOLDER_HELPER_CODEC(data, dp=dp))
     
     def compile(self, with_identifier: str, /):
         "Compiles the Density into Beet file class instances."
