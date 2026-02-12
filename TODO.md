@@ -13,3 +13,8 @@
 
 # IDEA
 - AdditionalResources get a wrapper like Density
+
+
+- [ ] §1 Annotate with concrete additional resource classes instead of AdditionalResource in DensityFunctionExpression fields
+  - [ ] §1.1 Decode additional resources dynamically from DensityFunctionExpression subclasses
+- [ ] $2 Decode density functions from a DataPack

@@ -19,9 +19,7 @@ __all__ = ["AdditionalResource", "BeetFileClass"]
 
 BeetFileClass = JsonFile
 
-_AR = TypeVar("_AR", bound="AdditionalResource")
-
-def decode_additional_resource(ref: str, t: type[_AR], dp: DataPack = None) -> _AR:
+def decode_additional_resource[T: AdditionalResource](ref: str, t: type[T], dp: DataPack = None) -> T:
 
     token = None
     if dp is not None:
@@ -50,14 +48,6 @@ class AdditionalResource(ABC):
     """
 
     fileclass: ClassVar[type[BeetFileClass]]
-
-    # REGISTERED_ADDITIONAL_RESOURCES: ClassVar[dict[str, type[AdditionalResource]]] = {}
-    # "Set of all defined classes inheriting from `AdditionalResource`."
-      
-    # def __init_subclass__(cls, **kwargs):
-    #     super().__init_subclass__(**kwargs)
-    #     if hasattr(cls, "id"):
-    #         AdditionalResource.REGISTERED_ADDITIONAL_RESOURCES[cls.id] = cls
 
     @property
     @abstractmethod

@@ -8,7 +8,6 @@ import inspect, functools
 
 __all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroWizard", "BuiltinWizard",]
 
-_decode_cache: dict[str, dft.DensityFunctionExpression] = {}
 
 #======// Formatters //==========================================================================//
 
