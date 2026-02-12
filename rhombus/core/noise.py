@@ -10,7 +10,7 @@ from Rhombus.core.utils import JSONDict, uuid_hash
 class Noise(AdditionalResource):
     """Defines a perlin noise.
 
-    To add a reference to an existing noise, use `ReferencedNoise()` instead.
+    **NOTE** To add a reference to an existing noise, use `ReferenceNoise()` instead.
     
     ### firstOctave
     `firstOctave` controls the base frequency of the noise. More negative values lead to more vast regions.<br>

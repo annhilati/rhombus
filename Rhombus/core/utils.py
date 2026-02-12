@@ -1,5 +1,5 @@
-import hashlib, uuid, json
 from typing import TypeAlias
+import hashlib, uuid, json
 
 JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool | None]
 

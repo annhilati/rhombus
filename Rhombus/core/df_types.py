@@ -3,10 +3,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
-from contextvars import ContextVar
-from Rhombus.core.additional_resource import AdditionalResource
+from Rhombus.core.additional_resource import AdditionalResource, decode_additional_resource
+from Rhombus.core.noise import Noise
 from Rhombus.core import config, JSONDict
-import warnings
+import warnings, beet, beet.contrib.worldgen as beet_worldgen
 
 __all__ = [
     "decode_HOLDER_HELPER_CODEC", "DensityFunction",
@@ -15,9 +15,7 @@ __all__ = [
 
 #======// Main Decoding Function //==============================================================//
 
-_current_on_reference: ContextVar[Callable[[str], "Reference"]] = ContextVar("_current_on_reference", default=lambda s: Reference(s))
-
-def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[[str], "Reference"] | None = None) -> "DensityFunction":
+def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, dp: beet.DataPack | None = None) -> "DensityFunction":
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
 
@@ -32,11 +30,11 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[
     # There are other codecs for that too (see `clamp`), but for clarity and supportiveness we will only use this one.
 
     token = None
-    if on_reference is not None:
-        token = _current_on_reference.set(on_reference)
+    if dp is not None:
+        token = config._current_datapack.set(dp)
 
     try:
-        fn = _current_on_reference.get()
+        dp = config._current_datapack.get()
 
         if isinstance(o, dict):
             t: str | None = o.get("type")
@@ -58,18 +56,18 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, on_reference: Callable[
             out = constant(float(o))
 
         elif isinstance(o, str):
-            out = fn(o)
+            if dp is not None and (f := dp[beet_worldgen.WorldgenDensityFunction].get(o, default=None)) is not None:
+                default = f.data
+            out = Reference(o, default=default)
 
         else:
-            raise TypeError(
-                f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument"
-            )
+            raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument")
 
         return out
 
     finally:
         if token is not None:
-            _current_on_reference.reset(token)
+            config._current_datapack.reset(token)
 
 
 #======// Function Type Base Classes //==========================================================//
@@ -168,8 +166,8 @@ class MultiArgumentsFunctionBase(DensityFunction):
             if f.init
         }
         return cls(**{
-            parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunction else value
-            # AdditionalResources cannot be decoded dynamically, because they don't have an intrinsic identifier. DF types with those in fields need a custom decoder instead.
+            parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunction else 
+            decode_additional_resource(value, t=tp) if isinstance(tp, AdditionalResource) else value
             for parameter, value in data.items()
             if parameter in init_fields
             for tp in (init_fields[parameter],)
@@ -298,7 +296,7 @@ class mul(DoubleArgumentFunctionBase):
 @dataclass
 class noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:noise"
-    noise: AdditionalResource
+    noise: Noise
     xz_scale: float
     y_scale: float
 
@@ -345,11 +343,10 @@ class range_choice(MultiArgumentsFunctionBase):
 @dataclass
 class shift(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift"
-    argument: AdditionalResource
+    argument: Noise
 
     @classmethod
     def decode(cls, data: JSONDict) -> shift:
-        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -357,11 +354,10 @@ class shift(MultiArgumentsFunctionBase):
 @dataclass
 class shift_a(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift_a"
-    argument: AdditionalResource
+    argument: Noise
 
     @classmethod
     def decode(cls, data: JSONDict) -> shift_a:
-        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -369,11 +365,10 @@ class shift_a(MultiArgumentsFunctionBase):
 @dataclass
 class shift_b(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift_b"
-    argument: AdditionalResource
+    argument: Noise
 
     @classmethod
     def decode(cls, data: JSONDict) -> shift_b:
-        from Rhombus.language.noise import Noise
         return cls(
             Noise(None, None, data["argument"])
         )
@@ -381,7 +376,7 @@ class shift_b(MultiArgumentsFunctionBase):
 @dataclass
 class shifted_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shifted_noise"
-    noise: AdditionalResource
+    noise: Noise
     xz_scale: float
     y_scale: float
     shift_x: DensityFunction
@@ -390,7 +385,6 @@ class shifted_noise(MultiArgumentsFunctionBase):
 
     @classmethod
     def decode(cls, data: JSONDict) -> shifted_noise:
-        from Rhombus.language.noise import Noise
         return cls(Noise(None, None, data["noise"]), **{
             k: v
             for k, v
@@ -458,12 +452,11 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
 class weird_scaled_sampler(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
-    noise: AdditionalResource
+    noise: Noise
     input: DensityFunction
 
     @classmethod
     def decode(cls, data: JSONDict) -> weird_scaled_sampler:
-        from Rhombus.language.noise import Noise
         return cls(
             data["rarity_value_mapper"],
             Noise(None, None, data["noise"]),

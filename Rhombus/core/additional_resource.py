@@ -1,18 +1,38 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Self, Protocol, Callable, Any
 from abc import ABC, abstractmethod
 
-from Rhombus.core.utils import uuid_hash
+from Rhombus.core.utils import uuid_hash, JSONDict
+from Rhombus.core import config
+
+from beet import DataPack, JsonFile
 
 __all__ = ["AdditionalResource", "BeetFileClass"]
 
-class BeetFileClass(Protocol):
-    "Protocol for beet file classes."
-    encoder: Callable[[dict[str, Any]], str]
-    data: dict
-    extension: str
-    scope: tuple[str, ...]
+# class BeetFileClass(Protocol):
+#     "Protocol for beet file classes."
+#     encoder: Callable[[dict[str, Any]], str]
+#     data: dict
+#     extension: str
+#     scope: tuple[str, ...]
 
+BeetFileClass = JsonFile
+
+def decode_additional_resource(ref: str, t: type[AdditionalResource], dp: DataPack = None) -> AdditionalResource:
+
+    token = None
+    if dp is not None:
+        token = config._current_datapack.set(dp)
+
+    try:
+        dp = config._current_datapack.get()
+
+        return t.decode(dp[t.fileclass][ref].data)
+
+    finally:
+        if token is not None:
+            config._current_datapack.reset(token)
 
 @dataclass(frozen=True)
 class AdditionalResource(ABC):
@@ -28,16 +48,24 @@ class AdditionalResource(ABC):
 
     fileclass: ClassVar[type[BeetFileClass]]
 
+    # REGISTERED_ADDITIONAL_RESOURCES: ClassVar[dict[str, type[AdditionalResource]]] = {}
+    # "Set of all defined classes inheriting from `AdditionalResource`."
+      
+    # def __init_subclass__(cls, **kwargs):
+    #     super().__init_subclass__(**kwargs)
+    #     if hasattr(cls, "id"):
+    #         AdditionalResource.REGISTERED_ADDITIONAL_RESOURCES[cls.id] = cls
+
     @property
     @abstractmethod
     def reference_identifier(self) -> str: ...
 
     @classmethod
     @abstractmethod
-    def decode(cls, dict: dict[str, Any]) -> Self: ...
+    def decode(cls, dict: JSONDict) -> Self: ...
 
     @abstractmethod
-    def encode(self) -> dict[str, Any]: ...
+    def encode(self) -> JSONDict: ...
 
     @abstractmethod
     def __eq__(self, other) -> bool: ...
