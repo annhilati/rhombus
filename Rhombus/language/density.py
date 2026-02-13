@@ -11,7 +11,7 @@ __all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReferenc
 
 #======// Formatters //==========================================================================//
 
-DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunctionExpression, str, float]
+DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunction, str, float]
 "UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
@@ -48,7 +48,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     if isinstance(arg, Density):
         return arg
 
-    if isinstance(arg, dft.DensityFunctionExpression):
+    if isinstance(arg, dft.DensityFunction):
         return Density(arg)
 
     if isinstance(arg, str):
@@ -139,7 +139,7 @@ def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 
 #======// Density Type //========================================================================//
 
-WrappedDFType = TypeVar("DensityFunctionType", bound=dft.DensityFunctionExpression, default=dft.DensityFunctionExpression)
+WrappedDFType = TypeVar("DensityFunctionType", bound=dft.DensityFunction, default=dft.DensityFunction)
 
 @dataclass
 class Density(Generic[WrappedDFType]):

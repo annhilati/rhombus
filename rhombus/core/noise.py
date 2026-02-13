@@ -1,9 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import ClassVar, Optional
+from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.additional_resource import AdditionalResource
 from Rhombus.core.utils import JSONDict, uuid_hash
-from beet.contrib.worldgen import WorldgenNoise
 
 @dataclass(frozen=True)
 class Noise(AdditionalResource):
