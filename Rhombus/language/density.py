@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
 from Rhombus.core import df_types as dft, config
-from Rhombus.core.utils import JSONDict, uuid_hash
+from Rhombus.core.utils import JSONDict, uuid_hash, FROM_CONTEXT, with_datapack_context
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
@@ -140,7 +140,7 @@ def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 #======// Density Type //========================================================================//
 
 @dataclass
-class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction](Generic[DensityFunction]):
+class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
     """Class representing a density calculation.
     
     Don't use the constructor of this class. To define a new density instead use:<br>
@@ -181,6 +181,17 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction](Generi
         data = file.data
 
         return Density(decode_HOLDER_HELPER_CODEC(data, dp=dp))
+    
+    @classmethod
+    @with_datapack_context
+    def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
+        """⚠️ Currently experimental.<br>
+        Creates a `Density` object from a dictionary.
+        
+        A Beet datapack can be provided as context.
+        """
+        from Rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
+        return decode_HOLDER_HELPER_CODEC(d, dp=dp)
     
     def compile(self, with_identifier: str, /):
         "Compiles the Density into Beet file class instances."

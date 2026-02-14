@@ -1,4 +1,4 @@
-from typing import TypeAlias, Callable, TypeVar, ParamSpec
+from typing import TypeAlias, Callable, TypeVar, ParamSpec, Final
 import hashlib, uuid, json, functools
 
 JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool | None]
@@ -17,11 +17,14 @@ def uuid_hash(data: JSONDict) -> str:
 _P = ParamSpec("P")
 _R = TypeVar("R")
 
+FROM_CONTEXT: Final = object()
+"Typing sentinel to denote that a value will be taken from a context variable."
+
 def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable[_P, _R]:
     """Decorator to help with DataPack context when decoding.
     
-    If the kwarg stated in `arg` of the decorated function is None:
-        Calls the decorated function with the current datapack context (which can be None).
+    If the kwarg stated in `arg` of the decorated function is `FROM_CONTEXT`:
+        Calls the decorated function with the current datapack context (which can be `None`, so this should be checked).
     If the kwarg stated in `arg` of the decorated function is set:
         Sets the datapack context for the execution of the decorated function.
     """
@@ -31,11 +34,10 @@ def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         dp = kwargs.get(kwarg, None)
 
-        if dp is None or dp is ...:
+        if dp is FROM_CONTEXT:
             
             current = config.datapack_context.get(None)
-            if current is not None:
-                kwargs[kwarg] = current
+            kwargs[kwarg] = current
             return func(*args, **kwargs)
 
         token = config.datapack_context.set(dp)

@@ -31,7 +31,7 @@ __all__ = [
 
 from Rhombus.core import df_types as dft
 from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor, BuiltinWizard, resolve_DensityDescriptor, ref
-from Rhombus.language.noise import Noise
+from Rhombus.core.noise import Noise
 from typing import Literal
 
 

@@ -3,10 +3,10 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
-from Rhombus.core.additional_resource import AdditionalResource, decode_additional_resource
+from Rhombus.core.additional_resource import AdditionalResource, decode_additional_resource_from_datapack
 from Rhombus.core.noise import Noise
 from Rhombus.core import config, JSONDict
-from Rhombus.core.utils import with_datapack_context
+from Rhombus.core.utils import with_datapack_context, FROM_CONTEXT
 import warnings, beet, beet.contrib.worldgen as beet_worldgen
 
 __all__ = [
@@ -17,7 +17,7 @@ __all__ = [
 #======// Main Decoding Function //==============================================================//
 
 @with_datapack_context
-def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, dp: beet.DataPack = None) -> "DensityFunction":
+def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, dp: beet.DataPack | None = FROM_CONTEXT) -> "DensityFunction":
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
 
@@ -160,7 +160,7 @@ class MultiArgumentsFunctionBase(DensityFunction):
         }
         return cls(**{
             parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunction else 
-            decode_additional_resource(ref=value, t=tp) if isinstance(tp, AdditionalResource) else value
+            decode_additional_resource_from_datapack(ref=value, t=tp) if isinstance(tp, AdditionalResource) else value
             for parameter, value in data.items()
             if parameter in init_fields
             for tp in (init_fields[parameter],)

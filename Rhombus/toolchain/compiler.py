@@ -13,7 +13,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
     def search_for_additional_files(o):
-        if isinstance(o, DensityFunctionExpression):
+        if isinstance(o, DensityFunction):
             if isinstance(o, Reference) and (default := o.default) is not None:
                 if isinstance(default, Reference): # To not have literal strings in a JSON file
                     default = add(default, constant(0))
