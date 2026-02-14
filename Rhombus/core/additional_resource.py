@@ -3,12 +3,11 @@ from dataclasses import dataclass
 from typing import ClassVar, Self
 from abc import ABC, abstractmethod
 
-from Rhombus.core.utils import uuid_hash, JSONDict, with_datapack_context
-from Rhombus.core import config
-
 from beet import DataPack, JsonFile
+from Rhombus.core.utils import uuid_hash, JSONDict, with_datapack_context
 
-__all__ = ["AdditionalResource", "BeetFileClass", "decode_additional_resource"]
+
+__all__ = ["AdditionalResource", "BeetFileClass", "decode_additional_resource_from_datapack"]
 
 # class BeetFileClass(Protocol):
 #     "Protocol for beet file classes."
@@ -20,7 +19,7 @@ __all__ = ["AdditionalResource", "BeetFileClass", "decode_additional_resource"]
 BeetFileClass = JsonFile
 
 @with_datapack_context
-def decode_additional_resource[T: AdditionalResource](ref: str, t: type[T], dp: DataPack = ...) -> T:
+def decode_additional_resource_from_datapack[T: AdditionalResource](ref: str, t: type[T], dp: DataPack = ...) -> T:
     ref = "minecraft:" + ref if not ":" in ref else ref
     if dp is None or dp is ...:
         raise Exception(f"Cannot decode additional resource {ref} of type {t.__name__} with no datapack in arguments or context.")

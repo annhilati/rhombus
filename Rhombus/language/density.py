@@ -139,10 +139,8 @@ def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 
 #======// Density Type //========================================================================//
 
-WrappedDFType = TypeVar("DensityFunctionType", bound=dft.DensityFunction, default=dft.DensityFunction)
-
 @dataclass
-class Density(Generic[WrappedDFType]):
+class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction](Generic[DensityFunction]):
     """Class representing a density calculation.
     
     Don't use the constructor of this class. To define a new density instead use:<br>
@@ -152,7 +150,7 @@ class Density(Generic[WrappedDFType]):
     - `DensityReference` to reference a density function that is provided externally, like by another datapack
     """
 
-    AST: WrappedDFType
+    AST: DensityFunction
     "The density function AST represented by this Density."
 
     def __post_init__(self):

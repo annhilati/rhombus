@@ -17,7 +17,7 @@ def uuid_hash(data: JSONDict) -> str:
 _P = ParamSpec("P")
 _R = TypeVar("R")
 
-def with_datapack_context(func: Callable[_P, _R], arg: str = "dp") -> Callable[_P, _R]:
+def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable[_P, _R]:
     """Decorator to help with DataPack context when decoding.
     
     If the kwarg stated in `arg` of the decorated function is None:
@@ -29,13 +29,13 @@ def with_datapack_context(func: Callable[_P, _R], arg: str = "dp") -> Callable[_
     
     @functools.wraps(func)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        dp = kwargs.get(arg, None)
+        dp = kwargs.get(kwarg, None)
 
         if dp is None or dp is ...:
             
             current = config.datapack_context.get(None)
             if current is not None:
-                kwargs[arg] = current
+                kwargs[kwarg] = current
             return func(*args, **kwargs)
 
         token = config.datapack_context.set(dp)
