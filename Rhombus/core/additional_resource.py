@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Self
 from abc import ABC, abstractmethod
@@ -19,11 +18,11 @@ __all__ = ["AdditionalResource", "BeetFileClass", "decode_additional_resource_fr
 BeetFileClass = JsonFile
 
 @with_datapack_context
-def decode_additional_resource_from_datapack[T: AdditionalResource](ref: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
-    ref = "minecraft:" + ref if not ":" in ref else ref
+def decode_additional_resource_from_datapack[T: AdditionalResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
+    id = "minecraft:" + id if not ":" in id else id
     if dp is None:
-        raise Exception(f"Cannot decode additional resource {ref} of type {t.__name__} with no datapack in arguments or context.")
-    return t.decode(dp[t.fileclass][ref].data)
+        raise Exception(f"Cannot decode additional resource {id} of type {t.__name__} with no datapack in arguments or context.")
+    return t.decode(dp[t.fileclass][id].data)
 
 
 @dataclass(frozen=True)

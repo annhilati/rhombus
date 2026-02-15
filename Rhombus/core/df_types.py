@@ -1,6 +1,5 @@
 """It is complicated ..."""
 
-from __future__ import annotations
 from dataclasses import dataclass, field, fields
 from typing import Any, ClassVar, Literal, Self, Callable, Literal
 from Rhombus.core.additional_resource import AdditionalResource, decode_additional_resource_from_datapack
@@ -53,9 +52,10 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, /, dp: beet.DataPack | Non
     elif isinstance(o, str):
         o = "minecraft:" + o if ":" not in o else o
 
+        default = None
         if dp is not None and (f := dp[beet_worldgen.WorldgenDensityFunction].get(o, default=None)) is not None:
             default = f.data
-        out = Reference(o, default=decode_HOLDER_HELPER_CODEC(default))
+        out = Reference(o, default=decode_HOLDER_HELPER_CODEC(default) if default is not None else None)
 
     else:
         raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument")
@@ -73,7 +73,7 @@ class DensityFunction:
     encode: ClassVar[Callable[[Self], JSONDict | float | str]]
     validate: ClassVar[Callable[[Self], None]]
 
-    REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type[DensityFunction]]] = {}
+    REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
     "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
       
     def __init_subclass__(cls, **kwargs):
@@ -153,14 +153,15 @@ class MultiArgumentsFunctionBase(DensityFunction):
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        init_fields = {
-            f.name: f.type
-            for f in fields(cls)
-            if f.init
-        }
+        init_fields = {f.name: f.type for f in fields(cls) if f.init}
         return cls(**{
-            parameter: decode_HOLDER_HELPER_CODEC(value) if tp is DensityFunction else 
-            decode_additional_resource_from_datapack(ref=value, t=tp) if isinstance(tp, AdditionalResource) else value
+            parameter: (
+                decode_HOLDER_HELPER_CODEC(value)
+                    if tp is DensityFunction
+                else decode_additional_resource_from_datapack(value, tp)
+                    if isinstance(tp, type) and issubclass(tp, AdditionalResource)
+                else value
+            )
             for parameter, value in data.items()
             if parameter in init_fields
             for tp in (init_fields[parameter],)
@@ -179,10 +180,10 @@ class MultiArgumentsFunctionBase(DensityFunction):
 @dataclass    
 class Reference(DensityFunction):
     reference: str
-    default: DensityFunction | None = field(init=True, default=None)
+    default: DensityFunction | None = None
     
     @classmethod
-    def decode(cls, data: str) -> Reference:
+    def decode(cls, data: str) -> "Reference":
         return decode_HOLDER_HELPER_CODEC(data)
     
     def encode(self) -> str:
@@ -245,7 +246,7 @@ class constant(DensityFunction):
                           "An error might be thrown when loading a world.")
 
     @classmethod
-    def decode(cls, data: JSONDict | float) -> constant:
+    def decode(cls, data: JSONDict | float) -> "constant":
         return cls(data["argument"] if isinstance(data, dict) else data)
     
     def encode(self) -> float:
@@ -359,7 +360,7 @@ class spline(DensityFunction):
     points: list[tuple[float, DensityFunction, float]]
 
     @classmethod
-    def decode(cls, data: JSONDict) -> spline:
+    def decode(cls, data: JSONDict) -> "spline":
         return cls(
             decode_HOLDER_HELPER_CODEC(data["spline"]["coordinate"]),
             [

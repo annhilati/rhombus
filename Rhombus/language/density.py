@@ -171,16 +171,14 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
     @classmethod
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
         "⚠️ Currently experimental.<br>Creates a `Density` object from a density function in a Beet datapack."
-        from Rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
 
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
 
-        file = dp[beet_worldgen.WorldgenDensityFunction][identifier]
+        file = dp[beet_worldgen.WorldgenDensityFunction].get(identifier, default=None)
         if file is None:
             return None
-        data = file.data
 
-        return Density(decode_HOLDER_HELPER_CODEC(data, dp=dp))
+        return Density.from_dict(file.data, dp=dp)
     
     @classmethod
     @with_datapack_context

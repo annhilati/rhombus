@@ -15,6 +15,6 @@
 - AdditionalResources get a wrapper like Density
 
 
-- [ ] §1 Decode additional resources dynamically from DensityFunction subclasses
-  - [ ] §1.1 Annotate with concrete additional resource classes instead of AdditionalResource in DensityFunction fields
-- [ ] §2 Decode density functions from a DataPack
+- [x] §1 Decode additional resources dynamically from `DensityFunction` subclasses
+  - [x] §1.1 Annotate with concrete additional resource classes instead of `AdditionalResource` in `DensityFunction` fields
+- [ ] §2 Decode density functions from a `DataPack`

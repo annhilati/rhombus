@@ -48,7 +48,7 @@ class Noise(AdditionalResource):
 
     @classmethod
     def decode(cls, data: JSONDict) -> Noise:
-        cls(firstOctave=data["firstoctave"], amplitudes=data["amplitudes"])
+        return cls(firstOctave=data["firstOctave"], amplitudes=data["amplitudes"])
 
     def encode(self) -> JSONDict:
         return {

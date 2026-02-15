@@ -1,5 +1,5 @@
 from typing import TypeAlias, Callable, TypeVar, ParamSpec, Final
-import hashlib, uuid, json, functools
+import hashlib, uuid, json, functools, inspect
 
 JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool | None]
 
@@ -31,18 +31,21 @@ def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable
     from Rhombus.core import config
     
     @functools.wraps(func)
-    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        dp = kwargs.get(kwarg, None)
+    def wrapper(*args, **kwargs):
+        sig = inspect.signature(func)
+        bound = sig.bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+
+        dp = bound.arguments.get(kwarg)
 
         if dp is FROM_CONTEXT:
-            
             current = config.datapack_context.get(None)
-            kwargs[kwarg] = current
-            return func(*args, **kwargs)
+            bound.arguments[kwarg] = current
+            return func(*bound.args, **bound.kwargs)
 
         token = config.datapack_context.set(dp)
         try:
-            return func(*args, **kwargs)
+            return func(*bound.args, **bound.kwargs)
         finally:
             config.datapack_context.reset(token)
 
