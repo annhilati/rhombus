@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
-from Rhombus.core.df_types import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.density_function import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction, decode_HOLDER_HELPER_CODEC
 from Rhombus.core.additional_resource import AdditionalResource
 from Rhombus.language.density import Density, DensityDescriptor, BuiltinAssistant
 from Rhombus.language.noise import Noise

@@ -1,6 +1,6 @@
 from typing import ClassVar, Self
 from dataclasses import dataclass
-from Rhombus.core.df_types import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
 
 TODO = "TODO"
 

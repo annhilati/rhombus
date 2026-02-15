@@ -1,7 +1,8 @@
 "Macros with mathmatical functions, that are not provided by default."
 
 from typing import Callable
-from Rhombus.core import df_types as dft, config as cfg
+from Rhombus import config as cfg
+from Rhombus.core import dft as dft
 from Rhombus.language.density import Density, DensityDescriptor, MacroWizard
 from Rhombus.language import builtins as f
 

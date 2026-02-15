@@ -1,6 +1,8 @@
 from typing import TypeAlias, Callable, TypeVar, ParamSpec, Final
 import hashlib, uuid, json, functools, inspect
 
+__all__ = ["uuid_hash", "JSONDict", "with_datapack_context", "FROM_CONTEXT"]
+
 JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool | None]
 
 def uuid_hash(data: JSONDict) -> str:
@@ -28,7 +30,7 @@ def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable
     If the kwarg stated in `arg` of the decorated function is set:
         Sets the datapack context for the execution of the decorated function.
     """
-    from Rhombus.core import config
+    from Rhombus import config
     
     @functools.wraps(func)
     def wrapper(*args, **kwargs):

@@ -4,4 +4,4 @@
 from Rhombus.language import *
 from Rhombus import toolchain
 from Rhombus.macros import *
-from Rhombus.core import config
+from Rhombus import config

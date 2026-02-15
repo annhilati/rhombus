@@ -45,6 +45,11 @@ class Noise(AdditionalResource):
         if self.reference is not None:
             return self.reference if ":" in self.reference else "minecraft:" + self.reference
         return f"rhombus:generated/" + uuid_hash(self.encode())
+    
+    @classmethod
+    def as_pure_reference(cls, id: str):
+        id = "minecraft:" + id if not ":" in id else id
+        return Noise(firstOctave=None, amplitudes=None, reference=id)
 
     @classmethod
     def decode(cls, data: JSONDict) -> Noise:
@@ -70,5 +75,4 @@ class ReferenceNoise:
     """
 
     def __new__(identifier: str, /) -> Noise:
-        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
-        return Noise(firstOctave=None, amplitudes=None, reference=identifier)
+        return Noise.as_pure_reference(identifier)

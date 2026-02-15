@@ -4,7 +4,8 @@ from tempfile import TemporaryDirectory
 from beet.contrib.worldgen import WorldgenDensityFunction
 from Rhombus.language.density import Density
 from Rhombus.core import *
-from Rhombus.core.df_types import Reference, add, constant
+from Rhombus.core.density_function import Reference, constant
+from Rhombus.core import dft as dft
 
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     files: dict[str, BeetFileClass] = {}
@@ -16,7 +17,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
         if isinstance(o, DensityFunction):
             if isinstance(o, Reference) and (default := o.default) is not None:
                 if isinstance(default, Reference): # To not have literal strings in a JSON file
-                    default = add(default, constant(0))
+                    default = dft.add(default, constant(0))
                 files[o.reference] = WorldgenDensityFunction(default.encode())
             for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:
                 search_for_additional_files(value)
@@ -29,13 +30,13 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     search_for_additional_files(root)
 
     if isinstance(root, Reference): # To not have literal strings in a JSON file
-        root = add(root, constant(0))
+        root = dft.add(root, constant(0))
         
     files[identifier] = WorldgenDensityFunction(root.encode())
 
     return files
 
-def summon(files: dict[str, BeetFileClass]) -> None:
+def show_in_temp(files: dict[str, BeetFileClass]) -> None:
     import os, sys, subprocess
     from pathlib import Path
 

@@ -3,17 +3,10 @@ from typing import ClassVar, Self
 from abc import ABC, abstractmethod
 
 from beet import DataPack, JsonFile
-from Rhombus.core.utils import uuid_hash, JSONDict, with_datapack_context, FROM_CONTEXT
+from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
 
 
 __all__ = ["AdditionalResource", "BeetFileClass", "decode_additional_resource_from_datapack"]
-
-# class BeetFileClass(Protocol):
-#     "Protocol for beet file classes."
-#     encoder: Callable[[dict[str, Any]], str]
-#     data: dict
-#     extension: str
-#     scope: tuple[str, ...]
 
 BeetFileClass = JsonFile
 
@@ -21,7 +14,7 @@ BeetFileClass = JsonFile
 def decode_additional_resource_from_datapack[T: AdditionalResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is None:
-        raise Exception(f"Cannot decode additional resource {id} of type {t.__name__} with no datapack in arguments or context.")
+        return t.as_pure_reference(id)
     return t.decode(dp[t.fileclass][id].data)
 
 
@@ -42,6 +35,10 @@ class AdditionalResource(ABC):
     @property
     @abstractmethod
     def reference_identifier(self) -> str: ...
+
+    @classmethod
+    @abstractmethod
+    def as_pure_reference(cls, id: str) -> Self: ...
 
     @classmethod
     @abstractmethod

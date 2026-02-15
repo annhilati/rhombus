@@ -1,7 +1,9 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Generic, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
-from Rhombus.core import df_types as dft, config
+from typing import Any, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
+from Rhombus import config
+from Rhombus.core.density_function import DensityFunction, constant, Reference
+from Rhombus.core import dft as dft
 from Rhombus.core.utils import JSONDict, uuid_hash, FROM_CONTEXT, with_datapack_context
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
@@ -11,7 +13,7 @@ __all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReferenc
 
 #======// Formatters //==========================================================================//
 
-DensityDescriptor: TypeAlias = Union["Density", dft.DensityFunction, str, float]
+DensityDescriptor: TypeAlias = Union["Density", DensityFunction, str, float]
 "UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
@@ -26,7 +28,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
         v = float(arg)
 
         if abs(v) <= limit:
-            return Density(dft.constant(v))
+            return Density(constant(v))
 
         sign = -1.0 if v < 0 else 1.0
         v = abs(v)
@@ -38,7 +40,7 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 
         factors.append(v * sign)
 
-        it = iter(dft.constant(f) for f in factors)
+        it = iter(constant(f) for f in factors)
         result = dft.mul(next(it), next(it))
         for x in it:
             result = dft.mul(result, x)
@@ -48,13 +50,13 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     if isinstance(arg, Density):
         return arg
 
-    if isinstance(arg, dft.DensityFunction):
+    if isinstance(arg, DensityFunction):
         return Density(arg)
 
     if isinstance(arg, str):
         if ":" not in arg:
             arg = "minecraft:" + arg
-        return Density(dft.Reference(arg))
+        return Density(Reference(arg))
 
     raise ValueError(f"Cannot resolve type {type(arg)} to a density function")
 
@@ -140,7 +142,7 @@ def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
 #======// Density Type //========================================================================//
 
 @dataclass
-class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
+class Density[Function: DensityFunction = DensityFunction]:
     """Class representing a density calculation.
     
     Don't use the constructor of this class. To define a new density instead use:<br>
@@ -150,12 +152,12 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
     - `DensityReference` to reference a density function that is provided externally, like by another datapack
     """
 
-    AST: DensityFunction
+    AST: Function
     "The density function AST represented by this Density."
 
     def __post_init__(self):
-        if isinstance(self.AST, Density):
-            raise Exception("A Density object was initialized, with another Density object as its contents")
+        if not isinstance(self.AST, DensityFunction):
+            raise TypeError(f"Cannot initialize a Density with content of type '{type(self.AST).__name__}'")
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
@@ -188,7 +190,7 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
         
         A Beet datapack can be provided as context.
         """
-        from Rhombus.core.df_types import decode_HOLDER_HELPER_CODEC
+        from Rhombus.core.density_function import decode_HOLDER_HELPER_CODEC
         return decode_HOLDER_HELPER_CODEC(d, dp=dp)
     
     def compile(self, with_identifier: str, /):
@@ -226,7 +228,7 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
         "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
         from Rhombus import toolchain
         files = self.compile(with_name)
-        toolchain.summon(files)
+        toolchain.show_in_temp(files)
         
     
     #======// Arithmetic Magic //================================================================//
@@ -247,7 +249,7 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
                 argument1=self,
                 argument2=dft.mul(
                     argument1=other,
-                    argument2=dft.constant(-1.0)
+                    argument2=constant(-1.0)
             )))
     
     def __rsub__(self, other) -> Density[dft.add]:
@@ -258,7 +260,7 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
                 argument1=other,
                 argument2=dft.mul(
                     argument1=self,
-                    argument2=dft.constant(-1.0)
+                    argument2=constant(-1.0)
             )))
     
     def __mul__(self, other) -> Density[dft.mul]:
@@ -317,7 +319,7 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
         return Density(dft.abs(self.AST))
     
     def __neg__(self) -> Density[dft.mul]:
-        return Density(dft.mul(self.AST, dft.constant(-1.0)))
+        return Density(dft.mul(self.AST, constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self
@@ -336,7 +338,7 @@ class Density[DensityFunction: dft.DensityFunction = dft.DensityFunction]:
 
 #======// Additional Density Types //============================================================//
 
-def ref(identifier: str, /) -> Density[dft.Reference]:
+def ref(identifier: str, /) -> Density[Reference]:
     "Creates a Density that is a reference to an externally provided density function."
     return resolve_DensityDescriptor(identifier)
 
@@ -346,11 +348,11 @@ class ConfiguredDensity:
     """Creates a Density that will be casted into a specific file when compiling."""
 
     @BuiltinWizard
-    def __new__(cls, name: str, default: DensityDescriptor) -> Density[dft.Reference]:
+    def __new__(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
         default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
-        if isinstance(default, dft.Reference):
+        if isinstance(default, Reference):
             default = dft.add(default, 0)
-        return Density(dft.Reference(name, default))
+        return Density(Reference(name, default))
 
 
 @dataclass(init=False)
@@ -359,7 +361,7 @@ class ExternalDensity:
 
     @BuiltinWizard
     def __new__(cls, value: DensityDescriptor, /):
-        return Density(dft.Reference(
+        return Density(Reference(
             reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
             default=value)
         )
@@ -369,5 +371,5 @@ class ExternalDensity:
 class DensityReference:
     """Creates a Density refering to an externally provided density function."""
 
-    def __new__(cls, identifier: str, /) -> Density[dft.Reference]:
+    def __new__(cls, identifier: str, /) -> Density[Reference]:
         return ref(identifier)
