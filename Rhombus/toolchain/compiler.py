@@ -24,7 +24,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
         elif isinstance(o, (list, tuple)):
             for value in o:
                 search_for_additional_files(value)
-        elif isinstance(o, AdditionalResource):
+        elif isinstance(o, RegistryResource):
             files[o.reference_identifier] = o.fileclass(o.encode())
 
     search_for_additional_files(root)

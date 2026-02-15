@@ -4,7 +4,7 @@ from typing import Any, Self, Callable, TypeVar, TypeAlias, Union, Literal, Para
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
 from Rhombus.core import dft as dft
-from Rhombus.core.utils import JSONDict, uuid_hash, FROM_CONTEXT, with_datapack_context
+from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 

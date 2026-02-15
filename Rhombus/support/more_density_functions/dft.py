@@ -83,10 +83,14 @@ class floor_div(DivisionFunctionBase):
 class floor_mod(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:floor_mod"
 
+@dataclass
 class gapped_grid_square_spiral():
     id: ClassVar[str] = "moredfs:gapped_grid_square_spiral"
-    TODO
-    # Here are lists of DFTypes
+    x_size: int # > 0
+    z_size: int # > 0
+    spacing: int # > 0
+    grid_cell_args: list[DensityFunction]
+    out_of_bounds_argument: DensityFunction
 
 @dataclass
 class gradient_magnitude(MultiArgumentsFunctionBase):
@@ -99,9 +103,11 @@ class gradient_magnitude(MultiArgumentsFunctionBase):
 class ieee_rem(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:ieee_rem"
 
-class log():
+@dataclass
+class log(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:log"
-    TODO
+    argument: DensityFunction
+    base: DensityFunction
 
 class log2(MappedFunctionBase):
     id: ClassVar[str] = "moredfs:log2"
@@ -127,9 +133,11 @@ class or_else(MultiArgumentsFunctionBase):
 class polar_coords(SimpleFunctionBase):
     id: ClassVar[str] = "moredfs:polar_coords"
 
-class power():
+@dataclass
+class power(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:power"
-    TODO
+    base: DensityFunction
+    exponent: DensityFunction
 
 @dataclass
 class profiler(MultiArgumentsFunctionBase):
@@ -160,7 +168,10 @@ class round(MappedFunctionBase):
 
 class shift():
     id: ClassVar[str] = "moredfs:shift"
-    TODO
+    argument: DensityFunction
+    shift_x: DensityFunction
+    shift_y: DensityFunction
+    shift_z: DensityFunction
 
 class sigmoid(MappedFunctionBase):
     id: ClassVar[str] = "moredfs:sigmoid"

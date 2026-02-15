@@ -12,9 +12,10 @@
 - How to name arguments in builtins vs macros? Technical or scientific?
 
 # IDEA
-- AdditionalResources get a wrapper like Density
+- RegistryResources get a wrapper like Density
 
 
-- [x] §1 Decode additional resources dynamically from `DensityFunction` subclasses
-  - [x] §1.1 Annotate with concrete additional resource classes instead of `AdditionalResource` in `DensityFunction` fields
+- [x] §1 Decode registry resources dynamically from `DensityFunction` subclasses
+  - [x] §1.1 Annotate with concrete registry resource classes instead of `RegistryResource` in `DensityFunction` fields
 - [ ] §2 Decode density functions from a `DataPack`
+- [ ] §3 Warn for potential invalid values in fields of `DensityFunction` subclasses by some sort of generic description

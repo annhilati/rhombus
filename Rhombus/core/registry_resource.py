@@ -6,12 +6,12 @@ from beet import DataPack, JsonFile
 from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
 
 
-__all__ = ["AdditionalResource", "BeetFileClass", "decode_additional_resource_from_datapack"]
+__all__ = ["RegistryResource", "BeetFileClass", "decode_RegistryResource_from_DataPack"]
 
 BeetFileClass = JsonFile
 
 @with_datapack_context
-def decode_additional_resource_from_datapack[T: AdditionalResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
+def decode_RegistryResource_from_DataPack[T: RegistryResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is None:
         return t.as_pure_reference(id)
@@ -19,10 +19,10 @@ def decode_additional_resource_from_datapack[T: AdditionalResource](id: str, t: 
 
 
 @dataclass(frozen=True)
-class AdditionalResource(ABC):
+class RegistryResource(ABC):
     """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
-    When defining new AdditionalResource types ensure the following:
+    When defining new RegistryResource types ensure the following:
     - It is a frozen dataclass
     - It is hashable (through sensible implementations of `__hash__` and `__eq__`)
     - A classmethod `decode(cls, dict) -> Self`

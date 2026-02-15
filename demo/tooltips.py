@@ -25,6 +25,6 @@ Density.show_in_dir
 
 #======// Core //================================================================================//
 
-AdditionalResource
+RegistryResource
 
 DensityFunction

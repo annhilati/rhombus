@@ -1,9 +1,9 @@
 """It is complicated ..."""
 
 from dataclasses import dataclass, fields
-from typing import Any, ClassVar, Self, Callable
+from typing import Any, ClassVar, Self, Callable, get_type_hints, get_origin, get_args
 from Rhombus import config
-from Rhombus.core.additional_resource import AdditionalResource, decode_additional_resource_from_datapack
+from Rhombus.core.registry_resource import RegistryResource, decode_RegistryResource_from_DataPack
 from Rhombus.core import JSONDict
 from Rhombus.core.utils import with_datapack_context, FROM_CONTEXT
 import warnings, beet, beet.contrib.worldgen as beet_worldgen
@@ -111,56 +111,32 @@ class SimpleFunctionBase(DensityFunction):
     def encode(self) -> JSONDict:
         return {"type": self.id}
     
-
-@dataclass
-class MappedFunctionBase(DensityFunction):
-    "Base class for density function types that map an argument `argument` to a value."
-    argument: DensityFunction
-
-    @classmethod
-    def decode(cls, data: JSONDict) -> Self:
-        argument = data["argument"]
-        return cls(decode_HOLDER_HELPER_CODEC(argument))
-    
-    def encode(self) -> JSONDict:
-        return {"type": self.id, "argument": self.argument.encode()}
-
-
-@dataclass
-class DoubleArgumentFunctionBase(DensityFunction):
-    "Base class for density function types with two arguments `argument1` and `argument2`."
-    argument1: DensityFunction
-    argument2: DensityFunction
-
-    @classmethod
-    def decode(cls, data: JSONDict) -> Self:
-        return cls(
-            decode_HOLDER_HELPER_CODEC(data["argument1"]),
-            decode_HOLDER_HELPER_CODEC(data["argument2"])
-        )
-    
-    def encode(self) -> JSONDict:
-        return {"type": self.id, "argument1": self.argument1.encode(), "argument2": self.argument2.encode()}
-    
-
 class MultiArgumentsFunctionBase(DensityFunction):
     """Base class for density function types with any number of arguments of primitive types.
 
     When inheriting from this class, add the `@dataclass` decorator to the new class<br>
     and add fields with the same keys as required in the density function JSON definition.<br>
 
-    If types are needed in the fields that are not `DensityFunctionType`, `AdditionalResource` or primitive, inherit from `DensityFunctionType` instead and implement the methods manually.
+    If types are needed in the fields that are not of type `DensityFunction`, of a subclass of `RegistryResource` or JSON-compatible, inherit from `DensityFunction` instead and implement the methods manually.
     """
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        init_fields = {f.name: f.type for f in fields(cls) if f.init}
+        init_fields: dict[str, type] = {
+            f.name: get_type_hints(cls)[f.name]
+            for f in fields(cls)
+            if f.init
+        }
+
         return cls(**{
             parameter: (
-                decode_HOLDER_HELPER_CODEC(value)
-                    if tp is DensityFunction
-                else decode_additional_resource_from_datapack(value, tp)
-                    if isinstance(tp, type) and issubclass(tp, AdditionalResource)
+                decode_HOLDER_HELPER_CODEC(value)                   # DensityFunction
+                    if tp is DensityFunction else
+                decode_RegistryResource_from_DataPack(value, tp)    # Noise, ... (subclasses of RegistryResource)
+                    if issubclass(tp, RegistryResource) else
+                [decode_HOLDER_HELPER_CODEC(f) for f in value]      # list[DensityFunction]
+                    if get_origin(tp) is list and get_args(tp)[0] is DensityFunction
+                
                 else value
             )
             for parameter, value in data.items()
@@ -170,12 +146,31 @@ class MultiArgumentsFunctionBase(DensityFunction):
 
     def encode(self) -> JSONDict:
         return {"type": self.id, **{
-            parameter: value.encode() if isinstance(value, DensityFunction) else value.reference_identifier if isinstance(value, AdditionalResource) else value
+            parameter: (
+                value.encode()                                      # DensityFunction
+                    if isinstance(value, DensityFunction) else
+                value.reference_identifier                          # Noise, ... (subclasses of RegistryResource)
+                    if isinstance(value, RegistryResource) else
+                [f.encode() for f in value]                         # list[DensityFunction]
+                    if isinstance(value, list) and isinstance(value[0], (DensityFunction, None))
+                    
+                else value)
             for parameter, value
             in self.fields.items()
         }}
 
+@dataclass
+class MappedFunctionBase(MultiArgumentsFunctionBase):
+    "Base class for density function types that map an argument `argument` to a value."
+    argument: DensityFunction
 
+@dataclass
+class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
+    "Base class for density function types with two arguments `argument1` and `argument2`."
+    argument1: DensityFunction
+    argument2: DensityFunction
+
+    
 #======// Reference Classes //===================================================================//
 
 @dataclass    

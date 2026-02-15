@@ -2,11 +2,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import ClassVar, Optional
 from beet.contrib.worldgen import WorldgenNoise
-from Rhombus.core.additional_resource import AdditionalResource
+from Rhombus.core.registry_resource import RegistryResource
 from Rhombus.core.utils import JSONDict, uuid_hash
 
 @dataclass(frozen=True)
-class Noise(AdditionalResource):
+class Noise(RegistryResource):
     """Defines a perlin noise.
 
     **NOTE** To add a reference to an existing noise, use `ReferenceNoise()` instead.
@@ -38,7 +38,7 @@ class Noise(AdditionalResource):
             raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
         
 
-    #======// Methods required by AdditionalResourceBase //================================//
+    #======// Methods required by RegistryResourceBase //================================//
     
     @property
     def reference_identifier(self) -> str:
