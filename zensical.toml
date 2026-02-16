@@ -16,8 +16,8 @@ nav = [
 extra_css = ["style.css"]
 
 [project.theme]
-logo = "/logo.png"
-favicon = "/logo.png"
+logo = "logo.png"
+favicon = "logo.png"
 features = [
     "navigation.sections",
     "navigation.tabs"
