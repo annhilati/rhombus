@@ -3,9 +3,12 @@ title: Mod Support
 icon: lucide/square-function
 ---
 
-# Adding Support for Density Function Types from Mods
+# Adding Support for Content from Mods
 
 Support for any density function types from mods can be added without any problems.
+
+!!! tip
+    Functions for mods are located in modules in `Rhombus.support`. If you need support for a mod that is currently not present in the `support` collection, you can file an [issue](https://github.com/annhilati/rhombus/issues) or contribute.
 
 ## Register a new class
 

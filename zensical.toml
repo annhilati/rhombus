@@ -4,12 +4,14 @@ site_url = "https://annhilati.github.io/rhombus"
 repo_url = "https://github.com/annhilati/rhombus"
 repo_name = "rhombus"
 nav = [
-    {"Usage" = [
-        "index.md"
+    {"Worldgen Developers" = [
+        "index.md",
+        "walkthrough.md",
     ]},
-    {"Extending" = [
+    {"Rhombus Developers" = [
         "extending/macros.md",
-        "extending/density_functions.md"
+        "extending/density_functions.md",
+        "extending/docstring_guide.md"
     ]}
 ]
 extra_css = ["style.css"]
@@ -31,6 +33,9 @@ primary = "custom"
 
 [project.extra]
 generator = false
+
+[project.extra.status]
+new = "Recently added"
 
 [project.markdown_extensions]
 pymdownx.superfences = {}
