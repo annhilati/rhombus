@@ -1,7 +1,8 @@
 [project]
 site_name = "Rhombus Documentation"
 site_url = "https://annhilati.github.io/rhombus"
-repo_url = "https://github.com/zensical/zensical"
+repo_url = "https://github.com/annhilati/rhombus"
+repo_name = "rhombus"
 nav = [
     {"Home" = [
         "index.md",
@@ -19,6 +20,9 @@ features = [
     "navigation.sections",
     "navigation.tabs"
 ]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
 
 [project.theme.palette]
 scheme = "slate"
