@@ -1,6 +1,10 @@
 # Development
 .vscode/
 test*.py
+.pytest_cache
+
+# Tests
+!tests/**
 
 # Build
 /build
