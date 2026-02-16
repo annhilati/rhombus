@@ -7,6 +7,10 @@ test*.py
 !tests/**
 
 # Build
-/build
+build
 *.egg-info
 __pycache__
+
+# Zensical
+site
+.cache

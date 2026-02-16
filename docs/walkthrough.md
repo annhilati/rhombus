@@ -60,7 +60,7 @@ with DataPack(...) as dp:
 
 When injecting into a datapack (or compiling in any other way) we have to address a name or resource location to the density function by which it will be accessible.
 
-<h2 align="center">Note on Performance and Caching</h3>
+<h2 align="center">Note on Performance and Caching</h2>
 
 If we composed a density function with multiple Density variables even if we reuse one variable multiple times, in the output we would only find one file. This is because the density function AST is always flattened to include as few references as possible to reduce overhead.
 

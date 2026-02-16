@@ -1,3 +1,24 @@
 [project]
-site_name = "My site"
+site_name = "Rhombus Documentation"
 site_url = "https://annhilati.github.io/rhombus"
+repo_url = "https://github.com/zensical/zensical"
+nav = [
+    {"Home" = [
+        "index.md",
+        "walkthrough.md"
+    ]},
+    {"Extension Developers" = [
+        "extensions/density_functions.md"
+    ]}
+]
+
+[project.theme]
+# logo = "/logo.png"
+# favicon = "/logo.png"
+features = [
+    "navigation.sections",
+    "navigation.tabs"
+]
+
+[project.theme.palette]
+scheme = "slate"

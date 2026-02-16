@@ -191,7 +191,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         A Beet datapack can be provided as context.
         """
         from Rhombus.core.density_function import decode_HOLDER_HELPER_CODEC
-        return decode_HOLDER_HELPER_CODEC(d, dp=dp)
+        return Density(decode_HOLDER_HELPER_CODEC(d, dp=dp))
     
     def compile(self, with_identifier: str, /):
         "Compiles the Density into Beet file class instances."
