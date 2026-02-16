@@ -5,8 +5,7 @@ repo_url = "https://github.com/annhilati/rhombus"
 repo_name = "rhombus"
 nav = [
     {"Usage" = [
-        # "index.md",
-        "walkthrough.md"
+        "index.md"
     ]},
     {"Extending" = [
         "extending/macros.md",
