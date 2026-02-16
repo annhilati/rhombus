@@ -60,7 +60,7 @@ class Noise(RegistryResource):
             "firstOctave": self.firstOctave,
             "amplitudes": self.amplitudes
         }
-       
+
     def __eq__(self, other: Noise):
         if not isinstance(other, Noise):
             return None

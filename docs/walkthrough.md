@@ -1,6 +1,10 @@
-###### This introduction may be perceived like a screencast
+---
+icon: lucide/footprints
+---
 
-<h2 align="center">Installation</h3>
+> This introduction may be perceived like a screencast
+
+## Installation
 
 Rhombus is an eDSL or *embedded domain specific language*. "Embedded" meaning that it is not a standalone language, but in this case a module for Python.
 
@@ -10,7 +14,7 @@ So we begin by installing rhombus with the pip command.
 pip install rhombus
 ```
 
-<h2 align="center">Composition</h3>
+## Composition
 
 In Rhombus, we *compose*[^1] density functions, by using given symbols and object oriented programming.
 
@@ -34,7 +38,7 @@ final_destiny = noise(n, xz_scale=1, y_scale=0) + y_clamped_gradient(from_value=
 
 An object representing a density function we call *Density*.
 
-<h2 align="center">Implementation</h3>
+## Implementation
 
 To implement a Density into a datapack, [Beet](https://github.com/mcbeet/beet) is highly recommended.
 
@@ -60,7 +64,7 @@ with DataPack(...) as dp:
 
 When injecting into a datapack (or compiling in any other way) we have to address a name or resource location to the density function by which it will be accessible.
 
-<h2 align="center">Note on Performance and Caching</h2>
+## Note on Performance and Caching
 
 If we composed a density function with multiple Density variables even if we reuse one variable multiple times, in the output we would only find one file. This is because the density function AST is always flattened to include as few references as possible to reduce overhead.
 

@@ -185,8 +185,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     @classmethod
     @with_datapack_context
     def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
-        """⚠️ Currently experimental.<br>
-        Creates a `Density` object from a dictionary.
+        """Creates a `Density` object from a dictionary.
         
         A Beet datapack can be provided as context.
         """
