@@ -5,7 +5,7 @@ repo_url = "https://github.com/annhilati/rhombus"
 repo_name = "rhombus"
 nav = [
     {"Usage" = [
-        "index.md",
+        # "index.md",
         "walkthrough.md"
     ]},
     {"Extending" = [
@@ -13,6 +13,7 @@ nav = [
         "extending/density_functions.md"
     ]}
 ]
+extra_css = ["style.css"]
 
 [project.theme]
 logo = "/logo.png"
@@ -27,12 +28,14 @@ repo = "fontawesome/brands/github"
 
 [project.theme.palette]
 scheme = "slate"
+primary = "custom"
 
 [project.extra]
 generator = false
 
-[project.markdown_extensions.pymdownx.superfences]
-[project.markdown_extensions.pymdownx.tabbed]
-alternate_style = true
-[project.markdown_extensions.admonition]
-[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions]
+pymdownx.superfences = {}
+pymdownx.tabbed = { alternate_style = true }
+pymdownx.details = {}
+admonition = {}
+footnotes = {}

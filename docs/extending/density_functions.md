@@ -7,27 +7,36 @@ icon: lucide/square-function
 
 Support for any density function types from mods can be added without any problems.
 
-## 1. Defining a data model
+## Register a new class
 
-So that data for the new density function can be stored, a `dataclass` inheriting from `DensityFunction` is needed.
+In order for the data for the new density function to be stored, a `dataclass` inheriting from `DensityFunction` is needed.
 The new class requires the following attributes:
 
-- `id: ClassVar[str]`<br>
-  The identifier of the density function type including its namespace, like it is used in the `type` field of a density function definition in a datapack. 
-- `decode: ClassVar[Callable[[type[Self], JSONDict], Self]]`<br>
-  A `classmethod` that can create an instance of the class from a dictionary (JSON density function definition)
-- `encode: ClassVar[Callable[[Self], JSONDict | float | str]]`<br>
-  A method that can create a dictionary (JSON density function definition) from an instance of the class
+```py
+id: ClassVar[str]
+    # The identifier of the density function type including its namespace, 
+    # like it is used in the `type` field of a density function definition in a datapack. 
 
-There are some base classes that already implement the `decode` and `encode` methods for common models:
+decode: ClassVar[Callable[[type[Self], JSONDict], Self]]
+    # A `classmethod` that can create an instance of the class
+    # from a dictionary(JSON density function definition)
+
+encode: ClassVar[Callable[[Self], JSONDict | float | str]]
+    # A method that can create a dictionary (JSON density function definition)
+    # from an instance of the class
+```
+
+There are some base classes that already implement the `decode` and `encode` methods for common fields:
 
 - `SimpleFunctionBase` for function types that don't take any arguments
 - `MappedFunctionBase` for function types that take an argument `argument` (which must not be declared)
 - `DoubleArgumentFunctionBase` for function types that take two arguments `argument1` and `argument2` (which must not be declared)
 - `MultiArgumentsFunctionBase` for function types that take any argument (which must be declared as `dataclass` fields) of the following types:
     - JSON-compatible value types (`str`, `dict`, `list`, `tuple`, `str`, `int`, `float`, `bool`, `None`)
-    - `DensityFunction`
+    - `DensityFunction` or `list[DensityFunction]`
     - Classes inheriting from `RegistryResource` (like `Noise`)
+
+Fields of `DensityFunction` subclasses must be called exactly like their counterparts in the JSON definition, unless a separate encoding and decoding logic is implemented.
 
 !!! example "Examples from the function types available in vanilla"
 
@@ -98,3 +107,12 @@ There are some base classes that already implement the `decode` and `encode` met
                     }
                 }
         ```
+
+When a new class inheriting `DensityFunction` is defined, it will automatically be registered in the decoding context.
+
+## Create a macro
+
+`DensityFunction` classes normally should not be accessible to the user.
+To let density function developers use the new density function type in Rhombus, a macro is needed that produces a `Density` object with adequate content.
+
+For how to create such a macro, see [Creating Macros](macros.md).

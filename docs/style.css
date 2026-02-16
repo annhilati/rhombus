@@ -1,0 +1,8 @@
+:root  > * {
+    --md-primary-fg-color: #734DFF;
+    --md-accent-fg-color: #8366ea;
+}
+
+.md-typeset ul li {
+    margin-bottom: .15em
+}
