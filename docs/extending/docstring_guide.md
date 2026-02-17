@@ -1,6 +1,6 @@
 ---
 icon: lucide/file-pen
-title: Docstring-Formatting Guide
+title: Docstring-Formatting
 ---
 
-# 
+# Docstring-Formatting Guide

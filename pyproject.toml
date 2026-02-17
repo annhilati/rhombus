@@ -1,6 +1,6 @@
 [project]
 name = "Rhombus"
-version = "0.0.0"
+version = "0.0.1"
 description = ""
 readme = "README.md"
 requires-python = ">=3.8"

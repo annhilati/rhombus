@@ -2,6 +2,7 @@ from Rhombus.language.density import Density, resolve_DensityDescriptor
 from Rhombus.core import dft
 
 def test_resolve_DensityDescriptor():
+    
     # int
     assert resolve_DensityDescriptor(1) == Density(dft.constant(1.0))
     # float

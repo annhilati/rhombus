@@ -1,6 +1,7 @@
 ---
 icon: lucide/footprints
 title: Walkthrough
+status: deprecated
 ---
 
 ## Installation

@@ -116,6 +116,6 @@ When a new class inheriting `DensityFunction` is defined, it will automatically 
 ## Create a macro
 
 `DensityFunction` classes normally should not be accessible to the user.
-To let density function developers use the new density function type in Rhombus, a macro is needed that produces a `Density` object with adequate content.
+To let worldgen developers use the new density function type in Rhombus, a macro is needed that produces a `Density` object with adequate content.
 
 For how to create such a macro, see [Creating Macros](macros.md).

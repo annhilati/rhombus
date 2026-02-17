@@ -6,7 +6,8 @@ repo_name = "rhombus"
 nav = [
     {"Worldgen Developers" = [
         "index.md",
-        "walkthrough.md",
+        "usage/walkthrough.md",
+        "usage/workflow.md",
     ]},
     {"Rhombus Developers" = [
         "extending/macros.md",
@@ -41,5 +42,8 @@ new = "Recently added"
 pymdownx.superfences = {}
 pymdownx.tabbed = { alternate_style = true }
 pymdownx.details = {}
+pymdownx.emoji = { emoji_index = "zensical.extensions.emoji.twemoji", emoji_generator = "zensical.extensions.emoji.to_svg", options.custom_icons = ["overrides/.icons"] }
 admonition = {}
 footnotes = {}
+attr_list = {}
+md_in_html = {}
