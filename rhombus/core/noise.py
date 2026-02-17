@@ -28,9 +28,9 @@ class Noise(RegistryResource):
  
     fileclass: ClassVar = WorldgenNoise
 
-    firstOctave: int           = field(init=True)
-    amplitudes:  list[float]   = field(init=True)
-    reference:   Optional[str] = field(init=True, default=None)
+    firstOctave: Optional[int]         = field(init=True)
+    amplitudes:  Optional[list[float]] = field(init=True)
+    reference:   Optional[str]         = field(init=True, default=None)
     "When given, the Noise object is a reference to an externally declared noise."
 
     def __post_init__(self):
@@ -49,7 +49,7 @@ class Noise(RegistryResource):
     @classmethod
     def as_pure_reference(cls, id: str):
         id = "minecraft:" + id if not ":" in id else id
-        return Noise(firstOctave=None, amplitudes=None, reference=id)
+        return cls(firstOctave=None, amplitudes=None, reference=id)
 
     @classmethod
     def decode(cls, data: JSONDict) -> Noise:

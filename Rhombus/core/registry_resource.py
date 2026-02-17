@@ -13,7 +13,7 @@ BeetFileClass = JsonFile
 @with_datapack_context
 def decode_RegistryResource_from_DataPack[T: RegistryResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
-    if dp is None:
+    if dp is None or dp[t.fileclass].get(id, default=None) is None:
         return t.as_pure_reference(id)
     return t.decode(dp[t.fileclass][id].data)
 

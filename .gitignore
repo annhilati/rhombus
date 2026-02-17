@@ -5,6 +5,7 @@ test*.py
 
 # Tests
 !tests/**
+test_pack/
 
 # Build
 build

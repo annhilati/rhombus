@@ -18,4 +18,9 @@
 - [x] §1 Decode registry resources dynamically from `DensityFunction` subclasses
   - [x] §1.1 Annotate with concrete registry resource classes instead of `RegistryResource` in `DensityFunction` fields
 - [ ] §2 Decode density functions from a `DataPack`
+  - [ ] §2.1 Implement a datapack context
 - [ ] §3 Warn for potential invalid values in fields of `DensityFunction` subclasses by some sort of generic description
+- [ ] §4 Perform AST simplification on encoding
+  - Wrap raw references
+  - Merge literal arithmetic
+  - Remove canonically false `range_choice`

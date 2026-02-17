@@ -326,8 +326,14 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     #======// Logical Magic //===================================================================//
     
-    def __eq__(self, other): return self.AST == other.AST # Mainly to allow testing
-    def __ne__(self, other): return self.AST != other.AST # Mainly to allow testing
+    def __eq__(self, other):
+        if not isinstance(other, Density):
+            return False
+        return self.AST == other.AST
+    def __ne__(self, other): 
+        if not isinstance(other, Density):
+            return False
+        return self.AST != other.AST
 
     def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
     def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
@@ -347,9 +353,9 @@ def ref(identifier: str, /) -> Density[Reference]:
 class ConfiguredDensity:
     """Creates a Density that will be casted into a specific file when compiling."""
 
-    @BuiltinWizard
     def __new__(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
-        default = resolve_DensityDescriptor(default).AST # This somehow is neccesarry
+        name = "minecraft:" + name if not ":" in name else name
+        default = resolve_DensityDescriptor(default).AST
         if isinstance(default, Reference):
             default = dft.add(default, 0)
         return Density(Reference(name, default))
@@ -359,11 +365,11 @@ class ConfiguredDensity:
 class ExternalDensity:
     """Creates a Density whose value will be casted into a separate file when compiling."""
 
-    @BuiltinWizard
-    def __new__(cls, value: DensityDescriptor, /):
+    def __new__(cls, value: DensityDescriptor, /) -> Density[dft.Reference]:
+        value = resolve_DensityDescriptor(value)
         return Density(Reference(
-            reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
-            default=value)
+            reference="rhombus:generated/" + uuid_hash(value.as_dict()),
+            default=value.AST)
         )
 
 
