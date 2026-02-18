@@ -1,17 +1,19 @@
 # Development
 .vscode/
+.venv/
+.env
 test*.py
-.pytest_cache
 
-# Tests
-!tests/**
+# Distribution & Packaging
+build/
+**.egg-info
+**/__pycache__/
+
+# pytest
+!tests/
+.pytest_cache/
 test_pack/
 
-# Build
-build
-*.egg-info
-__pycache__
-
 # Zensical
-site
-.cache
+.cache/
+site/
