@@ -1,22 +1,29 @@
 from Rhombus import *
 from Rhombus.core import *
 from Rhombus.toolchain import *
+from Rhombus.support import *
 
 #======// Language //============================================================================//
 
 Noise
 
 Density
-DensityReference
-ConfiguredDensity
-ExternalDensity
 
 DensityDescriptor
 
+# Macros
 math.x
 coords.x
 builtins.x
 
+# Support
+tectonic
+more_density_functions
+lithostiched
+
+Density.separated
+Density.configured
+Density.referenced
 Density.AST
 Density.compile
 Density.inject

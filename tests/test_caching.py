@@ -1,10 +1,10 @@
-from Rhombus import flat_cache, Density, ExternalDensity, ConfiguredDensity
+from Rhombus import flat_cache, Density
 from Rhombus.core import dft
 
 def test_caching_factories():
 
-    assert ExternalDensity(1.0) == Density(dft.Reference(reference='rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', default=dft.constant(argument=1.0)))
-    assert ConfiguredDensity("test", 1.0) == Density(dft.Reference(reference='minecraft:test', default=dft.constant(argument=1.0)))
+    assert Density.separated(1.0) == Density(dft.Reference(reference='rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', default=dft.constant(argument=1.0)))
+    assert Density.configured("test", 1.0) == Density(dft.Reference(reference='minecraft:test', default=dft.constant(argument=1.0)))
 
 def test_caching_builtins():
 

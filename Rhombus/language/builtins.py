@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 from Rhombus.core import dft as dft
-from Rhombus.language.density import Density, ExternalDensity, DensityDescriptor, BuiltinWizard, resolve_DensityDescriptor, ref
+from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard, resolve_DensityDescriptor, ref
 from Rhombus.core.noise import Noise
 from typing import Literal
 
@@ -207,7 +207,7 @@ def flat_cache(argument: DensityDescriptor) -> Density[dft.Reference]:
 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    return ExternalDensity(dft.flat_cache(argument))
+    return Density.separated(dft.flat_cache(argument))
 
 @BuiltinWizard
 def half_negative(argument: DensityDescriptor) -> Density[dft.half_negative]:

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import ClassVar, Optional
 from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.registry_resource import RegistryResource
-from Rhombus.core.utils import JSONDict, uuid_hash
+from Rhombus.core.utils import JSONDict
 
 @dataclass(frozen=True)
 class Noise(RegistryResource):
@@ -28,10 +28,9 @@ class Noise(RegistryResource):
  
     fileclass: ClassVar = WorldgenNoise
 
-    firstOctave: Optional[int]         = field(init=True)
-    amplitudes:  Optional[list[float]] = field(init=True)
-    reference:   Optional[str]         = field(init=True, default=None)
-    "When given, the Noise object is a reference to an externally declared noise."
+    firstOctave: int
+    amplitudes:  list[float]
+    reference:   Optional[str] = None
 
     def __post_init__(self):
         if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
@@ -41,7 +40,7 @@ class Noise(RegistryResource):
     #======// Methods required by RegistryResourceBase //================================//
      
     @classmethod
-    def as_pure_reference(cls, id: str):
+    def referenced(cls, id: str):
         id = "minecraft:" + id if not ":" in id else id
         return cls(firstOctave=None, amplitudes=None, reference=id)
 
@@ -61,12 +60,3 @@ class Noise(RegistryResource):
         if self.reference is None and other.reference is None:
             return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
         return self.reference == other.reference
-
-
-@dataclass(init=False)
-class ReferenceNoise:
-    """Returns a Noise with a reference to an externally provided noise.
-    """
-
-    def __new__(identifier: str, /) -> Noise:
-        return Noise.as_pure_reference(identifier)

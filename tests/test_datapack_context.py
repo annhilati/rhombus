@@ -1,4 +1,4 @@
-from Rhombus import Density, ExternalDensity, constant, Noise, noise, ReferenceNoise
+from Rhombus import Density, constant, Noise, noise
 from Rhombus.core import dft
 from beet import DataPack
 
@@ -9,7 +9,7 @@ def test_decoding_functions_with_context():
 
         other = constant(1.0)
 
-        d: Density = ExternalDensity(other) + 5.0
+        d: Density = Density.separated(other) + 5.0
 
         d.inject(dp, "main:function", log=False)
 
@@ -27,5 +27,5 @@ def test_decoding_RegistryResources_with_context():
         assert Density.from_datapack(dp, "main:function") == Density(dft.noise(n, 1.0, 1.0))
 
         # with unknown Noise reference
-        noise(Noise.as_pure_reference("some:noise"), 1, 1).inject(dp, "random:function", log=False)
+        noise(Noise.referenced("some:noise"), 1, 1).inject(dp, "random:function", log=False)
         assert Density.from_datapack(dp, "random:function") == Density(dft.noise(Noise(None, None, "some:noise"), 1.0, 1.0))

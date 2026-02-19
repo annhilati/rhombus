@@ -1,3 +1,7 @@
 "Collection of modules with Rhombus support for non-vanilla content."
 
-from Rhombus.support import more_density_functions, tectonic
+__all__ = [
+    "lithostiched",
+    "more_density_functions",
+    "tectonic",
+]

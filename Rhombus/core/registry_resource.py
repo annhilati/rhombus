@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import ClassVar, Self, Optional
+from typing import ClassVar, Self
 from abc import ABC, abstractmethod
 
 from beet import DataPack, JsonFile
@@ -14,7 +14,7 @@ BeetFileClass = JsonFile
 def decode_RegistryResource_from_DataPack[T: RegistryResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is None or dp[t.fileclass].get(id, default=None) is None:
-        return t.as_pure_reference(id)
+        return t.referenced(id)
     return t.decode(dp[t.fileclass][id].data)
 
 
@@ -25,12 +25,13 @@ class RegistryResource(ABC):
     When defining new RegistryResource types ensure the following:
     - It is a frozen dataclass
     - It is hashable (through sensible implementations of `__hash__` and `__eq__`)
+    - A field `reference: str`, that is `None` by default
     - A classmethod `decode(cls, dict) -> Self`
     - A method `encode(self) -> dict` that produces a JSON dictionary
     """
 
     fileclass: ClassVar[type[BeetFileClass]]
-    reference: Optional[str]
+    # reference: ClassVar[str] # Actually a fields in subclasses
 
     @property
     def reference_identifier(self) -> str:
@@ -39,8 +40,9 @@ class RegistryResource(ABC):
         return f"rhombus:generated/" + uuid_hash(self.encode())
 
     @classmethod
-    def as_pure_reference(cls, id: str) -> Self:
-        return cls(reference=id)
+    def referenced(cls, identifier: str, /) -> Self:
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        return cls(reference=identifier)
 
     @classmethod
     @abstractmethod

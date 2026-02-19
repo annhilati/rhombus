@@ -1,5 +1,5 @@
 from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard
-from Rhombus.support.more_density_functions import dft as dft
+from . import dft as dft
 
 __all__ = []
 
@@ -34,3 +34,5 @@ def atan(argument: DensityDescriptor) -> Density[dft.atan]:
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#arc-tangent)
     """
     return Density(dft.atan(argument))
+
+...

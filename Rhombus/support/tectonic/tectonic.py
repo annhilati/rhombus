@@ -1,13 +1,9 @@
-"""[Tectonic](https://modrinth.com/datapack/tectonic) by Apollo"""
-
 from dataclasses import dataclass
 from typing import ClassVar
 from Rhombus.core.density_function import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction, decode_HOLDER_HELPER_CODEC
 from Rhombus.core.registry_resource import RegistryResource
-from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard
 from Rhombus.core.noise import Noise
-
-__all__ = ["invert", "config_constant", "config_noise"]
+from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard
 
 class dft:
 

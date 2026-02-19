@@ -24,3 +24,4 @@
   - Merge literal arithmetic
   - Remove canonically false `range_choice`
 - [ ] §5 Add support for Unions and Tuples for DensityFunction fields
+- [ ] §6 Don't use factories, that utilize `__new__`

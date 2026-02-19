@@ -8,7 +8,7 @@ from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
-__all__ = ["Density", "DensityDescriptor", "ConfiguredDensity", "DensityReference", "ExternalDensity", "ref", "MacroWizard", "BuiltinWizard",]
+__all__ = ["Density", "DensityDescriptor", "ref", "MacroWizard", "BuiltinWizard",]
 
 
 #======// Formatters //==========================================================================//
@@ -167,6 +167,32 @@ class Density[Function: DensityFunction = DensityFunction]:
         "Returns the **compilation complexity** of the density function AST."
         return self.AST.compilation_complexity
     
+
+    #======// Factories //=======================================================================//
+
+    @classmethod
+    @BuiltinWizard
+    def configured(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
+        """Creates a Density that will be casted into a specific file when compiling."""
+        name = "minecraft:" + name if not ":" in name else name
+        if isinstance(default, Reference):
+            default = dft.add(default, 0)
+        return Density(Reference(name, default))
+    
+    @classmethod
+    @BuiltinWizard
+    def separated(cls, value: DensityDescriptor):
+        """Creates a Density whose value will be casted into a separate file when compiling."""
+        return Density(Reference(
+            reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
+            default=value)
+        )
+    
+    @classmethod
+    def referenced(identifier: str) -> Density[Reference]:
+        """Creates a Density refering to an externally provided density function."""
+        return Density(Reference(identifier))
+
 
     #======// Toolchain //=======================================================================//
 
@@ -346,36 +372,4 @@ class Density[Function: DensityFunction = DensityFunction]:
 
 def ref(identifier: str, /) -> Density[Reference]:
     "Creates a Density that is a reference to an externally provided density function."
-    return resolve_DensityDescriptor(identifier)
-
-
-@dataclass(init=False)
-class ConfiguredDensity:
-    """Creates a Density that will be casted into a specific file when compiling."""
-
-    def __new__(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
-        name = "minecraft:" + name if not ":" in name else name
-        default = resolve_DensityDescriptor(default).AST
-        if isinstance(default, Reference):
-            default = dft.add(default, 0)
-        return Density(Reference(name, default))
-
-
-@dataclass(init=False)
-class ExternalDensity:
-    """Creates a Density whose value will be casted into a separate file when compiling."""
-
-    def __new__(cls, value: DensityDescriptor, /) -> Density[dft.Reference]:
-        value = resolve_DensityDescriptor(value)
-        return Density(Reference(
-            reference="rhombus:generated/" + uuid_hash(value.as_dict()),
-            default=value.AST)
-        )
-
-
-@dataclass(init=False)
-class DensityReference:
-    """Creates a Density refering to an externally provided density function."""
-
-    def __new__(cls, identifier: str, /) -> Density[Reference]:
-        return ref(identifier)
+    return Density.referenced(identifier)

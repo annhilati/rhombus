@@ -1,16 +1,12 @@
-"""[Lithostiched](https://modrinth.com/mod/lithostitched) by Apollo"""
-
 from dataclasses import dataclass
 from typing import ClassVar, Literal, Optional
-from Rhombus.core.density_function import MultiArgumentsFunctionBase, DensityFunction
 from Rhombus.core.registry_resource import RegistryResource
 from Rhombus.core.utils import JSONDict
-from Rhombus.language.density import Density, BuiltinWizard
 
 from beet.library.base import JsonFile, NamespaceFileScope
 
 class LithostichedFastNoiseConfig(JsonFile):
-    """Class representing a Lithostiched noise."""
+    """Class representing a Lithostiched noise configuration file."""
 
     scope: ClassVar[NamespaceFileScope] = ("lithostitched", "fast_noise_config")
     extension: ClassVar[str] = ".json"
@@ -23,8 +19,6 @@ class FastNoiseConfig(RegistryResource):
     
     """
     fileclass: ClassVar = LithostichedFastNoiseConfig
-
-    reference: Optional[str] = None
 
     type: Literal["lithostiched:cellular", "lithostiched:perlin", "lithostiched:simplex"]
     frequency: float
@@ -39,6 +33,8 @@ class FastNoiseConfig(RegistryResource):
     octaves:           Optional[int] = None # non-negaive, completely optional
     lacunarity:        Optional[float] = None # completely optional
     gain:              Optional[float] = None # completely optional
+
+    reference: Optional[str] = None
 
     def encode(self) -> JSONDict:
         return {
@@ -61,55 +57,36 @@ class FastNoiseConfig(RegistryResource):
     @classmethod
     def decode(cls, dict: JSONDict) -> "FastNoiseConfig":
         return cls(
-            **dict
+            **dict # Hope this works 😅
         )
-
-class dft:
-
-    @dataclass
-    class fast_noise(MultiArgumentsFunctionBase):
-        id: ClassVar[str] = "lithostiched:fast_noise"
-        config: FastNoiseConfig
-        xz_scale: float
-        y_scale: float
-        shift_x: DensityFunction
-        shift_y: DensityFunction
-        shift_z: DensityFunction
-
-@dataclass(init=False)
-class ReferenceFastNoiseConfig:
-    """Returns a FastNoiseConfig with a reference to an externally provided noise.
-    """
-
-    def __new__(identifier: str, /) -> FastNoiseConfig:
-        return FastNoiseConfig.as_pure_reference(identifier)
     
-@dataclass(init=False)
-class CellularNoise:
-
-    def __new__(
-        frequency: float,
-        jitter: Optional[float],
-        distance_function: Optional[Literal["euclidean", "euclidean_squared", "manhattan", "hybrid"]],
-        return_type: Optional[Literal["cell_value", "distance", "distance_2", "distance_2_add", "distance_2_sub", "distance_2_mul", "distance_2_div"]],
-        salt: Optional[int] = None
-    ) -> FastNoiseConfig:
-        return FastNoiseConfig(type="lithostiched:cellular", salt=salt, jitter=jitter, distance_function=distance_function, return_type=return_type)
+    @classmethod
+    def referenced(cls, identifier):
+        return cls(reference=identifier, type=None, frequency=None)
     
-@dataclass(init=False)
-class SimplexNoise:
-
-    def __new__(
+    @classmethod
+    def SimplexNoise(
+        cls,
         frequency: float,
         fractal_type: Literal["none", "fbm", "ridged", "ping_pong", "domain_warp_progressive", "domain_warp_independent"],
         octaves: Optional[int] = None, # non-negaive
         lacunarity: Optional[float] = None,
         gain: Optional[float] = None,
         salt: Optional[int] = None
-    ) -> FastNoiseConfig:
-        return FastNoiseConfig(type="lithostiched:simplex", salt=salt, fractal_type=fractal_type, octaves=octaves, lacunarity=lacunarity, gain=gain)
+    ) -> "FastNoiseConfig":
+        return cls(type="lithostiched:simplex", frequency=frequency, salt=salt, fractal_type=fractal_type, octaves=octaves, lacunarity=lacunarity, gain=gain)
     
-
-@BuiltinWizard   
-def fast_noise(config: FastNoiseConfig, xz_scale: float = 1, y_scale: float = 1, shift_x: ... = 0, shift_y: ... = 0, shift_z: ... = 0):
-    return Density(dft.fast_noise(config, xz_scale, y_scale, shift_x, shift_y, shift_z))
+    @classmethod
+    def CellularNoise(
+        cls,
+        frequency: float,
+        jitter: Optional[float],
+        distance_function: Optional[Literal["euclidean", "euclidean_squared", "manhattan", "hybrid"]],
+        return_type: Optional[Literal["cell_value", "distance", "distance_2", "distance_2_add", "distance_2_sub", "distance_2_mul", "distance_2_div"]],
+        salt: Optional[int] = None
+    ) -> "FastNoiseConfig":
+        return cls(type="lithostiched:cellular", frequency=frequency, salt=salt, jitter=jitter, distance_function=distance_function, return_type=return_type)
+    
+    @classmethod
+    def PerlinNoise(cls, frequency: float, salt: int) -> "FastNoiseConfig":
+        return cls(type="lithostiched:perlin", frequency=frequency, salt=salt)
