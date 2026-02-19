@@ -4,8 +4,8 @@ from dataclasses import dataclass, fields
 from typing import Any, ClassVar, Self, Callable, get_type_hints, get_origin, get_args
 from Rhombus import config
 from Rhombus.core.registry_resource import RegistryResource, decode_RegistryResource_from_DataPack
-from Rhombus.core import JSONDict
-from Rhombus.core.utils import with_datapack_context, FROM_CONTEXT
+from Rhombus.core.params import SubParameters
+from Rhombus.core.utils import JSONDict, with_datapack_context, FROM_CONTEXT
 import warnings, beet, beet.contrib.worldgen as beet_worldgen
 
 __all__ = [
@@ -135,8 +135,10 @@ class MultiArgumentsFunctionBase(DensityFunction):
                 decode_RegistryResource_from_DataPack(value, tp)    # Noise, ... (subclasses of RegistryResource)
                     if issubclass(tp, RegistryResource) else
                 [decode_HOLDER_HELPER_CODEC(f) for f in value]      # list[DensityFunction]
-                    if get_origin(tp) is list and get_args(tp)[0] is DensityFunction
-                
+                    if get_origin(tp) is list and get_args(tp)[0] is DensityFunction else
+                tp.decode(value)                                    # (subclasses of SubParameters)
+                    if issubclass(tp, SubParameters)
+
                 else value
             )
             for parameter, value in data.items()
@@ -152,8 +154,10 @@ class MultiArgumentsFunctionBase(DensityFunction):
                 value.reference_identifier                          # Noise, ... (subclasses of RegistryResource)
                     if isinstance(value, RegistryResource) else
                 [f.encode() for f in value]                         # list[DensityFunction]
-                    if isinstance(value, list) and isinstance(value[0], (DensityFunction, None))
-                    
+                    if isinstance(value, list) and isinstance(value[0], (DensityFunction, None)) else
+                value.encode()                                      # (subclasses of SubParameters)
+                    if isinstance(value, SubParameters)
+
                 else value)
             for parameter, value
             in self.fields.items()

@@ -1,6 +1,5 @@
 """[Tectonic](https://modrinth.com/datapack/tectonic) by Apollo"""
 
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 from Rhombus.core.density_function import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction, decode_HOLDER_HELPER_CODEC

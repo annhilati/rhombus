@@ -39,13 +39,7 @@ class Noise(RegistryResource):
         
 
     #======// Methods required by RegistryResourceBase //================================//
-    
-    @property
-    def reference_identifier(self) -> str:
-        if self.reference is not None:
-            return self.reference if ":" in self.reference else "minecraft:" + self.reference
-        return f"rhombus:generated/" + uuid_hash(self.encode())
-    
+     
     @classmethod
     def as_pure_reference(cls, id: str):
         id = "minecraft:" + id if not ":" in id else id
