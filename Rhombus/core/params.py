@@ -10,7 +10,7 @@ class SubParameters:
 
     @property
     def fields(self) -> dict[str, Any]:
-        "Returns the fields of the sub parameter with their values."
+        "Returns the fields of the sub parameters, with their values."
         return fields(self)
     
     @classmethod

@@ -1,11 +1,11 @@
 """It is complicated ..."""
 
-from dataclasses import dataclass, fields
-from typing import Any, ClassVar, Self, Callable, get_type_hints, get_origin, get_args
+from dataclasses import dataclass
+from typing import Any, ClassVar, Self, Callable, get_origin, get_args
 from Rhombus import config
 from Rhombus.core.registry_resource import RegistryResource, decode_RegistryResource_from_DataPack
 from Rhombus.core.params import SubParameters
-from Rhombus.core.utils import JSONDict, with_datapack_context, FROM_CONTEXT
+from Rhombus.core.utils import JSONDict, with_datapack_context, FROM_CONTEXT, annotated_fields, fields
 from Rhombus.core.codec import encode as uniencode, decode as unidecode
 import warnings, beet, beet.contrib.worldgen as beet_worldgen
 
@@ -73,7 +73,7 @@ class DensityFunction:
 
     decode: ClassVar[Callable[[type[Self], JSONDict], Self]]
     encode: ClassVar[Callable[[Self], JSONDict | float | str]]
-    validate: ClassVar[Callable[[Self], None]]
+    # validate: ClassVar[Callable[[Self], None]]
 
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
     "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
@@ -83,18 +83,10 @@ class DensityFunction:
         if hasattr(cls, "id"):
             DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
 
-    def __post_init__(self):
-        if hasattr(self, "validate"):
-            self.validate()
-
     @property
     def fields(self) -> dict[str, Any]:
         "Returns the fields of the density function type with their values."
-        return {
-            f.name: getattr(self, f.name, None)
-            for f in fields(self)
-            if f.init
-        }
+        return fields(self)
 
     
 @dataclass
@@ -119,28 +111,22 @@ class MultiArgumentsFunctionBase(DensityFunction):
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        init_fields: dict[str, type] = {
-            f.name: get_type_hints(cls)[f.name]
-            for f in fields(cls)
-            if f.init
-        }
+        fields = annotated_fields(cls)
 
         return cls(**{
             parameter: (
-                decode_HOLDER_HELPER_CODEC(value)                   # DensityFunction
-                    if tp is DensityFunction else
-                decode_RegistryResource_from_DataPack(value, tp)    # Noise, ... (subclasses of RegistryResource)
-                    if issubclass(tp, RegistryResource) else
-                [decode_HOLDER_HELPER_CODEC(f) for f in value]      # list[DensityFunction]
-                    if get_origin(tp) is list and get_args(tp)[0] is DensityFunction else
-                tp.decode(value)                                    # (subclasses of SubParameters)
-                    if issubclass(tp, SubParameters)
+                # DensityFunction
+                decode_HOLDER_HELPER_CODEC(value)                   if tp is DensityFunction else
+                # Noise, ... (subclasses of RegistryResource)
+                decode_RegistryResource_from_DataPack(value, tp)    if issubclass(tp, RegistryResource) else
+                # list[DensityFunction]
+                [decode_HOLDER_HELPER_CODEC(f) for f in value]      if get_origin(tp) is list and get_args(tp)[0] is DensityFunction
 
-                else value
+                else unidecode(value, tp)
             )
             for parameter, value in data.items()
-            if parameter in init_fields
-            for tp in (init_fields[parameter],)
+            if parameter in fields
+            for tp in (fields[parameter],)
         })
 
     def encode(self) -> JSONDict:
@@ -181,12 +167,6 @@ class Reference(DensityFunction):
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
-
-    def validate(self) -> None:
-        limit = config.constant_number_limit
-        if self.argument > limit or self.argument < -limit:
-            warnings.warn(f"A constant with a value of {self.argument} lies outside the limit of ± {float(limit)}.\n    "
-                          "An error might be thrown when loading a world.")
             
     @classmethod
     def decode(cls, data: JSONDict | float) -> "constant":

@@ -20,13 +20,13 @@ def encode[T](o: T):
     
     return o
 
-def decode[T, C](v: T, t: type[C]) -> C:
+def decode[V, T](v: V, t: type[T]) -> T:
     """Casts a value `v` into a type `t` according to specific procedures.
     
     Supported are:
-    - `DensityFunction`
-    - `RegistryResource`
-    - `SubParameters`
+    - `DensityFunction` subclasses
+    - `RegistryResource` subclasses
+    - `SubParameters` subclasses
     - `str`, `int`, `float`
     - `list[T]`, `tuple[T]`
     - `dict[KT, VT]`

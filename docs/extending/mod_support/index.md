@@ -13,7 +13,7 @@ To add support for mods, you can use the infrastructure on which the built-ins a
 
 <div class="grid cards" markdown>
 
--   **Density Function Type**
+-   **Density Function Types**
 
     ---
     A type of operator at the Java level that is used to perform density calculations.
@@ -21,11 +21,18 @@ To add support for mods, you can use the infrastructure on which the built-ins a
     :octicons-arrow-right-24: [Class inheriting from `DensityFunction`](density_functions.md)<br>
     :octicons-arrow-right-24: [Builtin macro producing an corresponding `Density`]
 
--   **Datapack Resource**
+-   **Datapack Resources**
 
     ---
     A resource that comes with an datapack and can be referenced in a field of a density function type.
 
     :octicons-arrow-right-24: [Class inheriting from `RegistryResource`](datapack_resources.md)<br>
+
+-   **Subparameters**
+
+    ---
+    An aggregation of parameters.
+
+    :octicons-arrow-right-24: Class inheriting from `SubParameter`<br>
 
 </div>

@@ -56,17 +56,9 @@ class cache_once(MappedFunctionBase):
 @dataclass
 class clamp(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:clamp"
-    input: DensityFunction
+    input: DensityFunction # no references
     min: float
     max:float
-
-    def validate(self) -> None:
-        if isinstance(self.input, Reference) and config.warn_on_reference_in_clamp:
-            warnings.warn(
-                "MC-252814: 'Clamp density function takes a direct input and doesn't allow a reference'.\n    "
-                "An error might be thrown when loading a world.\n    "
-                "For more information see https://bugs.mojang.com/browse/MC/issues/MC-252814"
-            )
 
 class cube(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:cube"
@@ -118,16 +110,6 @@ class old_blended_noise(MultiArgumentsFunctionBase):
     xz_factor: float
     y_factor: float
     smear_scale_multiplier: float
-
-    def validate(self) -> None:
-        for param, value in {k: v for k, v in self.fields.items() if k != "smear_scale_multiplier"}.items():
-            if value > 1000 or value < 0.001:
-                warnings.warn(f"A value of {value} in the '{param}' field of 'old_blended_noise' lies outside the limit of 0.001 ≤ value ≤ 1000.0.\n    "
-                              "An error might be thrown when loading a world.")
-        if self.smear_scale_multiplier > 8 or self.smear_scale_multiplier < 1:
-                warnings.warn(f"A value of {self.smear_scale_multiplier} in the 'smear_scale_multiplier' field of 'old_blended_noise' lies outside the limit of 1.0 ≤ value ≤ 8.0.\n    "
-                              "An error might be thrown when loading a world.")
-
 
 class quarter_negative(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:quarter_negative"
@@ -231,17 +213,3 @@ class y_clamped_gradient(MultiArgumentsFunctionBase):
     to_y: int
     from_value: float
     to_value: float
-
-    def validate(self) -> None:
-        if self.from_y > 4062 or self.from_y < -4064:
-            warnings.warn(f"A value of {self.from_y} in the 'from_y' field of 'y_clamped_gradient' lies outside the limit of -4064 ≤ value ≤ 4062.\n    "
-                          "An error might be thrown when loading a world.")
-        if self.to_y > 4062 or self.to_y < -4064:
-            warnings.warn(f"A value of {self.to_y} in the 'to_y' field of 'y_clamped_gradient' lies outside the limit of -4064 ≤ value ≤ 4062.\n    "
-                          "An error might be thrown when loading a world.")
-        if self.from_value > 4062 or self.from_value < -4064:
-            warnings.warn(f"A value of {self.from_value} in the 'from_value' field of 'y_clamped_gradient' lies outside the limit of -1000000.0 ≤ value ≤ 1000000.0.\n    "
-                          "An error might be thrown when loading a world.")
-        if self.to_value > 4062 or self.to_value < -4064:
-            warnings.warn(f"A value of {self.to_value} in the 'to_value' field of 'y_clamped_gradient' lies outside the limit of -1000000.0 ≤ value ≤ 1000000.0.\n    "
-                          "An error might be thrown when loading a world.")

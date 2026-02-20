@@ -60,7 +60,7 @@ def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable
 #======// Typing //==============================================================================//
 
 def fields(o: object) -> dict[str, Any]:
-    "Returns the fields of a dataclass, that are also in the init."
+    "Returns the fields of a dataclass instance, that are present in the init, with their values."
     return {
         f.name: getattr(o, f.name, None)
         for f in dataclasses.fields(o)
