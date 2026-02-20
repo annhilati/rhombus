@@ -35,9 +35,7 @@ class Noise(RegistryResource):
     def __post_init__(self):
         if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
             raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
-        
-
-    #======// Methods required by RegistryResourceBase //================================//
+               
      
     @classmethod
     def referenced(cls, id: str):
@@ -47,12 +45,6 @@ class Noise(RegistryResource):
     @classmethod
     def decode(cls, data: JSONDict) -> Noise:
         return cls(firstOctave=data["firstOctave"], amplitudes=data["amplitudes"])
-
-    def encode(self) -> JSONDict:
-        return {
-            "firstOctave": self.firstOctave,
-            "amplitudes": self.amplitudes
-        }
 
     def __eq__(self, other: Noise):
         if not isinstance(other, Noise):

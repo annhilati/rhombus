@@ -1,9 +1,10 @@
 from dataclasses import dataclass
-from typing import ClassVar, Self
+from typing import ClassVar, Self, Any
 from abc import ABC, abstractmethod
 
 from beet import DataPack, JsonFile
-from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
+from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT, fields
+from Rhombus.core.codec import encode as uniencode
 
 
 __all__ = ["RegistryResource", "BeetFileClass", "decode_RegistryResource_from_DataPack"]
@@ -23,15 +24,15 @@ class RegistryResource(ABC):
     """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
     When defining new RegistryResource types ensure the following:
-    - It is a frozen dataclass
-    - It is hashable (through sensible implementations of `__hash__` and `__eq__`)
-    - A field `reference: str`, that is `None` by default
-    - A classmethod `decode(cls, dict) -> Self`
-    - A method `encode(self) -> dict` that produces a JSON dictionary
+        This has to be reworked
     """
 
     fileclass: ClassVar[type[BeetFileClass]]
     # reference: ClassVar[str] # Actually a fields in subclasses
+
+    @property
+    def _fields(self) -> dict[str, Any]:
+        return fields(self)
 
     @property
     def reference_identifier(self) -> str:
@@ -48,8 +49,12 @@ class RegistryResource(ABC):
     @abstractmethod
     def decode(cls, dict: JSONDict) -> Self: ...
 
-    @abstractmethod
-    def encode(self) -> JSONDict: ...
+    def encode(self) -> JSONDict:
+        return {
+            parameter: uniencode(value)
+            for parameter, value in self._fields.items()
+            if value is not None
+        }
 
     @abstractmethod
     def __eq__(self, other) -> bool: ...
