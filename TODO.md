@@ -26,5 +26,5 @@
   - Remove canonically false `range_choice`
 - [ ] §5 Add support for Unions, Tuples and Optionals for DensityFunction fields
 - [x] §6 Don't use factories, that utilize `__new__`
-- [ ] §7 Implement a universal decoding and encoding system that can be used anywhere
+- [x] §7 Implement a universal decoding and encoding system that can be used anywhere
   - Perhaps a large configurable function with type specific lambdas?
