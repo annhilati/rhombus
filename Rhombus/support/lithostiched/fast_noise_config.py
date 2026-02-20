@@ -15,7 +15,11 @@ class LithostichedFastNoiseConfig(JsonFile):
 class FastNoiseConfig(RegistryResource):
     """Defines a Lithostiched noise.
     
-    **NOTE** Because Lithostiched noises have a lot of interdependent fields, use the fabrics instead.
+    **NOTE** Because Lithostiched noises have a lot of interdependent fields, use these fabrics instead:
+    - `.SimplexNoise()`
+    - `.CellularNoise()`
+    - `.PerlinNoise()`
+    - `.referenced()`
     
     """
     fileclass: ClassVar = LithostichedFastNoiseConfig
@@ -30,7 +34,7 @@ class FastNoiseConfig(RegistryResource):
     return_type:       Literal["cell_value", "distance", "distance_2", "distance_2_add", "distance_2_sub", "distance_2_mul", "distance_2_div"] = None
     # lithostiched:simplex
     fractal_type:      Literal["none", "fbm", "ridged", "ping_pong", "domain_warp_progressive", "domain_warp_independent"] = None
-    octaves:           Optional[int] = None # non-negaive, completely optional
+    octaves:           Optional[int] = None # non-negative, completely optional
     lacunarity:        Optional[float] = None # completely optional
     gain:              Optional[float] = None # completely optional
 
@@ -69,7 +73,7 @@ class FastNoiseConfig(RegistryResource):
         cls,
         frequency: float,
         fractal_type: Literal["none", "fbm", "ridged", "ping_pong", "domain_warp_progressive", "domain_warp_independent"],
-        octaves: Optional[int] = None, # non-negaive
+        octaves: Optional[int] = None,
         lacunarity: Optional[float] = None,
         gain: Optional[float] = None,
         salt: Optional[int] = None

@@ -41,4 +41,5 @@ class SubParameters:
                 else value)
             for parameter, value
             in self.fields.items()
+            if value is not None
         }}

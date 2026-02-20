@@ -1,8 +1,7 @@
-from typing import ClassVar, Self
+from typing import ClassVar, Self, Literal, Optional
 from dataclasses import dataclass
 from Rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
-
-TODO = "TODO"
+from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
 
 #======// Function Type Base Classes //==========================================================//
 
@@ -54,13 +53,21 @@ class cos(MappedFunctionBase):
 class cosh(MappedFunctionBase):
     id: ClassVar[str] = "moredfs:cosh"
 
+@dataclass
 class derivative():
     id: ClassVar[str] = "moredfs:derivative"
-    TODO
+    argument: DensityFunction
+    component_x: Optional[DerivativeComponent] = None
+    component_y: Optional[DerivativeComponent] = None
+    component_z: Optional[DerivativeComponent] = None
+    # One of the components mus be defined at least
 
-class distance():
+
+class distance(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:distance"
-    TODO
+    distance_metric: DistanceMetric
+    point1: Optional[list[DensityFunction]] = None
+    point2: Optional[list[DensityFunction]] = None
 
 class div(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:div"
@@ -204,9 +211,16 @@ class tan(MappedFunctionBase):
 class tanh(MappedFunctionBase):
     id: ClassVar[str] = "moredfs:tanh"
 
-class value_noise():
+@dataclass
+class value_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:value_noise"
-    TODO
+    sampler: RandomSampler
+    size_x: int # >= 0
+    size_y: int # >= 0
+    size_z: int # >= 0
+    interpolation: Literal["none", "lerp", "smoothstep"]
+    salt: Optional[int] = None
+    extra_octaves: Optional[ExtraOctaves] = None
 
 class vector_angle(DoubleArgumentFunctionBase):
     id: ClassVar[str] = "moredfs:vector_angle"
