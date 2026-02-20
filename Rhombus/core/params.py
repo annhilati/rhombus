@@ -1,44 +1,32 @@
-from typing import Any, Self, get_type_hints
-from dataclasses import fields
+from typing import Any, Self
 
-from Rhombus.core import JSONDict
+from Rhombus.core.utils import JSONDict, fields, annotated_fields
+from Rhombus.core.codec import encode as uniencode, decode as unidecode
 
 class SubParameters:
+    """Base class for parameter groups that are used inline in fields of density function types or another.
+    
+    """
 
     @property
     def fields(self) -> dict[str, Any]:
         "Returns the fields of the sub parameter with their values."
-        return {
-            f.name: getattr(self, f.name, None)
-            for f in fields(self)
-            if f.init
-        }
+        return fields(self)
     
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        init_fields: dict[str, type] = {
-            f.name: get_type_hints(cls)[f.name]
-            for f in fields(cls)
-            if f.init
-        }
+        fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: (
-                ... if False
-                
-                else value
-            )
+            parameter: unidecode(value, tp)
             for parameter, value in data.items()
-            if parameter in init_fields
-            for tp in (init_fields[parameter],)
+            if parameter in fields
+            for tp in (fields[parameter],)
         })
     
     def encode(self) -> JSONDict:
         return {**{
-            parameter: (
-                ... if False
-                    
-                else value)
+            parameter: uniencode(value)
             for parameter, value
             in self.fields.items()
             if value is not None

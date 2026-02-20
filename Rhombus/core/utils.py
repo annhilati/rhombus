@@ -1,9 +1,9 @@
-from typing import TypeAlias, Callable, TypeVar, ParamSpec, Final
-import hashlib, uuid, json, functools, inspect
+from typing import TypeAlias, Callable, TypeVar, ParamSpec, Final, Any, get_type_hints
+import hashlib, uuid, json, functools, inspect, dataclasses
 
 __all__ = ["uuid_hash", "JSONDict", "with_datapack_context", "FROM_CONTEXT"]
 
-JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool | None]
+JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool]
 
 def uuid_hash(data: JSONDict) -> str:
     """Creates a UUID string (without `-`) based of a JSON dictionary."""
@@ -15,6 +15,9 @@ def uuid_hash(data: JSONDict) -> str:
     ).encode('utf-8')
     hash_digest = hashlib.sha256(encoded_str).digest()
     return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
+
+
+#======// Context //=============================================================================//
 
 _P = ParamSpec("P")
 _R = TypeVar("R")
@@ -52,3 +55,22 @@ def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable
             config.datapack_context.reset(token)
 
     return wrapper
+
+
+#======// Typing //==============================================================================//
+
+def fields(o: object) -> dict[str, Any]:
+    "Returns the fields of a dataclass, that are also in the init."
+    return {
+        f.name: getattr(o, f.name, None)
+        for f in dataclasses.fields(o)
+        if f.init
+    }
+
+def annotated_fields(o: type) -> dict[str, type]:
+    "Returns the fields of a dataclass, that are present in the init, with their annotation."
+    return {
+        f.name: get_type_hints(o)[f.name]
+        for f in dataclasses.fields(o)
+        if f.init
+    }

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 from Rhombus.core.density_function import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction, decode_HOLDER_HELPER_CODEC
 from Rhombus.core.registry_resource import RegistryResource
-from Rhombus.core.noise import Noise
+from Rhombus.support.builtin.noise import Noise
 from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard
 
 class dft:

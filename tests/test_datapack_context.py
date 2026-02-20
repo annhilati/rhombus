@@ -1,5 +1,5 @@
 from Rhombus import Density, constant, Noise, noise
-from Rhombus.core import dft
+from Rhombus.support.builtin import dft
 from beet import DataPack
 
 def test_decoding_functions_with_context():

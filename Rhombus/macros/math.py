@@ -2,9 +2,9 @@
 
 from typing import Callable
 from Rhombus import config as cfg
-from Rhombus.core import dft as dft
+from Rhombus.support.builtin import dft as dft
 from Rhombus.language.density import Density, DensityDescriptor, MacroWizard
-from Rhombus.language import builtins as f
+from Rhombus.support.builtin import functions as f
 
 pi = 3.14159265359
 "The constant π to 11 decimals."

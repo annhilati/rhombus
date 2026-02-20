@@ -14,7 +14,7 @@ DensityDescriptor
 # Macros
 math.x
 coords.x
-builtins.x
+functions.x
 
 # Support
 tectonic

@@ -2,34 +2,44 @@
 from typing import Literal
 from Rhombus.core.params import SubParameters
 from Rhombus.core.density_function import DensityFunction
-from Rhombus.core.utils import JSONDict
+from Rhombus.core.utils import JSONDict, annotated_fields
+from Rhombus.core.codec import encode as uniencode, decode as unidecode
 from Rhombus.language import DensityDescriptor, BuiltinWizard
 from dataclasses import dataclass
 
 @dataclass
 class RandomSampler(SubParameters):
+    """Describes a sampler for random values.
+
+    **NOTE** Use these factories for instanciating:
+    - `.Beta()` 
+    - `.Binomial()` 
+    - `.Exponential()` 
+    - `.Gamma()` 
+    - `.Geometric()` 
+    - `.Normal()` 
+    - `.Poisson()` 
+    - `.Uniform()` 
+    
+    [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#random-sampler-types)
+    """
     type: Literal["beta", "binomial", "exponential", "gamma", "geometric", "normal", "poisson", "uniform"]
 
     # beta
     alpha: float        = None # > 0
     beta: float         = None # > 0
-
     # binomial
     trials: int         = None # 0 < x < 1000000
     # binomial / geometric
     probability: float  = None # 0 =< x =< 1
-
     # exponential / poisson
     Lambda: float       = None # > 0
-
     # gamma
     shape: float        = None # > 0
     scale: float        = None
-
     # normal
     mean: float         = None
     std_dev: float      = None # > 0
-
     # uniform
     min: float          = None
     max: float          = None # >= min
@@ -59,26 +69,47 @@ class RandomSampler(SubParameters):
     def Uniform(cls, min: float, max: float):
         return cls(type="uniform", min=min, max=max)
     
+    @classmethod
+    def decode(cls, data: JSONDict) -> "RandomSampler":
+        fields = annotated_fields(cls)
+
+        return cls(**{
+            parameter: unidecode(value, tp)
+            for parameter, value in data.items()
+            if parameter in fields
+            for tp in (fields[parameter],)
+            if parameter != "lambda"
+        },
+        **({"lambda": data["lambda"]} if data.get("lambda", default=None) is not None else {}))
+    
     def encode(self) -> JSONDict:
         return {**{
-            parameter: (
-                ... if False
-                    
-                else value)
+            parameter: uniencode(value)
             for parameter, value
             in self.fields.items()
             if value is not None and parameter != "Lambda"
         },
         **({"lambda": self.Lambda} if self.Lambda is not None else {})
         }
+    
 
 
 @dataclass
 class DistanceMetric(SubParameters):
+    """Describes a procedure to determine distances between n-dimensional points.
+
+    **NOTE** Use these factories for instanciating:
+    - `.Chebyshev()` 
+    - `.Euclidean()` 
+    - `.Manhattan()` 
+    - `.Minowski()` 
+    
+    [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#distance-metric-types)
+    """
     type: Literal["chebyshev", "euclidean", "manhattan", "minkowski"]
 
     # minowski
-    p: int              = None
+    p: int = None
 
     @classmethod
     def Chebyshev(cls) -> "DistanceMetric":

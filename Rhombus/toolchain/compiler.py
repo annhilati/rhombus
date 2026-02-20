@@ -5,7 +5,7 @@ from beet.contrib.worldgen import WorldgenDensityFunction
 from Rhombus.language.density import Density
 from Rhombus.core import *
 from Rhombus.core.density_function import Reference, constant
-from Rhombus.core import dft as dft
+from Rhombus.support.builtin import dft as dft
 
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     files: dict[str, BeetFileClass] = {}

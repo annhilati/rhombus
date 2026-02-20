@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import ClassVar, Optional
 from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.registry_resource import RegistryResource

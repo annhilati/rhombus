@@ -6,6 +6,7 @@ from Rhombus import config
 from Rhombus.core.registry_resource import RegistryResource, decode_RegistryResource_from_DataPack
 from Rhombus.core.params import SubParameters
 from Rhombus.core.utils import JSONDict, with_datapack_context, FROM_CONTEXT
+from Rhombus.core.codec import encode as uniencode, decode as unidecode
 import warnings, beet, beet.contrib.worldgen as beet_worldgen
 
 __all__ = [
@@ -94,10 +95,6 @@ class DensityFunction:
             for f in fields(self)
             if f.init
         }
-    
-    @property
-    def compilation_complexity(self) -> int:
-        return 1 + sum([value.compilation_complexity for name, value in self.fields.items() if isinstance(value, DensityFunction)])
 
     
 @dataclass
@@ -105,7 +102,7 @@ class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
     @classmethod
-    def decode(cls, data: dict) -> Self:
+    def decode(cls, data: dict = {}) -> Self:
         return cls()
     
     def encode(self) -> JSONDict:
@@ -148,19 +145,10 @@ class MultiArgumentsFunctionBase(DensityFunction):
 
     def encode(self) -> JSONDict:
         return {"type": self.id, **{
-            parameter: (
-                value.encode()                                      # DensityFunction
-                    if isinstance(value, DensityFunction) else
-                value.reference_identifier                          # Noise, ... (subclasses of RegistryResource)
-                    if isinstance(value, RegistryResource) else
-                [f.encode() for f in value]                         # list[DensityFunction]
-                    if isinstance(value, list) and isinstance(value[0], (DensityFunction, None)) else
-                value.encode()                                      # (subclasses of SubParameters)
-                    if isinstance(value, SubParameters)
-
-                else value)
+            parameter: uniencode(value)
             for parameter, value
             in self.fields.items()
+            if value is not None
         }}
 
 @dataclass

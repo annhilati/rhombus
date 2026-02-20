@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Any, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
-from Rhombus.core import dft as dft
 from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
+from Rhombus.language.builtin import dft as dft
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
@@ -161,11 +161,6 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
-    
-    @property
-    def cc(self) -> int:
-        "Returns the **compilation complexity** of the density function AST."
-        return self.AST.compilation_complexity
     
 
     #======// Factories //=======================================================================//

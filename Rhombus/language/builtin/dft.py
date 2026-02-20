@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import warnings
 from Rhombus.core.density_function import MappedFunctionBase, DoubleArgumentFunctionBase, SimpleFunctionBase, MultiArgumentsFunctionBase, DensityFunction, Reference, constant, decode_HOLDER_HELPER_CODEC
 from Rhombus.core.utils import JSONDict
-from Rhombus.core.noise import Noise
+from Rhombus.language.builtin.noise import Noise
 from Rhombus import config
 
 __all__ = [
@@ -201,10 +201,6 @@ class spline(DensityFunction):
             }
         }
     
-    @property
-    def compilation_complexity(self) -> int:
-        return 1 + self.coordinate.compilation_complexity + sum([p[1].compilation_complexity for p in self.points])
-
 class square(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:square"
 

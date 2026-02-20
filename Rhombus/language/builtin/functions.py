@@ -29,9 +29,9 @@ __all__ = [
     "y_clamped_gradient"
 ]
 
-from Rhombus.core import dft as dft
 from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard, resolve_DensityDescriptor, ref
-from Rhombus.core.noise import Noise
+from Rhombus.language.builtin import dft as dft
+from Rhombus.language.builtin.noise import Noise
 from typing import Literal
 
 

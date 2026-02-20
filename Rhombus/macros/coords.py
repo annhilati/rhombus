@@ -47,7 +47,8 @@ Through controlled exploitation of floating-point wraparound, precision loss, an
 conditional composition, this macro reconstructs the coordinates using only vanilla
 density functions.
 """
-from Rhombus.language import builtins as f, Noise
+from Rhombus.language import Noise
+from Rhombus.support.builtin import functions as f
 
 __all__ = ["x", "z", "y"]
 
