@@ -1,5 +1,5 @@
 from Rhombus import Density, Noise
-from Rhombus.support.builtin import dft
+from Rhombus.language.builtin import dft
 
 def test_Density_from_dict():
     

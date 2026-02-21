@@ -1,0 +1,64 @@
+name: Design Proposal
+description: Make a proposal about the internal design of Rhombus.
+title: "[Design Proposal]: "
+labels: []
+projects: []
+assignees: []
+type: task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to make a design proposal!
+  - type: input
+    id: topic
+    attributes:
+      label: What component of Rhombus do you wish to make a proposal about?
+      description: Please state the matter as short a possible, but as concrete as possible too.
+      placeholder: Field validation for DensityFunction subclasses
+    validations:
+      required: true
+  - type: textarea
+    id: explanation
+    attributes:
+      label: How do you want to change or implement this component?
+      description: Please clarify again which problem or missing feature you are referring to and then explain what kind of implementation you would like to propose. Feel free to use code examples.
+      placeholder: "..."
+      # value: "A bug happened!"
+    validations:
+      required: true
+  # - type: dropdown
+  #   id: version
+  #   attributes:
+  #     label: Version
+  #     description: What version of our software are you running?
+  #     options:
+  #       - 1.0.2 (Default)
+  #       - 1.0.3 (Edge)
+  #     default: 0
+  #   validations:
+  #     required: true
+  # - type: dropdown
+  #   id: browsers
+  #   attributes:
+  #     label: What browsers are you seeing the problem on?
+  #     multiple: true
+  #     options:
+  #       - Firefox
+  #       - Chrome
+  #       - Safari
+  #       - Microsoft Edge
+  # - type: textarea
+  #   id: logs
+  #   attributes:
+  #     label: Relevant log output
+  #     description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+  #     render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com).
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

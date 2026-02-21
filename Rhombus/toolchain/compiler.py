@@ -2,10 +2,10 @@ from dataclasses import fields
 from tempfile import TemporaryDirectory
 
 from beet.contrib.worldgen import WorldgenDensityFunction
+from Rhombus.core.registry_resource import BeetFileClass, RegistryResource
+from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.language.density import Density
-from Rhombus.core import *
-from Rhombus.core.density_function import Reference, constant
-from Rhombus.support.builtin import dft as dft
+from Rhombus.language.builtin import dft as dft
 
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     files: dict[str, BeetFileClass] = {}
