@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Self, Callable, TypeVar, TypeAlias, Union, Literal, ParamSpec, overload, get_args, get_origin
+from typing import Self, Callable, TypeVar, TypeAliasType, Union, Literal, Optional, ParamSpec, overload, get_args, get_origin
+from types import UnionType
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
 from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
@@ -14,8 +15,8 @@ __all__ = ["Density", "DensityDescriptor", "ref", "MacroWizard", "BuiltinWizard"
 
 #======// Formatters //==========================================================================//
 
-DensityDescriptor: TypeAlias = Union["Density", DensityFunction, str, float]
-"UnionType for all types that can be interpreted by `resolve_DensityDescriptor()`."
+type DensityDescriptor = Union[Density, DensityFunction, str, float]
+"TypeAliasType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
 def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
     """Interprets a QoL argument input and returns a Density object.
@@ -61,20 +62,10 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 
     raise ValueError(f"Cannot resolve type {type(arg)} to a density function")
 
-def _is_density_descriptor(annotation) -> bool:
-    if annotation is None:
-        return False
-    if annotation is DensityDescriptor:
-        return True
-    origin = get_origin(annotation)
-    return origin is DensityDescriptor or (
-        origin is not None and DensityDescriptor in get_args(annotation)
-    )
-
 _P = ParamSpec("Params")
 _R = TypeVar("Result")
 
-def MacroWizard(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
+def MacroWizard(fn: Optional[Callable[_P, _R]] = None, *, unwrap: bool = False):
     """A helper decorator for macros, that take (among other) density function inputs.
 
     The following effects are applied:
@@ -86,28 +77,24 @@ def MacroWizard(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
     unwrap : bool
         Whether to pass the resolved `DensityDescriptor` arguments of the function as `DensityFunctionType` objects instead of `Density` objects
     """
-
-    def _to_ast(obj: Any) -> Any:
-        try:
-            DensityType = globals().get("Density")
-        except Exception:
-            DensityType = None
-
-        if DensityType is not None and isinstance(obj, DensityType):
-            return obj.AST
-
-        wrapped = getattr(obj, "wrapped", obj)
-        if DensityType is not None and isinstance(wrapped, DensityType):
-            return wrapped.AST
-
-        return wrapped
+    
+    def _apply_by_annotation(annotation: type) -> bool:
+        if annotation is DensityDescriptor:
+            return True
+        if get_origin(annotation) in [Union, UnionType]:
+            args = get_args(annotation)
+            if Density in args and any([t in args for t in [str, float, int]]):
+                return True
+        if isinstance(annotation, TypeAliasType):
+            return _apply_by_annotation(annotation.__value__)
+        return False
 
     def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         sig = inspect.signature(func)
         
         params_to_resolve = {
             name for name, param in sig.parameters.items()
-            if _is_density_descriptor(param.annotation)
+            if _apply_by_annotation(param.annotation)
         }
 
         @functools.wraps(func)
@@ -121,7 +108,7 @@ def MacroWizard(fn: Callable[_P, _R] = None, *, unwrap: bool = False):
                     resolved = resolve_DensityDescriptor(current_val)
 
                     if unwrap:
-                        bound.arguments[name] = _to_ast(resolved)
+                        bound.arguments[name] = resolved.AST
                     else:
                         bound.arguments[name] = resolved
 
@@ -148,9 +135,9 @@ class Density[Function: DensityFunction = DensityFunction]:
     
     Don't use the constructor of this class. To define a new density instead use:<br>
     - Methods from `Rhombus.language.builtins` or other methods that return a `Density` for calculations
-    - `ConfiguredDensity` if a value is needed that can be easily altered in the compiled datapack later
-    - `ExternalDensity` if a density function has to be compiled to a separate file, but it is not important what this file is
-    - `DensityReference` to reference a density function that is provided externally, like by another datapack
+    - `.configured()` if a value is needed that can be easily altered in the compiled datapack later
+    - `.separated()` if a density function has to be compiled to a separate file, but it is not important what this file is
+    - `.referenced()` to reference a density function that is provided externally, like by another datapack
     """
 
     AST: Function
@@ -335,7 +322,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         self = self.AST
         return Density(dft.min(self, other))
     
-    def __abs__(self) -> Density[dft.abs]:
+    def __abs__(self) -> "Density[dft.abs]":
         return Density(dft.abs(self.AST))
     
     def __neg__(self) -> Density[dft.mul]:

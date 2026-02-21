@@ -1,6 +1,6 @@
 """Macros for reconstructing the coordinates of the block being evaluated.
 
-The techniques used were invented by *Uni* aka. *unnecessarymb*.<br>
+The techniques used here were invented by *Uni* aka. *unnecessarymb*.<br>
 An original JSON-implementation can be seen [here](https://github.com/klinbee/One-Island/tree/main/One_Survival_Island/data/one_island/worldgen/density_function/coord).
 
 ---

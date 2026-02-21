@@ -1,4 +1,4 @@
-from typing import get_origin, get_args, Union
+from typing import get_origin, get_args, Union, TypeAliasType
 from types import UnionType
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.registry_resource import RegistryResource
@@ -59,6 +59,9 @@ def decode[V, T](v: V, t: type[T]) -> T:
         
         elif t in (list, tuple, set):
             return t(m for m in v)
+        
+        elif isinstance(t, TypeAliasType):
+            return decode(v, t.__value__)
             
     args = get_args(t)
 
