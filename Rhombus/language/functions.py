@@ -30,8 +30,8 @@ __all__ = [
 ]
 
 from Rhombus.language.density import Density, DensityDescriptor, BuiltinWizard, resolve_DensityDescriptor, ref
-from Rhombus.language.builtin import dft as dft
-from Rhombus.language.builtin.noise import Noise
+from Rhombus.language import dft as dft
+from Rhombus.language.noise import Noise
 from typing import Literal
 
 

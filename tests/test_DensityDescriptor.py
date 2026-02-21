@@ -1,5 +1,5 @@
 from Rhombus.language.density import Density, resolve_DensityDescriptor
-from Rhombus.language.builtin import dft
+from Rhombus.language import dft
 
 def test_resolve_DensityDescriptor():
     

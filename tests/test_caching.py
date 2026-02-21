@@ -1,5 +1,5 @@
 from Rhombus import flat_cache, Density
-from Rhombus.language.builtin import dft
+from Rhombus.language import dft
 
 def test_caching_factories():
 

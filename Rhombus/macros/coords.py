@@ -48,7 +48,7 @@ conditional composition, this macro reconstructs the coordinates using only vani
 density functions.
 """
 from Rhombus.language import Noise
-from Rhombus.language.builtin import functions as f
+from Rhombus.language import functions as f
 
 __all__ = ["x", "z", "y"]
 

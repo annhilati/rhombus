@@ -1,7 +1,6 @@
 from typing import Any, Self
 
 from Rhombus.core.utils import JSONDict, fields, annotated_fields
-from Rhombus.core.codec import encode as uniencode, decode as unidecode
 
 class SubParameters:
     """Base class for parameter groups that are used inline in fields of density function types or another.
@@ -15,6 +14,7 @@ class SubParameters:
     
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
+        from Rhombus.core.codec import decode as unidecode
         fields = annotated_fields(cls)
 
         return cls(**{
@@ -25,6 +25,7 @@ class SubParameters:
         })
     
     def encode(self) -> JSONDict:
+        from Rhombus.core.codec import encode as uniencode
         return {**{
             parameter: uniencode(value)
             for parameter, value

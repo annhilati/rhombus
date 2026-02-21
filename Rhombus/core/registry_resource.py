@@ -3,21 +3,12 @@ from typing import ClassVar, Self, Any
 from abc import ABC, abstractmethod
 
 from beet import DataPack, JsonFile
-from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT, fields
-from Rhombus.core.codec import encode as uniencode
+from Rhombus.core.utils import JSONDict, uuid_hash, fields
 
 
-__all__ = ["RegistryResource", "BeetFileClass", "decode_RegistryResource_from_DataPack"]
+__all__ = ["RegistryResource", "BeetFileClass"]
 
 BeetFileClass = JsonFile
-
-@with_datapack_context
-def decode_RegistryResource_from_DataPack[T: RegistryResource](id: str, t: type[T], /, dp: DataPack | None = FROM_CONTEXT) -> T:
-    id = "minecraft:" + id if not ":" in id else id
-    if dp is None or dp[t.fileclass].get(id, default=None) is None:
-        return t.referenced(id)
-    return t.decode(dp[t.fileclass][id].data)
-
 
 @dataclass(frozen=True)
 class RegistryResource(ABC):
@@ -50,6 +41,7 @@ class RegistryResource(ABC):
     def decode(cls, dict: JSONDict) -> Self: ...
 
     def encode(self) -> JSONDict:
+        from Rhombus.core.codec import encode as uniencode
         return {
             parameter: uniencode(value)
             for parameter, value in self._fields.items()

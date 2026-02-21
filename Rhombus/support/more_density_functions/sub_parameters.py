@@ -1,6 +1,6 @@
 
 from typing import Literal
-from Rhombus.core.params import SubParameters
+from Rhombus.core.sub_parameters import SubParameters
 from Rhombus.core.density_function import DensityFunction
 from Rhombus.core.utils import JSONDict, annotated_fields
 from Rhombus.core.codec import encode as uniencode, decode as unidecode

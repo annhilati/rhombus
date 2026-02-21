@@ -1,10 +1,9 @@
 from typing import ClassVar, Literal
 from dataclasses import dataclass
-import warnings
-from Rhombus.core.density_function import MappedFunctionBase, DoubleArgumentFunctionBase, SimpleFunctionBase, MultiArgumentsFunctionBase, DensityFunction, Reference, constant, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.density_function import MappedFunctionBase, DoubleArgumentFunctionBase, SimpleFunctionBase, MultiArgumentsFunctionBase, DensityFunction, Reference, constant
 from Rhombus.core.utils import JSONDict
-from Rhombus.language.builtin.noise import Noise
-from Rhombus import config
+from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
+from Rhombus.language.noise import Noise
 
 __all__ = [
     "Reference", "constant",

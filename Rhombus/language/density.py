@@ -4,7 +4,8 @@ from typing import Any, Self, Callable, TypeVar, TypeAlias, Union, Literal, Para
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
 from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
-from Rhombus.language.builtin import dft as dft
+from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
+from Rhombus.language import dft as dft
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
@@ -210,7 +211,6 @@ class Density[Function: DensityFunction = DensityFunction]:
         
         A Beet datapack can be provided as context.
         """
-        from Rhombus.core.density_function import decode_HOLDER_HELPER_CODEC
         return Density(decode_HOLDER_HELPER_CODEC(d, dp=dp))
     
     def compile(self, with_identifier: str, /):
