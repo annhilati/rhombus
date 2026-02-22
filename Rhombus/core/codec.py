@@ -92,9 +92,10 @@ def decode[V, T](v: V, t: type[T]) -> T:
 @with_datapack_context
 def decode_RegistryResource_reference[T: RegistryResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
-    if dp is None or dp[t.fileclass].get(id, default=None) is None:
-        return t.referenced(id)
-    return t.decode(dp[t.fileclass][id].data)
+    if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
+        print(file)
+        return t.decode(file.data)
+    return t.referenced(id)
 
 @with_datapack_context
 def decode_HOLDER_HELPER_CODEC(o: dict | str | float, dp: beet.DataPack | None = FROM_CONTEXT) -> DensityFunction:

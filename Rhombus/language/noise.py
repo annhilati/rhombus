@@ -5,7 +5,7 @@ from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.registry_resource import RegistryResource
 from Rhombus.core.utils import JSONDict
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, repr=False)
 class Noise(RegistryResource):
     """Defines a perlin noise.
 
@@ -41,10 +41,6 @@ class Noise(RegistryResource):
     def referenced(cls, id: str):
         id = "minecraft:" + id if not ":" in id else id
         return cls(firstOctave=None, amplitudes=None, reference=id)
-
-    @classmethod
-    def decode(cls, data: JSONDict) -> Noise:
-        return cls(firstOctave=data["firstOctave"], amplitudes=data["amplitudes"])
 
     def __eq__(self, other: Noise):
         if not isinstance(other, Noise):

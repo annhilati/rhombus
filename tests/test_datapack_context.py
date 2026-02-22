@@ -28,4 +28,4 @@ def test_decoding_RegistryResources_with_context():
 
         # with unknown Noise reference
         noise(Noise.referenced("some:noise"), 1, 1).inject(dp, "random:function", log=False)
-        assert Density.from_datapack(dp, "random:function") == Density(dft.noise(Noise(None, None, "some:noise"), 1.0, 1.0))
+        assert Density.from_datapack(dp, "random:function") == Density(dft.noise(Noise.referenced("some:noise"), 1.0, 1.0))

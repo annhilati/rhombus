@@ -15,7 +15,8 @@ nav = [
         {"Mod Support" = [
             "extending/mod_support/index.md",
             "extending/mod_support/density_functions.md",
-            "extending/mod_support/datapack_resources.md"
+            "extending/mod_support/datapack_resources.md",
+            "extending/mod_support/sub_parameters.md"
         ]},
     ]}
 ]

@@ -10,7 +10,7 @@ build/
 **/__pycache__/
 
 # pytest
-!tests/
+!tests/**.py
 .pytest_cache/
 test_pack/
 

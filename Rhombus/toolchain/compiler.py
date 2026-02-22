@@ -1,11 +1,9 @@
-from dataclasses import fields
 from tempfile import TemporaryDirectory
-
-from beet.contrib.worldgen import WorldgenDensityFunction
 from Rhombus.core.registry_resource import BeetFileClass, RegistryResource
 from Rhombus.core.density_function import DensityFunction, Reference, constant
-from Rhombus.language.density import Density
-from Rhombus.language import dft as dft
+from Rhombus.core.sub_parameters import SubParameters
+from Rhombus.language import Density, dft
+from beet.contrib.worldgen import WorldgenDensityFunction
 
 def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     files: dict[str, BeetFileClass] = {}
@@ -14,18 +12,34 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
     def search_for_additional_files(o):
+
         if isinstance(o, DensityFunction):
+
             if isinstance(o, Reference) and (default := o.default) is not None:
                 if isinstance(default, Reference): # To not have literal strings in a JSON file
                     default = dft.add(default, constant(0))
                 files[o.reference] = WorldgenDensityFunction(default.encode())
-            for value in [getattr(o, param) for param in {f.name for f in fields(o) if f.init}]:
+            
+            for param, value in o.fields.items():
                 search_for_additional_files(value)
+
         elif isinstance(o, (list, tuple)):
             for value in o:
                 search_for_additional_files(value)
-        elif isinstance(o, RegistryResource):
+
+        elif isinstance(o, dict):
+            for k, v in o.items():
+                search_for_additional_files(k)
+                search_for_additional_files(v)
+            
+        elif isinstance(o, SubParameters):
+            for param, value in o.fields():
+                search_for_additional_files(value)
+
+        elif isinstance(o, RegistryResource) and o.reference is not None:
             files[o.reference_identifier] = o.fileclass(o.encode())
+            for param, value in o._fields.items():
+                search_for_additional_files(value)
 
     search_for_additional_files(root)
 

@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, is_dataclass
 from typing import ClassVar, Self, Any
 from abc import ABC, abstractmethod
 
-from beet import DataPack, JsonFile
-from Rhombus.core.utils import JSONDict, uuid_hash, fields
+from beet import JsonFile
+from Rhombus.core.utils import JSONDict, uuid_hash, fields, annotated_fields
 
 
 __all__ = ["RegistryResource", "BeetFileClass"]
@@ -14,12 +14,11 @@ BeetFileClass = JsonFile
 class RegistryResource(ABC):
     """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
-    When defining new RegistryResource types ensure the following:
-        This has to be reworked
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/datapack_resources/)
     """
 
     fileclass: ClassVar[type[BeetFileClass]]
-    # reference: ClassVar[str] # Actually a fields in subclasses
+    # reference: ClassVar[str] # Actually a field in subclasses
 
     @property
     def _fields(self) -> dict[str, Any]:
@@ -37,8 +36,16 @@ class RegistryResource(ABC):
         return cls(reference=identifier)
 
     @classmethod
-    @abstractmethod
-    def decode(cls, dict: JSONDict) -> Self: ...
+    def decode(cls, data: JSONDict) -> Self:
+        from Rhombus.core.codec import decode as unidecode
+        fields = annotated_fields(cls)
+
+        return cls(**{
+            parameter: unidecode(value, tp)
+            for parameter, value in data.items()
+            if parameter in fields
+            for tp in (fields[parameter],)
+        })
 
     def encode(self) -> JSONDict:
         from Rhombus.core.codec import encode as uniencode
