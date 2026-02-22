@@ -14,3 +14,12 @@ In addition, the difficulty of density functions goes beyond mere development kn
 !!! info "Beet Interoperability"
     If you already worked with development environments for datapacks, you might be pleased to hear that Rhombus is working hand in hand with [Beet](https://github.com/mcbeet/beet).
     Rhombus can be used without it, but the features that provide a real speed advantage are based on it.
+
+<h2>What do I need to get started?</h2>
+
+To use Rhombus efficiently, the following is recommended:
+- A basic understanding of how to use Python and Python modules
+- A basic understanding of how to use [Beet](https://github.com/mcbeet/beet)
+- A basic understanding of how datapacks work
+
+To see how Rhombus can be integrated into your workflow, see [Worfklow](workflow.md).

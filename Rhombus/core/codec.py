@@ -1,7 +1,7 @@
 from typing import get_origin, get_args, Union, TypeAliasType
 from types import UnionType
 from Rhombus.core.density_function import DensityFunction, Reference, constant
-from Rhombus.core.registry_resource import RegistryResource
+from Rhombus.core.registry_resource import DatapackResource
 from Rhombus.core.sub_parameters import SubParameters
 from Rhombus.core.utils import with_datapack_context, FROM_CONTEXT
 import beet, beet.contrib.worldgen as beet_worldgen
@@ -11,7 +11,7 @@ def encode[T](o: T):
     if isinstance(o, DensityFunction):
         return o.encode()
     
-    elif isinstance(o, RegistryResource):
+    elif isinstance(o, DatapackResource):
         return o.reference_identifier
     
     elif isinstance(o, SubParameters):
@@ -30,7 +30,7 @@ def decode[V, T](v: V, t: type[T]) -> T:
     
     Supported are:
     - `DensityFunction` subclasses
-    - `RegistryResource` subclasses
+    - `DatapackResource` subclasses
     - `SubParameters` subclasses
     - `str`, `int`, `float`
     - `list[T]`, `tuple[T]`
@@ -48,8 +48,8 @@ def decode[V, T](v: V, t: type[T]) -> T:
         elif issubclass(t, DensityFunction):
             return t.decode(v)
         
-        elif issubclass(t, RegistryResource):
-            return decode_RegistryResource_reference(v, t)
+        elif issubclass(t, DatapackResource):
+            return decode_DatapackResource_reference(v, t)
         
         elif issubclass(t, SubParameters):
             return t.decode(v)
@@ -90,7 +90,7 @@ def decode[V, T](v: V, t: type[T]) -> T:
 
 
 @with_datapack_context
-def decode_RegistryResource_reference[T: RegistryResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
+def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
         print(file)

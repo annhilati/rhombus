@@ -15,7 +15,7 @@ def test_decoding_functions_with_context():
 
         assert Density.from_datapack(dp, "main:function") == Density(dft.add(dft.Reference('rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', default=dft.constant(argument=1.0)), dft.constant(argument=5.0)))
 
-def test_decoding_RegistryResources_with_context():
+def test_decoding_DatapackResources_with_context():
 
     with DataPack(path="test_pack") as dp:
         dp.clear()

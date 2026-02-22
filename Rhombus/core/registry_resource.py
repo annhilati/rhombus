@@ -1,17 +1,17 @@
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass
 from typing import ClassVar, Self, Any
 from abc import ABC, abstractmethod
 
-from beet import JsonFile
+from beet.core.file import DataModelBase
 from Rhombus.core.utils import JSONDict, uuid_hash, fields, annotated_fields
 
 
-__all__ = ["RegistryResource", "BeetFileClass"]
+__all__ = ["DatapackResource", "BeetFileClass"]
 
-BeetFileClass = JsonFile
+type BeetFileClass = DataModelBase
 
 @dataclass(frozen=True)
-class RegistryResource(ABC):
+class DatapackResource(ABC):
     """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/datapack_resources/)

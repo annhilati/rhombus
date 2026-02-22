@@ -32,6 +32,6 @@ Density.show_in_dir
 
 #======// Core //================================================================================//
 
-RegistryResource
+DatapackResource
 
 DensityFunction

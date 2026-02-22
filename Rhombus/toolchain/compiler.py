@@ -1,5 +1,5 @@
 from tempfile import TemporaryDirectory
-from Rhombus.core.registry_resource import BeetFileClass, RegistryResource
+from Rhombus.core.registry_resource import BeetFileClass, DatapackResource
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.sub_parameters import SubParameters
 from Rhombus.language import Density, dft
@@ -36,7 +36,7 @@ def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
             for param, value in o.fields():
                 search_for_additional_files(value)
 
-        elif isinstance(o, RegistryResource) and o.reference is not None:
+        elif isinstance(o, DatapackResource) and o.reference is not None:
             files[o.reference_identifier] = o.fileclass(o.encode())
             for param, value in o._fields.items():
                 search_for_additional_files(value)

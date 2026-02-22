@@ -39,7 +39,8 @@ Functions and classes provide detailed docstrings describing behavior, parameter
 - ⚡ **Efficient Worldgen Performance**<br>
 Density expressions are transpiled into as few files as possible, reducing overhead during chunk generation.
 - ⚙️ **High Compatability**<br>
-As long as the density function definiton format remains unchanged in new version, generated data works across all Minecraft versions. Supporting additional features from mods is straightforward.
+As long as the density function definiton format remains unchanged in new version, generated data works across all Minecraft versions. - 🛠️ **Generous Modding-API**<br>
+Classes can be used to derive support for any features from mods.
 
 ## Features
 - **Unified Density Type**: 
@@ -50,12 +51,6 @@ Density function trees can be built using arithmetic operators, provided interfa
 High-level Python interfaces for all vanilla density function types.
 - **Advanced Macros**:
 Shortcuts for more complex, commonly needed processes.
-
-## Get started
-To use Rhombus efficiently, the following is recommended:
-- A basic understanding of how to use Python and Python modules
-- A basic understanding of how to use Beet
-- A basic understanding of the meaning and use of density functions in datapacks
 
 ## What Rombus is not and what we cannot guarantee it will become
 - **A Visualizer Tool**:

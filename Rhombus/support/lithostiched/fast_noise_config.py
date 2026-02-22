@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import ClassVar, Literal, Optional
-from Rhombus.core.registry_resource import RegistryResource
+from Rhombus.core.registry_resource import DatapackResource
 from Rhombus.core.utils import JSONDict
 
 from beet.library.base import JsonFile, NamespaceFileScope
@@ -12,7 +12,7 @@ class LithostichedFastNoiseConfig(JsonFile):
     extension: ClassVar[str] = ".json"
 
 @dataclass(frozen=True)
-class FastNoiseConfig(RegistryResource):
+class FastNoiseConfig(DatapackResource):
     """Defines a Lithostiched noise.
     
     **NOTE** Because Lithostiched noises have a lot of interdependent fields, use these fabrics instead:

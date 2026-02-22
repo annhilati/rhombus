@@ -26,7 +26,7 @@ To add support for mods, you can use the infrastructure on which the built-ins a
     ---
     A resource that comes with an datapack and can be referenced in a field of a density function type.
 
-    :octicons-arrow-right-24: [Class inheriting from `RegistryResource`](datapack_resources.md)<br>
+    :octicons-arrow-right-24: [Class inheriting from `DatapackResource`](datapack_resources.md)<br>
 
 -   **Subparameters**
 

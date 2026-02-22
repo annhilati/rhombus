@@ -2,11 +2,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Optional
 from beet.contrib.worldgen import WorldgenNoise
-from Rhombus.core.registry_resource import RegistryResource
-from Rhombus.core.utils import JSONDict
+from Rhombus.core.registry_resource import DatapackResource
 
 @dataclass(frozen=True, repr=False)
-class Noise(RegistryResource):
+class Noise(DatapackResource):
     """Defines a perlin noise.
 
     **NOTE** To add a reference to an existing noise, use `ReferenceNoise()` instead.

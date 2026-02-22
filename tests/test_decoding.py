@@ -12,5 +12,5 @@ def test_Density_from_dict():
     # literal references
     assert Density.from_dict({"type": "abs", "argument": "test:reference"}) == Density(dft.abs(dft.Reference("test:reference")))
 
-    # RegistryResources
+    # DatapackResources
     assert Density.from_dict({"type": "noise", "noise": "referenced:noise", "xz_scale": 1, "y_scale": 1}) == Density(dft.noise(noise=Noise(None, None, reference='referenced:noise'), xz_scale=1, y_scale=1))

@@ -4,6 +4,7 @@
 
 - configuration is random and has to be standardized
 - .fields() does nothing for most base classes. How should .fields(), the field util functions and the decoders interact?
+- Since .reference is a hard requirement for DatapackResources, it should be provided by the base class
 
 # Design
 - What kind of methods are attributes of Density objects?
@@ -11,12 +12,12 @@
 
 
 
-- [x] §1 Decode registry resources dynamically from `DensityFunction` subclasses
-  - [x] §1.1 Annotate with concrete registry resource classes instead of `RegistryResource` in `DensityFunction` fields
+- [x] §1 Decode Datapack Resources dynamically from `DensityFunction` subclasses
+  - [x] §1.1 Annotate with concrete Datapack Resource classes instead of `DatapackResource` in `DensityFunction` fields
 - [ ] §2 Decode density functions from a `DataPack`
   - [x] §2.1 Implement a datapack context
 - [ ] §3a Warn for potential invalid values in fields of `DensityFunction` subclasses by some sort of generic description
-- [ ] §3b Warn for potential invalid values in fields of `RegistryResource` subclasses by some sort of generic description
+- [ ] §3b Warn for potential invalid values in fields of `DatapackResource` subclasses by some sort of generic description
 - [ ] §4 Perform AST simplification on encoding
   - Wrap raw references
   - Merge literal arithmetic

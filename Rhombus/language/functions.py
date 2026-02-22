@@ -1,4 +1,4 @@
-"""Collection of the builtin density functions.
+"""Collection of the vanilla density function types.
 
 Note, that importing `*` from here is helpfull, but will overwrite some builtin Python functions like `abs()`. You can get them again from the `builtins` package.
 """

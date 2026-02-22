@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, Callable, get_origin, get_args
-from Rhombus.core.registry_resource import RegistryResource
+from Rhombus.core.registry_resource import DatapackResource
 from Rhombus.core.utils import JSONDict, annotated_fields, fields
 
 __all__ = [
@@ -56,20 +56,20 @@ class MultiArgumentsFunctionBase(DensityFunction):
     When inheriting from this class, add the `@dataclass` decorator to the new class<br>
     and add fields with the same keys as required in the density function JSON definition.<br>
 
-    If types are needed in the fields that are not of type `DensityFunction`, of a subclass of `RegistryResource` or JSON-compatible, inherit from `DensityFunction` instead and implement the methods manually.
+    If types are needed in the fields that are not of type `DensityFunction`, of a subclass of `DatapackResource` or JSON-compatible, inherit from `DensityFunction` instead and implement the methods manually.
     """
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC, decode_RegistryResource_reference, decode as unidecode
+        from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC, decode_DatapackResource_reference, decode as unidecode
         fields = annotated_fields(cls)
 
         return cls(**{
             parameter: (
                 # DensityFunction
                 decode_HOLDER_HELPER_CODEC(value)                   if tp is DensityFunction else
-                # Noise, ... (subclasses of RegistryResource)
-                decode_RegistryResource_reference(value, tp)    if issubclass(tp, RegistryResource) else
+                # Noise, ... (subclasses of DatapackResource)
+                decode_DatapackResource_reference(value, tp)    if issubclass(tp, DatapackResource) else
                 # list[DensityFunction]
                 [decode_HOLDER_HELPER_CODEC(f) for f in value]      if get_origin(tp) is list and get_args(tp)[0] is DensityFunction
 

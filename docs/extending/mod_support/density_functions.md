@@ -3,7 +3,11 @@ title: Density Function Types
 icon: lucide/square-function
 ---
 
-# Adding Support for Density Function Types
+# Density Function Types
+
+A density function type represents a kind of operation, which to apply on its arguments. In Rhombus, the subclasses of `DensityFunction` are the nodes of the abstract syntax tree that represents a density function.
+
+## Defining DensityFunction classes
 
 In order for the data for new density function to be stored, a `dataclass` inheriting from `DensityFunction` is needed.
 The new class requires the following attributes:
@@ -22,11 +26,11 @@ encode: ClassVar[Callable[[Self], JSONDict | float | str]]
     # from an instance of the class
 ```
 
-## Base classes
+### Base classes
 
 There are some base classes that already implement the `decode` and `encode` methods for common fields like shown as follows.
 
-### Types with no arguments or one or two density function arguments
+#### Types with no arguments or one or two density function arguments
 
 There are base classes for density function types that take no arguments or one or two arguments that are density functions.
 When inheriting from these, besides stating the function type id, no additional declarations have to be made. The classes are:
@@ -54,7 +58,7 @@ When inheriting from these, besides stating the function type id, no additional 
         id: ClassVar[str] = "minecraft:add"
     ```
 
-### Types with any fields of trivial types
+#### Types with any fields of trivial types
 
 For density function types with fields that aren't covered by the base classes above, a `dataclass` declaration inheriting from `MultiArgumentsFunctionBase` has to be made.
 
@@ -63,7 +67,7 @@ The following types are supported in the fields:
 - JSON-compatible value types (`str`, `dict`, `list`, `tuple`, `str`, `int`, `float`, `bool`, `None`)
 - `DensityFunction`
 - `list[DensityFunction]`
-- Classes inheriting from `RegistryResource` (like `Noise`)
+- Classes inheriting from `DatapackResource` (like `Noise`)
 
 Fields of `DensityFunction` subclasses must be called exactly like their counterparts in the JSON definition, unless a separate encoding and decoding logic is implemented.
 
@@ -82,7 +86,7 @@ class shifted_noise(MultiArgumentsFunctionBase):
 
 When a new class inheriting `DensityFunction` is defined, it will automatically be registered in the decoding context.
 
-### Types with more complex fields
+#### Types with more complex fields
 
 Density function types that require fields of non-trivial types or whose fields should have a different composition than the JSON definition, the required methods have to be implemented manually.
 
