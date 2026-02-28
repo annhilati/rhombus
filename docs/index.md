@@ -18,7 +18,9 @@ In addition, the difficulty of density functions goes beyond mere development kn
 <h2>What do I need to get started?</h2>
 
 To use Rhombus efficiently, the following is recommended:
-- A basic understanding of how to use Python and Python modules
+
+- A basic understanding of how to use Python and object oriented programming
+- A basic understanding of how to use Python modules
 - A basic understanding of how to use [Beet](https://github.com/mcbeet/beet)
 - A basic understanding of how datapacks work
 
