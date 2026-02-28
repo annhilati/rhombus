@@ -3,7 +3,8 @@ from types import UnionType
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.registry_resource import DatapackResource
 from Rhombus.core.sub_parameters import SubParameters
-from Rhombus.core.utils import with_datapack_context, FROM_CONTEXT
+from Rhombus.core.utils import contextfunction, FROM_CONTEXT
+from Rhombus import config
 import beet, beet.contrib.worldgen as beet_worldgen
 
 def encode[T](o: T):
@@ -89,7 +90,7 @@ def decode[V, T](v: V, t: type[T]) -> T:
     return v
 
 
-@with_datapack_context
+@contextfunction(dp=config.datapack_context)
 def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
@@ -97,7 +98,7 @@ def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], 
         return t.decode(file.data)
     return t.referenced(id)
 
-@with_datapack_context
+@contextfunction(dp=config.datapack_context)
 def decode_HOLDER_HELPER_CODEC(o: dict | str | float, dp: beet.DataPack | None = FROM_CONTEXT) -> DensityFunction:
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)

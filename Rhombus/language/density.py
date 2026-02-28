@@ -4,7 +4,7 @@ from typing import Self, Callable, TypeVar, TypeAliasType, Union, Literal, Optio
 from types import UnionType
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
-from Rhombus.core.utils import JSONDict, uuid_hash, with_datapack_context, FROM_CONTEXT
+from Rhombus.core.utils import JSONDict, uuid_hash, contextfunction, FROM_CONTEXT
 from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from Rhombus.language import dft as dft
 import beet, beet.contrib.worldgen as beet_worldgen
@@ -192,7 +192,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density.from_dict(file.data, dp=dp)
     
     @classmethod
-    @with_datapack_context
+    @contextfunction(dp=config.datapack_context)
     def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
         """Creates a `Density` object from a dictionary.
         
