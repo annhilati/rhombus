@@ -4,9 +4,9 @@ import beet, warnings
 constant_number_limit = 1_000_000
 warn_on_reference_in_clamp = True
 
+class ctx:
 
-datapack_context: ContextVar[beet.DataPack | None] = ContextVar("datapack_context", default=None)
-
+    datapack: ContextVar[beet.DataPack | None] = ContextVar("datapack", default=None)
 
 def warn(message, category, filename, lineno, file=None, line=None):
     print(

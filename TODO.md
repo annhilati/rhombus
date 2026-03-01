@@ -26,3 +26,4 @@
 - [x] §7 Implement a universal decoding and encoding system that can be used anywhere
   - Perhaps a large configurable function with type specific lambdas?
   - [x] §5 Add support for Unions, Tuples and Optionals for DensityFunction fields
+- [ ] §8 Unify wizards in a single fabric, dont use on as a decorator and a fabric

@@ -180,6 +180,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Toolchain //=======================================================================//
 
     @classmethod
+    @contextfunction(dp=config.ctx.datapack)
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
         "⚠️ Currently experimental.<br>Creates a `Density` object from a density function in a Beet datapack."
 
@@ -192,7 +193,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density.from_dict(file.data, dp=dp)
     
     @classmethod
-    @contextfunction(dp=config.datapack_context)
+    @contextfunction(dp=config.ctx.datapack)
     def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
         """Creates a `Density` object from a dictionary.
         

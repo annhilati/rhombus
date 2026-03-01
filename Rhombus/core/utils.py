@@ -28,7 +28,14 @@ FROM_CONTEXT: Final = object()
 def contextfunction(func: Callable, **ctxparams: contextvars.ContextVar):
     """Decorator for automatic context handling for parameters.
     
-    All kwargs of this decorator, that are also present as kwargs in the decorated function are affected.
+    All kwargs in this decorator, that are also present as kwargs in the decorated function are affected.
+
+    If `FROM_CONTEXT` is passed:
+        Calls the function with the current value of the `ContextVar` of the corresponding decorator kwarg
+    If something else is passed:
+        Sets the `ContextVar` of the corresponding decorator kwarg and then calls the function
+
+    This decorator can also be used without `FROM_CONTEXT` entirely, as a tool to set `ContextVar`s.
     """
 
     @functools.wraps(func)
@@ -54,37 +61,6 @@ def contextfunction(func: Callable, **ctxparams: contextvars.ContextVar):
             for ctxvar, token_list in tokens.items():
                 for token in reversed(token_list):
                     ctxvar.reset(token)
-
-    return wrapper
-
-def with_datapack_context(func: Callable[_P, _R], kwarg: str = "dp") -> Callable[_P, _R]:
-    """Decorator to help with DataPack context when decoding.
-    
-    If the kwarg stated in `arg` of the decorated function is `FROM_CONTEXT`:
-        Calls the decorated function with the current datapack context (which can be `None`, so this should be checked).
-    If the kwarg stated in `arg` of the decorated function is set:
-        Sets the datapack context for the execution of the decorated function.
-    """
-    from Rhombus import config
-    
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        sig = inspect.signature(func)
-        bound = sig.bind_partial(*args, **kwargs)
-        bound.apply_defaults()
-
-        dp = bound.arguments.get(kwarg)
-
-        if dp is FROM_CONTEXT:
-            current = config.datapack_context.get(None)
-            bound.arguments[kwarg] = current
-            return func(*bound.args, **bound.kwargs)
-
-        token = config.datapack_context.set(dp)
-        try:
-            return func(*bound.args, **bound.kwargs)
-        finally:
-            config.datapack_context.reset(token)
 
     return wrapper
 

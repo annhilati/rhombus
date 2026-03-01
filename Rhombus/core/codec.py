@@ -90,7 +90,7 @@ def decode[V, T](v: V, t: type[T]) -> T:
     return v
 
 
-@contextfunction(dp=config.datapack_context)
+@contextfunction(dp=config.ctx.datapack)
 def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
@@ -98,7 +98,7 @@ def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], 
         return t.decode(file.data)
     return t.referenced(id)
 
-@contextfunction(dp=config.datapack_context)
+@contextfunction(dp=config.ctx.datapack)
 def decode_HOLDER_HELPER_CODEC(o: dict | str | float, dp: beet.DataPack | None = FROM_CONTEXT) -> DensityFunction:
     """Decodes any value that can be used as a HOLDER_HELPER_CODEC type argument in a density function.<br>
     (Either a JSON density function definiton, a string reference to another density function or a constant numeric value)
