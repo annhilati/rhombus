@@ -127,6 +127,9 @@ class DistanceMetric(SubParameters):
 
 @dataclass
 class ExtraOctaves(SubParameters):
+    """
+    [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#value-noise)
+    """
     count: int  # >= 0
     lacunarity: float
     persistence: float
@@ -134,6 +137,9 @@ class ExtraOctaves(SubParameters):
 
 @dataclass
 class DerivativeComponent(SubParameters):
+    """
+    [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#derivative)
+    """
     step: int       # > 0
     direction: DensityFunction
 

@@ -14,7 +14,7 @@ type BeetFileClass = DataModelBase
 class DatapackResource(ABC):
     """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/datapack_resources/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/datapack_resources/)
     """
 
     fileclass: ClassVar[type[BeetFileClass]]

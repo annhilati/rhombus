@@ -14,16 +14,17 @@ DensityDescriptor
 # Macros
 math.x
 coords.x
-functions.x
+f.x
 
 # Support
-tectonic
-more_density_functions
-lithostiched
+tectonic.x
+more_density_functions.x
+lithostiched.x
 
 Density.separated
 Density.configured
 Density.referenced
+Density.from_datapack
 Density.AST
 Density.compile
 Density.inject
