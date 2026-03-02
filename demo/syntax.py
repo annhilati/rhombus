@@ -1,6 +1,6 @@
 from Rhombus import *
 
-distance_scale = ConfiguredDensity("config:distance_scale", default=1.0)
+distance_scale = Density.configured("config:distance_scale", default=1.0)
 
 def radius() -> Density:
     x = coords.x()

@@ -3,7 +3,16 @@ import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
 
 __all__ = ["uuid_hash", "JSONDict", "contextfunction", "FROM_CONTEXT"]
 
+
+#======// Typing //==============================================================================//
+
 type JSONDict = dict[str, dict | list | tuple | str | int | float | bool]
+type DataclassInstance = object
+type Dataclass = type
+type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
+
+
+#======// Data //================================================================================//
 
 def uuid_hash(data: JSONDict) -> str:
     """Creates a UUID string (without `-`) based of a JSON dictionary."""
@@ -22,7 +31,7 @@ def uuid_hash(data: JSONDict) -> str:
 FROM_CONTEXT: Final = object()
 "Typing sentinel to denote that a value will be taken from a context variable."
 
-def contextfunction(**ctxparams: contextvars.ContextVar):
+def contextfunction(**ctxparams: contextvars.ContextVar) -> Decorator:
     """Decorator for automatic context handling for parameters.
     
     All kwargs in this decorator, that are also present as kwargs in the decorated function are affected.
@@ -61,14 +70,10 @@ def contextfunction(**ctxparams: contextvars.ContextVar):
                         ctxvar.reset(token)
 
         return wrapper
-
     return decorator
 
 
-#======// Typing //==============================================================================//
-
-type DataclassInstance = object
-type Dataclass = type
+#======// Dataclasses //=========================================================================//
 
 def fields(o: DataclassInstance) -> dict[str, Any]:
     "Returns the fields of a dataclass instance, that are present in the init, with their values."

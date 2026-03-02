@@ -1,10 +1,10 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Self, Callable, TypeVar, TypeAliasType, Union, Literal, ParamSpec, overload, get_args, get_origin
+from typing import Self, Callable, TypeAliasType, Union, Literal, overload, get_args, get_origin
 from types import UnionType
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
-from Rhombus.core.utils import JSONDict, uuid_hash, contextfunction, FROM_CONTEXT
+from Rhombus.core.utils import JSONDict, Decorator, uuid_hash, contextfunction, FROM_CONTEXT
 from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from Rhombus.language import dft as dft
 import beet, beet.contrib.worldgen as beet_worldgen
@@ -60,10 +60,8 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 
     raise ValueError(f"Cannot resolve object of type '{type(arg)}' to a density function")
 
-_P = ParamSpec("Params")
-_R = TypeVar("Result")
 
-def WizardFactory(*, unwrap: bool = False):
+def WizardFactory(*, unwrap: bool = False) -> Decorator:
     """A helper decorator for macros, that take (among other) density function inputs.
 
     The following effects are applied:
@@ -87,7 +85,7 @@ def WizardFactory(*, unwrap: bool = False):
             return _apply_by_annotation(annotation.__value__)
         return False
 
-    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+    def decorator[**P, R](func: Callable[P, R]) -> Callable[P, R]:
         sig = inspect.signature(func)
         
         params_to_resolve = {
@@ -96,7 +94,7 @@ def WizardFactory(*, unwrap: bool = False):
         }
 
         @functools.wraps(func)
-        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             bound = sig.bind(*args, **kwargs)
             bound.apply_defaults()
 
@@ -117,11 +115,11 @@ def WizardFactory(*, unwrap: bool = False):
 
     return decorator
 
-def MacroWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
+def MacroWizard[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
     "Shortcut for `WizardFactory(unwrap=False)`"
     return WizardFactory(unwrap=False)(fn)
 
-def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
+def BuiltinWizard[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
     "Shortcut for `WizardFactory(unwrap=True)`"
     return WizardFactory(unwrap=True)(fn)
 
