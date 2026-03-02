@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, Callable, get_origin, get_args
-from Rhombus.core.registry_resource import DatapackResource
+from Rhombus.core.datapack_resource import DatapackResource
 from Rhombus.core.utils import JSONDict, annotated_fields, fields
 
 __all__ = [

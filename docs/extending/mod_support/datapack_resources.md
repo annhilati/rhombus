@@ -19,7 +19,7 @@ Here is how the standard noise resource is defined:
 from Rhombus.core import DatapackResource
 from dataclasses import dataclass
 
-@dataclass(frozen=True)
+@dataclass
 class Noise(DatapackResource):
 
     # The value here has to be a class inheriting from beet.core.file.DataModelBase
@@ -28,14 +28,7 @@ class Noise(DatapackResource):
     # Declare the fields like for regular dataclasses
     firstOctave: int
     amplitudes:  list[float]
-    reference:   Optional[str] = None # The reference field is a hard requirement. It has to be optional and must default to None
      
-    @classmethod
-    def referenced(cls, id: str):
-        id = "minecraft:" + id if not ":" in id else id
-        return cls(firstOctave=None, amplitudes=None, reference=id)
-    # This method must be able to create an instance of the class with just the reference set as data
-
     # @classmethod
     # def decode(cls, data: JSONDict) -> Noise: ...
     # def encode(self) -> JSONDict: ...

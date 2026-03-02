@@ -1,6 +1,6 @@
 <h1 align="center"><sub><img src="docs/logo.png" height="35"></sub> Rhombus <sub><img src="docs/logo.png" height="35"></sub></h1>
 <p align="center">A Python embedded Domain Specific Language for Minecraft Terrain Generation</p>
-<p align="center"><code>pip install rhombus</code></p>
+<p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
 
 ### Abstract
 
@@ -12,22 +12,6 @@ It allows you to comfortably write density functions while benefiting from Pytho
 > [!note]
 > **State of Development**<br>
 > Rhombus already has most features I imagined it to have. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API. 
->
-> - [x] Unified type for composing ASTs
-> - [ ] Warnings for potentially invalid values (#20)
-> - [ ] AST simplification
->   - [ ] Ensure proper caching
->   - [ ] Remove canonically false `range_choice`
->   - [ ] Simplify constant arithmetic (respect splitting for high literals)
-> - [ ] Performance evaluation
->   - [ ] Compilation complexity
->   - [ ] Noise samples per chunk
->   - [ ] Unknown references
-> - [ ] Decoding density functions from a data pack
->   - [ ] 🪲 References get decoded twice in a nested way
-> - [x] Macros for basic mathematical operations 
-> - [ ] Support for the 'More Density Functions' mod (#8)
->   - [ ] Base class for parameter groups (#9)
 
 ## Key Advantages
 - 📦 **Object-oriented Design**<br>

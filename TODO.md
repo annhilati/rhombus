@@ -2,9 +2,10 @@
 
 # Every Problem
 
-- configuration is random and has to be standardized
+- configuration feels random and has to be standardized
 - .fields() does nothing for most base classes. How should .fields(), the field util functions and the decoders interact?
 - Since .reference is a hard requirement for DatapackResources, it should be provided by the base class
+- The wizards and their factory are not the best conceptualized
 
 # Design
 - What kind of methods are attributes of Density objects?
@@ -27,3 +28,5 @@
   - Perhaps a large configurable function with type specific lambdas?
   - [x] §5 Add support for Unions, Tuples and Optionals for DensityFunction fields
 - [ ] §8 Unify wizards in a single fabric, dont use on as a decorator and a fabric
+- [x] §9 New system for DataPackResources to store references. They shouldn't be a field in the init. (Not make them frozen anymore?)
+  - [x] §9.1 Implement the referenced classmethod in the base class (utilize the field util when instanciating?)

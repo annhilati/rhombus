@@ -2,9 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Optional
 from beet.contrib.worldgen import WorldgenNoise
-from Rhombus.core.registry_resource import DatapackResource
+from Rhombus.core.datapack_resource import DatapackResource
 
-@dataclass(frozen=True, repr=False)
+@dataclass()
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
@@ -29,18 +29,12 @@ class Noise(DatapackResource):
 
     firstOctave: int
     amplitudes:  list[float]
-    reference:   Optional[str] = None
 
-    def __post_init__(self):
-        if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
-            raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
+    # def __post_init__(self):
+    #     if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
+    #         raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
                
      
-    @classmethod
-    def referenced(cls, id: str):
-        id = "minecraft:" + id if not ":" in id else id
-        return cls(firstOctave=None, amplitudes=None, reference=id)
-
     def __eq__(self, other: Noise):
         if not isinstance(other, Noise):
             return None

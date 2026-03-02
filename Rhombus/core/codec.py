@@ -1,7 +1,7 @@
 from typing import get_origin, get_args, Union, TypeAliasType
 from types import UnionType
 from Rhombus.core.density_function import DensityFunction, Reference, constant
-from Rhombus.core.registry_resource import DatapackResource
+from Rhombus.core.datapack_resource import DatapackResource
 from Rhombus.core.sub_parameters import SubParameters
 from Rhombus.core.utils import contextfunction, FROM_CONTEXT
 from Rhombus import config

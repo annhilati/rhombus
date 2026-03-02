@@ -20,6 +20,7 @@ f.x
 tectonic.x
 more_density_functions.x
 lithostiched.x
+ensity.x
 
 Density.separated
 Density.configured

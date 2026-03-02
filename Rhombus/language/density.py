@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Self, Callable, TypeVar, TypeAliasType, Union, Literal, Optional, ParamSpec, overload, get_args, get_origin
+from typing import Self, Callable, TypeVar, TypeAliasType, Union, Literal, ParamSpec, overload, get_args, get_origin
 from types import UnionType
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
@@ -10,10 +10,8 @@ from Rhombus.language import dft as dft
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
-__all__ = ["Density", "DensityDescriptor", "ref", "MacroWizard", "BuiltinWizard",]
+__all__ = ["Density", "DensityDescriptor", "ref"]
 
-
-#======// Formatters //==========================================================================//
 
 type DensityDescriptor = Union[Density, DensityFunction, str, float]
 "TypeAliasType for all types that can be interpreted by `resolve_DensityDescriptor()`."
@@ -60,12 +58,12 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
             arg = "minecraft:" + arg
         return Density(Reference(arg))
 
-    raise ValueError(f"Cannot resolve type {type(arg)} to a density function")
+    raise ValueError(f"Cannot resolve object of type '{type(arg)}' to a density function")
 
 _P = ParamSpec("Params")
 _R = TypeVar("Result")
 
-def MacroWizard(fn: Optional[Callable[_P, _R]] = None, *, unwrap: bool = False):
+def WizardFactory(*, unwrap: bool = False):
     """A helper decorator for macros, that take (among other) density function inputs.
 
     The following effects are applied:
@@ -117,14 +115,15 @@ def MacroWizard(fn: Optional[Callable[_P, _R]] = None, *, unwrap: bool = False):
         wrapper.__signature__ = sig
         return wrapper
 
-    if fn is not None:
-        return decorator(fn)
-
     return decorator
 
+def MacroWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
+    "Shortcut for `WizardFactory(unwrap=False)`"
+    return WizardFactory(unwrap=False)(fn)
+
 def BuiltinWizard(fn: Callable[_P, _R]) -> Callable[_P, _R]:
-    "Shortcut for `MacroWizard(unwrap=True)`"
-    return MacroWizard(unwrap=True)(fn)
+    "Shortcut for `WizardFactory(unwrap=True)`"
+    return WizardFactory(unwrap=True)(fn)
 
 
 #======// Density Type //========================================================================//
@@ -145,7 +144,7 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     def __post_init__(self):
         if not isinstance(self.AST, DensityFunction):
-            raise TypeError(f"Cannot initialize a Density with content of type '{type(self.AST).__name__}'")
+            raise TypeError(f"Cannot initialize Density object with content of type '{type(self.AST).__name__}'")
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
@@ -300,7 +299,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         if not isinstance(other, int):
             raise ValueError("Can't raise to non-integer powers")
         if other == 0:
-            return 1
+            return Density(dft.constant(1))
         elif other == 1:
             return self
         elif other == 2:

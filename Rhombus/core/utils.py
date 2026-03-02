@@ -1,9 +1,9 @@
-from typing import TypeAlias, Callable, TypeVar, ParamSpec, Final, Any, get_type_hints
+from typing import Callable, Final, Any, get_type_hints
 import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
 
-__all__ = ["uuid_hash", "JSONDict", "with_datapack_context", "FROM_CONTEXT"]
+__all__ = ["uuid_hash", "JSONDict", "contextfunction", "FROM_CONTEXT"]
 
-JSONDict: TypeAlias = dict[str, dict | list | tuple | str | int | float | bool]
+type JSONDict = dict[str, dict | list | tuple | str | int | float | bool]
 
 def uuid_hash(data: JSONDict) -> str:
     """Creates a UUID string (without `-`) based of a JSON dictionary."""
@@ -19,13 +19,10 @@ def uuid_hash(data: JSONDict) -> str:
 
 #======// Context //=============================================================================//
 
-_P = ParamSpec("P")
-_R = TypeVar("R")
-
 FROM_CONTEXT: Final = object()
 "Typing sentinel to denote that a value will be taken from a context variable."
 
-def contextfunction(func: Callable, **ctxparams: contextvars.ContextVar):
+def contextfunction(**ctxparams: contextvars.ContextVar):
     """Decorator for automatic context handling for parameters.
     
     All kwargs in this decorator, that are also present as kwargs in the decorated function are affected.
@@ -38,36 +35,42 @@ def contextfunction(func: Callable, **ctxparams: contextvars.ContextVar):
     This decorator can also be used without `FROM_CONTEXT` entirely, as a tool to set `ContextVar`s.
     """
 
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        sig = inspect.signature(func)
-        bound = sig.bind_partial(*args, **kwargs)
-        bound.apply_defaults()
-        
-        tokens: dict[contextvars.ContextVar, list[contextvars.Token]] = {}
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            sig = inspect.signature(func)
+            bound = sig.bind_partial(*args, **kwargs)
+            bound.apply_defaults()
 
-        for param, ctxvar in ctxparams.items():
-            value = bound.arguments.get(param)
-            
-            if value is FROM_CONTEXT:
-                current = ctxvar.get(None)
-                bound.arguments[param] = current
-            else:
-                tokens.setdefault(ctxvar, []).append(ctxvar.set(value))
+            tokens: dict[contextvars.ContextVar, list[contextvars.Token]] = {}
 
-        try:
-            return func(*bound.args, **bound.kwargs)
-        finally:
-            for ctxvar, token_list in tokens.items():
-                for token in reversed(token_list):
-                    ctxvar.reset(token)
+            for param, ctxvar in ctxparams.items():
+                value = bound.arguments.get(param)
 
-    return wrapper
+                if value is FROM_CONTEXT:
+                    current = ctxvar.get(None)
+                    bound.arguments[param] = current
+                else:
+                    tokens.setdefault(ctxvar, []).append(ctxvar.set(value))
+
+            try:
+                return func(*bound.args, **bound.kwargs)
+            finally:
+                for ctxvar, token_list in tokens.items():
+                    for token in reversed(token_list):
+                        ctxvar.reset(token)
+
+        return wrapper
+
+    return decorator
 
 
 #======// Typing //==============================================================================//
 
-def fields(o: object) -> dict[str, Any]:
+type DataclassInstance = object
+type Dataclass = type
+
+def fields(o: DataclassInstance) -> dict[str, Any]:
     "Returns the fields of a dataclass instance, that are present in the init, with their values."
     return {
         f.name: getattr(o, f.name, None)
@@ -75,7 +78,7 @@ def fields(o: object) -> dict[str, Any]:
         if f.init
     }
 
-def annotated_fields(o: type) -> dict[str, type]:
+def annotated_fields(o: Dataclass) -> dict[str, type]:
     "Returns the fields of a dataclass, that are present in the init, with their annotation."
     return {
         f.name: get_type_hints(o)[f.name]

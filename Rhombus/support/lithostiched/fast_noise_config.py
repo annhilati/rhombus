@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import ClassVar, Literal, Optional
-from Rhombus.core.registry_resource import DatapackResource
+from Rhombus.core.datapack_resource import DatapackResource
 from Rhombus.core.utils import JSONDict
 
 from beet.library.base import JsonFile, NamespaceFileScope

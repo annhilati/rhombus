@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar, Self, Any
 from abc import ABC, abstractmethod
 
@@ -10,7 +10,7 @@ __all__ = ["DatapackResource", "BeetFileClass"]
 
 type BeetFileClass = DataModelBase
 
-@dataclass(frozen=True)
+@dataclass()
 class DatapackResource(ABC):
     """Abstract base class for resources that have to be declared in a datapack outside of a density function.
     
@@ -18,7 +18,7 @@ class DatapackResource(ABC):
     """
 
     fileclass: ClassVar[type[BeetFileClass]]
-    # reference: ClassVar[str] # Actually a field in subclasses
+    reference: str | None = field(init=False, default=None)
 
     @property
     def _fields(self) -> dict[str, Any]:
@@ -33,7 +33,9 @@ class DatapackResource(ABC):
     @classmethod
     def referenced(cls, identifier: str, /) -> Self:
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
-        return cls(reference=identifier)
+        instance = cls(**{param: None for param in annotated_fields(cls)})
+        instance.reference = identifier
+        return instance
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:

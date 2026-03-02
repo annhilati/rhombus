@@ -1,5 +1,5 @@
 from tempfile import TemporaryDirectory
-from Rhombus.core.registry_resource import BeetFileClass, DatapackResource
+from Rhombus.core.datapack_resource import BeetFileClass, DatapackResource
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.sub_parameters import SubParameters
 from Rhombus.language import Density, dft
