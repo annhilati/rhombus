@@ -1,8 +1,7 @@
 """It is complicated ..."""
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Self, Callable, get_origin, get_args
-from Rhombus.core.datapack_resource import DatapackResource
+from typing import Any, ClassVar, Self, Callable
 from Rhombus.core.utils import JSONDict, annotated_fields, fields
 
 __all__ = [
@@ -10,9 +9,6 @@ __all__ = [
     "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase", "MultiArgumentsFunctionBase",
     "Reference", "constant"
 ]
-
-#======// Main Decoding Function //==============================================================//
-
 
 
 #======// Function Type Base Classes //==========================================================//
@@ -23,7 +19,6 @@ class DensityFunction:
 
     decode: ClassVar[Callable[[type[Self], JSONDict], Self]]
     encode: ClassVar[Callable[[Self], JSONDict | float | str]]
-    # validate: ClassVar[Callable[[Self], None]]
 
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
     "Set of all defined classes inheriting from `DensityFunctionTypeBase`."
@@ -38,7 +33,6 @@ class DensityFunction:
         "Returns the fields of the density function type with their values."
         return fields(self)
 
-    
 @dataclass
 class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
@@ -61,20 +55,11 @@ class MultiArgumentsFunctionBase(DensityFunction):
 
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC, decode_DatapackResource_reference, decode as unidecode
+        from Rhombus.core.codec import decode as unidecode
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: (
-                # DensityFunction
-                decode_HOLDER_HELPER_CODEC(value)                   if tp is DensityFunction else
-                # Noise, ... (subclasses of DatapackResource)
-                decode_DatapackResource_reference(value, tp)    if issubclass(tp, DatapackResource) else
-                # list[DensityFunction]
-                [decode_HOLDER_HELPER_CODEC(f) for f in value]      if get_origin(tp) is list and get_args(tp)[0] is DensityFunction
-
-                else unidecode(value, tp)
-            )
+            parameter: unidecode(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
