@@ -4,8 +4,9 @@
 
 - configuration feels random and has to be standardized
 - .fields() does nothing for most base classes. How should .fields(), the field util functions and the decoders interact?
-- Since .reference is a hard requirement for DatapackResources, it should be provided by the base class
 - The wizards and their factory are not the best conceptualized
+- wizards dont work on classmethods?
+- decode_HOLDER_HELPER_CODEC annotations gone (see in language/dft)
 
 # Design
 - What kind of methods are attributes of Density objects?
@@ -30,3 +31,4 @@
 - [ ] §8 Unify wizards in a single fabric, dont use on as a decorator and a fabric
 - [x] §9 New system for DataPackResources to store references. They shouldn't be a field in the init. (Not make them frozen anymore?)
   - [x] §9.1 Implement the referenced classmethod in the base class (utilize the field util when instanciating?)
+  - [x] §9.2 Implement property setting and store reference secretly

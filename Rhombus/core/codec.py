@@ -7,26 +7,36 @@ from Rhombus.core.utils import contextfunction, FROM_CONTEXT
 from Rhombus import config
 import beet, beet.contrib.worldgen as beet_worldgen
 
-def encode[T](o: T):
+def fEncode[T](o: T):
+    """Encodes an object `o` as a JSON compatible value.
+    
+    Supported are:
+    - `DensityFunction` subclasses
+    - `DatapackResource` subclasses (will return the identifier)
+    - `SubParameters` subclasses
+    - `str`, `int`, `float`, `bool`
+    - `list[T]`, `tuple[T]`
+    - `dict[KT, VT]`
+    """
 
     if isinstance(o, DensityFunction):
         return o.encode()
     
     elif isinstance(o, DatapackResource):
-        return o.reference_identifier
+        return o.identifier
     
     elif isinstance(o, SubParameters):
         return o.encode()
     
-    elif isinstance(o, (list, tuple, set)):
-        return type(o)(encode(m) for m in o)
+    elif isinstance(o, (list, tuple)):
+        return type(o)(fEncode(m) for m in o)
     
     elif isinstance(o, dict):
-        return {encode(k): encode(v) for k, v in o.items()}
+        return {fEncode(k): fEncode(v) for k, v in o.items()}
     
     return o
 
-def decode[V, T](v: V, t: type[T]) -> T:
+def fDecode[V, T](v: V, t: type[T]) -> T:
     """Casts a value `v` into a type `t` according to specific procedures.
     
     Supported are:
@@ -62,28 +72,28 @@ def decode[V, T](v: V, t: type[T]) -> T:
             return t(m for m in v)
         
         elif isinstance(t, TypeAliasType):
-            return decode(v, t.__value__)
+            return fDecode(v, t.__value__)
             
     args = get_args(t)
 
     if origin in (list, tuple, set):
         return t(
-            decode(m, args[0] if len(args) == 1 else Union[*args]) for m in v
+            fDecode(m, args[0] if len(args) == 1 else Union[*args]) for m in v
         )
     
     if origin in (Union, UnionType):
         if type(v) in args:
-            return decode(v, type(v))
+            return fDecode(v, type(v))
         for arg in args:
             try:
-                return decode(v, arg)
+                return fDecode(v, arg)
             except:
                 continue
 
     if origin is dict:
         kt, vt = args
         return {
-            decode(k, kt): decode(v, vt)
+            fDecode(k, kt): fDecode(v, vt)
             for k, v in v.items()
         }
     

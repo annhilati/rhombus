@@ -6,10 +6,10 @@ from Rhombus.language import dft as dft
 from Rhombus.language.density import Density, DensityDescriptor, MacroWizard
 from Rhombus.language import functions as f
 
-pi = 3.14159265359
-"The constant π to 11 decimals."
-e = 2.71828182846
-"Euler's number e to 10 decimals."
+pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
+"The constant `π` to 16 decimals."
+e  = 2.7182818284590452 #35360287471352662497757247093699959574966
+"Euler's number `e` to 16 decimals."
 
 
 #======// Number Theory //=======================================================================//
@@ -276,3 +276,8 @@ def cosh(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
         result = result + term
 
     return result
+
+@MacroWizard
+def symsmoothstep(argument: DensityDescriptor) -> Density[dft.add]:
+    # [-1,1] -> [-1,1]
+    return (3/2) * argument - 0.5 * argument**3

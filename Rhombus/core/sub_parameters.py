@@ -5,6 +5,7 @@ from Rhombus.core.utils import JSONDict, fields, annotated_fields
 class SubParameters:
     """Base class for parameter groups that are used inline in fields of density function types or another.
     
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)
     """
 
     @property
@@ -14,20 +15,20 @@ class SubParameters:
     
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        from Rhombus.core.codec import decode as unidecode
+        from Rhombus.core.codec import fDecode
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: unidecode(value, tp)
+            parameter: fDecode(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
         })
     
     def encode(self) -> JSONDict:
-        from Rhombus.core.codec import encode as uniencode
+        from Rhombus.core.codec import fEncode
         return {**{
-            parameter: uniencode(value)
+            parameter: fEncode(value)
             for parameter, value
             in self.fields.items()
             if value is not None

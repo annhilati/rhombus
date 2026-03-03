@@ -161,7 +161,11 @@ class spline(DensityFunction):
         return cls(
             decode_HOLDER_HELPER_CODEC(data["spline"]["coordinate"]),
             [
-                (point["location"], decode_HOLDER_HELPER_CODEC(point["value"]), point["derivative"])
+                (
+                    point["location"],
+                    decode_HOLDER_HELPER_CODEC(point["value"]),
+                    point["derivative"]
+                )
                 for point in data["spline"]["points"]
             ]
         )
@@ -174,7 +178,7 @@ class spline(DensityFunction):
                 "points": [
                     {
                         "location": point[0],
-                        "value": point[1].encode() if isinstance(point[1], DensityFunction) else point[1],
+                        "value": point[1].encode(),
                         "derivative": point[2], 
                     }
                     for point in self.points

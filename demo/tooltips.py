@@ -5,11 +5,10 @@ from Rhombus.support import *
 
 #======// Language //============================================================================//
 
-Noise
-
-Density
-
+Density.x
 DensityDescriptor
+
+Noise
 
 # Macros
 math.x
@@ -37,3 +36,5 @@ Density.show_in_dir
 DatapackResource
 
 DensityFunction
+
+SubParameters

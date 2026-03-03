@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import ClassVar, Optional
+from typing import ClassVar
 from beet.contrib.worldgen import WorldgenNoise
 from Rhombus.core.datapack_resource import DatapackResource
 
@@ -33,11 +33,3 @@ class Noise(DatapackResource):
     # def __post_init__(self):
     #     if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
     #         raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
-               
-     
-    def __eq__(self, other: Noise):
-        if not isinstance(other, Noise):
-            return None
-        if self.reference is None and other.reference is None:
-            return (self.firstOctave == other.firstOctave) and (self.amplitudes == other.amplitudes)
-        return self.reference == other.reference

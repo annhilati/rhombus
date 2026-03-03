@@ -62,17 +62,6 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
 
 
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
-    """A helper decorator for macros, that take (among other) density function inputs.
-
-    The following effects are applied:
-    - Function arguments annotated with `DensityDescriptor` are canonicalized (see the `unwrap` parameter)
-    - Literal constant values that are larger than accepted are split into multiplications
-
-    Parameters
-    -------
-    unwrap : bool
-        Whether to pass the resolved `DensityDescriptor` arguments of the function as `DensityFunctionType` objects instead of `Density` objects
-    """
     
     def _apply_by_annotation(annotation: type) -> bool:
         if annotation is DensityDescriptor:
@@ -151,21 +140,21 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Factories //=======================================================================//
 
     @classmethod
-    @BuiltinWizard
     def configured(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
         """Creates a Density that will be casted into a specific file when compiling."""
         name = "minecraft:" + name if not ":" in name else name
+        default = resolve_DensityDescriptor(default) # somehow neccesarry
         if isinstance(default, Reference):
             default = dft.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
-    @BuiltinWizard
     def separated(cls, value: DensityDescriptor):
         """Creates a Density whose value will be casted into a separate file when compiling."""
+        default = resolve_DensityDescriptor(value) # somehow neccesarry
         return Density(Reference(
             reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
-            default=value)
+            default=default)
         )
     
     @classmethod
