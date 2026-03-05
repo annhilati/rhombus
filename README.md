@@ -23,7 +23,8 @@ Functions and classes provide detailed docstrings describing behavior, parameter
 - ⚡ **Efficient Worldgen Performance**<br>
 Density expressions are transpiled into as few files as possible, reducing overhead during chunk generation.
 - ⚙️ **High Compatability**<br>
-As long as the density function definiton format remains unchanged in new version, generated data works across all Minecraft versions. - 🛠️ **Generous Modding-API**<br>
+As long as the density function definiton format remains unchanged in new version, generated data works across all Minecraft versions.
+- 🛠️ **Generous Modding-API**<br>
 Classes can be used to derive support for any features from mods.
 
 ## Features

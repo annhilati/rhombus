@@ -185,6 +185,12 @@ class spline(DensityFunction):
                 ]
             }
         }
+
+    def show(self):
+        from Rhombus.macros._spline import show_spline
+        if any((not isinstance(p[1], constant) for p in self.points)):
+            raise Exception # TODO
+        show_spline([(p[0], p[1].argument, p[2]) for p in self.points])
     
 class square(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:square"

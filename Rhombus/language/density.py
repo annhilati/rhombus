@@ -192,7 +192,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         from Rhombus import toolchain
         return toolchain.compile(density=self, identifier=with_identifier)
 
-    def inject(self, dp: beet.DataPack, with_identifier: str, /, log: bool = True) -> None:
+    def inject(self, dp: beet.DataPack, with_identifier: str) -> None:
         """Implements the Density and all additionally needed files in a Beet datapack.
         
         Parameters
@@ -209,9 +209,9 @@ class Density[Function: DensityFunction = DensityFunction]:
 
         for id, file in files.items():
             dp[id] = file
-            if log: print(f"Implemented {type(file).__name__} '{id}'")
+            # print(f"Implemented {type(file).__name__} '{id}'")
             
-        if log: print(f"Finished implementing density function '{with_identifier}'")
+        # print(f"Finished implementing density function '{with_identifier}'")
     
     def as_dict(self) -> JSONDict:
         """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>

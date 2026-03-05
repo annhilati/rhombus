@@ -9,7 +9,8 @@ authors = [
   { name = "Annhilati"},
 ]
 dependencies = [
-  "beet"
+  "beet",
+  "numpy"
 ]
 
 [project.urls]

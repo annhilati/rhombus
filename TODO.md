@@ -11,6 +11,7 @@
 # Design
 - What kind of methods are attributes of Density objects?
 - How to name arguments in builtins vs macros? Technical or scientific?
+- Supply Spline Points as SubParam?
 
 
 
