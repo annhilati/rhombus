@@ -1,16 +1,11 @@
-"Macros with mathmatical functions, that are not provided by default."
-
-from typing import Callable
 from Rhombus import config as cfg
-from Rhombus.language import dft as dft
 from Rhombus.language.density import Density, DensityDescriptor, MacroWizard
-from Rhombus.language import functions as f
+from Rhombus.language import dft as dft, functions as f
 
 pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
 "The constant `π` to 16 decimals."
 e  = 2.7182818284590452 #35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
-
 
 
 @MacroWizard
@@ -105,16 +100,3 @@ def prod(*arguments: DensityDescriptor) -> Density[dft.mul]:
         result = result * x
 
     return result
-
-
-
-@MacroWizard
-def symsmoothstep(argument: DensityDescriptor) -> Density[dft.add]:
-    # [-1,1] -> [-1,1]
-    return f.spline(
-        argument,
-        [
-            (-1, -1, 0),
-            ( 1,  1, 0)
-        ]
-    )

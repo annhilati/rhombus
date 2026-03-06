@@ -187,6 +187,7 @@ class spline(DensityFunction):
         }
 
     def show(self):
+        "Only for debugging.<br>Open the spline in a pyplot."
         from Rhombus.macros._spline import show_spline
         if any((not isinstance(p[1], constant) for p in self.points)):
             raise Exception # TODO

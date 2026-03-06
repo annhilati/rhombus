@@ -1,9 +1,15 @@
 from typing import Callable
+from matplotlib.figure import Figure
 import numpy as np, matplotlib.pyplot as plt
 
 
-def poly_spline_points(a: float, b: float, c: float, d: float, ab: tuple[float, float]) -> list[tuple[float, float, float]]:
-    "Calculates points of a cubic hermite spline from a cubic function in the range between two points"
+# https://en.wikipedia.org/wiki/Cubic_Hermite_spline
+
+def poly_spline_points(
+    a: float, b: float, c: float, d: float, sample_interval: tuple[float, float]) -> list[tuple[float, float, float]]:
+    """Calculates spline points for an arbitrary polynomial `ax³ + bx² + cx + d` within the `sample_interval`."""
+    x0, x1 = sample_interval
+
     def f(x):
         return a*x**3 + b*x**2 + c*x + d
 
@@ -11,28 +17,32 @@ def poly_spline_points(a: float, b: float, c: float, d: float, ab: tuple[float, 
         return 3*a*x**2 + 2*b*x + c
 
     return [
-        (ab[0], f(ab[0]), df(ab[0])),
-        (ab[1], f(ab[1]), df(ab[1]))
+        (x0, f(x0), df(x0)),
+        (x1, f(x1), df(x1))
     ]
 
+def function_spline_points(f: Callable[[float], float], sample_interval: tuple[float, float], points=5, step_size=1e-8) -> list[tuple[float, float, float]]:
+    """Calculates spline points based of an arbitrary function within the `sample_interval`.
+    
+    **Functions this method does not work well with:**
+    - Very steep functions (`tan()`, `sqrt()` near 0, `1/x`, etc., except exponentials) 
+    - Functions with poles (`tan()`, `1/x` near 0, etc.)
+    - Highly fluctuating functions (`tan()`, etc.)
+    """
 
-def function_spline_points(f: Callable[[float], float], ab: tuple[float, float], n=5, h=1e-6) -> list[tuple[float, float, float]]:
-
-    xs = np.linspace(ab[0], ab[1], n)
+    xs = np.linspace(sample_interval[0], sample_interval[1], points)
     points = []
 
     for x in xs:
         y = f(x)
 
-        m = (f(x + h) - f(x - h)) / (2 * h)
+        m = (f(x + step_size) - f(x - step_size)) / (2 * step_size)
 
         points.append((float(x), y, m))
 
     return points
 
 
-
-from matplotlib.figure import Figure
 def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) -> Figure:
 
     points = sorted(points, key=lambda p: p[0])
@@ -86,8 +96,8 @@ def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) 
     plt.figure()
     plt.plot(x_vals, y_vals)
     plt.scatter([p[0] for p in points], [p[1] for p in points], s=20)
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("input")
+    plt.ylabel("output")
     plt.axis("equal")
     plt.title("Cubic Hermite spline")
     if show: plt.show()

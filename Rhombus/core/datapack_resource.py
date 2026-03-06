@@ -1,12 +1,10 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, Self, Any
 from beet.core.file import DataModelBase
-from Rhombus.core.utils import JSONDict, uuid_hash, fields, annotated_fields
+from Rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, fields, annotated_fields
 
 __all__ = ["DatapackResource", "BeetFileClass"]
 
-
-type BeetFileClass = DataModelBase
 
 @dataclass
 class DatapackResource:

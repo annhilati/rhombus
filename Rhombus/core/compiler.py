@@ -2,13 +2,14 @@ from tempfile import TemporaryDirectory
 from Rhombus.core.datapack_resource import BeetFileClass, DatapackResource
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.sub_parameters import SubParameters
-from Rhombus.language import Density, dft
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-def compile(density: Density, identifier: str) -> dict[str, BeetFileClass]:
+def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClass]:
+    from Rhombus.language import dft
+
     files: dict[str, BeetFileClass] = {}
 
-    root = density.AST
+    root = density
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
     def search_for_additional_files(o):

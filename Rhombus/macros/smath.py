@@ -1,7 +1,11 @@
-from Rhombus.language.density import MacroWizard, Density, DensityDescriptor
+from Rhombus.language.density import Density, DensityDescriptor, MacroWizard
 from Rhombus.language import dft, functions as f
-from Rhombus.macros import _spline as s
+from Rhombus.macros import math as m, _spline as s
+
+__all__ = []
 
 @MacroWizard
-def smoothstep(argument: DensityDescriptor) -> Density[dft.spline]:
-    return f.spline(argument, s.poly_spline_points(-2, 3, 0, 0, (0, 1)))
+def smoothstep(argument: DensityDescriptor, xRange: tuple[float, float] = (-1, 1), yRange: tuple[float, float] = (-1, 1)) -> Density[dft.spline]:
+    # xRange and yRange are not selection but transformation intervals
+    return f.spline(argument, [(xRange[0], yRange[0], 0), (xRange[1], yRange[1], 0)])
+

@@ -1,5 +1,5 @@
 from typing import Callable, Final, Any, get_type_hints
-import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
+import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet.core.file
 
 __all__ = ["uuid_hash", "JSONDict", "contextfunction", "FROM_CONTEXT"]
 
@@ -10,7 +10,7 @@ type JSONDict = dict[str, dict | list | tuple | str | int | float | bool]
 type DataclassInstance = object
 type Dataclass = type
 type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
-
+type BeetFileClass = beet.core.file.DataModelBase
 
 #======// Data //================================================================================//
 

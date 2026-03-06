@@ -4,8 +4,9 @@ from typing import Self, Callable, TypeAliasType, Union, Literal, overload, get_
 from types import UnionType
 from Rhombus import config
 from Rhombus.core.density_function import DensityFunction, constant, Reference
-from Rhombus.core.utils import JSONDict, Decorator, uuid_hash, contextfunction, FROM_CONTEXT
+from Rhombus.core.utils import JSONDict, Decorator, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
+from Rhombus.core.compiler import compile
 from Rhombus.language import dft as dft
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
@@ -187,10 +188,9 @@ class Density[Function: DensityFunction = DensityFunction]:
         """
         return Density(decode_HOLDER_HELPER_CODEC(d, dp=dp))
     
-    def compile(self, with_identifier: str, /):
+    def compile(self, with_identifier: str, /) -> dict[str, BeetFileClass]:
         "Compiles the Density into Beet file class instances."
-        from Rhombus import toolchain
-        return toolchain.compile(density=self, identifier=with_identifier)
+        return compile(density=self.AST, identifier=with_identifier)
 
     def inject(self, dp: beet.DataPack, with_identifier: str) -> None:
         """Implements the Density and all additionally needed files in a Beet datapack.
