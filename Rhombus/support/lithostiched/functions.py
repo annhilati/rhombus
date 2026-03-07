@@ -1,6 +1,3 @@
-from dataclasses import dataclass
-from typing import ClassVar
-from Rhombus.core.density_function import MultiArgumentsFunctionBase, DensityFunction
 from Rhombus.language.density import Density, BuiltinWizard, DensityDescriptor
 
 from .fast_noise_config import FastNoiseConfig

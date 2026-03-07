@@ -10,6 +10,7 @@ nav = [
         "usage/workflow.md",
     ]},
     {"Rhombus Developers" = [
+        "extending/development.md",
         "extending/macros.md",
         "extending/docstring_guide.md",
         {"Mod Support" = [

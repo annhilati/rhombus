@@ -14,8 +14,6 @@
   - Maybe an additional factory
 
 
-
-
 - [x] §1 Decode Datapack Resources dynamically from `DensityFunction` subclasses
   - [x] §1.1 Annotate with concrete Datapack Resource classes instead of `DatapackResource` in `DensityFunction` fields
 - [ ] §2 Decode density functions from a `DataPack`

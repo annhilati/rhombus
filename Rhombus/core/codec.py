@@ -62,7 +62,7 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
             return t.decode(v)
         
         elif issubclass(t, DatapackResource):
-            return decode_DatapackResource_reference(v, t)
+            return resolve_DatapackResource_reference(v, t)
         
         elif issubclass(t, SubParameters):
             return t.decode(v)
@@ -103,7 +103,7 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
 
 
 @contextfunction(dp=config.ctx.datapack)
-def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
+def resolve_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
         return t.decode(file.data)
