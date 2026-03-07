@@ -1,7 +1,20 @@
-from typing import ClassVar
+from typing import ClassVar, Literal
 from dataclasses import dataclass
-from Rhombus.core.density_function import MultiArgumentsFunctionBase, DensityFunction, MappedFunctionBase
+from Rhombus.core.density_function import MultiArgumentsFunctionBase, DensityFunction, MappedFunctionBase, SimpleFunctionBase
+from Rhombus.core.sub_parameters import SubParameters
 from .fast_noise_config import FastNoiseConfig
+
+
+@dataclass
+class InclusiveRange(SubParameters):
+    min_inclusive: float
+    max_inclusive: float
+
+@dataclass
+class Selection(SubParameters):
+    range: float | list[float] | InclusiveRange
+    function: DensityFunction
+
 
 @dataclass
 class fast_noise(MultiArgumentsFunctionBase):
@@ -13,12 +26,50 @@ class fast_noise(MultiArgumentsFunctionBase):
     shift_y: DensityFunction
     shift_z: DensityFunction
 
-# class axis
-# class ceil
-# class floor
-# class sin
-# class cos
-# class sqrt
-# class mix
-# class shift
-# class select
+@dataclass
+class axis(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "lithostitched:axis"
+    axis: Literal["x", "y", "z"]
+
+class ceil(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:ceil"
+
+class floor(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:floor"
+
+class sin(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:sin"
+
+class cos(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:cos"
+
+class sqrt(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:sqrt"
+
+@dataclass
+class mix(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "lithostitched:mix"
+    input: DensityFunction
+    argument1: DensityFunction
+    argument2: DensityFunction
+
+@dataclass
+class shift(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "lithostitched:shift"
+    input: DensityFunction
+    shift_x: DensityFunction
+    shift_y: DensityFunction
+    shift_z: DensityFunction
+
+@dataclass
+class select(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "lithostitched:select"
+    input: DensityFunction
+    fallback: DensityFunction
+    selections: list[Selection]
+
+class original_marker(SimpleFunctionBase):
+    id: ClassVar[str] = "lithostitched:original_marker"
+
+class wrapped_marker(SimpleFunctionBase):
+    id: ClassVar[str] = "lithostitched:wrapped_marker"
