@@ -144,7 +144,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     def configured(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
         """Creates a Density that will be casted into a specific file when compiling."""
         name = "minecraft:" + name if not ":" in name else name
-        default = resolve_DensityDescriptor(default) # somehow neccesarry
+        default = resolve_DensityDescriptor(default).AST # somehow neccesarry
         if isinstance(default, Reference):
             default = dft.add(default, 0)
         return Density(Reference(name, default))
@@ -152,10 +152,10 @@ class Density[Function: DensityFunction = DensityFunction]:
     @classmethod
     def separated(cls, value: DensityDescriptor):
         """Creates a Density whose value will be casted into a separate file when compiling."""
-        default = resolve_DensityDescriptor(value) # somehow neccesarry
+        value = resolve_DensityDescriptor(value) # somehow neccesarry
         return Density(Reference(
-            reference="rhombus:generated/" + uuid_hash(Density(value).as_dict()),
-            default=default)
+            reference="rhombus:generated/" + uuid_hash(value.as_dict()),
+            default=value.AST)
         )
     
     @classmethod
@@ -220,9 +220,9 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     def show_in_dir(self, with_name: str = "test"):
         "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
-        from Rhombus import toolchain
+        from Rhombus.core.compiler import show_in_temp
         files = self.compile(with_name)
-        toolchain.show_in_temp(files)
+        show_in_temp(files)
         
     
     #======// Arithmetic Magic //================================================================//

@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
-from typing import ClassVar, Self, Any
-from beet.core.file import DataModelBase
+from typing import ClassVar, Self
 from Rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, fields, annotated_fields
 
 __all__ = ["DatapackResource", "BeetFileClass"]
@@ -15,10 +14,6 @@ class DatapackResource:
 
     fileclass: ClassVar[type[BeetFileClass]]
     _reference: str | None = field(init=False, default=None)
-
-    @property
-    def _fields(self) -> dict[str, Any]:
-        return fields(self)
 
     @property
     def identifier(self) -> str:
@@ -56,11 +51,13 @@ class DatapackResource:
         from Rhombus.core.codec import fEncode
         return {
             parameter: fEncode(value)
-            for parameter, value in self._fields.items()
+            for parameter, value in fields(self).items()
             if value is not None
         }
 
-    def __eq__(self, other) -> bool: 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, type(self)):
+            return False
         return self.identifier == other.identifier
     
     def __hash__(self) -> int:

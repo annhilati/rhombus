@@ -11,7 +11,7 @@ class LithostichedFastNoiseConfig(JsonFile):
     scope: ClassVar[NamespaceFileScope] = ("lithostitched", "fast_noise_config")
     extension: ClassVar[str] = ".json"
 
-@dataclass(frozen=True)
+@dataclass
 class FastNoiseConfig(DatapackResource):
     """Defines a Lithostiched noise.
     
@@ -84,9 +84,9 @@ class FastNoiseConfig(DatapackResource):
     def CellularNoise(
         cls,
         frequency: float,
-        jitter: Optional[float],
-        distance_function: Optional[Literal["euclidean", "euclidean_squared", "manhattan", "hybrid"]],
-        return_type: Optional[Literal["cell_value", "distance", "distance_2", "distance_2_add", "distance_2_sub", "distance_2_mul", "distance_2_div"]],
+        jitter: float,
+        distance_function: Literal["euclidean", "euclidean_squared", "manhattan", "hybrid"],
+        return_type: Literal["cell_value", "distance", "distance_2", "distance_2_add", "distance_2_sub", "distance_2_mul", "distance_2_div"],
         salt: Optional[int] = None
     ) -> "FastNoiseConfig":
         return cls(type="lithostiched:cellular", frequency=frequency, salt=salt, jitter=jitter, distance_function=distance_function, return_type=return_type)

@@ -1,4 +1,4 @@
-from typing import Any, Self
+from typing import Self
 
 from Rhombus.core.utils import JSONDict, fields, annotated_fields
 
@@ -7,11 +7,6 @@ class SubParameters:
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)
     """
-
-    @property
-    def fields(self) -> dict[str, Any]:
-        "Returns the fields of the sub parameters, with their values."
-        return fields(self)
     
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
@@ -30,6 +25,6 @@ class SubParameters:
         return {**{
             parameter: fEncode(value)
             for parameter, value
-            in self.fields.items()
+            in fields(self).items()
             if value is not None
         }}

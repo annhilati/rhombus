@@ -4,7 +4,7 @@ from Rhombus.core.sub_parameters import SubParameters
 from Rhombus.core.density_function import DensityFunction
 from Rhombus.core.utils import JSONDict, annotated_fields
 from Rhombus.core.codec import fEncode as uniencode, fDecode as unidecode
-from Rhombus.language import DensityDescriptor, BuiltinWizard
+from Rhombus.language.density import DensityDescriptor, BuiltinWizard
 from dataclasses import dataclass
 
 @dataclass

@@ -1,5 +1,5 @@
 <h1 align="center"><sub><img src="docs/logo.png" height="35"></sub> Rhombus <sub><img src="docs/logo.png" height="35"></sub></h1>
-<p align="center">A Python embedded Domain Specific Language for Minecraft Terrain Generation</p>
+<p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p>
 <p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
 
 ### Abstract
@@ -17,7 +17,7 @@ It allows you to comfortably write density functions while benefiting from Pytho
 - 📦 **Object-oriented Design**<br>
 Full use of Python’s object model for composing, reusing, and structuring density functions.
 - 📝 **Native Comments**<br>
-Density logic is written in Python, so comments work naturally without any custom syntax.
+Since Python code is in use, comments work naturally without any custom syntax.
 - 📖 **Integrated Documentation**<br>
 Functions and classes provide detailed docstrings describing behavior, parameters, and usage.
 - ⚡ **Efficient Worldgen Performance**<br>
@@ -32,6 +32,8 @@ Classes can be used to derive support for any features from mods.
 Represents any computed density value, independent of its underlying implementation.
 - **Intuitive AST Construction**:
 Density function trees can be built using arithmetic operators, provided interfaces, or custom methods.
+- **Data Model Base Classes**:
+Most funcionality comes from few base classes, so inheriting new classes is very easy.
 - **Complete Vanilla Coverage**:
 High-level Python interfaces for all vanilla density function types.
 - **Advanced Macros**:

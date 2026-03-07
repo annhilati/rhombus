@@ -3,7 +3,6 @@
 # Every Problem
 
 - configuration feels random and has to be standardized
-- .fields() does nothing for most base classes. How should .fields(), the field util functions and the decoders interact?
 - The wizards and their factory are not the best conceptualized
 - wizards dont work on classmethods?
 - decode_HOLDER_HELPER_CODEC annotations gone (see in language/dft)

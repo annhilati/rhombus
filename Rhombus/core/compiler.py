@@ -2,6 +2,7 @@ from tempfile import TemporaryDirectory
 from Rhombus.core.datapack_resource import BeetFileClass, DatapackResource
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.sub_parameters import SubParameters
+from Rhombus.core.utils import fields
 from beet.contrib.worldgen import WorldgenDensityFunction
 
 def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClass]:
@@ -34,12 +35,12 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
                 search_for_additional_files(v)
             
         elif isinstance(o, SubParameters):
-            for param, value in o.fields():
+            for param, value in fields(o).items():
                 search_for_additional_files(value)
 
         elif isinstance(o, DatapackResource) and o._reference is None: # here it was 'o._reference is not None'
             files[o.identifier] = o.fileclass(o.encode())
-            for param, value in o._fields.items():
+            for param, value in fields(o).items():
                 search_for_additional_files(value)
 
     search_for_additional_files(root)

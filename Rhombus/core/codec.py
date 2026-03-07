@@ -1,4 +1,4 @@
-from typing import get_origin, get_args, Union, TypeAliasType
+from typing import get_origin, get_args, Union, TypeAliasType, Literal
 from types import UnionType
 from Rhombus.core.density_function import DensityFunction, Reference, constant
 from Rhombus.core.datapack_resource import DatapackResource
@@ -48,13 +48,15 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
     - `dict[KT, VT]`
     - `Union[T]`, `UnionType[T]`
     """
+
+    print("fDecode gets", v , "for", t)
     
     origin = get_origin(t)
 
     if origin is None:
 
         if t is DensityFunction:
-            decode_HOLDER_HELPER_CODEC(v)
+            return decode_HOLDER_HELPER_CODEC(v)
 
         elif issubclass(t, DensityFunction):
             return t.decode(v)
@@ -65,7 +67,7 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
         elif issubclass(t, SubParameters):
             return t.decode(v)
         
-        elif t in (str, float, int):
+        elif t in (str, float, int, Literal):
             return t(v)
         
         elif t in (list, tuple, set):
@@ -104,7 +106,6 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
 def decode_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
-        print(file)
         return t.decode(file.data)
     return t.referenced(id)
 

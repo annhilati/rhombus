@@ -2,6 +2,5 @@
 """
 
 from Rhombus.language import *
-from Rhombus import toolchain
 from Rhombus.macros import *
 from Rhombus import config

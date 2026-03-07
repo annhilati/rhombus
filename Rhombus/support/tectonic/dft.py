@@ -1,6 +1,6 @@
 from typing import ClassVar
 from Rhombus.core.density_function import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction
-from Rhombus.core.datapack_resource import DatapackResource
+from Rhombus.language.noise import Noise
 from dataclasses import dataclass
 
 class invert(MappedFunctionBase):
@@ -13,8 +13,8 @@ class config_constant(MultiArgumentsFunctionBase):
 
 @dataclass
 class config_noise(MultiArgumentsFunctionBase):
-    id: ClassVar[str] = "minecraft:noise"
-    noise: DatapackResource
+    id: ClassVar[str] = "tectonic:config_noise"
+    noise: Noise
     key: str
     shift_x: DensityFunction
     shift_z: DensityFunction

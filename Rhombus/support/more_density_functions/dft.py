@@ -1,6 +1,7 @@
 from typing import ClassVar, Self, Literal, Optional
 from dataclasses import dataclass
-from Rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase, decode_HOLDER_HELPER_CODEC
+from Rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase
+from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
 
 #======// Function Type Base Classes //==========================================================//
