@@ -3,6 +3,7 @@
 .venv/
 .env
 test*.py
+dir
 
 # Distribution & Packaging
 build/
@@ -10,7 +11,7 @@ build/
 **/__pycache__/
 
 # pytest
-!tests/**.py
+!tests/**/**.py
 .pytest_cache/
 test_pack/
 

@@ -3,7 +3,7 @@ title: Roadmap
 icon: lucide/map
 ---
 
-# Development
+# Roadmap
 
 ## 🚧 Phase 0: Modeling
 

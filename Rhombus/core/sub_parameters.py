@@ -1,6 +1,8 @@
 from typing import Self
-
 from Rhombus.core.utils import JSONDict, fields, annotated_fields
+
+__all__ = ["SubParameters"]
+
 
 class SubParameters:
     """Base class for parameter groups that are used inline in fields of density function types or another.

@@ -1,8 +1,6 @@
 from typing import Callable, Final, Any, get_type_hints
 import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet.core.file
 
-__all__ = ["uuid_hash", "JSONDict", "contextfunction", "FROM_CONTEXT"]
-
 
 #======// Typing //==============================================================================//
 
@@ -45,9 +43,10 @@ def contextfunction(**ctxparams: contextvars.ContextVar) -> Decorator:
     """
 
     def decorator(func: Callable):
+        sig = inspect.signature(func)
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            sig = inspect.signature(func)
             bound = sig.bind_partial(*args, **kwargs)
             bound.apply_defaults()
 
@@ -69,7 +68,9 @@ def contextfunction(**ctxparams: contextvars.ContextVar) -> Decorator:
                     for token in reversed(token_list):
                         ctxvar.reset(token)
 
+        wrapper.__signature__ = sig
         return wrapper
+        
     return decorator
 
 

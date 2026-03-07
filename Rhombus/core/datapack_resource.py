@@ -7,7 +7,7 @@ __all__ = ["DatapackResource", "BeetFileClass"]
 
 @dataclass
 class DatapackResource:
-    """Abstract base class for resources that are provided by a datapack outside of a density function.
+    """Base class for resources that are provided by a datapack outside of a density function.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/datapack_resources/)
     """
@@ -25,7 +25,7 @@ class DatapackResource:
     @identifier.setter
     def identifier(self, value: str | None) -> None:
         if not isinstance(value, str):
-            raise TypeError(f"Cannot asign non-str value '{value} as reference identifier'")
+            raise TypeError(f"Cannot asign non-str value '{value} to reference identifier'")
         self._reference = value
 
     @classmethod

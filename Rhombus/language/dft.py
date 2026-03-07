@@ -163,7 +163,9 @@ class spline(DensityFunction):
             [
                 (
                     point["location"],
-                    decode_HOLDER_HELPER_CODEC(point["value"]),
+                    decode_HOLDER_HELPER_CODEC({"type": "minecraft:spline", "spline": point["value"]})
+                        if isinstance(point["value"], dict) and point["value"].get("type") is None
+                    else decode_HOLDER_HELPER_CODEC(point["value"]),
                     point["derivative"]
                 )
                 for point in data["spline"]["points"]

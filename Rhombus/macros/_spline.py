@@ -22,12 +22,23 @@ def poly_spline_points(
     ]
 
 def function_spline_points(f: Callable[[float], float], sample_interval: tuple[float, float], points=5, step_size=1e-8) -> list[tuple[float, float, float]]:
-    """Calculates spline points based of an arbitrary function within the `sample_interval`.
+    """Samples spline points based of an arbitrary function within the `sample_interval`.
     
     **Functions this method does not work well with:**
     - Very steep functions (`tan()`, `sqrt()` near 0, `1/x`, etc., except exponentials) 
     - Functions with poles (`tan()`, `1/x` near 0, etc.)
     - Highly fluctuating functions (`tan()`, etc.)
+
+    Parameters
+    -------
+    f : float -> float
+        The function to sample the spline points from.
+    sample_interval : tuple[float, float]
+        The interval between to sample the function.
+    points : int
+        The amount of points to sample between within the sample interval.
+    step_size : float
+        The infinitesimal value that is used to calculate derivatives.
     """
 
     xs = np.linspace(sample_interval[0], sample_interval[1], points)
