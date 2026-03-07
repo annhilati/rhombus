@@ -1,6 +1,11 @@
+---
+title: Roadmap
+icon: lucide/map
+---
+
 # Development
 
-## 🚧 Phase 0: 
+## 🚧 Phase 0: Modeling
 
 Phase 0 focusses on implementing all base functionality for constituting abstract syntax trees for density functions.
 
