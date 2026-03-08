@@ -4,7 +4,7 @@ from Rhombus.core.density_function import DensityFunction, MappedFunctionBase, S
 from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
 
-#======// Function Type Base Classes //==========================================================//
+#======// Density Function Base Classes //=======================================================//
 
 @dataclass
 class DivisionFunctionBase(DensityFunction):
@@ -61,9 +61,9 @@ class derivative():
     component_x: Optional[DerivativeComponent] = None
     component_y: Optional[DerivativeComponent] = None
     component_z: Optional[DerivativeComponent] = None
-    # One of the components mus be defined at least
+    # One of the components must be defined at least
 
-
+@dataclass
 class distance(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "moredfs:distance"
     distance_metric: DistanceMetric
@@ -174,6 +174,7 @@ class resolver(MappedFunctionBase):
 class round(MappedFunctionBase):
     id: ClassVar[str] = "moredfs:round"
 
+@dataclass
 class shift():
     id: ClassVar[str] = "moredfs:shift"
     argument: DensityFunction

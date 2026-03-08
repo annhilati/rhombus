@@ -59,12 +59,6 @@ class FastNoiseConfig(DatapackResource):
         }
     
     @classmethod
-    def decode(cls, dict: JSONDict) -> "FastNoiseConfig":
-        return cls(
-            **dict # Hope this works 😅
-        )
-    
-    @classmethod
     def referenced(cls, identifier):
         return cls(reference=identifier, type=None, frequency=None)
     

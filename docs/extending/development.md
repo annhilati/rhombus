@@ -22,8 +22,10 @@ Phase 0 focusses on implementing all base functionality for constituting abstrac
 - 🚧 **Mod support**: Modeling classes for density function types and datapack resources from common used worldgen libraries.
 - 🧪 **Macro infrastructure**: Decorators to help with creating macros.
 - 🧪 **Spline generation**: Tools for generating spline configurations.
+- 🕔 **Field validation**: Warn when values in fields of density functions are invalid.
 
 ## 🕔 Phase 2: Optimization
 
+- 🧪 **Performance evaluation**: Debug methods for quantifying performance costs.
 - 🕔 **Caching**: Ensure proper caching in complex scenarios.
 - 🕔 **AST optimization**: Optimize the abstract syntax tree to cost less performance.

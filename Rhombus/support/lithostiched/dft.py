@@ -4,6 +4,7 @@ from Rhombus.core.density_function import MultiArgumentsFunctionBase, DensityFun
 from Rhombus.core.sub_parameters import SubParameters
 from .fast_noise_config import FastNoiseConfig
 
+#======// Subparameters //=======================================================================//
 
 @dataclass
 class InclusiveRange(SubParameters):
@@ -16,6 +17,19 @@ class Selection(SubParameters):
     function: DensityFunction
 
 
+#======// Density Function Classes //============================================================//
+
+@dataclass
+class axis(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "lithostitched:axis"
+    axis: Literal["x", "y", "z"]
+
+class ceil(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:ceil"
+
+class cos(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:cos"
+
 @dataclass
 class fast_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "lithostiched:fast_noise"
@@ -26,25 +40,8 @@ class fast_noise(MultiArgumentsFunctionBase):
     shift_y: DensityFunction
     shift_z: DensityFunction
 
-@dataclass
-class axis(MultiArgumentsFunctionBase):
-    id: ClassVar[str] = "lithostitched:axis"
-    axis: Literal["x", "y", "z"]
-
-class ceil(MappedFunctionBase):
-    id: ClassVar[str] = "lithostitched:ceil"
-
 class floor(MappedFunctionBase):
     id: ClassVar[str] = "lithostitched:floor"
-
-class sin(MappedFunctionBase):
-    id: ClassVar[str] = "lithostitched:sin"
-
-class cos(MappedFunctionBase):
-    id: ClassVar[str] = "lithostitched:cos"
-
-class sqrt(MappedFunctionBase):
-    id: ClassVar[str] = "lithostitched:sqrt"
 
 @dataclass
 class mix(MultiArgumentsFunctionBase):
@@ -52,6 +49,16 @@ class mix(MultiArgumentsFunctionBase):
     input: DensityFunction
     argument1: DensityFunction
     argument2: DensityFunction
+
+class original_marker(SimpleFunctionBase):
+    id: ClassVar[str] = "lithostitched:original_marker"
+
+@dataclass
+class select(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "lithostitched:select"
+    input: DensityFunction
+    fallback: DensityFunction
+    selections: list[Selection]
 
 @dataclass
 class shift(MultiArgumentsFunctionBase):
@@ -61,15 +68,11 @@ class shift(MultiArgumentsFunctionBase):
     shift_y: DensityFunction
     shift_z: DensityFunction
 
-@dataclass
-class select(MultiArgumentsFunctionBase):
-    id: ClassVar[str] = "lithostitched:select"
-    input: DensityFunction
-    fallback: DensityFunction
-    selections: list[Selection]
+class sin(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:sin"
 
-class original_marker(SimpleFunctionBase):
-    id: ClassVar[str] = "lithostitched:original_marker"
+class sqrt(MappedFunctionBase):
+    id: ClassVar[str] = "lithostitched:sqrt"
 
 class wrapped_marker(SimpleFunctionBase):
     id: ClassVar[str] = "lithostitched:wrapped_marker"
