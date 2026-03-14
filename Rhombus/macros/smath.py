@@ -18,7 +18,23 @@ def cos(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) ->
     return f.spline(argument, s.function_spline_points(_math.cos, xRange, points))
 
 @MacroWizard
-def PDF(argument: DensityDescriptor, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)):
+def logistic(argument: DensityDescriptor, capacity: float = 1, growth_rate: float = 4, center: float = 0, xRange: tuple[float, float] = (-1, 1)) -> Density[dft.spline]:
+    """Evaluates the value of the input on a logistic function.
+
+    Parameters:
+        capacity (float): 
+        growth_rate (float): Controlls the steepness of the curve.
+        center (float): The point about which the function is rotationally symmetric
+        xRange ((float, float)): The interval over which the function can take inputs.
+
+    ---
+    [Wikipedia](https://en.wikipedia.org/wiki/Logistic_function)
+    """
+    func = lambda x: capacity/(1+_math.exp(- growth_rate * (x-center)))
+    return f.spline(argument, s.function_spline_points(func, xRange))
+
+@MacroWizard
+def PDF(argument: DensityDescriptor, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[dft.spline]:
     """Evaluates the value of the input on a probability density function.
 
     Parameters:
