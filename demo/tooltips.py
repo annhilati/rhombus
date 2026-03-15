@@ -1,6 +1,7 @@
 from Rhombus import *
 from Rhombus.core import *
 from Rhombus.support import *
+from Rhombus.macros import _spline
 
 #======// Language //============================================================================//
 
@@ -15,6 +16,8 @@ smath.x
 emath.x
 coords.x
 f.x
+
+_spline
 
 # Support
 tectonic.x

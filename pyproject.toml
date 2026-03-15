@@ -3,20 +3,21 @@ name = "Rhombus"
 version = "0.0.1"
 description = ""
 readme = "README.md"
-requires-python = ">=3.8"
-license = "EUPL-1.2"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
 authors = [
   { name = "Annhilati"},
 ]
 dependencies = [
   "beet",
-  "numpy"
+  "numpy",
+  "matplotlib"
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/annhilati/rhombus"
-"Documentation" = "https://github.com/annhilati/rhombus"
-# "Changelog" = "https://annhilati.gitbook.io/vpmobil/anderes/changelog"
+"Documentation" = "https://annhilati.github.io/rhombus"
+# "Changelog" = ""
 "Repository" = "https://github.com/annhilati/rhombus"
 "Bug Tracker" = "https://github.com/annhilati/rhombus/issues"
 "Download" = "https://pypi.org/project/rhombus/"
