@@ -11,12 +11,14 @@ Noise
 
 # Macros
 math.x
+smath.x
+emath.x
 coords.x
 f.x
 
 # Support
 tectonic.x
-more_density_functions.x
+moredfs.x
 lithostiched.x
 ensity.x
 
@@ -32,8 +34,6 @@ Density.show_in_dir
 
 #======// Core //================================================================================//
 
-DatapackResource
-
 DensityFunction
-
+DatapackResource
 SubParameters

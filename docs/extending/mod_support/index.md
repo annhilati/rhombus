@@ -6,7 +6,7 @@ icon: lucide/package-open
 # Adding Support for Content from Mods
 
 !!! tip
-    Rhombus already has functions and classes for relevant mods built-in. They are located in modules in `Rhombus.support`.
+    Rhombus already has functions and classes for common mods built-in. They are located in modules in `Rhombus.support`.
     If you need support for a mod that is currently not present in the `support` collection, you can file an [issue](https://github.com/annhilati/rhombus/issues) or contribute.
 
 To add support for mods, you can use the infrastructure on which the built-ins are also based. There are base classes for various scenarios.

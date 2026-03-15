@@ -14,7 +14,7 @@ __all__ = [
 #======// Function Type Base Classes //==========================================================//
 
 class DensityFunction:
-    """Base class for density function types.
+    """Base class for density function types, which are the nodes of the density AST.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/density_functions/)
     """

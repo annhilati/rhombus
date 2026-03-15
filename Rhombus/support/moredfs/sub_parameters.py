@@ -80,7 +80,7 @@ class RandomSampler(SubParameters):
             for tp in (fields[parameter],)
             if parameter != "lambda"
         },
-        **({"lambda": data["lambda"]} if data.get("lambda", default=None) is not None else {}))
+        **({"lambda": data["lambda"]} if data.get("lambda", None) is not None else {}))
     
     def encode(self) -> JSONDict:
         return {**{

@@ -6,6 +6,7 @@ constant_number_limit = 1_000_000
 class ctx:
 
     datapack: ContextVar[beet.DataPack | None] = ContextVar("datapack", default=None)
+    
 
 def warn(message, category, filename, lineno, file=None, line=None):
     print(
