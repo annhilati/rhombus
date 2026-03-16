@@ -1,5 +1,5 @@
 from Rhombus import Density, constant, Noise, noise
-from Rhombus.language import dft
+from Rhombus.language import types
 from beet import DataPack
 
 def test_decoding_functions_with_context():
@@ -13,7 +13,7 @@ def test_decoding_functions_with_context():
 
         d.inject(dp, "main:function")
 
-        assert Density.from_datapack(dp, "main:function") == Density(dft.add(dft.Reference('rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', default=dft.constant(argument=1.0)), dft.constant(argument=5.0)))
+        assert Density.from_datapack(dp, "main:function") == Density(types.add(types.Reference('rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', default=types.constant(argument=1.0)), types.constant(argument=5.0)))
 
 def test_decoding_DatapackResources_with_context():
 
@@ -24,10 +24,10 @@ def test_decoding_DatapackResources_with_context():
 
         # with exisiting Noise
         noise(n, 1, 1).inject(dp, "main:function")
-        assert Density.from_datapack(dp, "main:function") == Density(dft.noise(n, 1.0, 1.0))
+        assert Density.from_datapack(dp, "main:function") == Density(types.noise(n, 1.0, 1.0))
 
         # with unknown Noise reference
         noise(Noise.referenced("some:noise"), 1, 1).inject(dp, "random:function")
-        assert Density.from_datapack(dp, "random:function") == Density(dft.noise(Noise.referenced("some:noise"), 1.0, 1.0))
+        assert Density.from_datapack(dp, "random:function") == Density(types.noise(Noise.referenced("some:noise"), 1.0, 1.0))
 
 test_decoding_DatapackResources_with_context()

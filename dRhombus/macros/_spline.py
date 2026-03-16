@@ -1,8 +1,8 @@
 """
 Utility module for working with Hermite splines.
 
-"spline point" alway refers to a `tuple[float, float, float]` describing a point
-on a hermite spline function where the first is the x-position,
+The term "spline point" alway refers to a `tuple[float, float, float]` type object
+describing a point on a hermite spline function where the first is the x-position,
 the second is the y-value and the third is the slope at the point.
 
 [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)

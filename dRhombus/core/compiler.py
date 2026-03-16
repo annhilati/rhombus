@@ -6,7 +6,7 @@ from Rhombus.core.utils import fields
 from beet.contrib.worldgen import WorldgenDensityFunction
 
 def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClass]:
-    from Rhombus.language import dft
+    from Rhombus.language import types
 
     files: dict[str, BeetFileClass] = {}
 
@@ -19,7 +19,7 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
 
             if isinstance(o, Reference) and (default := o.default) is not None:
                 if isinstance(default, Reference): # To not have literal strings in a JSON file
-                    default = dft.add(default, constant(0))
+                    default = types.add(default, constant(0))
                 files[o.reference] = WorldgenDensityFunction(default.encode())
             
             for param, value in o.fields.items():
@@ -46,7 +46,7 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
     search_for_additional_files(root)
 
     if isinstance(root, Reference): # To not have literal strings in a JSON file
-        root = dft.add(root, constant(0))
+        root = types.add(root, constant(0))
         
     files[identifier] = WorldgenDensityFunction(root.encode())
 

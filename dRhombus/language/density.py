@@ -7,7 +7,7 @@ from Rhombus.core.density_function import DensityFunction, constant, Reference
 from Rhombus.core.utils import JSONDict, Decorator, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from Rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from Rhombus.core.compiler import compile
-from Rhombus.language import dft as dft
+from Rhombus.language import types as types
 import beet, beet.contrib.worldgen as beet_worldgen
 import inspect, functools
 
@@ -42,9 +42,9 @@ def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
         factors.append(v * sign)
 
         it = iter(constant(f) for f in factors)
-        result = dft.mul(next(it), next(it))
+        result = types.mul(next(it), next(it))
         for x in it:
-            result = dft.mul(result, x)
+            result = types.mul(result, x)
 
         return Density(result)
 
@@ -146,7 +146,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         name = "minecraft:" + name if not ":" in name else name
         default = resolve_DensityDescriptor(default).AST # somehow neccesarry
         if isinstance(default, Reference):
-            default = dft.add(default, 0)
+            default = types.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
@@ -227,93 +227,93 @@ class Density[Function: DensityFunction = DensityFunction]:
     
     #======// Arithmetic Magic //================================================================//
     
-    def __add__(self, other) -> Density[dft.add]:
+    def __add__(self, other) -> Density[types.add]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(dft.add(self, other))
+        return Density(types.add(self, other))
     
-    def __radd__(self, other) -> Density[dft.add]:
+    def __radd__(self, other) -> Density[types.add]:
         return self.__add__(other)
     
-    def __sub__(self, other) -> Density[dft.add]:
+    def __sub__(self, other) -> Density[types.add]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
         return Density(
-            dft.add(
+            types.add(
                 argument1=self,
-                argument2=dft.mul(
+                argument2=types.mul(
                     argument1=other,
                     argument2=constant(-1.0)
             )))
     
-    def __rsub__(self, other) -> Density[dft.add]:
+    def __rsub__(self, other) -> Density[types.add]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
         return Density(
-            dft.add(
+            types.add(
                 argument1=other,
-                argument2=dft.mul(
+                argument2=types.mul(
                     argument1=self,
                     argument2=constant(-1.0)
             )))
     
-    def __mul__(self, other) -> Density[dft.mul]:
+    def __mul__(self, other) -> Density[types.mul]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(dft.mul(self, other))
+        return Density(types.mul(self, other))
     
-    def __rmul__(self, other) -> Density[dft.mul]:
+    def __rmul__(self, other) -> Density[types.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other) -> Density[dft.mul]:
+    def __truediv__(self, other) -> Density[types.mul]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(dft.mul(self, dft.invert(other)))
+        return Density(types.mul(self, types.invert(other)))
     
-    def __rtruediv__(self, other) -> Density[dft.mul]:
+    def __rtruediv__(self, other) -> Density[types.mul]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(dft.mul(other, dft.invert(self)))
+        return Density(types.mul(other, types.invert(self)))
     
     @overload
-    def __pow__(self, other: Literal[2]) -> Density[dft.square]: ...
+    def __pow__(self, other: Literal[2]) -> Density[types.square]: ...
     @overload
-    def __pow__(self, other: Literal[3]) -> Density[dft.cube]: ...
+    def __pow__(self, other: Literal[3]) -> Density[types.cube]: ...
     @overload
-    def __pow__(self, other: int) -> Density[dft.mul]: ...
+    def __pow__(self, other: int) -> Density[types.mul]: ...
     def __pow__(self, other):
         wrapped = self.AST
         if not isinstance(other, int):
             raise ValueError("Can't raise to non-integer powers")
         if other == 0:
-            return Density(dft.constant(1))
+            return Density(types.constant(1))
         elif other == 1:
             return self
         elif other == 2:
-            return Density(dft.square(wrapped))
+            return Density(types.square(wrapped))
         elif other == 3:
-            return Density(dft.cube(wrapped))
+            return Density(types.cube(wrapped))
         elif other > 3:
-            s = Density(dft.mul(wrapped, wrapped))
+            s = Density(types.mul(wrapped, wrapped))
             for i in range(other - 2):
-                s = Density(dft.mul(s.AST, wrapped))
+                s = Density(types.mul(s.AST, wrapped))
             return s
 
     def __and__(self, other):
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(dft.max(self, other))
+        return Density(types.max(self, other))
     
     def __or__(self, other):
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(dft.min(self, other))
+        return Density(types.min(self, other))
     
-    def __abs__(self) -> "Density[dft.abs]":
-        return Density(dft.abs(self.AST))
+    def __abs__(self) -> "Density[types.abs]":
+        return Density(types.abs(self.AST))
     
-    def __neg__(self) -> Density[dft.mul]:
-        return Density(dft.mul(self.AST, constant(-1.0)))
+    def __neg__(self) -> Density[types.mul]:
+        return Density(types.mul(self.AST, constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self

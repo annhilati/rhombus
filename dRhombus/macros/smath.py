@@ -1,5 +1,5 @@
 from Rhombus.language.density import Density, DensityDescriptor, MacroWizard
-from Rhombus.language import dft, functions as f
+from Rhombus.language import functions as f, types
 from Rhombus.macros import math as m, _spline as s
 from math import pi, sqrt
 import math as _math
@@ -8,7 +8,7 @@ __all__ = ["cos", "PDF", "sin", "smoothstep"]
 
 
 @MacroWizard
-def cos(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) -> Density[dft.spline]:
+def cos(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) -> Density[types.spline]:
     """Evaluates the cosine value of the input.
 
     Parameters:
@@ -18,7 +18,7 @@ def cos(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) ->
     return f.spline(argument, s.function_spline_points(_math.cos, xRange, points))
 
 @MacroWizard
-def logistic(argument: DensityDescriptor, capacity: float = 1, growth_rate: float = 4, center: float = 0, xRange: tuple[float, float] = (-1, 1)) -> Density[dft.spline]:
+def logistic(argument: DensityDescriptor, capacity: float = 1, growth_rate: float = 4, center: float = 0, xRange: tuple[float, float] = (-1, 1)) -> Density[types.spline]:
     """Evaluates the value of the input on a logistic function.
 
     Parameters:
@@ -34,7 +34,7 @@ def logistic(argument: DensityDescriptor, capacity: float = 1, growth_rate: floa
     return f.spline(argument, s.function_spline_points(func, xRange))
 
 @MacroWizard
-def PDF(argument: DensityDescriptor, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[dft.spline]:
+def PDF(argument: DensityDescriptor, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[types.spline]:
     """Evaluates the value of the input on a probability density function.
 
     Parameters:
@@ -48,7 +48,7 @@ def PDF(argument: DensityDescriptor, mean: float = 0, standard_deviation: float 
     return f.spline(argument, s.function_spline_points(pdf, (mean - 3.5*standard_deviation, mean + 3.5*standard_deviation), 13))
 
 @MacroWizard
-def sin(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) -> Density[dft.spline]:
+def sin(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) -> Density[types.spline]:
     """Evaluates the sine value of the input.
 
     Parameters:
@@ -58,7 +58,7 @@ def sin(argument: DensityDescriptor, xRange: tuple[float, float] = (-pi, pi)) ->
     return f.spline(argument, s.function_spline_points(_math.sin, xRange, points))
 
 @MacroWizard
-def smoothstep(argument: DensityDescriptor, xRange: tuple[float, float] = (-1, 1), yRange: tuple[float, float] = (-1, 1)) -> Density[dft.spline]:
+def smoothstep(argument: DensityDescriptor, xRange: tuple[float, float] = (-1, 1), yRange: tuple[float, float] = (-1, 1)) -> Density[types.spline]:
     """Evaluates a smoothstep transition of the input.
 
     The smoothstep curve rises smoothly from `yRange[0]` to `yRange[1]` while the

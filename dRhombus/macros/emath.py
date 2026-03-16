@@ -1,13 +1,13 @@
 from typing import Callable
 from Rhombus.language.density import MacroWizard, DensityDescriptor, Density
-from Rhombus.language import dft, f
+from Rhombus.language import f, types
 from Rhombus.macros.math import pi
 
 __all__ = []
 
 
 @MacroWizard
-def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[dft.mul]:
+def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.mul]:
     """Returns the square root of the input.<br>
     ❗`sqrt(x)` is nonesense, if `x < 0`
 
@@ -33,7 +33,7 @@ def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Dens
     return x
 
 @MacroWizard
-def exp(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
+def exp(argument: DensityDescriptor, terms: int = 4) -> Density[types.add]:
     """Returns the exponential function value of the input, so `e` exponentiated to the input.<br>
 
     ⚙️ This implementation uses the [Taylor series of the exponential function](https://en.wikipedia.org/wiki/Taylor_series#Exponential_function).
@@ -48,7 +48,7 @@ def exp(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
     return result
 
 @MacroWizard
-def ln(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
+def ln(argument: DensityDescriptor, terms: int = 4) -> Density[types.add]:
     """Returns the natual logarithm value of the input.<br>
 
     ⚙️ This implementation uses the [Taylor series of the natural logarithm](https://en.wikipedia.org/wiki/Taylor_series#Natural_logarithm).
@@ -66,7 +66,7 @@ def ln(argument: DensityDescriptor, terms: int = 4) -> Density[dft.add]:
 #======// Trigonometry //========================================================================//
 
 @MacroWizard
-def sin(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def sin(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the sine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
@@ -84,7 +84,7 @@ def sin(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
     return result
 
 @MacroWizard
-def cos(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def cos(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the cosine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of cosine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
@@ -102,7 +102,7 @@ def cos(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
     return result
 
 @MacroWizard
-def tan(argument: DensityDescriptor, terms: int = 3) -> Density[dft.mul]:
+def tan(argument: DensityDescriptor, terms: int = 3) -> Density[types.mul]:
     """Returns the tangent value of the input in radians.<br>
     ❗`tan((2n - 1) * x) = NaN` where `x` is near π/2.
 
@@ -113,7 +113,7 @@ def tan(argument: DensityDescriptor, terms: int = 3) -> Density[dft.mul]:
     return sin(argument, terms) / cos(argument, terms)
 
 @MacroWizard
-def asin(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def asin(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the arc sine value of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
 
@@ -130,7 +130,7 @@ def asin(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
     return result
 
 @MacroWizard
-def acos(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def acos(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the arc cosine value of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
 
@@ -139,7 +139,7 @@ def acos(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
     return (pi / 2) - asin(argument, terms)
 
 @MacroWizard
-def atan(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def atan(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the arc tangent value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of arc tangent](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
@@ -154,7 +154,7 @@ def atan(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
     return result
 
 @MacroWizard
-def sinh(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def sinh(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of hyperbolic sine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
@@ -171,7 +171,7 @@ def sinh(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
     return result
 
 @MacroWizard
-def cosh(argument: DensityDescriptor, terms: int = 3) -> Density[dft.add]:
+def cosh(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of hyperbolic cosine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>

@@ -1,4 +1,4 @@
-from Rhombus.language import DensityDescriptor, Density, dft
+from Rhombus.language import DensityDescriptor, Density, types
 from Rhombus.language.density import MacroWizard, BuiltinWizard
 
 def test_MacroWizard():
@@ -7,5 +7,5 @@ def test_MacroWizard():
     def macro(x: DensityDescriptor) -> Density:
         return x
     
-    assert macro(0) == Density(dft.constant(0.0))
-    assert macro("a:reference") == Density(dft.Reference("a:reference"))
+    assert macro(0) == Density(types.constant(0.0))
+    assert macro("a:reference") == Density(types.Reference("a:reference"))
