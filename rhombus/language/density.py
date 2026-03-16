@@ -1,15 +1,24 @@
+"""
+In Rhombus, the abstract syntax trees of composed density functions are
+wrapped in instances of the `Density` class, which is defined here.
+
+For more information, see the `.Density` class.
+"""
+
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Self, Callable, TypeAliasType, Union, Literal, overload, get_args, get_origin
 from types import UnionType
+import inspect, functools
+import beet
+import beet.contrib.worldgen as beet_worldgen
+
 from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, Decorator, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
 from rhombus.language import types as types
-import beet, beet.contrib.worldgen as beet_worldgen
-import inspect, functools
 
 __all__ = ["Density", "DensityDescriptor", "ref"]
 
@@ -120,11 +129,12 @@ def BuiltinWizard[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
 class Density[Function: DensityFunction = DensityFunction]:
     """Class representing a density calculation.
     
-    Don't use the constructor of this class. To define a new density instead use:<br>
-    - Methods from `rhombus.language.builtins` or other methods that return a `Density` for calculations
-    - `.configured()` if a value is needed that can be easily altered in the compiled datapack later
-    - `.separated()` if a density function has to be compiled to a separate file, but it is not important what this file is
-    - `.referenced()` to reference a density function that is provided externally, like by another datapack
+    For Rhombus language users, the constructor of this class is not needed. To define a new density instead use:
+    - Methods from `rhombus.language.builtins` or other methods that return a `Density` for calculations.
+    - `.constant()`
+    - `.configured()` if a value is needed that can be easily altered in the compiled datapack later.
+    - `.separated()` if a density function has to be compiled to a separate file, but it is not important what this file is.
+    - `.referenced()` to reference a density function that is provided externally, like by another datapack.
     """
 
     AST: Function
@@ -140,6 +150,11 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     #======// Factories //=======================================================================//
 
+    @classmethod
+    def constant(cls, value: DensityDescriptor) -> Density:
+        """Creates a Density constant to a float value or another descriptive value."""
+        return resolve_DensityDescriptor(value)
+    
     @classmethod
     def configured(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
         """Creates a Density that will be casted into a specific file when compiling."""
@@ -159,10 +174,10 @@ class Density[Function: DensityFunction = DensityFunction]:
         )
     
     @classmethod
-    def referenced(identifier: str) -> Density[Reference]:
+    def referenced(cls, identifier: str) -> Density[Reference]:
         """Creates a Density refering to an externally provided density function."""
-        return Density(Reference(identifier))
-
+        return cls(Reference(identifier))
+    
 
     #======// Toolchain //=======================================================================//
 

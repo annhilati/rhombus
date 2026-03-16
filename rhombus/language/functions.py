@@ -29,10 +29,10 @@ __all__ = [
     "y_clamped_gradient"
 ]
 
+from typing import Literal
 from rhombus.language.density import Density, DensityDescriptor, BuiltinWizard, resolve_DensityDescriptor, ref
 from rhombus.language import types as types
 from rhombus.language.noise import Noise
-from typing import Literal
 
 
 #======// Builtin Functions //===================================================================//

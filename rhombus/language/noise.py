@@ -1,8 +1,14 @@
-from __future__ import annotations
+"""
+For more information on the use and parameters, see `.Noise`.
+"""
+
 from dataclasses import dataclass
 from typing import ClassVar
 from beet.contrib.worldgen import WorldgenNoise
 from rhombus.core.datapack_resource import DatapackResource
+
+__all__ = ["Noise"]
+
 
 @dataclass()
 class Noise(DatapackResource):

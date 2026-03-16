@@ -1,9 +1,9 @@
 from rhombus.language.density import Density
-from . import dft
+from . import types
 
 
-def lonely_island() -> Density[dft.lonely_island]:
-    return Density(dft.lonely_island())
+def lonely_island() -> Density[types.lonely_island]:
+    return Density(types.lonely_island())
 
-def floating_islands() -> Density[dft.floating_islands]:
-    return Density(dft.floating_islands())
+def floating_islands() -> Density[types.floating_islands]:
+    return Density(types.floating_islands())

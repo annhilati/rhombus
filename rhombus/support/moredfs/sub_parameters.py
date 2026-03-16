@@ -1,11 +1,15 @@
 
 from typing import Literal
-from rhombus.core.sub_parameters import SubParameters
-from rhombus.core.density_function import DensityFunction
-from rhombus.core.utils import JSONDict, annotated_fields
-from rhombus.core.codec import fEncode as uniencode, fDecode as unidecode
-from rhombus.language.density import DensityDescriptor, BuiltinWizard
 from dataclasses import dataclass
+from rhombus.core import (
+    SubParameters,
+    DensityFunction,
+    JSONDict,
+    annotated_fields,
+    fEncode,
+    fDecode
+)
+from rhombus.language.density import DensityDescriptor, BuiltinWizard
 
 @dataclass
 class RandomSampler(SubParameters):
@@ -74,7 +78,7 @@ class RandomSampler(SubParameters):
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: unidecode(value, tp)
+            parameter: fDecode(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
@@ -84,7 +88,7 @@ class RandomSampler(SubParameters):
     
     def encode(self) -> JSONDict:
         return {**{
-            parameter: uniencode(value)
+            parameter: fEncode(value)
             for parameter, value
             in self.fields.items()
             if value is not None and parameter != "Lambda"

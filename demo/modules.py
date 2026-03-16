@@ -9,7 +9,6 @@ import rhombus.language.density
 import rhombus.language.types
 import rhombus.language.functions
 import rhombus.language.noise
-import rhombus.macros._spline
 import rhombus.macros.coords
 import rhombus.macros.emath
 import rhombus.macros.math
@@ -18,3 +17,7 @@ import rhombus.support.ensity
 import rhombus.support.moredfs
 import rhombus.support.lithostiched
 import rhombus.support.tectonic
+import rhombus.splines
+import rhombus.config
+
+from matplotlib.backend_bases import * # Base classes

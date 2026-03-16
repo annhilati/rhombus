@@ -1,9 +1,9 @@
 """
-Utility module for working with Hermite splines.
+Utility module for working with cubic Hermite splines.
 
-The term "spline point" alway refers to a `tuple[float, float, float]` type object
-describing a point on a hermite spline function where the first is the x-position,
-the second is the y-value and the third is the slope at the point.
+The term "spline point" always refers to an object of type `tuple[float, float, float]`  
+that describes a point on a Hermite spline function. Here, the first value is the  
+x-position, the second is the y-value and the third is the slope at that point.
 
 [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
 """
@@ -11,6 +11,34 @@ the second is the y-value and the third is the slope at the point.
 from typing import Callable
 from matplotlib.figure import Figure
 import numpy as np, matplotlib.pyplot as plt
+
+
+def function_spline_points(f: Callable[[float], float], sample_interval: tuple[float, float], points=5, step_size=1e-8) -> list[tuple[float, float, float]]:
+    """Samples spline points based of an arbitrary function.
+
+    Ideal for functions that satisfy:
+    *   **Smoothness:** Function must be at least twice continuously differentiable in the interval.
+    *   **Limited curvature:** Very steep or diverging derivatives → many segments required.
+    *   **Monotonic or periodic:** Better approximation, fewer segments.
+
+    Parameters:
+        f (float -> float): The function to sample the spline points from.
+        sample_interval ((float, float)): The interval between to sample the function.
+        points (int): The amount of points to sample between within the sample interval.
+        step_size (float): The infinitesimal value that is used to calculate derivatives.
+    """
+
+    xs = np.linspace(sample_interval[0], sample_interval[1], points)
+    points = []
+
+    for x in xs:
+        y = f(x)
+
+        m = (f(x + step_size) - f(x - step_size)) / (2 * step_size)
+
+        points.append((float(x), y, m))
+
+    return points
 
 
 def poly_spline_points(
@@ -28,36 +56,6 @@ def poly_spline_points(
         (x0, f(x0), df(x0)),
         (x1, f(x1), df(x1))
     ]
-
-def function_spline_points(f: Callable[[float], float], sample_interval: tuple[float, float], points=5, step_size=1e-8) -> list[tuple[float, float, float]]:
-    """Samples spline points based of an arbitrary function.
-
-    Ideal for functions that satisfy:
-    *   **Smoothness:** Function must be at least twice continuously differentiable in the interval.
-    *   **Limited curvature:** Very steep or diverging derivatives → many segments required.
-    *   **Monotonic or periodic:** Better approximation, fewer segments.
-
-    Parameters:
-        f (float -> float): The function to sample the spline points from.
-        sample_interval ((float, float)): The interval between to sample the function.
-        points (int): The amount of points to sample between within the sample interval.
-        step_size (float): The infinitesimal value that is used to calculate derivatives.
-
-    Returns:
-        out (list[tuple[float, float, float]]): A list of the spline points. The tuples yield `(x, y, m)`
-    """
-
-    xs = np.linspace(sample_interval[0], sample_interval[1], points)
-    points = []
-
-    for x in xs:
-        y = f(x)
-
-        m = (f(x + step_size) - f(x - step_size)) / (2 * step_size)
-
-        points.append((float(x), y, m))
-
-    return points
 
 
 def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) -> Figure:
@@ -84,7 +82,6 @@ def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) 
         xs = []
         ys = []
 
-        # linker konstanter Bereich
         x0, y0, _ = points[0]
         x_left = np.linspace(x0 - padding, x0, resolution)
         y_left = np.full_like(x_left, y0)
@@ -92,7 +89,6 @@ def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) 
         xs.append(x_left)
         ys.append(y_left)
 
-        # spline Segmente
         for i in range(len(points) - 1):
             x0, y0, m0 = points[i]
             x1, y1, m1 = points[i + 1]
@@ -103,7 +99,6 @@ def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) 
             xs.append(x_segment)
             ys.append(y_segment)
 
-        # rechter konstanter Bereich
         xn, yn, _ = points[-1]
         x_right = np.linspace(xn, xn + padding, resolution)
         y_right = np.full_like(x_right, yn)

@@ -1,8 +1,21 @@
+"""Data models for the vanilla density function types.
+
+They are not needed for normal use of the rhombus language.
+"""
+
 from typing import ClassVar, Literal
 from dataclasses import dataclass
-from rhombus.core.density_function import MappedFunctionBase, DoubleArgumentFunctionBase, SimpleFunctionBase, MultiArgumentsFunctionBase, DensityFunction, Reference, constant
-from rhombus.core.utils import JSONDict
-from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
+from rhombus.core import (
+    DensityFunction,
+    SimpleFunctionBase,
+    MappedFunctionBase,
+    DoubleArgumentFunctionBase,
+    MultiArgumentsFunctionBase,
+    Reference,
+    constant,
+    JSONDict,
+    decode_HOLDER_HELPER_CODEC
+)
 from rhombus.language.noise import Noise
 
 __all__ = [
@@ -190,7 +203,7 @@ class spline(DensityFunction):
 
     def show(self):
         "Only for debugging.<br>Open the spline in a pyplot."
-        from rhombus.macros._spline import show_spline
+        from rhombus.splines import show_spline
         if any((not isinstance(p[1], constant) for p in self.points)):
             raise Exception # TODO
         show_spline([(p[0], p[1].argument, p[2]) for p in self.points])

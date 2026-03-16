@@ -2,4 +2,4 @@
 
 from .functions import *
 from .fast_noise_config import FastNoiseConfig
-from .dft import Selection, InclusiveRange
+from .types import Selection, InclusiveRange

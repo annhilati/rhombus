@@ -1,19 +1,19 @@
 from rhombus.language.noise import Noise
 from rhombus.language.density import Density, DensityDescriptor, BuiltinWizard
-from rhombus.support.tectonic import dft
+from rhombus.support.tectonic import types
 
 
 @BuiltinWizard
-def invert(argument: DensityDescriptor) -> Density[dft.invert]:
+def invert(argument: DensityDescriptor) -> Density[types.invert]:
     """Calculates `1/x`.
     """
-    return Density(dft.invert(argument))
+    return Density(types.invert(argument))
 
-def config_constant(key: str) -> Density[dft.config_constant]:
+def config_constant(key: str) -> Density[types.config_constant]:
     "References a constant from the Tectonic configuration."
-    return Density(dft.config_constant(key))
+    return Density(types.config_constant(key))
 
 @BuiltinWizard
-def config_noise(noise: Noise, key: str, shift_x: DensityDescriptor, shift_z: DensityDescriptor) -> Density[dft.config_noise]:
+def config_noise(noise: Noise, key: str, shift_x: DensityDescriptor, shift_z: DensityDescriptor) -> Density[types.config_noise]:
     ""
-    return Density(dft.config_noise(noise, key, shift_x, shift_z))
+    return Density(types.config_noise(noise, key, shift_x, shift_z))

@@ -1,3 +1,12 @@
+"""
+`emath` stands for '*expensive* maths'. This is because the macros in this
+module use approximation methods that have high performance costs.
+Either they require a large number of calculations, or they multiply
+the abstract syntax tree of the input.
+
+These methods typically include infinite series, such as Taylor series, or iterative methods, such as Newton's method.
+"""
+
 from typing import Callable
 from rhombus.language.density import MacroWizard, DensityDescriptor, Density
 from rhombus.language import f, types

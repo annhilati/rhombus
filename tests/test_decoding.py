@@ -1,6 +1,6 @@
 from rhombus import Density, Noise
 from rhombus.language import types
-from rhombus.support.moredfs import dft as mdft, RandomSampler
+from rhombus.support.moredfs import RandomSampler, types as mdft
 
 def test_Density_from_dict():
     

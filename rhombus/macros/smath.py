@@ -1,6 +1,7 @@
+from rhombus import splines as s
 from rhombus.language.density import Density, DensityDescriptor, MacroWizard
 from rhombus.language import functions as f, types
-from rhombus.macros import math as m, _spline as s
+from rhombus.macros import math as m
 from math import pi, sqrt
 import math as _math
 

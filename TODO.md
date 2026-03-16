@@ -12,6 +12,7 @@
 - How to name arguments in builtins vs macros? Technical or scientific?
 - Supply Spline Points as SubParam?
   - Maybe an additional factory
+- resolve DensityDescriptor on Density instances?
 
 
 - [x] §1 Decode Datapack Resources dynamically from `DensityFunction` subclasses

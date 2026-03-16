@@ -1,5 +1,3 @@
-"""It is complicated ..."""
-
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, Callable
 from rhombus.core.utils import JSONDict, annotated_fields, fields

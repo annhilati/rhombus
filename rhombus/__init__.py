@@ -7,4 +7,7 @@
 
 from rhombus.language import *
 from rhombus.macros import *
-from rhombus import config
+from rhombus import (
+    config,
+    splines
+)
