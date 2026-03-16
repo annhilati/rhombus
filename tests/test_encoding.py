@@ -1,4 +1,4 @@
-from Rhombus import noise, Noise
+from rhombus import noise, Noise
 
 n = Noise(-9, [1, 2, 3])
 

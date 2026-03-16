@@ -1,7 +1,7 @@
-from Rhombus import *
-from Rhombus.core import *
-from Rhombus.support import *
-from Rhombus.macros import _spline
+from rhombus import *
+from rhombus.core import *
+from rhombus.support import *
+from rhombus.macros import _spline
 
 #======// Language //============================================================================//
 

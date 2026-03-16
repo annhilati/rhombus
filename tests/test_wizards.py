@@ -1,5 +1,5 @@
-from Rhombus.language import DensityDescriptor, Density, types
-from Rhombus.language.density import MacroWizard, BuiltinWizard
+from rhombus.language import DensityDescriptor, Density, types
+from rhombus.language.density import MacroWizard, BuiltinWizard
 
 def test_MacroWizard():
 

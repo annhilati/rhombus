@@ -1,4 +1,4 @@
-from Rhombus.support.moredfs import RandomSampler
+from rhombus.support.moredfs import RandomSampler
 
 m = RandomSampler.Poisson(1.0)
 

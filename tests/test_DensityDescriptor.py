@@ -1,5 +1,5 @@
-from Rhombus.language.density import Density, resolve_DensityDescriptor
-from Rhombus.language import types
+from rhombus.language.density import Density, resolve_DensityDescriptor
+from rhombus.language import types
 
 def test_resolve_DensityDescriptor():
     
