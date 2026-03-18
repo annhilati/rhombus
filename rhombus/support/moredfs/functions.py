@@ -1,9 +1,9 @@
-from rhombus.language.density import Density, DensityDescriptor, BuiltinWizard
+from rhombus.language.density import Density, DensityDescriptor, builtinmacro
 from rhombus.support.moredfs import types
 
 __all__ = []
 
-@BuiltinWizard
+@builtinmacro
 def acos(argument: DensityDescriptor) -> Density[types.acos]:
     """Returns the arc cosine of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
@@ -14,7 +14,7 @@ def acos(argument: DensityDescriptor) -> Density[types.acos]:
     """
     return Density(types.acos(argument))
 
-@BuiltinWizard
+@builtinmacro
 def asin(argument: DensityDescriptor) -> Density[types.asin]:
     """Returns the arc sine of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
@@ -25,7 +25,7 @@ def asin(argument: DensityDescriptor) -> Density[types.asin]:
     """
     return Density(types.asin(argument))
 
-@BuiltinWizard
+@builtinmacro
 def atan(argument: DensityDescriptor) -> Density[types.atan]:
     """Returns the arc tangent of the input in radians.<br>
 

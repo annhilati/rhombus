@@ -19,6 +19,9 @@ Most of the Rhombus language runs on a few base classes and general function, wh
     General tooling and utility functions for typing, handling context,
     working with dataclasses and more.
 
+`.compiler`
+    Functions for compiling density abstract syntax trees into files.
+
 For informationen on how to implement classes to support features from mods, see the [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/).
 """
 

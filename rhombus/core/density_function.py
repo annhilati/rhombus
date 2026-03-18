@@ -48,10 +48,12 @@ class SimpleFunctionBase(DensityFunction):
 class MultiArgumentsFunctionBase(DensityFunction):
     """Base class for density function types with any number of arguments of primitive types.
 
-    When inheriting from this class, add the `@dataclass` decorator to the new class<br>
-    and add fields with the same keys as required in the density function JSON definition.<br>
+    When inheriting from this class, add the `@dataclass` decorator to the new class  
+    and add fields with the same keys as required in the density function JSON definition.
 
-    If types are needed in the fields that are not of type `DensityFunction`, of a subclass of `DatapackResource` or JSON-compatible, inherit from `DensityFunction` instead and implement the methods manually.
+    If types are needed in the fields that are not of type `DensityFunction`,  
+    of a subclass of `DatapackResource` or JSON-compatible, inherit from  
+    `DensityFunction` instead and implement the methods manually.  
     """
 
     @classmethod

@@ -1,5 +1,5 @@
 from rhombus import config as cfg
-from rhombus.language.density import Density, DensityDescriptor, MacroWizard
+from rhombus.language.density import Density, DensityDescriptor, macro
 from rhombus.language import functions as f, types as types
 
 pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
@@ -8,18 +8,18 @@ e  = 2.7182818284590452 #35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
 
 
-@MacroWizard
+@macro
 def linsqrt01(argument: DensityDescriptor) -> Density[types.add]:
     return 0.41731 + 0.59016*argument
 
-@MacroWizard
+@macro
 def ratsqrt01(argument: DensityDescriptor) -> Density[types.mul]:
     return argument / (0.41731+0.59016*argument)
 
 
 #======// Number Theory //=======================================================================//
 
-@MacroWizard
+@macro
 def heaviside(argument: DensityDescriptor) -> Density[types.range_choice]:
     """Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive.<br>
 
@@ -41,12 +41,12 @@ def heaviside(argument: DensityDescriptor) -> Density[types.range_choice]:
             when_out_of_range=1.0
         ))
 
-@MacroWizard
+@macro
 def ramp(argument: DensityDescriptor) -> Density[types.max]:
     """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
     return f.max(argument, 0)
 
-@MacroWizard
+@macro
 def sgn(argument: DensityDescriptor) -> Density[types.range_choice]:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`<br>
 
@@ -68,12 +68,12 @@ def sgn(argument: DensityDescriptor) -> Density[types.range_choice]:
 
 #======// Arithmetic //==========================================================================//
 
-@MacroWizard
+@macro
 def monus(argument1: DensityDescriptor, argument2: DensityDescriptor):
     """Returns `argument1 - argument2`, but when that's negative, returns `0.0` instead."""
     return f.max(argument1 - argument2, 0.0)
 
-@MacroWizard
+@macro
 def sum(*arguments: DensityDescriptor) -> Density[types.add]:
     "Returns the sum of any number of arguments."
     if len(arguments) == 1:
@@ -87,7 +87,7 @@ def sum(*arguments: DensityDescriptor) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def prod(*arguments: DensityDescriptor) -> Density[types.mul]:
     "Returns the product of any number of arguments."
     if len(arguments) == 1:

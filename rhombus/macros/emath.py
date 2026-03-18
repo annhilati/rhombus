@@ -8,14 +8,14 @@ These methods typically include infinite series, such as Taylor series, or itera
 """
 
 from typing import Callable
-from rhombus.language.density import MacroWizard, DensityDescriptor, Density
+from rhombus.language.density import macro, DensityDescriptor, Density
 from rhombus.language import f, types
 from rhombus.macros.math import pi
 
 __all__ = []
 
 
-@MacroWizard
+@macro
 def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.mul]:
     """Returns the square root of the input.<br>
     ❗`sqrt(x)` is nonesense, if `x < 0`
@@ -41,7 +41,7 @@ def sqrt(argument: DensityDescriptor, iterations: int = 3, guess: Callable[[Dens
 
     return x
 
-@MacroWizard
+@macro
 def exp(argument: DensityDescriptor, terms: int = 4) -> Density[types.add]:
     """Returns the exponential function value of the input, so `e` exponentiated to the input.<br>
 
@@ -56,7 +56,7 @@ def exp(argument: DensityDescriptor, terms: int = 4) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def ln(argument: DensityDescriptor, terms: int = 4) -> Density[types.add]:
     """Returns the natual logarithm value of the input.<br>
 
@@ -74,7 +74,7 @@ def ln(argument: DensityDescriptor, terms: int = 4) -> Density[types.add]:
 
 #======// Trigonometry //========================================================================//
 
-@MacroWizard
+@macro
 def sin(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the sine value of the input in radians.<br>
 
@@ -92,7 +92,7 @@ def sin(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def cos(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the cosine value of the input in radians.<br>
 
@@ -110,7 +110,7 @@ def cos(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def tan(argument: DensityDescriptor, terms: int = 3) -> Density[types.mul]:
     """Returns the tangent value of the input in radians.<br>
     ❗`tan((2n - 1) * x) = NaN` where `x` is near π/2.
@@ -121,7 +121,7 @@ def tan(argument: DensityDescriptor, terms: int = 3) -> Density[types.mul]:
 
     return sin(argument, terms) / cos(argument, terms)
 
-@MacroWizard
+@macro
 def asin(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the arc sine value of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
@@ -138,7 +138,7 @@ def asin(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def acos(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the arc cosine value of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
@@ -147,7 +147,7 @@ def acos(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """
     return (pi / 2) - asin(argument, terms)
 
-@MacroWizard
+@macro
 def atan(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the arc tangent value of the input in radians.<br>
 
@@ -162,7 +162,7 @@ def atan(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def sinh(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
 
@@ -179,7 +179,7 @@ def sinh(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
 
     return result
 
-@MacroWizard
+@macro
 def cosh(argument: DensityDescriptor, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
 

@@ -1,5 +1,5 @@
 [project]
-name = "Rhombus"
+name = "rhombus"
 version = "0.0.1"
 description = ""
 readme = "README.md"
@@ -20,7 +20,7 @@ dependencies = [
 # "Changelog" = ""
 "Repository" = "https://github.com/annhilati/rhombus"
 "Bug Tracker" = "https://github.com/annhilati/rhombus/issues"
-"Download" = "https://pypi.org/project/rhombus/"
+# "Download" = "https://pypi.org/project/rhombus/"
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -28,4 +28,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["Rhombus*"]
+include = ["rhombus*"]
