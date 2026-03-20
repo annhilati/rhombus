@@ -1,6 +1,6 @@
 """Data models for the vanilla density function types.
 
-They are not needed for normal use of the rhombus language.
+They are not needed for normal use of the Rhombus language.
 """
 
 from typing import ClassVar, Literal

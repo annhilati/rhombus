@@ -16,7 +16,7 @@ from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
-from rhombus.language import types as types
+from rhombus.language import types as t
 from rhombus.language.utils import DensityDescriptor, resolve_DensityDescriptor
 
 __all__ = ["Density", "ref"]
@@ -29,11 +29,11 @@ class Density[Function: DensityFunction = DensityFunction]:
     """Class representing a density calculation.
     
     For Rhombus language users, the constructor of this class is not needed. To define a new density instead use:
-    - Methods from `rhombus.language.builtins` or other methods that return a `Density` for calculations.
+    - Methods from `rhombus.language.functions` or other methods that return a `Density` for calculations.
     - `.constant()`
     - `.configured()` if a value is needed that can be easily altered in the compiled datapack later.
     - `.separated()` if a density function has to be compiled to a separate file, but it is not important what this file is.
-    - `.referenced()` to reference a density function that is provided externally, like by another datapack.
+    - `.reference()` to reference a density function that is provided externally, like by another datapack.
     """
 
     AST: Function
@@ -60,7 +60,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         name = "minecraft:" + name if not ":" in name else name
         default = resolve_DensityDescriptor(default).AST # somehow neccesarry
         if isinstance(default, Reference):
-            default = types.add(default, 0)
+            default = t.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
@@ -73,7 +73,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         )
     
     @classmethod
-    def referenced(cls, identifier: str) -> Density[Reference]:
+    def reference(cls, identifier: str) -> Density[Reference]:
         """Creates a Density refering to an externally provided density function."""
         return cls(Reference(identifier))
     
@@ -83,11 +83,11 @@ class Density[Function: DensityFunction = DensityFunction]:
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
-        "⚠️ Currently experimental.<br>Creates a `Density` object from a density function in a Beet datapack."
+        "Creates a `Density` object from a density function in a Beet datapack."
 
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
 
-        file = dp[beet_worldgen.WorldgenDensityFunction].get(identifier, default=None)
+        file = dp[beet_worldgen.WorldgenDensityFunction].get(identifier)
         if file is None:
             return None
 
@@ -107,16 +107,8 @@ class Density[Function: DensityFunction = DensityFunction]:
         return compile(density=self.AST, identifier=with_identifier)
 
     def inject(self, dp: beet.DataPack, with_identifier: str) -> None:
-        """Implements the Density and all additionally needed files in a Beet datapack.
+        """Implements the Density and all additionally required files in a datapack.
         
-        Parameters
-        -------
-        dp : DataPack
-            The datapack the density function is to be implemented in.
-        with_name : str
-            A resource identifier under which the density function will be available.
-        log : bool
-            Whether to print the progress of the injection to the console.
         """
 
         files = self.compile(with_identifier)
@@ -141,93 +133,93 @@ class Density[Function: DensityFunction = DensityFunction]:
     
     #======// Arithmetic Magic //================================================================//
     
-    def __add__(self, other) -> Density[types.add]:
+    def __add__(self, other) -> Density[t.add]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(types.add(self, other))
+        return Density(t.add(self, other))
     
-    def __radd__(self, other) -> Density[types.add]:
+    def __radd__(self, other) -> Density[t.add]:
         return self.__add__(other)
     
-    def __sub__(self, other) -> Density[types.add]:
+    def __sub__(self, other) -> Density[t.add]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
         return Density(
-            types.add(
+            t.add(
                 argument1=self,
-                argument2=types.mul(
+                argument2=t.mul(
                     argument1=other,
                     argument2=constant(-1.0)
             )))
     
-    def __rsub__(self, other) -> Density[types.add]:
+    def __rsub__(self, other) -> Density[t.add]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
         return Density(
-            types.add(
+            t.add(
                 argument1=other,
-                argument2=types.mul(
+                argument2=t.mul(
                     argument1=self,
                     argument2=constant(-1.0)
             )))
     
-    def __mul__(self, other) -> Density[types.mul]:
+    def __mul__(self, other) -> Density[t.mul]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(types.mul(self, other))
+        return Density(t.mul(self, other))
     
-    def __rmul__(self, other) -> Density[types.mul]:
+    def __rmul__(self, other) -> Density[t.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other) -> Density[types.mul]:
+    def __truediv__(self, other) -> Density[t.mul]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(types.mul(self, types.invert(other)))
+        return Density(t.mul(self, t.invert(other)))
     
-    def __rtruediv__(self, other) -> Density[types.mul]:
+    def __rtruediv__(self, other) -> Density[t.mul]:
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(types.mul(other, types.invert(self)))
+        return Density(t.mul(other, t.invert(self)))
     
     @overload
-    def __pow__(self, other: Literal[2]) -> Density[types.square]: ...
+    def __pow__(self, other: Literal[2]) -> Density[t.square]: ...
     @overload
-    def __pow__(self, other: Literal[3]) -> Density[types.cube]: ...
+    def __pow__(self, other: Literal[3]) -> Density[t.cube]: ...
     @overload
-    def __pow__(self, other: int) -> Density[types.mul]: ...
+    def __pow__(self, other: int) -> Density[t.mul]: ...
     def __pow__(self, other):
         wrapped = self.AST
         if not isinstance(other, int):
             raise ValueError("Can't raise to non-integer powers")
         if other == 0:
-            return Density(types.constant(1))
+            return Density(t.constant(1))
         elif other == 1:
             return self
         elif other == 2:
-            return Density(types.square(wrapped))
+            return Density(t.square(wrapped))
         elif other == 3:
-            return Density(types.cube(wrapped))
+            return Density(t.cube(wrapped))
         elif other > 3:
-            s = Density(types.mul(wrapped, wrapped))
+            s = Density(t.mul(wrapped, wrapped))
             for i in range(other - 2):
-                s = Density(types.mul(s.AST, wrapped))
+                s = Density(t.mul(s.AST, wrapped))
             return s
 
     def __and__(self, other):
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(types.max(self, other))
+        return Density(t.max(self, other))
     
     def __or__(self, other):
         other = resolve_DensityDescriptor(other).AST
         self = self.AST
-        return Density(types.min(self, other))
+        return Density(t.min(self, other))
     
-    def __abs__(self) -> "Density[types.abs]":
-        return Density(types.abs(self.AST))
+    def __abs__(self) -> "Density[t.abs]":
+        return Density(t.abs(self.AST))
     
-    def __neg__(self) -> Density[types.mul]:
-        return Density(types.mul(self.AST, constant(-1.0)))
+    def __neg__(self) -> Density[t.mul]:
+        return Density(t.mul(self.AST, constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self
@@ -255,4 +247,4 @@ class Density[Function: DensityFunction = DensityFunction]:
 
 def ref(identifier: str, /) -> Density[Reference]:
     "Creates a Density that is a reference to an externally provided density function."
-    return Density.referenced(identifier)
+    return Density.reference(identifier)
