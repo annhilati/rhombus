@@ -7,7 +7,7 @@ For more information, see the `.Density` class.
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Self, Literal, overload
+from typing import Self, Literal, overload, Union
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
@@ -17,10 +17,56 @@ from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfuncti
 from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
 from rhombus.language import types as t
-from rhombus.language.utils import DensityDescriptor, resolve_DensityDescriptor
 
-__all__ = ["Density", "ref"]
+__all__ = ["Density", "ref", "DensityDescriptor", "resolve_DensityDescriptor"]
 
+
+type DensityDescriptor = Union[Density, DensityFunction, str, float]
+"TypeAliasType for all types that can be interpreted by `resolve_DensityDescriptor()`."
+
+def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
+    """Interprets a QoL argument input and returns a Density object.
+    Applies logic like splitting large literal constants into calculations
+    before constructing constant AST nodes.
+    """
+
+    limit = config.constant_number_limit
+
+    if isinstance(arg, (int, float)):
+        v = float(arg)
+
+        if abs(v) <= limit:
+            return Density(constant(v))
+
+        sign = -1.0 if v < 0 else 1.0
+        v = abs(v)
+
+        factors: list[float] = []
+        while v > limit:
+            factors.append(float(limit))
+            v /= limit
+
+        factors.append(v * sign)
+
+        it = iter(constant(f) for f in factors)
+        result = t.mul(next(it), next(it))
+        for x in it:
+            result = t.mul(result, x)
+
+        return Density(result)
+
+    if isinstance(arg, Density):
+        return arg
+
+    if isinstance(arg, DensityFunction):
+        return Density(arg)
+
+    if isinstance(arg, str):
+        if ":" not in arg:
+            arg = "minecraft:" + arg
+        return Density(Reference(arg))
+
+    raise ValueError(f"Cannot resolve object of type '{type(arg)}' to a density function")
 
 #======// Density Type //========================================================================//
 
@@ -130,7 +176,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         files = self.compile(with_name)
         show_in_temp(files)
         
-    
+
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[t.add]:

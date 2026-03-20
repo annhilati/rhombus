@@ -108,6 +108,9 @@ class Reference(DensityFunction):
     def encode(self) -> str:
         return self.reference
     
+    def __repr__(self) -> str:
+        return self.reference
+    
 @dataclass
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
@@ -118,4 +121,7 @@ class constant(DensityFunction):
         return cls(data["argument"] if isinstance(data, dict) else data)
     
     def encode(self) -> float:
+        return self.argument
+
+    def __repr__(self) -> str:
         return self.argument

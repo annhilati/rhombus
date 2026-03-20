@@ -1,6 +1,6 @@
 from rhombus import splines as s
-from rhombus.language.density import Density, DensityDescriptor, macro
-from rhombus.language import functions as f, types
+from rhombus.language.density import Density, DensityDescriptor
+from rhombus.language import functions as f, types, macro
 from rhombus.macros import math as m
 from math import pi, sqrt
 import math as _math

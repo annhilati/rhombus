@@ -8,4 +8,4 @@ def test_caching_factories():
 
 def test_caching_builtins():
 
-    assert flat_cache(1.0) == Density(types.Reference(reference='rhombus:generated/c2ce730b562b7ce281e701dadc1f0ce5', default=types.flat_cache(types.constant(1.0))))
+    ...

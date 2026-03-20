@@ -1,5 +1,5 @@
 from typing import Literal
-from rhombus.language.density import Density, builtinmacro, DensityDescriptor
+from rhombus.language import Density, builtinmacro, DensityDescriptor
 from rhombus.support.lithostiched.fast_noise_config import FastNoiseConfig
 from rhombus.support.lithostiched.types import Selection
 from rhombus.support.lithostiched import types

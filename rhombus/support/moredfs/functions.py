@@ -1,4 +1,4 @@
-from rhombus.language.density import Density, DensityDescriptor, builtinmacro
+from rhombus.language import Density, DensityDescriptor, builtinmacro
 from rhombus.support.moredfs import types
 
 __all__ = []

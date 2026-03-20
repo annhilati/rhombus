@@ -1,5 +1,4 @@
-from rhombus.language.noise import Noise
-from rhombus.language.density import Density, DensityDescriptor, builtinmacro
+from rhombus.language import Noise, Density, DensityDescriptor, builtinmacro
 from rhombus.support.tectonic import types
 
 

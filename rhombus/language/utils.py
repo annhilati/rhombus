@@ -1,60 +1,13 @@
 from typing import Union, TypeAliasType, Callable, get_args, get_origin
 from types import UnionType
-from rhombus import config
-from rhombus.language import Density, types
-from rhombus.core import DensityFunction, constant, Reference
 from rhombus.core.utils import Decorator
 import inspect, functools
 
-type DensityDescriptor = Union[Density, DensityFunction, str, float]
-"TypeAliasType for all types that can be interpreted by `resolve_DensityDescriptor()`."
 
-def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
-    """Interprets a QoL argument input and returns a Density object.
-    Applies logic like splitting large literal constants into calculations
-    before constructing constant AST nodes.
-    """
-
-    limit = config.constant_number_limit
-
-    if isinstance(arg, (int, float)):
-        v = float(arg)
-
-        if abs(v) <= limit:
-            return Density(constant(v))
-
-        sign = -1.0 if v < 0 else 1.0
-        v = abs(v)
-
-        factors: list[float] = []
-        while v > limit:
-            factors.append(float(limit))
-            v /= limit
-
-        factors.append(v * sign)
-
-        it = iter(constant(f) for f in factors)
-        result = types.mul(next(it), next(it))
-        for x in it:
-            result = types.mul(result, x)
-
-        return Density(result)
-
-    if isinstance(arg, Density):
-        return arg
-
-    if isinstance(arg, DensityFunction):
-        return Density(arg)
-
-    if isinstance(arg, str):
-        if ":" not in arg:
-            arg = "minecraft:" + arg
-        return Density(Reference(arg))
-
-    raise ValueError(f"Cannot resolve object of type '{type(arg)}' to a density function")
 
 
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
+    from rhombus.language import Density, DensityDescriptor, resolve_DensityDescriptor
     
     def _apply_by_annotation(annotation: type) -> bool:
         if annotation is DensityDescriptor:

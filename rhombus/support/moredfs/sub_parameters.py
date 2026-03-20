@@ -9,7 +9,7 @@ from rhombus.core import (
     fEncode,
     fDecode
 )
-from rhombus.language.density import DensityDescriptor, builtinmacro
+from rhombus.language import DensityDescriptor, builtinmacro
 
 @dataclass
 class RandomSampler(SubParameters):

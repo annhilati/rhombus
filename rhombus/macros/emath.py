@@ -8,8 +8,8 @@ These methods typically include infinite series, such as Taylor series, or itera
 """
 
 from typing import Callable
-from rhombus.language.density import macro, DensityDescriptor, Density
-from rhombus.language import f, types
+from rhombus.language.density import DensityDescriptor, Density
+from rhombus.language import f, types, macro
 from rhombus.macros.math import pi
 
 __all__ = []

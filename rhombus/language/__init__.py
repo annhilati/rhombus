@@ -24,6 +24,6 @@ They can be devided in:
 from rhombus.language.density import *
 from rhombus.language.noise import *
 from rhombus.language.functions import *
-from rhombus.language.utils import DensityDescriptor, builtinmacro, macro, resolve_DensityDescriptor
+from rhombus.language.utils import builtinmacro, macro
 from rhombus.language import functions as f
 from rhombus.language import types as t
