@@ -124,4 +124,4 @@ class constant(DensityFunction):
         return self.argument
 
     def __repr__(self) -> str:
-        return self.argument
+        return str(self.argument)
