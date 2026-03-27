@@ -1,7 +1,5 @@
 # Conditionality
 
-Conditionality class.
-
 ```py
 
 v = (
@@ -13,3 +11,12 @@ v = (
 )
 
 ```
+
+Condition -> Causality -> Density
+Condition -> Causality -> Condition+ -> Causality+ -> Density
+
+Causality
+    *(
+        Condition
+        DensityDescriptor
+    )
