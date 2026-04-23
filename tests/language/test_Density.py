@@ -1,5 +1,5 @@
 from rhombus import Density
-from rhombus.language import types, resolve_DensityDescriptor
+from rhombus.language import types, densityfunction
 
 def test_separating_factories():
 
@@ -10,12 +10,12 @@ def test_separating_factories():
 def test_resolve_DensityDescriptor():
     
     # int
-    assert resolve_DensityDescriptor(1) == Density(types.constant(1.0))
+    assert densityfunction.unify(1) == Density(types.constant(1.0))
     # float
-    assert resolve_DensityDescriptor(4.5) == Density(types.constant(4.5))
+    assert densityfunction.unify(4.5) == Density(types.constant(4.5))
     # large floats
-    assert resolve_DensityDescriptor(1234567.0) == Density(types.mul(types.constant(1000000.0), types.constant(1.234567)))
+    assert densityfunction.unify(1234567.0) == Density(types.mul(types.constant(1000000.0), types.constant(1.234567)))
     # str
-    assert resolve_DensityDescriptor("test:reference") == Density(types.Reference("test:reference"))
+    assert densityfunction.unify("test:reference") == Density(types.Reference("test:reference"))
     # DensityFunction
-    assert resolve_DensityDescriptor(types.constant(1.0)) == Density(types.constant(1.0))
+    assert densityfunction.unify(types.constant(1.0)) == Density(types.constant(1.0))

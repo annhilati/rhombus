@@ -9,7 +9,7 @@ from rhombus.core import (
     fEncode,
     fDecode
 )
-from rhombus.language import DensityDescriptor, builtinmacro
+from rhombus.language import densityfunction, builtinmacro
 
 @dataclass
 class RandomSampler(SubParameters):
@@ -148,6 +148,6 @@ class DerivativeComponent(SubParameters):
     direction: DensityFunction
 
     @builtinmacro
-    def __init__(self, step: int, direction: DensityDescriptor):
+    def __init__(self, step: int, direction: densityfunction):
         self.step = step
         self.direction = direction

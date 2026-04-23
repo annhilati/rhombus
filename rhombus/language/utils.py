@@ -1,16 +1,14 @@
 from typing import Union, TypeAliasType, Callable, get_args, get_origin
 from types import UnionType
 from rhombus.core.utils import Decorator
+from rhombus.core.dsl.DSLType import DSLMethod
 import inspect, functools
 
-
-
-
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
-    from rhombus.language import Density, DensityDescriptor, resolve_DensityDescriptor
+    from rhombus.language import Density, densityfunction
     
     def _apply_by_annotation(annotation: type) -> bool:
-        if annotation is DensityDescriptor:
+        if annotation is densityfunction:
             return True
         if get_origin(annotation) in [Union, UnionType]:
             args = get_args(annotation)
@@ -36,7 +34,7 @@ def WizardFactory(*, unwrap: bool = False) -> Decorator:
             for name in params_to_resolve:
                 if name in bound.arguments:
                     current_val = bound.arguments[name]
-                    resolved = resolve_DensityDescriptor(current_val)
+                    resolved = densityfunction.unify(current_val)
 
                     if unwrap:
                         bound.arguments[name] = resolved.AST
@@ -55,7 +53,6 @@ class macro[**P, R]:
     """Shortcut for WizardFactory(unwrap=False)"""
 
     def __init__(self, fn: Callable[P, R]):
-        from rhombus.language.utils import WizardFactory
         self._wrapped = WizardFactory(unwrap=False)(fn)
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
@@ -66,7 +63,6 @@ class builtinmacro[**P, R]:
     """Shortcut for WizardFactory(unwrap=True)"""
 
     def __init__(self, fn: Callable[P, R]):
-        from rhombus.language.utils import WizardFactory
         self._wrapped = WizardFactory(unwrap=True)(fn)
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:

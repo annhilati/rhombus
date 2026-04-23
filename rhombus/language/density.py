@@ -13,60 +13,14 @@ import beet.contrib.worldgen as beet_worldgen
 
 from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
+from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
 from rhombus.language import types as t
 
-__all__ = ["Density", "ref", "DensityDescriptor", "resolve_DensityDescriptor"]
+__all__ = ["Density", "ref", "densityfunction"]
 
-
-type DensityDescriptor = Union[Density, DensityFunction, str, float]
-"TypeAliasType for all types that can be interpreted by `resolve_DensityDescriptor()`."
-
-def resolve_DensityDescriptor(arg: DensityDescriptor) -> Density:
-    """Interprets a QoL argument input and returns a Density object.
-    Applies logic like splitting large literal constants into calculations
-    before constructing constant AST nodes.
-    """
-
-    limit = config.constant_number_limit
-
-    if isinstance(arg, (int, float)):
-        v = float(arg)
-
-        if abs(v) <= limit:
-            return Density(constant(v))
-
-        sign = -1.0 if v < 0 else 1.0
-        v = abs(v)
-
-        factors: list[float] = []
-        while v > limit:
-            factors.append(float(limit))
-            v /= limit
-
-        factors.append(v * sign)
-
-        it = iter(constant(f) for f in factors)
-        result = t.mul(next(it), next(it))
-        for x in it:
-            result = t.mul(result, x)
-
-        return Density(result)
-
-    if isinstance(arg, Density):
-        return arg
-
-    if isinstance(arg, DensityFunction):
-        return Density(arg)
-
-    if isinstance(arg, str):
-        if ":" not in arg:
-            arg = "minecraft:" + arg
-        return Density(Reference(arg))
-
-    raise ValueError(f"Cannot resolve object of type '{type(arg)}' to a density function")
 
 #======// Density Type //========================================================================//
 
@@ -96,23 +50,23 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Factories //=======================================================================//
 
     @classmethod
-    def constant(cls, value: DensityDescriptor) -> Density:
+    def constant(cls, value: densityfunction) -> Density:
         """Creates a Density constant to a float value or another descriptive value."""
-        return resolve_DensityDescriptor(value)
+        return densityfunction.unify(value)
     
     @classmethod
-    def configured(cls, name: str, default: DensityDescriptor) -> Density[Reference]:
+    def configured(cls, name: str, default: densityfunction) -> Density[Reference]:
         """Creates a Density that will be casted into a specific file when compiling."""
         name = "minecraft:" + name if not ":" in name else name
-        default = resolve_DensityDescriptor(default).AST # somehow neccesarry
+        default = densityfunction.unify(default).AST # somehow neccesarry
         if isinstance(default, Reference):
             default = t.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
-    def separated(cls, value: DensityDescriptor):
+    def separated(cls, value: densityfunction):
         """Creates a Density whose value will be casted into a separate file when compiling."""
-        value = resolve_DensityDescriptor(value) # somehow neccesarry
+        value = densityfunction.unify(value) # somehow neccesarry
         return Density(Reference(
             reference="rhombus:generated/" + uuid_hash(value.as_dict()),
             default=value.AST)
@@ -180,7 +134,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[t.add]:
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(t.add(self, other))
     
@@ -188,7 +142,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[t.add]:
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(
             t.add(
@@ -199,7 +153,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __rsub__(self, other) -> Density[t.add]:
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(
             t.add(
@@ -210,7 +164,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __mul__(self, other) -> Density[t.mul]:
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(t.mul(self, other))
     
@@ -218,12 +172,12 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[t.mul]:
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(t.mul(self, t.invert(other)))
     
     def __rtruediv__(self, other) -> Density[t.mul]:
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(t.mul(other, t.invert(self)))
     
@@ -252,12 +206,12 @@ class Density[Function: DensityFunction = DensityFunction]:
             return s
 
     def __and__(self, other):
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(t.max(self, other))
     
     def __or__(self, other):
-        other = resolve_DensityDescriptor(other).AST
+        other = densityfunction.unify(other).AST
         self = self.AST
         return Density(t.min(self, other))
     
@@ -290,6 +244,55 @@ class Density[Function: DensityFunction = DensityFunction]:
 
 
 #======// Additional Density Types //============================================================//
+
+class densityfunction(DSLType, Density):
+    "DSL Type"
+    
+    @classmethod
+    def unify(cls, v: int | float | str | Density | DensityFunction, **kwargs) -> Density:
+        """Interprets a QoL argument input and returns a Density object.
+        Applies logic like splitting large literal constants into calculations
+        before constructing constant AST nodes.
+        """
+
+        limit = config.constant_number_limit
+
+        if isinstance(v, (int, float)):
+            vp = float(v)
+
+            if abs(vp) <= limit:
+                return Density(constant(vp))
+
+            sign = -1.0 if vp < 0 else 1.0
+            vp = abs(vp)
+
+            factors: list[float] = []
+            while vp > limit:
+                factors.append(float(limit))
+                vp /= limit
+
+            factors.append(vp * sign)
+
+            it = iter(constant(f) for f in factors)
+            result = t.mul(next(it), next(it))
+            for x in it:
+                result = t.mul(result, x)
+
+            return Density(result)
+
+        if isinstance(v, Density):
+            return v
+
+        if isinstance(v, DensityFunction):
+            return Density(v)
+
+        if isinstance(v, str):
+            if ":" not in v:
+                v = "minecraft:" + v
+            return Density(Reference(v))
+
+        raise ValueError(f"Cannot resolve object of type '{type(v)}' to a density function")
+
 
 def ref(identifier: str, /) -> Density[Reference]:
     "Creates a Density that is a reference to an externally provided density function."

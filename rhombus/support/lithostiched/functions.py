@@ -1,5 +1,5 @@
 from typing import Literal
-from rhombus.language import Density, builtinmacro, DensityDescriptor
+from rhombus.language import Density, builtinmacro, densityfunction
 from rhombus.support.lithostiched.fast_noise_config import FastNoiseConfig
 from rhombus.support.lithostiched.types import Selection
 from rhombus.support.lithostiched import types
@@ -11,43 +11,43 @@ def axis(axis: Literal["x", "y", "z"]):
     return Density(types.axis(axis))
 
 @builtinmacro
-def ceil(argument: DensityDescriptor):
-    return DensityDescriptor(types.ceil(argument))
+def ceil(argument: densityfunction):
+    return Density(types.ceil(argument))
 
 @builtinmacro
-def cos(argument: DensityDescriptor):
-    return DensityDescriptor(types.cos(argument))
+def cos(argument: densityfunction):
+    return Density(types.cos(argument))
 
 @builtinmacro   
-def fast_noise(config: FastNoiseConfig, xz_scale: float = 1.0, y_scale: float = 1.0, shift_x: DensityDescriptor = 0, shift_y: DensityDescriptor = 0, shift_z: DensityDescriptor = 0):
+def fast_noise(config: FastNoiseConfig, xz_scale: float = 1.0, y_scale: float = 1.0, shift_x: densityfunction = 0, shift_y: densityfunction = 0, shift_z: densityfunction = 0):
     return Density(types.fast_noise(config, xz_scale, y_scale, shift_x, shift_y, shift_z))
 
 @builtinmacro
-def floor(argument: DensityDescriptor):
-    return DensityDescriptor(types.floor(argument))
+def floor(argument: densityfunction):
+    return Density(types.floor(argument))
 
 @builtinmacro
-def mix(input: DensityDescriptor, argument1: DensityDescriptor, argument2: DensityDescriptor):
-    return DensityDescriptor(types.mix(input, argument1, argument2))
+def mix(input: densityfunction, argument1: densityfunction, argument2: densityfunction):
+    return Density(types.mix(input, argument1, argument2))
 
 def original_marker():
     return Density(types.original_marker())
 
 @builtinmacro
-def select(input: DensityDescriptor, fallback: DensityDescriptor, selections: list[Selection]):
+def select(input: densityfunction, fallback: densityfunction, selections: list[Selection]):
     return Density(types.select(input, fallback, selections))
 
 @builtinmacro
-def shift(input: DensityDescriptor, shift_x: DensityDescriptor, shift_y: DensityDescriptor, shift_z: DensityDescriptor):
+def shift(input: densityfunction, shift_x: densityfunction, shift_y: densityfunction, shift_z: densityfunction):
     return Density(types.shift(input, shift_x, shift_y, shift_z))
 
 @builtinmacro
-def sin(argument: DensityDescriptor):
-    return DensityDescriptor(types.sin(argument))
+def sin(argument: densityfunction):
+    return Density(types.sin(argument))
 
 @builtinmacro
-def sqrt(argument: DensityDescriptor):
-    return DensityDescriptor(types.sqrt(argument))
+def sqrt(argument: densityfunction):
+    return Density(types.sqrt(argument))
 
 def wrapped_marker():
     return Density(types.wrapped_marker())
