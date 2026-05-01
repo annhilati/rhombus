@@ -35,6 +35,7 @@ def WizardFactory(*, unwrap: bool = False) -> Decorator:
                 if name in bound.arguments:
                     current_val = bound.arguments[name]
                     resolved = densityfunction.unify(current_val)
+                    # replace this with DSLmethod logic sometime
 
                     if unwrap:
                         bound.arguments[name] = resolved.AST

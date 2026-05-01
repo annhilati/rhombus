@@ -255,7 +255,7 @@ class densityfunction(DSLType, Density):
         before constructing constant AST nodes.
         """
 
-        limit = config.constant_number_limit
+        limit = t.constant_number_limit
 
         if isinstance(v, (int, float)):
             vp = float(v)

@@ -1,7 +1,7 @@
 from contextvars import ContextVar
 import beet, warnings
 
-constant_number_limit = 1_000_000
+infinitesimal = 1/10000000
 
 class ctx:
 

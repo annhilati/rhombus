@@ -18,6 +18,8 @@ from rhombus.core import (
 )
 from rhombus.language.noise import Noise
 
+constant_number_limit = 10000000
+
 __all__ = [
     "Reference", "constant",
     "abs", "add", "beardifier",

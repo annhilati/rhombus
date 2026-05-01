@@ -17,7 +17,7 @@
 
 - [x] §1 Decode Datapack Resources dynamically from `DensityFunction` subclasses
   - [x] §1.1 Annotate with concrete Datapack Resource classes instead of `DatapackResource` in `DensityFunction` fields
-- [y] §2 Decode density functions from a `DataPack`
+- [x] §2 Decode density functions from a `DataPack`
   - [x] §2.1 Implement a datapack context
 - [ ] §3a Warn for potential invalid values in fields of `DensityFunction` subclasses by some sort of generic description
 - [ ] §3b Warn for potential invalid values in fields of `DatapackResource` subclasses by some sort of generic description

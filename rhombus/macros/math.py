@@ -30,11 +30,11 @@ def heaviside(argument: densityfunction) -> Density[types.range_choice]:
     return f.range_choice(
         input=argument,
         min_inclusive=0,
-        max_exclusive=1/cfg.constant_number_limit,
+        max_exclusive=cfg.infinitesimal,
         when_in_range=0.5,
         when_out_of_range=f.range_choice(
             input=argument,
-            min_inclusive=-cfg.constant_number_limit,
+            min_inclusive=-types.constant_number_limit,
             max_exclusive=0,
             when_in_range=0,
             when_out_of_range=1.0
@@ -54,11 +54,11 @@ def sgn(argument: densityfunction) -> Density[types.range_choice]:
     return f.range_choice(
         input=argument,
         min_inclusive=0,
-        max_exclusive=1/cfg.constant_number_limit,
+        max_exclusive=cfg.infinitesimal,
         when_in_range=0,
         when_out_of_range=f.range_choice(
             input=argument,
-            min_inclusive=-cfg.constant_number_limit,
+            min_inclusive=-types.constant_number_limit,
             max_exclusive=0,
             when_in_range=-1.0,
             when_out_of_range=1.0
