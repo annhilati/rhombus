@@ -15,7 +15,7 @@ from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
-from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
+from rhombus.core.serializer import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
 from rhombus.language import types as t
 

@@ -1,5 +1,5 @@
 # All
-import rhombus.core.codec
+import rhombus.core.serializer
 import rhombus.core.compiler
 import rhombus.core.datapack_resource
 import rhombus.core.density_function

@@ -4,7 +4,9 @@ import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet.c
 
 #======// Typing //==============================================================================//
 
-type JSONDict = dict[str, dict | list | tuple | str | int | float | bool]
+type JSONValue = dict[str, JSONValue] | list[JSONValue] | tuple[JSONValue] | str | int | float | bool | None
+type JSONDict = dict[str, JSONValue]
+type Annotation = type
 type DataclassInstance = object
 type Dataclass = type
 type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
@@ -84,7 +86,7 @@ def fields(o: DataclassInstance) -> dict[str, Any]:
         if f.init
     }
 
-def annotated_fields(o: Dataclass) -> dict[str, type]:
+def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
     "Returns the fields of a dataclass, that are present in the init, with their annotation."
     return {
         f.name: get_type_hints(o)[f.name]

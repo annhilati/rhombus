@@ -172,7 +172,7 @@ class spline(DensityFunction):
     points: list[tuple[float, DensityFunction, float]]
 
     @classmethod
-    def decode(cls, data: JSONDict) -> "spline":
+    def deserialize(cls, data: JSONDict) -> "spline":
         return cls(
             decode_HOLDER_HELPER_CODEC(data["spline"]["coordinate"]),
             [
@@ -187,15 +187,15 @@ class spline(DensityFunction):
             ]
         )
     
-    def encode(self) -> JSONDict:
+    def serialize(self) -> JSONDict:
         return {
             "type": self.id,
             "spline": {
-                "coordinate": self.coordinate.encode(),
+                "coordinate": self.coordinate.serialize(),
                 "points": [
                     {
                         "location": point[0],
-                        "value": point[1].encode(),
+                        "value": point[1].serialize(),
                         "derivative": point[2], 
                     }
                     for point in self.points

@@ -12,20 +12,20 @@ class SubParameters:
     
     @classmethod
     def decode(cls, data: JSONDict) -> Self:
-        from rhombus.core.codec import fDecode
+        from rhombus.core.serializer import deserialize
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: fDecode(value, tp)
+            parameter: deserialize(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
         })
     
     def encode(self) -> JSONDict:
-        from rhombus.core.codec import fEncode
+        from rhombus.core.serializer import serialize
         return {**{
-            parameter: fEncode(value)
+            parameter: serialize(value)
             for parameter, value
             in fields(self).items()
             if value is not None

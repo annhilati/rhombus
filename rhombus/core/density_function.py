@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, ClassVar, Self, Callable
+from typing import Any, ClassVar, Self
 from rhombus.core.utils import JSONDict, annotated_fields, fields
 
 __all__ = [
@@ -18,8 +18,12 @@ class DensityFunction:
     """
     id: ClassVar[str]
 
-    decode: ClassVar[Callable[[type[Self], JSONDict], Self]]
-    encode: ClassVar[Callable[[Self], JSONDict | float | str]]
+    @classmethod
+    def deserialize(cls, data: JSONDict) -> "DensityFunction":
+        raise NotImplementedError
+    
+    def serialize(self) -> JSONDict | float | str:
+        raise NotImplementedError
 
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
     "Dict of all defined classes inheriting from `DensityFunction` with their ids as the keys."
@@ -39,10 +43,10 @@ class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
     @classmethod
-    def decode(cls, data: dict = {}) -> Self:
+    def deserialize(cls, data: dict = {}) -> Self:
         return cls()
     
-    def encode(self) -> JSONDict:
+    def serialize(self) -> JSONDict:
         return {"type": self.id}
     
 class MultiArgumentsFunctionBase(DensityFunction):
@@ -57,21 +61,21 @@ class MultiArgumentsFunctionBase(DensityFunction):
     """
 
     @classmethod
-    def decode(cls, data: JSONDict) -> Self:
-        from rhombus.core.codec import fDecode
+    def deserialize(cls, data: JSONDict) -> Self:
+        from rhombus.core.serializer import deserialize
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: fDecode(value, tp)
+            parameter: deserialize(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
         })
 
-    def encode(self) -> JSONDict:
-        from rhombus.core.codec import fEncode
+    def serialize(self) -> JSONDict:
+        from rhombus.core.serializer import serialize
         return {"type": self.id, **{
-            parameter: fEncode(value)
+            parameter: serialize(value)
             for parameter, value
             in self.fields.items()
             if value is not None
@@ -101,11 +105,11 @@ class Reference(DensityFunction):
             raise ValueError(f"Cannot initialize Reference object with default of type {type(self.definition)}")
     
     @classmethod
-    def decode(cls, data: str) -> "Reference":
-        from rhombus.core.codec import decode_HOLDER_HELPER_CODEC
+    def deserialize(cls, data: str) -> "Reference":
+        from rhombus.core.serializer import decode_HOLDER_HELPER_CODEC
         return decode_HOLDER_HELPER_CODEC(data)
     
-    def encode(self) -> str:
+    def serialize(self) -> str:
         return self.reference
     
     def __repr__(self) -> str:
@@ -117,10 +121,10 @@ class constant(DensityFunction):
     argument: float
             
     @classmethod
-    def decode(cls, data: JSONDict | float) -> "constant":
+    def deserialize(cls, data: JSONDict | float) -> "constant":
         return cls(data["argument"] if isinstance(data, dict) else data)
     
-    def encode(self) -> float:
+    def serialize(self) -> float:
         return self.argument
 
     def __repr__(self) -> str:

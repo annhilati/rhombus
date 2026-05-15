@@ -5,14 +5,14 @@ import beet, beet.contrib.worldgen as beet_worldgen
 from rhombus.core.density_function import DensityFunction, Reference, constant
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.sub_parameters import SubParameters
-from rhombus.core.utils import contextfunction, FROM_CONTEXT
+from rhombus.core.utils import contextfunction, FROM_CONTEXT, JSONValue
 from rhombus import config
 
-__all__ = ["fEncode", "fDecode", "resolve_DatapackResource_reference", "decode_HOLDER_HELPER_CODEC"]
+__all__ = ["serialize", "deserialize", "resolve_DatapackResource_reference", "decode_HOLDER_HELPER_CODEC"]
 
 
-def fEncode[T](o: T):
-    """Encodes an object `o` as a JSON compatible value.
+def serialize[T](o: T) -> JSONValue | T:
+    """Serializes an object to a JSON compatible value.
     
     Supported are:
     - `DensityFunction` subclasses
@@ -24,7 +24,7 @@ def fEncode[T](o: T):
     """
 
     if isinstance(o, DensityFunction):
-        return o.encode()
+        return o.serialize()
     
     elif isinstance(o, DatapackResource):
         return o.identifier
@@ -33,15 +33,17 @@ def fEncode[T](o: T):
         return o.encode()
     
     elif isinstance(o, (list, tuple)):
-        return type(o)(fEncode(m) for m in o)
+        return type(o)(serialize(m) for m in o)
     
     elif isinstance(o, dict):
-        return {fEncode(k): fEncode(v) for k, v in o.items()}
+        return {serialize(k): serialize(v) for k, v in o.items()}
     
     return o
 
-def fDecode[V, T](v: V, t: type[T]) -> T:
+def deserialize[V, T](v: V, t: type[T]) -> T:
     """Casts a value `v` into a type `t` according to specific procedures.
+    
+    When no procedures are intended, the values is passed on.
     
     Supported are:
     - `DensityFunction` subclasses
@@ -61,7 +63,7 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
             return decode_HOLDER_HELPER_CODEC(v)
 
         elif issubclass(t, DensityFunction):
-            return t.decode(v)
+            return t.deserialize(v)
         
         elif issubclass(t, DatapackResource):
             return resolve_DatapackResource_reference(v, t)
@@ -76,28 +78,28 @@ def fDecode[V, T](v: V, t: type[T]) -> T:
             return t(m for m in v)
         
         elif isinstance(t, TypeAliasType):
-            return fDecode(v, t.__value__)
+            return deserialize(v, t.__value__)
             
     args = get_args(t)
 
     if origin in (list, tuple, set):
         return t(
-            fDecode(m, args[0] if len(args) == 1 else Union[*args]) for m in v
+            deserialize(m, args[0] if len(args) == 1 else Union[*args]) for m in v
         )
     
     if origin in (Union, UnionType):
         if type(v) in args:
-            return fDecode(v, type(v))
+            return deserialize(v, type(v))
         for arg in args:
             try:
-                return fDecode(v, arg)
+                return deserialize(v, arg)
             except:
                 continue
 
     if origin is dict:
         kt, vt = args
         return {
-            fDecode(k, kt): fDecode(v, vt)
+            deserialize(k, kt): deserialize(v, vt)
             for k, v in v.items()
         }
     
@@ -138,7 +140,7 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, dp: beet.DataPack | None =
                 f"Cannot decode dict as HOLDER_HELPER_CODEC argument with type id '{t}'. "
                 "No density function class with adequate id is defined"
             )
-        return cls.decode(o)
+        return cls.deserialize(o)
 
     elif isinstance(o, (int, float)):
         return constant(float(o))
