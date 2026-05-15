@@ -9,11 +9,11 @@ def test_decoding_functions_with_context():
 
         other = constant(1.0)
 
-        d: Density = Density.separated(other) + 5.0
+        d: Density = Density.partitioned(other) + 5.0
 
         d.inject(dp, "main:function")
 
-        assert Density.from_datapack(dp, "main:function") == Density(types.add(types.Reference('rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', default=types.constant(argument=1.0)), types.constant(argument=5.0)))
+        assert Density.from_datapack(dp, "main:function") == Density(types.add(types.Reference('rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', definition=types.constant(argument=1.0)), types.constant(argument=5.0)))
 
 def test_decoding_DatapackResources_with_context():
 

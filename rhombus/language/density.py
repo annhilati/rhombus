@@ -32,7 +32,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     - Methods from `rhombus.language.functions` or other methods that return a `Density` for calculations.
     - `.constant()`
     - `.configured()` if a value is needed that can be easily altered in the compiled datapack later.
-    - `.separated()` if a density function has to be compiled to a separate file, but it is not important what this file is.
+    - `.partitioned()` if a density function has to be compiled to a separate file, but it is not important what this file is.
     - `.reference()` to reference a density function that is provided externally, like by another datapack.
     """
 
@@ -64,12 +64,12 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density(Reference(name, default))
     
     @classmethod
-    def separated(cls, value: densityfunction):
+    def partitioned(cls, value: densityfunction):
         """Creates a Density whose value will be casted into a separate file when compiling."""
-        value = densityfunction.unify(value) # somehow neccesarry
+        value = densityfunction.unify(value) # somehow not possible by decorator
         return Density(Reference(
             reference="rhombus:generated/" + uuid_hash(value.as_dict()),
-            default=value.AST)
+            definition=value.AST)
         )
     
     @classmethod

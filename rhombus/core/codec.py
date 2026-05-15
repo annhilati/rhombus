@@ -149,7 +149,7 @@ def decode_HOLDER_HELPER_CODEC(o: dict | str | float, dp: beet.DataPack | None =
         default = None
         if dp is not None and (f := dp[beet_worldgen.WorldgenDensityFunction].get(o)) is not None:
             default = f.data
-        return Reference(o, default=decode_HOLDER_HELPER_CODEC(default) if default is not None else None)
+        return Reference(o, definition=decode_HOLDER_HELPER_CODEC(default) if default is not None else None)
 
     else:
         raise TypeError(f"Cannot decode type '{type(o).__name__}' as HOLDER_HELPER_CODEC argument")

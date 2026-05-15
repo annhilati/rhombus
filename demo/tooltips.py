@@ -25,7 +25,7 @@ moredfs.x
 lithostiched.x
 ensity.x
 
-Density.separated
+Density.partitioned
 Density.configured
 Density.reference
 Density.from_datapack

@@ -94,11 +94,11 @@ class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
 @dataclass    
 class Reference(DensityFunction):
     reference: str
-    default: DensityFunction | None = None
+    definition: DensityFunction | None = None
 
     def __post_init__(self):
-        if not isinstance(self.default, DensityFunction) and self.default is not None:
-            raise ValueError(f"Cannot initialize Reference object with default of type {type(self.default)}")
+        if not isinstance(self.definition, DensityFunction) and self.definition is not None:
+            raise ValueError(f"Cannot initialize Reference object with default of type {type(self.definition)}")
     
     @classmethod
     def decode(cls, data: str) -> "Reference":

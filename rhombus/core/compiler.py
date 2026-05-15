@@ -17,7 +17,7 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
 
         if isinstance(o, DensityFunction):
 
-            if isinstance(o, Reference) and (default := o.default) is not None:
+            if isinstance(o, Reference) and (default := o.definition) is not None:
                 if isinstance(default, Reference): # To not have literal strings in a JSON file
                     default = types.add(default, constant(0))
                 files[o.reference] = WorldgenDensityFunction(default.encode())

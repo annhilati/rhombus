@@ -34,3 +34,4 @@
   - [x] §9.1 Implement the referenced classmethod in the base class (utilize the field util when instanciating?)
   - [x] §9.2 Implement property setting and store reference secretly
   - [ ] §10 Implement separation rules for caching functions
+  - [ ] §11 Abstract compiler instructions, so that completely new classes can be hooked in
