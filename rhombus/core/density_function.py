@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self
-from rhombus.core.utils import JSONDict, annotated_fields, fields
+from rhombus.core.utils import JSONDict, annotated_fields, fields, BeetFileClass
+from rhombus.core.node import Node, SerializationContext
+from beet.contrib.worldgen import WorldgenDensityFunction
 
 __all__ = [
     "DensityFunction",
@@ -11,12 +13,14 @@ __all__ = [
 
 #======// Function Type Base Classes //==========================================================//
 
-class DensityFunction:
+class DensityFunction(Node):
     """Base class for density function types, which are the nodes of the density AST.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/density_functions/)
     """
     id: ClassVar[str]
+    
+    #======// Serialization //===================================================================//
 
     @classmethod
     def deserialize(cls, data: JSONDict) -> "DensityFunction":
@@ -24,7 +28,7 @@ class DensityFunction:
     
     def serialize(self) -> JSONDict | float | str:
         raise NotImplementedError
-
+    
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
     "Dict of all defined classes inheriting from `DensityFunction` with their ids as the keys."
       
@@ -32,11 +36,7 @@ class DensityFunction:
         super().__init_subclass__(**kwargs)
         if hasattr(cls, "id"):
             DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
-
-    @property
-    def fields(self) -> dict[str, Any]:
-        "Returns the fields of the density function type with their values."
-        return fields(self)
+        
 
 @dataclass
 class SimpleFunctionBase(DensityFunction):
@@ -111,6 +111,13 @@ class Reference(DensityFunction):
     
     def serialize(self) -> str:
         return self.reference
+    
+    def generated_files(self) -> dict[str, BeetFileClass]:
+        files = {}
+        if self.definition is not None:
+            files[self.reference] = WorldgenDensityFunction(self.definition.serialize())
+            files |= self.definition.generated_files()
+        return files
     
     def __repr__(self) -> str:
         return self.reference

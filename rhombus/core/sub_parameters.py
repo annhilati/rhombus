@@ -1,17 +1,18 @@
-from typing import Self
-from rhombus.core.utils import JSONDict, fields, annotated_fields
+from typing import Self, Any
+from rhombus.core.utils import JSONDict, fields, annotated_fields, BeetFileClass
+from rhombus.core.node import Node, SerializationContext
 
 __all__ = ["SubParameters"]
 
 
-class SubParameters:
+class SubParameters(Node):
     """Base class for parameter groups that are used inline in fields of density function types or another.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)
     """
-    
+      
     @classmethod
-    def deserialize(cls, data: JSONDict) -> Self:
+    def deserialize(cls, data: JSONDict, ctx: SerializationContext = SerializationContext.TOPLEVEL) -> Self:
         from rhombus.core.serializer import deserialize
         fields = annotated_fields(cls)
 
@@ -22,11 +23,11 @@ class SubParameters:
             for tp in (fields[parameter],)
         })
     
-    def serialize(self) -> JSONDict:
+    def serialize(self, ctx: SerializationContext = SerializationContext.TOPLEVEL) -> JSONDict:
         from rhombus.core.serializer import serialize
         return {**{
             parameter: serialize(value)
             for parameter, value
-            in fields(self).items()
+            in self.fields.items()
             if value is not None
         }}

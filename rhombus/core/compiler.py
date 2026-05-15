@@ -3,48 +3,23 @@ from rhombus.core.datapack_resource import BeetFileClass, DatapackResource
 from rhombus.core.density_function import DensityFunction, Reference, constant
 from rhombus.core.sub_parameters import SubParameters
 from rhombus.core.utils import fields
+from rhombus.core.node import Node, SerializationContext
 from beet.contrib.worldgen import WorldgenDensityFunction
+from pathlib import Path
+import os, sys, subprocess
 
-def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClass]:
-    from rhombus.std import vdft
+
+def compile(density: Node, identifier: str) -> dict[str, BeetFileClass]:
+    
 
     files: dict[str, BeetFileClass] = {}
 
     root = density
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
-    def search_for_additional_files(o):
+    files |= root.generated_files()
 
-        if isinstance(o, DensityFunction):
-
-            if isinstance(o, Reference) and (default := o.definition) is not None:
-                if isinstance(default, Reference): # To not have literal strings in a JSON file
-                    default = vdft.add(default, constant(0))
-                files[o.reference] = WorldgenDensityFunction(default.serialize())
-            
-            for param, value in o.fields.items():
-                search_for_additional_files(value)
-
-        elif isinstance(o, (list, tuple)):
-            for value in o:
-                search_for_additional_files(value)
-
-        elif isinstance(o, dict):
-            for k, v in o.items():
-                search_for_additional_files(k)
-                search_for_additional_files(v)
-            
-        elif isinstance(o, SubParameters):
-            for param, value in fields(o).items():
-                search_for_additional_files(value)
-
-        elif isinstance(o, DatapackResource) and o._reference is None: # here it was 'o._reference is not None'
-            files[o.identifier] = o.fileclass(o.serialize())
-            for param, value in fields(o).items():
-                search_for_additional_files(value)
-
-    search_for_additional_files(root)
-
+    from rhombus.std import vdft
     if isinstance(root, Reference): # To not have literal strings in a JSON file
         root = vdft.add(root, constant(0))
         
@@ -53,8 +28,6 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
     return files
 
 def show_in_temp(files: dict[str, BeetFileClass]) -> None:
-    import os, sys, subprocess
-    from pathlib import Path
 
     def open_folder(path: Path) -> None:
         if sys.platform == "win32":

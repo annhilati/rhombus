@@ -2,10 +2,10 @@ from typing import Union, TypeAliasType, Callable, get_args, get_origin
 from types import UnionType
 from rhombus.core.utils import Decorator
 from rhombus.core.dsl.DSLType import DSLMethod
+from rhombus.std.density import Density, densityfunction
 import inspect, functools
 
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
-    from rhombus.std import Density, densityfunction
     
     def _apply_by_annotation(annotation: type) -> bool:
         if annotation is densityfunction:

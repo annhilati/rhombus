@@ -6,31 +6,25 @@ from rhombus.core.density_function import DensityFunction, Reference, constant
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.sub_parameters import SubParameters
 from rhombus.core.utils import contextfunction, FROM_CONTEXT, JSONValue
+from rhombus.core.node import Node
 from rhombus import config
 
 __all__ = ["serialize", "deserialize", "resolve_DatapackResource_reference", "decode_HOLDER_HELPER_CODEC"]
 
 
 def serialize[T](o: T) -> JSONValue | T:
-    """Serializes an object to a JSON compatible value.
-    
-    Supported are:
-    - `DensityFunction` subclasses
-    - `DatapackResource` subclasses (will return the identifier)
-    - `SubParameters` subclasses
-    - `str`, `int`, `float`, `bool`
-    - `list[T]`, `tuple[T]`
-    - `dict[KT, VT]`
-    """
 
-    if isinstance(o, DensityFunction):
+    if isinstance(o, Node):
         return o.serialize()
+
+    # if isinstance(o, DensityFunction):
+    #     return o.serialize()
     
-    elif isinstance(o, DatapackResource):
-        return o.identifier
+    # elif isinstance(o, DatapackResource):
+    #     return o.identifier
     
-    elif isinstance(o, SubParameters):
-        return o.serialize()
+    # elif isinstance(o, SubParameters):
+    #     return o.serialize()
     
     elif isinstance(o, (list, tuple)):
         return type(o)(serialize(m) for m in o)
@@ -41,17 +35,6 @@ def serialize[T](o: T) -> JSONValue | T:
     return o
 
 def deserialize[T](v: Any, t: type[T]) -> T:
-    """Casts a value into a type according to specific procedures.
-        
-    Supported are:
-    - `DensityFunction` subclasses
-    - `DatapackResource` subclasses
-    - `SubParameters` subclasses
-    - `str`, `int`, `float`
-    - `list[T]`, `tuple[T]`
-    - `dict[KT, VT]`
-    - `Union[T]`, `UnionType[T]`
-    """
     
     origin = get_origin(t)
 
@@ -107,12 +90,12 @@ def deserialize[T](v: Any, t: type[T]) -> T:
     raise ValueError(f"No deserialization procedure for target type '{t.__name__}' known")
 
 
-@contextfunction(dp=config.ctx.datapack)
-def resolve_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
-    id = "minecraft:" + id if not ":" in id else id
-    if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
-        return t.deserialize(file.data)
-    return t.referenced(id)
+# @contextfunction(dp=config.ctx.datapack)
+# def resolve_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
+#     id = "minecraft:" + id if not ":" in id else id
+#     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
+#         return t.deserialize(file.data)
+#     return t.referenced(id)
 
 @contextfunction(dp=config.ctx.datapack)
 def decode_HOLDER_HELPER_CODEC(o: dict | str | float, dp: beet.DataPack | None = FROM_CONTEXT) -> DensityFunction:

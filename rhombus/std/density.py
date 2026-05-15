@@ -7,7 +7,7 @@ For more information, see the `.Density` class.
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Self, Literal, overload, Union
+from typing import Self, Literal, overload
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
@@ -17,7 +17,7 @@ from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.core.serializer import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
-from rhombus.std import vdft as vdft
+from rhombus.std import vdft
 
 __all__ = ["Density", "ref", "densityfunction"]
 

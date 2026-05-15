@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, Self
-from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, fields, annotated_fields, contextfunction
+from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, annotated_fields, contextfunction, FROM_CONTEXT
+from rhombus.core.node import Node, SerializationContext
 from rhombus import config
 import beet
 
@@ -8,7 +9,7 @@ __all__ = ["DatapackResource", "BeetFileClass"]
 
 
 @dataclass
-class DatapackResource:
+class DatapackResource(Node):
     """Base class for resources that are provided by a datapack outside of a density function.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/datapack_resources/)
@@ -16,6 +17,56 @@ class DatapackResource:
 
     fileclass: ClassVar[type[BeetFileClass]]
     _reference: str | None = field(init=False, default=None)
+
+    #======// Serialization //===================================================================//
+    
+    @classmethod
+    @contextfunction(dp=config.ctx.datapack)
+    def deserialize(cls, data: JSONDict | str, ctx: SerializationContext, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
+        
+        # We are in the top of a file -> we expect a JSONDict
+        if ctx == SerializationContext.TOPLEVEL:
+            if not isinstance(data, dict):
+                raise ValueError(f"Expected a dict, got '{type(data).__name__}'")
+            
+            from rhombus.core.serializer import deserialize
+            fields = annotated_fields(cls)
+
+            return cls(**{
+                parameter: deserialize(value, tp)
+                for parameter, value in data.items()
+                if parameter in fields
+                for tp in (fields[parameter],)
+            })
+            
+        # We are somewhere in a file -> we expect a string
+        elif ctx == SerializationContext.INLINE:
+            if not isinstance(data, str):
+                raise ValueError(f"Expected a str, got '{type(data).__name__}'")
+            
+            id = "minecraft:" + data if not ":" in data else data
+            if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
+                return cls.deserialize(file.data, SerializationContext.TOPLEVEL) # We deserialize the found data from top level context
+            return cls.referenced(id)
+        
+        
+    def serialize(self, ctx: SerializationContext) -> JSONDict | str:
+        
+        # We are in the top of a file -> we deliver the serialized fields
+        if ctx == SerializationContext.TOPLEVEL:
+            from rhombus.core.serializer import serialize
+            return {
+                parameter: serialize(value)
+                for parameter, value in self.fields.items()
+                if value is not None
+            }
+            
+        # We are somewhere in a file -> we deliver the reference string
+        elif ctx == SerializationContext.INLINE:
+            return self.identifier
+        
+        
+    #======// Dataclasses //=====================================================================//
 
     @property
     def identifier(self) -> str:
@@ -33,14 +84,7 @@ class DatapackResource:
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
-
-        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
-
-        file: BeetFileClass = dp[cls.fileclass].get(identifier)
-        if file is None:
-            return None
-
-        return cls.deserialize(file.data)
+        return cls.deserialize(identifier, SerializationContext.INLINE, dp) # The deserialization classmethod can do that
 
     @classmethod
     def referenced(cls, identifier: str, /) -> Self:
@@ -49,25 +93,8 @@ class DatapackResource:
         instance.identifier = identifier
         return instance
 
-    @classmethod
-    def deserialize(cls, data: JSONDict) -> Self:
-        from rhombus.core.serializer import deserialize
-        fields = annotated_fields(cls)
 
-        return cls(**{
-            parameter: deserialize(value, tp)
-            for parameter, value in data.items()
-            if parameter in fields
-            for tp in (fields[parameter],)
-        })
-
-    def serialize(self) -> JSONDict:
-        from rhombus.core.serializer import serialize
-        return {
-            parameter: serialize(value)
-            for parameter, value in fields(self).items()
-            if value is not None
-        }
+    #======// Utility //=========================================================================//
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
