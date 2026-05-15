@@ -9,7 +9,7 @@ from rhombus.core import (
     serialize,
     deserialize
 )
-from rhombus.language import densityfunction, builtinmacro
+from rhombus.std import densityfunction, builtinmacro
 
 @dataclass
 class RandomSampler(SubParameters):
@@ -74,7 +74,7 @@ class RandomSampler(SubParameters):
         return cls(type="uniform", min=min, max=max)
     
     @classmethod
-    def decode(cls, data: JSONDict) -> "RandomSampler":
+    def deserialize(cls, data: JSONDict) -> "RandomSampler":
         fields = annotated_fields(cls)
 
         return cls(**{
@@ -86,7 +86,7 @@ class RandomSampler(SubParameters):
         },
         **({"lambda": data["lambda"]} if data.get("lambda", None) is not None else {}))
     
-    def encode(self) -> JSONDict:
+    def serialize(self) -> JSONDict:
         return {**{
             parameter: serialize(value)
             for parameter, value

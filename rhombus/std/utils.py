@@ -5,7 +5,7 @@ from rhombus.core.dsl.DSLType import DSLMethod
 import inspect, functools
 
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
-    from rhombus.language import Density, densityfunction
+    from rhombus.std import Density, densityfunction
     
     def _apply_by_annotation(annotation: type) -> bool:
         if annotation is densityfunction:

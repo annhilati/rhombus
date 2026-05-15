@@ -40,7 +40,7 @@ class FastNoiseConfig(DatapackResource):
 
     reference: Optional[str] = None
 
-    def encode(self) -> JSONDict:
+    def serialize(self) -> JSONDict:
         return {
             "type": self.type,
             "frequency": self.frequency,

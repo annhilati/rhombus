@@ -11,7 +11,7 @@ class SubParameters:
     """
     
     @classmethod
-    def decode(cls, data: JSONDict) -> Self:
+    def deserialize(cls, data: JSONDict) -> Self:
         from rhombus.core.serializer import deserialize
         fields = annotated_fields(cls)
 
@@ -22,7 +22,7 @@ class SubParameters:
             for tp in (fields[parameter],)
         })
     
-    def encode(self) -> JSONDict:
+    def serialize(self) -> JSONDict:
         from rhombus.core.serializer import serialize
         return {**{
             parameter: serialize(value)

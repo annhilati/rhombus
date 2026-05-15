@@ -1,4 +1,4 @@
-from rhombus.language import densityfunction, Density, types, macro, builtinmacro
+from rhombus.std import densityfunction, Density, macro, builtinmacro, vdft
 
 def test_MacroWizard():
 
@@ -6,5 +6,5 @@ def test_MacroWizard():
     def fn(x: densityfunction) -> Density:
         return x
     
-    assert fn(0) == Density(types.constant(0.0))
-    assert fn("a:reference") == Density(types.Reference("a:reference"))
+    assert fn(0) == Density(vdft.constant(0.0))
+    assert fn("a:reference") == Density(vdft.Reference("a:reference"))

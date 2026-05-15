@@ -1,4 +1,6 @@
-"""Data models for the vanilla density function types.
+"""'vdft' stands for 'vanilla density function types'.
+
+These are the data models for the vanilla density function types.
 
 They are not needed for normal use of the Rhombus language.
 """
@@ -16,7 +18,7 @@ from rhombus.core import (
     JSONDict,
     decode_HOLDER_HELPER_CODEC
 )
-from rhombus.language.noise import Noise
+from rhombus.std.noise import Noise
 
 constant_number_limit = 10000000
 

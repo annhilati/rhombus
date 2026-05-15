@@ -5,7 +5,7 @@
 [GitHub](https://github.com/annhilati/rhombus)
 """
 
-from rhombus.language import *
+from rhombus.std import *
 from rhombus.macros import *
 from rhombus import (
     config,

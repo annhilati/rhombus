@@ -5,10 +5,10 @@ import rhombus.core.datapack_resource
 import rhombus.core.density_function
 import rhombus.core.sub_parameters
 import rhombus.core.utils
-import rhombus.language.density
-import rhombus.language.types
-import rhombus.language.functions
-import rhombus.language.noise
+import rhombus.std.density
+import rhombus.std.vdft
+import rhombus.std.functions
+import rhombus.std.noise
 import rhombus.macros.coords
 import rhombus.macros.emath
 import rhombus.macros.math

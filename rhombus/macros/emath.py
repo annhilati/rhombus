@@ -8,15 +8,15 @@ These methods typically include infinite series, such as Taylor series, or itera
 """
 
 from typing import Callable
-from rhombus.language.density import Density, densityfunction
-from rhombus.language import f, types, macro
+from rhombus.std.density import Density, densityfunction
+from rhombus.std import f, macro, vdft
 from rhombus.macros.math import pi
 
 __all__ = []
 
 
 @macro
-def sqrt(argument: densityfunction, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.mul]:
+def sqrt(argument: densityfunction, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[vdft.mul]:
     """Returns the square root of the input.<br>
     ❗`sqrt(x)` is nonesense, if `x < 0`
 
@@ -42,7 +42,7 @@ def sqrt(argument: densityfunction, iterations: int = 3, guess: Callable[[Densit
     return x
 
 @macro
-def exp(argument: densityfunction, terms: int = 4) -> Density[types.add]:
+def exp(argument: densityfunction, terms: int = 4) -> Density[vdft.add]:
     """Returns the exponential function value of the input, so `e` exponentiated to the input.<br>
 
     ⚙️ This implementation uses the [Taylor series of the exponential function](https://en.wikipedia.org/wiki/Taylor_series#Exponential_function).
@@ -57,7 +57,7 @@ def exp(argument: densityfunction, terms: int = 4) -> Density[types.add]:
     return result
 
 @macro
-def ln(argument: densityfunction, terms: int = 4) -> Density[types.add]:
+def ln(argument: densityfunction, terms: int = 4) -> Density[vdft.add]:
     """Returns the natual logarithm value of the input.<br>
 
     ⚙️ This implementation uses the [Taylor series of the natural logarithm](https://en.wikipedia.org/wiki/Taylor_series#Natural_logarithm).
@@ -75,7 +75,7 @@ def ln(argument: densityfunction, terms: int = 4) -> Density[types.add]:
 #======// Trigonometry //========================================================================//
 
 @macro
-def sin(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def sin(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the sine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
@@ -93,7 +93,7 @@ def sin(argument: densityfunction, terms: int = 3) -> Density[types.add]:
     return result
 
 @macro
-def cos(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def cos(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the cosine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of cosine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
@@ -111,7 +111,7 @@ def cos(argument: densityfunction, terms: int = 3) -> Density[types.add]:
     return result
 
 @macro
-def tan(argument: densityfunction, terms: int = 3) -> Density[types.mul]:
+def tan(argument: densityfunction, terms: int = 3) -> Density[vdft.mul]:
     """Returns the tangent value of the input in radians.<br>
     ❗`tan((2n - 1) * x) = NaN` where `x` is near π/2.
 
@@ -122,7 +122,7 @@ def tan(argument: densityfunction, terms: int = 3) -> Density[types.mul]:
     return sin(argument, terms) / cos(argument, terms)
 
 @macro
-def asin(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def asin(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the arc sine value of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
 
@@ -139,7 +139,7 @@ def asin(argument: densityfunction, terms: int = 3) -> Density[types.add]:
     return result
 
 @macro
-def acos(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def acos(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the arc cosine value of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
 
@@ -148,7 +148,7 @@ def acos(argument: densityfunction, terms: int = 3) -> Density[types.add]:
     return (pi / 2) - asin(argument, terms)
 
 @macro
-def atan(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def atan(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the arc tangent value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of arc tangent](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
@@ -163,7 +163,7 @@ def atan(argument: densityfunction, terms: int = 3) -> Density[types.add]:
     return result
 
 @macro
-def sinh(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def sinh(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of hyperbolic sine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
@@ -180,7 +180,7 @@ def sinh(argument: densityfunction, terms: int = 3) -> Density[types.add]:
     return result
 
 @macro
-def cosh(argument: densityfunction, terms: int = 3) -> Density[types.add]:
+def cosh(argument: densityfunction, terms: int = 3) -> Density[vdft.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
 
     ⚙️ This implementation uses the [Taylor series of hyperbolic cosine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>

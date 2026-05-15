@@ -1,4 +1,4 @@
-from typing import get_origin, get_args, Union, TypeAliasType, Literal
+from typing import get_origin, get_args, Union, TypeAliasType, Literal, Any
 from types import UnionType
 import beet, beet.contrib.worldgen as beet_worldgen
 
@@ -30,7 +30,7 @@ def serialize[T](o: T) -> JSONValue | T:
         return o.identifier
     
     elif isinstance(o, SubParameters):
-        return o.encode()
+        return o.serialize()
     
     elif isinstance(o, (list, tuple)):
         return type(o)(serialize(m) for m in o)
@@ -40,11 +40,9 @@ def serialize[T](o: T) -> JSONValue | T:
     
     return o
 
-def deserialize[V, T](v: V, t: type[T]) -> T:
-    """Casts a value `v` into a type `t` according to specific procedures.
-    
-    When no procedures are intended, the values is passed on.
-    
+def deserialize[T](v: Any, t: type[T]) -> T:
+    """Casts a value into a type according to specific procedures.
+        
     Supported are:
     - `DensityFunction` subclasses
     - `DatapackResource` subclasses
@@ -69,7 +67,7 @@ def deserialize[V, T](v: V, t: type[T]) -> T:
             return resolve_DatapackResource_reference(v, t)
         
         elif issubclass(t, SubParameters):
-            return t.decode(v)
+            return t.deserialize(v)
         
         elif t in (str, float, int, Literal):
             return t(v)
@@ -81,13 +79,16 @@ def deserialize[V, T](v: V, t: type[T]) -> T:
             return deserialize(v, t.__value__)
             
     args = get_args(t)
+    
+    if origin is Literal:
+            return str(v)
 
-    if origin in (list, tuple, set):
+    elif origin in (list, tuple, set):
         return t(
             deserialize(m, args[0] if len(args) == 1 else Union[*args]) for m in v
         )
     
-    if origin in (Union, UnionType):
+    elif origin in (Union, UnionType):
         if type(v) in args:
             return deserialize(v, type(v))
         for arg in args:
@@ -96,21 +97,21 @@ def deserialize[V, T](v: V, t: type[T]) -> T:
             except:
                 continue
 
-    if origin is dict:
+    elif origin is dict:
         kt, vt = args
         return {
             deserialize(k, kt): deserialize(v, vt)
             for k, v in v.items()
         }
     
-    return v
+    raise ValueError(f"No deserialization procedure for target type '{t.__name__}' known")
 
 
 @contextfunction(dp=config.ctx.datapack)
 def resolve_DatapackResource_reference[T: DatapackResource](id: str, t: type[T], dp: beet.DataPack | None = FROM_CONTEXT) -> T:
     id = "minecraft:" + id if not ":" in id else id
     if dp is not None and (file := dp[t.fileclass].get(id)) is not None:
-        return t.decode(file.data)
+        return t.deserialize(file.data)
     return t.referenced(id)
 
 @contextfunction(dp=config.ctx.datapack)

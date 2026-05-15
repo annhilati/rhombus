@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, Self
-from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, fields, annotated_fields
+from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, fields, annotated_fields, contextfunction
+from rhombus import config
+import beet
 
 __all__ = ["DatapackResource", "BeetFileClass"]
 
@@ -20,13 +22,25 @@ class DatapackResource:
         "The identifier of the datapack resource including the namespace."
         if self._reference is not None:
             return self._reference if ":" in self._reference else "minecraft:" + self._reference
-        return f"rhombus:generated/" + uuid_hash(self.encode())
+        return f"rhombus:generated/" + uuid_hash(self.serialize())
 
     @identifier.setter
     def identifier(self, value: str | None) -> None:
         if not isinstance(value, str):
             raise TypeError(f"Cannot asign non-str value '{value} to reference identifier'")
         self._reference = value
+        
+    @classmethod
+    @contextfunction(dp=config.ctx.datapack)
+    def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
+
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+
+        file: BeetFileClass = dp[cls.fileclass].get(identifier)
+        if file is None:
+            return None
+
+        return cls.deserialize(file.data)
 
     @classmethod
     def referenced(cls, identifier: str, /) -> Self:
@@ -36,7 +50,7 @@ class DatapackResource:
         return instance
 
     @classmethod
-    def decode(cls, data: JSONDict) -> Self:
+    def deserialize(cls, data: JSONDict) -> Self:
         from rhombus.core.serializer import deserialize
         fields = annotated_fields(cls)
 
@@ -47,7 +61,7 @@ class DatapackResource:
             for tp in (fields[parameter],)
         })
 
-    def encode(self) -> JSONDict:
+    def serialize(self) -> JSONDict:
         from rhombus.core.serializer import serialize
         return {
             parameter: serialize(value)
@@ -61,4 +75,4 @@ class DatapackResource:
         return self.identifier == other.identifier
     
     def __hash__(self) -> int:
-        return hash(uuid_hash(self.encode()))
+        return hash(uuid_hash(self.serialize()))

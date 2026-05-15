@@ -6,7 +6,7 @@ from rhombus.core.utils import fields
 from beet.contrib.worldgen import WorldgenDensityFunction
 
 def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClass]:
-    from rhombus.language import types
+    from rhombus.std import vdft
 
     files: dict[str, BeetFileClass] = {}
 
@@ -19,7 +19,7 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
 
             if isinstance(o, Reference) and (default := o.definition) is not None:
                 if isinstance(default, Reference): # To not have literal strings in a JSON file
-                    default = types.add(default, constant(0))
+                    default = vdft.add(default, constant(0))
                 files[o.reference] = WorldgenDensityFunction(default.serialize())
             
             for param, value in o.fields.items():
@@ -39,14 +39,14 @@ def compile(density: DensityFunction, identifier: str) -> dict[str, BeetFileClas
                 search_for_additional_files(value)
 
         elif isinstance(o, DatapackResource) and o._reference is None: # here it was 'o._reference is not None'
-            files[o.identifier] = o.fileclass(o.encode())
+            files[o.identifier] = o.fileclass(o.serialize())
             for param, value in fields(o).items():
                 search_for_additional_files(value)
 
     search_for_additional_files(root)
 
     if isinstance(root, Reference): # To not have literal strings in a JSON file
-        root = types.add(root, constant(0))
+        root = vdft.add(root, constant(0))
         
     files[identifier] = WorldgenDensityFunction(root.serialize())
 

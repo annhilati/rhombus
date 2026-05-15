@@ -21,9 +21,9 @@ They can be devided in:
     typing macros.
 """
 
-from rhombus.language.density import *
-from rhombus.language.noise import *
-from rhombus.language.functions import *
-from rhombus.language.utils import builtinmacro, macro
-from rhombus.language import functions as f
-from rhombus.language import types as t
+from rhombus.std.density import *
+from rhombus.std.noise import *
+from rhombus.std.functions import *
+from rhombus.std.utils import builtinmacro, macro
+from rhombus.std import functions as f
+from rhombus.std import vdft as vdft

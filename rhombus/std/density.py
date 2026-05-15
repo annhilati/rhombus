@@ -17,7 +17,7 @@ from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.core.serializer import decode_HOLDER_HELPER_CODEC
 from rhombus.core.compiler import compile
-from rhombus.language import types as t
+from rhombus.std import vdft as vdft
 
 __all__ = ["Density", "ref", "densityfunction"]
 
@@ -60,7 +60,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         name = "minecraft:" + name if not ":" in name else name
         default = densityfunction.unify(default).AST # somehow neccesarry
         if isinstance(default, Reference):
-            default = t.add(default, 0)
+            default = vdft.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
@@ -133,93 +133,93 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     #======// Arithmetic Magic //================================================================//
     
-    def __add__(self, other) -> Density[t.add]:
+    def __add__(self, other) -> Density[vdft.add]:
         other = densityfunction.unify(other).AST
         self = self.AST
-        return Density(t.add(self, other))
+        return Density(vdft.add(self, other))
     
-    def __radd__(self, other) -> Density[t.add]:
+    def __radd__(self, other) -> Density[vdft.add]:
         return self.__add__(other)
     
-    def __sub__(self, other) -> Density[t.add]:
+    def __sub__(self, other) -> Density[vdft.add]:
         other = densityfunction.unify(other).AST
         self = self.AST
         return Density(
-            t.add(
+            vdft.add(
                 argument1=self,
-                argument2=t.mul(
+                argument2=vdft.mul(
                     argument1=other,
                     argument2=constant(-1.0)
             )))
     
-    def __rsub__(self, other) -> Density[t.add]:
+    def __rsub__(self, other) -> Density[vdft.add]:
         other = densityfunction.unify(other).AST
         self = self.AST
         return Density(
-            t.add(
+            vdft.add(
                 argument1=other,
-                argument2=t.mul(
+                argument2=vdft.mul(
                     argument1=self,
                     argument2=constant(-1.0)
             )))
     
-    def __mul__(self, other) -> Density[t.mul]:
+    def __mul__(self, other) -> Density[vdft.mul]:
         other = densityfunction.unify(other).AST
         self = self.AST
-        return Density(t.mul(self, other))
+        return Density(vdft.mul(self, other))
     
-    def __rmul__(self, other) -> Density[t.mul]:
+    def __rmul__(self, other) -> Density[vdft.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other) -> Density[t.mul]:
+    def __truediv__(self, other) -> Density[vdft.mul]:
         other = densityfunction.unify(other).AST
         self = self.AST
-        return Density(t.mul(self, t.invert(other)))
+        return Density(vdft.mul(self, vdft.invert(other)))
     
-    def __rtruediv__(self, other) -> Density[t.mul]:
+    def __rtruediv__(self, other) -> Density[vdft.mul]:
         other = densityfunction.unify(other).AST
         self = self.AST
-        return Density(t.mul(other, t.invert(self)))
+        return Density(vdft.mul(other, vdft.invert(self)))
     
     @overload
-    def __pow__(self, other: Literal[2]) -> Density[t.square]: ...
+    def __pow__(self, other: Literal[2]) -> Density[vdft.square]: ...
     @overload
-    def __pow__(self, other: Literal[3]) -> Density[t.cube]: ...
+    def __pow__(self, other: Literal[3]) -> Density[vdft.cube]: ...
     @overload
-    def __pow__(self, other: int) -> Density[t.mul]: ...
+    def __pow__(self, other: int) -> Density[vdft.mul]: ...
     def __pow__(self, other):
         wrapped = self.AST
         if not isinstance(other, int):
             raise ValueError("Can't raise to non-integer powers")
         if other == 0:
-            return Density(t.constant(1))
+            return Density(vdft.constant(1))
         elif other == 1:
             return self
         elif other == 2:
-            return Density(t.square(wrapped))
+            return Density(vdft.square(wrapped))
         elif other == 3:
-            return Density(t.cube(wrapped))
+            return Density(vdft.cube(wrapped))
         elif other > 3:
-            s = Density(t.mul(wrapped, wrapped))
+            s = Density(vdft.mul(wrapped, wrapped))
             for i in range(other - 2):
-                s = Density(t.mul(s.AST, wrapped))
+                s = Density(vdft.mul(s.AST, wrapped))
             return s
 
     def __and__(self, other):
         other = densityfunction.unify(other).AST
         self = self.AST
-        return Density(t.max(self, other))
+        return Density(vdft.max(self, other))
     
     def __or__(self, other):
         other = densityfunction.unify(other).AST
         self = self.AST
-        return Density(t.min(self, other))
+        return Density(vdft.min(self, other))
     
-    def __abs__(self) -> "Density[t.abs]":
-        return Density(t.abs(self.AST))
+    def __abs__(self) -> "Density[vdft.abs]":
+        return Density(vdft.abs(self.AST))
     
-    def __neg__(self) -> Density[t.mul]:
-        return Density(t.mul(self.AST, constant(-1.0)))
+    def __neg__(self) -> Density[vdft.mul]:
+        return Density(vdft.mul(self.AST, constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self
@@ -255,30 +255,8 @@ class densityfunction(DSLType, Density):
         before constructing constant AST nodes.
         """
 
-        limit = t.constant_number_limit
-
         if isinstance(v, (int, float)):
-            vp = float(v)
-
-            if abs(vp) <= limit:
-                return Density(constant(vp))
-
-            sign = -1.0 if vp < 0 else 1.0
-            vp = abs(vp)
-
-            factors: list[float] = []
-            while vp > limit:
-                factors.append(float(limit))
-                vp /= limit
-
-            factors.append(vp * sign)
-
-            it = iter(constant(f) for f in factors)
-            result = t.mul(next(it), next(it))
-            for x in it:
-                result = t.mul(result, x)
-
-            return Density(result)
+            return Density(constant(float(v)))
 
         if isinstance(v, Density):
             return v

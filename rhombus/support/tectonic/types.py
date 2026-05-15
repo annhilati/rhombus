@@ -1,6 +1,6 @@
 from typing import ClassVar
 from rhombus.core.density_function import MappedFunctionBase, MultiArgumentsFunctionBase, DensityFunction
-from rhombus.language.noise import Noise
+from rhombus.std.noise import Noise
 from dataclasses import dataclass
 
 class invert(MappedFunctionBase):
