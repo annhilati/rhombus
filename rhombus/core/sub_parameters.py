@@ -1,11 +1,11 @@
-from typing import Self, Any
-from rhombus.core.utils import JSONDict, fields, annotated_fields, BeetFileClass
-from rhombus.core.node import Node, SerializationContext
+from typing import Self
+from rhombus.core.utils import JSONDict, annotated_fields
+from rhombus.core.node import RhombusASTNode, SerializationContext
 
 __all__ = ["SubParameters"]
 
 
-class SubParameters(Node):
+class SubParameters(RhombusASTNode):
     """Base class for parameter groups that are used inline in fields of density function types or another.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)

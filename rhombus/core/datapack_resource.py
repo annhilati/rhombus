@@ -1,21 +1,22 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, Self
-from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, annotated_fields, contextfunction, FROM_CONTEXT
-from rhombus.core.node import Node, SerializationContext
+from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, annotated_fields, contextfunction, FROM_CONTEXT
+from rhombus.core.node import RhombusASTNode, SerializationContext
 from rhombus import config
+from rhombus.core.serializer import deserialize, serialize
 import beet
 
-__all__ = ["DatapackResource", "BeetFileClass"]
+__all__ = ["DatapackResource"]
 
 
 @dataclass
-class DatapackResource(Node):
+class DatapackResource(RhombusASTNode):
     """Base class for resources that are provided by a datapack outside of a density function.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/datapack_resources/)
     """
 
-    fileclass: ClassVar[type[BeetFileClass]]
+    fileclass: ClassVar[type[BeetFile]]
     _reference: str | None = field(init=False, default=None)
 
     #======// Serialization //===================================================================//
@@ -27,13 +28,12 @@ class DatapackResource(Node):
         # We are in the top of a file -> we expect a JSONDict
         if ctx == SerializationContext.TOPLEVEL:
             if not isinstance(data, dict):
-                raise ValueError(f"Expected a dict, got '{type(data).__name__}'")
+                raise ValueError(f"Expected a dict, got '{type(data).__name__}'") 
             
-            from rhombus.core.serializer import deserialize
             fields = annotated_fields(cls)
 
             return cls(**{
-                parameter: deserialize(value, tp)
+                parameter: deserialize(value, tp, SerializationContext.INLINE)
                 for parameter, value in data.items()
                 if parameter in fields
                 for tp in (fields[parameter],)
@@ -54,7 +54,6 @@ class DatapackResource(Node):
         
         # We are in the top of a file -> we deliver the serialized fields
         if ctx == SerializationContext.TOPLEVEL:
-            from rhombus.core.serializer import serialize
             return {
                 parameter: serialize(value)
                 for parameter, value in self.fields.items()

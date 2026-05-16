@@ -1,5 +1,5 @@
-from typing import Callable, Final, Any, get_type_hints
-import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet.core.file
+from typing import Callable, Final, Any, get_type_hints, ClassVar
+import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet, beet.library.base
 
 
 #======// Typing //==============================================================================//
@@ -10,7 +10,10 @@ type Annotation = type
 type DataclassInstance = object
 type Dataclass = type
 type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
-type BeetFileClass = beet.core.file.DataModelBase
+class BeetFile(beet.library.base.NamespaceFile):
+    data: JSONDict | JSONValue | Any
+    scope: ClassVar[beet.library.base.NamespaceFileScope]
+    extension: ClassVar[str]
 
 #======// Data //================================================================================//
 
@@ -31,24 +34,16 @@ def uuid_hash(data: JSONDict) -> str:
 FROM_CONTEXT: Final = object()
 "Typing sentinel to denote that a value will be taken from a context variable."
 
-def contextfunction(**ctxparams: contextvars.ContextVar) -> Decorator:
+def contextfunction[**P, R](**ctxparams: contextvars.ContextVar) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator for automatic context handling for parameters.
-    
-    All kwargs in this decorator, that are also present as kwargs in the decorated function are affected.
-
-    If `FROM_CONTEXT` is passed:
-        Calls the function with the current value of the `ContextVar` of the corresponding decorator kwarg
-    If something else is passed:
-        Sets the `ContextVar` of the corresponding decorator kwarg and then calls the function
-
-    This decorator can also be used without `FROM_CONTEXT` entirely, as a tool to set `ContextVar`s.
+    ...
     """
 
-    def decorator(func: Callable):
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         sig = inspect.signature(func)
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             bound = sig.bind_partial(*args, **kwargs)
             bound.apply_defaults()
 
@@ -64,13 +59,17 @@ def contextfunction(**ctxparams: contextvars.ContextVar) -> Decorator:
                     tokens.setdefault(ctxvar, []).append(ctxvar.set(value))
 
             try:
-                return func(*bound.args, **bound.kwargs)
+                # Type-Checker wissen manchmal nicht, dass bind_partial die exakten Args wiederherstellt, 
+                # ein # type: ignore kann bei strenger Typisierung hier für mypy nötig sein,
+                # aber die Signatur nach außen bleibt erhalten.
+                return func(*bound.args, **bound.kwargs)  # type: ignore
             finally:
                 for ctxvar, token_list in tokens.items():
                     for token in reversed(token_list):
                         ctxvar.reset(token)
 
-        wrapper.__signature__ = sig
+        # Für die Laufzeit-Introspektion (z.B. pydantic oder FastAPI)
+        wrapper.__signature__ = sig # type: ignore
         return wrapper
         
     return decorator

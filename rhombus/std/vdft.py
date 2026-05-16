@@ -16,7 +16,7 @@ from rhombus.core import (
     Reference,
     constant,
     JSONDict,
-    decode_HOLDER_HELPER_CODEC
+    SerializationContext
 )
 from rhombus.std.noise import Noise
 
@@ -176,13 +176,13 @@ class spline(DensityFunction):
     @classmethod
     def deserialize(cls, data: JSONDict) -> "spline":
         return cls(
-            decode_HOLDER_HELPER_CODEC(data["spline"]["coordinate"]),
+            DensityFunction.deserialize(data["spline"]["coordinate"], ),
             [
                 (
                     point["location"],
-                    decode_HOLDER_HELPER_CODEC({"type": "minecraft:spline", "spline": point["value"]})
+                    DensityFunction.deserialize({"type": "minecraft:spline", "spline": point["value"]}, SerializationContext.INLINE)
                         if isinstance(point["value"], dict) and point["value"].get("type") is None
-                    else decode_HOLDER_HELPER_CODEC(point["value"]),
+                    else DensityFunction(point["value"], SerializationContext.INLINE),
                     point["derivative"]
                 )
                 for point in data["spline"]["points"]

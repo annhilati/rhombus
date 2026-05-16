@@ -1,18 +1,16 @@
 from tempfile import TemporaryDirectory
-from rhombus.core.datapack_resource import BeetFileClass, DatapackResource
-from rhombus.core.density_function import DensityFunction, Reference, constant
-from rhombus.core.sub_parameters import SubParameters
-from rhombus.core.utils import fields
-from rhombus.core.node import Node, SerializationContext
+from rhombus.core.datapack_resource import BeetFile
+from rhombus.core.density_function import Reference, constant
+from rhombus.core.node import RhombusASTNode, SerializationContext
 from beet.contrib.worldgen import WorldgenDensityFunction
 from pathlib import Path
 import os, sys, subprocess
 
 
-def compile(density: Node, identifier: str) -> dict[str, BeetFileClass]:
+def compile(density: RhombusASTNode, identifier: str) -> dict[str, BeetFile]:
     
 
-    files: dict[str, BeetFileClass] = {}
+    files: dict[str, BeetFile] = {}
 
     root = density
     if ":" not in identifier: identifier = "minecraft:" + identifier
@@ -23,11 +21,11 @@ def compile(density: Node, identifier: str) -> dict[str, BeetFileClass]:
     if isinstance(root, Reference): # To not have literal strings in a JSON file
         root = vdft.add(root, constant(0))
         
-    files[identifier] = WorldgenDensityFunction(root.serialize())
+    files[identifier] = WorldgenDensityFunction(root.serialize(SerializationContext.TOPLEVEL))
 
     return files
 
-def show_in_temp(files: dict[str, BeetFileClass]) -> None:
+def show_in_temp(files: dict[str, BeetFile]) -> None:
 
     def open_folder(path: Path) -> None:
         if sys.platform == "win32":

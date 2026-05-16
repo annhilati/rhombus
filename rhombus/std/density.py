@@ -14,8 +14,8 @@ import beet.contrib.worldgen as beet_worldgen
 from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.dsl.DSLType import DSLType
-from rhombus.core.utils import JSONDict, BeetFileClass, uuid_hash, contextfunction, FROM_CONTEXT
-from rhombus.core.serializer import decode_HOLDER_HELPER_CODEC
+from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
+from rhombus.core.node import SerializationContext
 from rhombus.core.compiler import compile
 from rhombus.std import vdft
 
@@ -100,9 +100,9 @@ class Density[Function: DensityFunction = DensityFunction]:
         
         A Beet datapack can be provided as context.
         """
-        return Density(decode_HOLDER_HELPER_CODEC(d, dp=dp))
+        return Density(DensityFunction.deserialize(d, SerializationContext.TOPLEVEL, dp=dp))
     
-    def compile(self, with_identifier: str, /) -> dict[str, BeetFileClass]:
+    def compile(self, with_identifier: str, /) -> dict[str, BeetFile]:
         "Compiles the Density into Beet file class instances."
         return compile(density=self.AST, identifier=with_identifier)
 

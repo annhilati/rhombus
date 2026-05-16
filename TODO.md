@@ -5,7 +5,6 @@
 - configuration feels random and has to be standardized
 - The wizards and their factory are not the best conceptualized
 - wizards dont work on classmethods?
-- decode_HOLDER_HELPER_CODEC annotations gone (see in language/dft)
 
 # Design
 - What kind of methods are attributes of Density objects?
