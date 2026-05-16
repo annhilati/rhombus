@@ -6,8 +6,8 @@ from rhombus.core import (
     DensityFunction,
     JSONDict,
     annotated_fields,
-    serialize,
-    deserialize
+    serialize_any,
+    deserialize_any
 )
 from rhombus.std import densityfunction, builtinmacro
 
@@ -78,7 +78,7 @@ class RandomSampler(SubParameters):
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: deserialize(value, tp)
+            parameter: deserialize_any(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
@@ -88,7 +88,7 @@ class RandomSampler(SubParameters):
     
     def serialize(self) -> JSONDict:
         return {**{
-            parameter: serialize(value)
+            parameter: serialize_any(value)
             for parameter, value
             in self.fields.items()
             if value is not None and parameter != "Lambda"

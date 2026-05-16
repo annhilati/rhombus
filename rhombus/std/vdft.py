@@ -16,9 +16,12 @@ from rhombus.core import (
     Reference,
     constant,
     JSONDict,
-    SerializationContext
+    contextfunction,
+    FROM_CONTEXT,
 )
 from rhombus.std.noise import Noise
+from rhombus import config
+import beet
 
 constant_number_limit = 10000000
 
@@ -174,15 +177,16 @@ class spline(DensityFunction):
     points: list[tuple[float, DensityFunction, float]]
 
     @classmethod
-    def deserialize(cls, data: JSONDict) -> "spline":
+    @contextfunction(dp=config.ctx.datapack)
+    def deserialize(cls, data: JSONDict, inline: bool = ..., dp: beet.DataPack | None = None) -> "spline":
         return cls(
             DensityFunction.deserialize(data["spline"]["coordinate"], ),
             [
                 (
                     point["location"],
-                    DensityFunction.deserialize({"type": "minecraft:spline", "spline": point["value"]}, SerializationContext.INLINE)
+                    DensityFunction.deserialize({"type": "minecraft:spline", "spline": point["value"]})
                         if isinstance(point["value"], dict) and point["value"].get("type") is None
-                    else DensityFunction(point["value"], SerializationContext.INLINE),
+                    else DensityFunction(point["value"]),
                     point["derivative"]
                 )
                 for point in data["spline"]["points"]

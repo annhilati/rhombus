@@ -1,10 +1,12 @@
+import os, sys, subprocess
+from pathlib import Path
 from tempfile import TemporaryDirectory
+
+from beet.contrib.worldgen import WorldgenDensityFunction
+
 from rhombus.core.datapack_resource import BeetFile
 from rhombus.core.density_function import Reference, constant
-from rhombus.core.node import RhombusASTNode, SerializationContext
-from beet.contrib.worldgen import WorldgenDensityFunction
-from pathlib import Path
-import os, sys, subprocess
+from rhombus.core.node import RhombusASTNode
 
 
 def compile(density: RhombusASTNode, identifier: str) -> dict[str, BeetFile]:
@@ -15,13 +17,9 @@ def compile(density: RhombusASTNode, identifier: str) -> dict[str, BeetFile]:
     root = density
     if ":" not in identifier: identifier = "minecraft:" + identifier
 
-    files |= root.generated_files()
-
-    from rhombus.std import vdft
-    if isinstance(root, Reference): # To not have literal strings in a JSON file
-        root = vdft.add(root, constant(0))
+    files |= root.additional_described_files()
         
-    files[identifier] = WorldgenDensityFunction(root.serialize(SerializationContext.TOPLEVEL))
+    files[identifier] = WorldgenDensityFunction(root.serialize(inline=False))
 
     return files
 

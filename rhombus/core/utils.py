@@ -1,4 +1,4 @@
-from typing import Callable, Final, Any, get_type_hints, ClassVar
+from typing import Callable, Final, Any, get_type_hints
 import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet, beet.library.base
 
 
@@ -6,14 +6,12 @@ import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet, 
 
 type JSONValue = dict[str, JSONValue] | list[JSONValue] | tuple[JSONValue] | str | int | float | bool | None
 type JSONDict = dict[str, JSONValue]
+type BeetFile = beet.library.base.NamespaceFile
+
 type Annotation = type
-type DataclassInstance = object
 type Dataclass = type
+type DataclassInstance = object
 type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
-class BeetFile(beet.library.base.NamespaceFile):
-    data: JSONDict | JSONValue | Any
-    scope: ClassVar[beet.library.base.NamespaceFileScope]
-    extension: ClassVar[str]
 
 #======// Data //================================================================================//
 
@@ -34,9 +32,8 @@ def uuid_hash(data: JSONDict) -> str:
 FROM_CONTEXT: Final = object()
 "Typing sentinel to denote that a value will be taken from a context variable."
 
-def contextfunction[**P, R](**ctxparams: contextvars.ContextVar) -> Callable[[Callable[P, R]], Callable[P, R]]:
+def contextfunction[**P, R](**ctxparams: contextvars.ContextVar) -> Decorator[P, R]:
     """Decorator for automatic context handling for parameters.
-    ...
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
@@ -79,16 +76,24 @@ def contextfunction[**P, R](**ctxparams: contextvars.ContextVar) -> Callable[[Ca
 
 def fields(o: DataclassInstance) -> dict[str, Any]:
     "Returns the fields of a dataclass instance, that are present in the init, with their values."
+    try:
+        flds = dataclasses.fields(o)
+    except TypeError:
+        raise TypeError(f"must be called with a dataclass type or instance, not: {o}")
     return {
         f.name: getattr(o, f.name, None)
-        for f in dataclasses.fields(o)
+        for f in flds
         if f.init
     }
 
 def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
     "Returns the fields of a dataclass, that are present in the init, with their annotation."
+    try:
+        flds = dataclasses.fields(o)
+    except TypeError:
+        raise TypeError(f"must be called with a dataclass type or instance, not: {o}")
     return {
         f.name: get_type_hints(o)[f.name]
-        for f in dataclasses.fields(o)
+        for f in flds
         if f.init
     }

@@ -1,7 +1,6 @@
 from typing import ClassVar, Self, Literal, Optional
 from dataclasses import dataclass
 from rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase, MultiArgumentsFunctionBase
-from rhombus.core.node import SerializationContext
 from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
 
 #======// Density Function Base Classes //=======================================================//
@@ -16,8 +15,8 @@ class DivisionFunctionBase(DensityFunction):
         numerator = data["argument1"]
         denominator = data["argument2"]
         return cls(
-            DensityFunction.deserialize(numerator, SerializationContext.INLINE),
-            DensityFunction.deserialize(denominator, SerializationContext.INLINE),
+            DensityFunction.deserialize(numerator),
+            DensityFunction.deserialize(denominator),
         )
     
     def serialize(self) -> dict:

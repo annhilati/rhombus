@@ -1,11 +1,13 @@
 from dataclasses import dataclass
 from typing import ClassVar, Self
-from rhombus.core.utils import JSONDict, annotated_fields, BeetFile, FROM_CONTEXT, contextfunction
-from rhombus.core.node import RhombusASTNode, SerializationContext
-from beet.contrib.worldgen import WorldgenDensityFunction
+
 import beet
+from beet.contrib.worldgen import WorldgenDensityFunction
+
+from rhombus.core.utils import JSONDict, annotated_fields, BeetFile, FROM_CONTEXT, contextfunction
+from rhombus.core.node import RhombusASTNode, IGNORED
+from rhombus.core.serializer import deserialize_any, serialize_any
 from rhombus import config
-from rhombus.core.serializer import deserialize, serialize
 
 __all__ = [
     "DensityFunction",
@@ -35,9 +37,10 @@ class DensityFunction(RhombusASTNode):
 
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
-    def deserialize(cls, data: JSONDict | str | float | int, ctx: SerializationContext, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
+    def deserialize(cls, data: JSONDict | str | float | int, inline: bool = IGNORED, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
         fields = annotated_fields(cls)
         
+        # Standard JSON object with 'type' key
         if isinstance(data, dict):
             t: str | None = data.get("type")
             if t is None:
@@ -52,31 +55,33 @@ class DensityFunction(RhombusASTNode):
                 )
             
             return cls(**{
-                parameter: deserialize(value, tp, SerializationContext.INLINE)
+                parameter: deserialize_any(value, tp)
                 for parameter, value in data.items()
                 if parameter in fields
                 for tp in (fields[parameter],)
             })
         
+        # Literal constant
         elif isinstance(data, (int, float)):
             return constant(float(data))
 
+        # Literal reference
         elif isinstance(data, str):
             data = "minecraft:" + data if ":" not in data else data
 
             default = None
             if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
                 default = f.data
-            return Reference(data, definition=deserialize(default, SerializationContext.TOPLEVEL) if default is not None else None)
+            return Reference(data, definition=deserialize_any(default, inline=False) if default is not None else None)
 
         else:
             raise TypeError(f"Cannot decode type '{type(data).__name__}' as density function argument")
 
         
-    def serialize(self, ctx: SerializationContext) -> JSONDict:
+    def serialize(self, inline: bool = IGNORED) -> JSONDict:
         
         return {"type": self.id, **{
-            parameter: serialize(SerializationContext.INLINE)
+            parameter: serialize_any(value)
             for parameter, value
             in self.fields.items()
             if value is not None
@@ -88,10 +93,10 @@ class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
     @classmethod
-    def deserialize(cls, data: dict = {}) -> Self:
+    def deserialize(cls, data: dict = {}, inline: bool = False, dp: beet.DataPack | None = None) -> Self:
         return cls()
     
-    def serialize(self) -> JSONDict:
+    def serialize(self, inline: bool = ...) -> JSONDict:
         return {"type": self.id}
     
 class MultiArgumentsFunctionBase(DensityFunction):
@@ -104,7 +109,6 @@ class MultiArgumentsFunctionBase(DensityFunction):
     of a subclass of `DatapackResource` or JSON-compatible, inherit from  
     `DensityFunction` instead and implement the methods manually.  
     """
-    
 
 @dataclass
 class MappedFunctionBase(MultiArgumentsFunctionBase):
@@ -129,19 +133,19 @@ class Reference(DensityFunction):
         if not isinstance(self.definition, DensityFunction) and self.definition is not None:
             raise ValueError(f"Cannot initialize Reference object with default of type {type(self.definition)}")
     
-    # @classmethod
-    # def deserialize(cls, data: str) -> "Reference":
-    #     from rhombus.core.serializer import decode_HOLDER_HELPER_CODEC
-    #     return decode_HOLDER_HELPER_CODEC(data)
     
-    # def serialize(self) -> str:
-    #     return self.reference
+    def serialize(self, inline: bool = True) -> str:
+        if inline:
+            return self.reference
+        elif not inline:
+            from rhombus.std import vdft
+            return vdft.add(vdft.constant(0.0), self).serialize(inline=False)
     
-    def generated_files(self) -> dict[str, BeetFile]:
+    def additional_described_files(self) -> dict[str, BeetFile]:
         files = {}
         if self.definition is not None:
-            files[self.reference] = WorldgenDensityFunction(self.definition.serialize())
-            files |= self.definition.generated_files()
+            files[self.reference] = WorldgenDensityFunction(self.definition.serialize(inline=False))
+            files |= self.definition.additional_described_files()
         return files
     
     def __repr__(self) -> str:
@@ -152,12 +156,9 @@ class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
             
-    # @classmethod
-    # def deserialize(cls, data: JSONDict | float) -> "constant":
-    #     return cls(data["argument"] if isinstance(data, dict) else data)
     
-    # def serialize(self) -> float:
-    #     return self.argument
+    def serialize(self, inline: bool = IGNORED) -> float:
+        return self.argument
 
     def __repr__(self) -> str:
         return str(self.argument)

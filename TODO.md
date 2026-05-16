@@ -34,3 +34,18 @@
   - [x] §9.2 Implement property setting and store reference secretly
   - [ ] §10 Implement separation rules for caching functions
   - [ ] §11 Abstract compiler instructions, so that completely new classes can be hooked in
+
+
+Node subclass
+- how to serialize (calls serialization coordinator)
+  - !! differenciate whether on top level or inline
+    - as an argument? -> cluttered
+- how to deserialize (if cls known)
+  - !! differenciate whether on top level or inline 
+
+serialization coordinator
+
+
+# TODO Features
+- Serialization
+  - make serialization procedures extendable
