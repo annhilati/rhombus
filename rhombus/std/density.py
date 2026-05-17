@@ -254,14 +254,14 @@ class densityfunction(DSLType, Density):
         before constructing constant AST nodes.
         """
 
-        if isinstance(v, (int, float)):
-            return Density(constant(float(v)))
-
         if isinstance(v, Density):
             return v
 
         if isinstance(v, DensityFunction):
             return Density(v)
+
+        if isinstance(v, (int, float)):
+            return Density(constant(float(v)))
 
         if isinstance(v, str):
             if ":" not in v:

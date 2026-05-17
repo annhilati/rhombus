@@ -48,29 +48,40 @@ class RhombusASTNode:
         
     #======// Typing //==========================================================================//
     
-    def serialize(self, inline: bool = True) -> JSONValue:
-        """Creates a dictionary containing the data serialized into the target format (primarily JSON).
+    def serialize_toplevel(self) -> JSONValue:
+        """Returns a JSON value containing the data serialized into the target
+        format (usually a dict), like it would be used at the top of a file
+        structure.
 
-        Only top-level, unreferenced data is retained. Nodes that generate references
-        only leave behind those references. To retrieve the data associated with the
-        references, use `~.additional_described_files()`.
-        
-        Parameters:
-            inline (bool): Whether the data to be serialized is to be found not at the top level of
-                the target file or it is. This parameter was introduced to signal whether to use
-                the raw data or a reference string when serializing DatapackResources, however the
-                exact implementation and use is left to the Node subclass.
+        For most node types, this will be the same as `~.serialize_toplevel`,
+        but for nodes, that cannot be defined inline a reference is returned.
+        Any default values for latter nodes are lost. To retrieve the data
+        associated with the references, use `~.additional_described_files()`.
+        """
+        raise NotImplementedError
+    
+    def serialize_inline(self) -> JSONValue:
+        """Returns a JSON value containing the data serialized into the target
+        format (usually a dict), like it would be used within a nested file
+        structure.
+
+        For most node types, this will be the same as `~.serialize_toplevel`,
+        but for nodes, that cannot be defined inline a reference is returned.
+        Any default values for latter nodes are lost. To retrieve the data
+        associated with the references, use `~.additional_described_files()`.
+        """
+        return self.serialize_toplevel()
+    
+    @classmethod
+    def deserialize_toplevel(cls, data) -> Self:
+        """Creates an instance of the class from data like it would be found at
+        the top of a file structure. 
         """
         raise NotImplementedError
     
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
-    def deserialize(cls, data: JSONValue, inline: bool, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
-        """Creates an instance of the class based on available data.
-        
-        Parameters:
-            data: ...
-            inline (bool): ...
-            dp (DataPack | None): Beet datapack from which references are to be resolved
+    def deserialize_inline(cls, data) -> Self:
+        """Creates an instance of the class from data like it would be found
+        within a nested file structure.
         """
-        raise NotImplementedError
+        return cls.deserialize_toplevel(data=data)

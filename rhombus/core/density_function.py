@@ -34,10 +34,17 @@ class DensityFunction(RhombusASTNode):
             DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
     
     #======// Serialization //===================================================================//
+    
+    def serialize_toplevel(self) -> JSONDict:
+        return {"type": self.id, **{
+            parameter: serialize_any(value)
+            for parameter, value
+            in self.fields.items()
+            if value is not None
+        }}
 
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
-    def deserialize(cls, data: JSONDict | str | float | int, inline: bool = IGNORED, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
+    def deserialize_toplevel(cls, data: JSONDict | float | int) -> Self:
         
         # Standard JSON object with 'type' key
         if isinstance(data, dict):
@@ -66,27 +73,18 @@ class DensityFunction(RhombusASTNode):
         elif isinstance(data, (int, float)):
             return constant(float(data))
 
-        # Literal reference
-        elif isinstance(data, str):
-            data = "minecraft:" + data if ":" not in data else data
-
-            default = None
-            if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-                default = f.data
-            return Reference(data, definition=deserialize_any(default, DensityFunction, inline=False) if default is not None else None)
-
         else:
-            raise TypeError(f"Cannot decode type '{type(data).__name__}' as density function argument")
+            raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function at top level")
 
-        
-    def serialize(self, inline: bool = IGNORED) -> JSONDict:
-        
-        return {"type": self.id, **{
-            parameter: serialize_any(value)
-            for parameter, value
-            in self.fields.items()
-            if value is not None
-        }}
+    @classmethod
+    def deserialize_inline(cls, data: JSONDict | float | int | str):
+        # Literal reference
+        if isinstance(data, str):
+            return Reference.deserialize_inline(data)
+        elif isinstance(data, (JSONDict, float, int)):
+            return cls.deserialize_toplevel(data)
+        else:
+            raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function inline")
         
 
 @dataclass
@@ -94,10 +92,10 @@ class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
     @classmethod
-    def deserialize(cls, data: dict = {}, inline: bool = False, dp: beet.DataPack | None = None) -> Self:
+    def deserialize_toplevel(cls, data: dict = {}) -> Self:
         return cls()
     
-    def serialize(self, inline: bool = ...) -> JSONDict:
+    def serialize_toplevel(self) -> JSONDict:
         return {"type": self.id}
     
 class MultiArgumentsFunctionBase(DensityFunction):
@@ -134,13 +132,21 @@ class Reference(DensityFunction):
         if not isinstance(self.definition, DensityFunction) and self.definition is not None:
             raise ValueError(f"Cannot initialize Reference object with default of type {type(self.definition)}")
     
+    @classmethod
+    def deserialize_inline(cls, data: str):
+        data = "minecraft:" + data if ":" not in data else data
+
+        default = None
+        
+        dp = config.ctx.datapack.get()
+        if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
+            default = f.data
+            
+        return Reference(data, definition=deserialize_any(default, DensityFunction) if default is not None else None)
     
-    def serialize(self, inline: bool = True) -> str:
-        if inline:
-            return self.reference
-        elif not inline:
-            from rhombus.std import vdft
-            return vdft.add(self, vdft.constant(0.0)).serialize(inline=False)
+    def serialize_toplevel(self):
+        from rhombus.std import vdft
+        return vdft.add(self, vdft.constant(0.0)).serialize_toplevel()
     
     def additional_described_files(self) -> dict[str, BeetFile]:
         files = {}
@@ -157,8 +163,7 @@ class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
             
-    
-    def serialize(self, inline: bool = IGNORED) -> float:
+    def serialize_toplevel(self) -> float:
         return self.argument
 
     def __repr__(self) -> str:
