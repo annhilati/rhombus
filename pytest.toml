@@ -1,0 +1,5 @@
+[pytest]
+minversion = "9.0"
+testpaths = ["tests"]
+python_files = ["*.py"]
+python_functions = ["test_*"]

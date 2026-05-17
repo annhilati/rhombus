@@ -1,17 +1,16 @@
 from typing import Self, Any
-from abc import ABC, abstractmethod
 
 import beet
 
 from rhombus.core.utils import BeetFile, fields, FROM_CONTEXT, JSONValue, contextfunction
 from rhombus import config
 
-__all__ = ["RhombusASTNode"]
+__all__ = ["RhombusASTNode", "IGNORED"]
     
 IGNORED = object()
 "Typing sentinel to indicate that inputs on an argument will have no effect"
 
-class RhombusASTNode(ABC):
+class RhombusASTNode:
     "Base class for all nodes in a Rhombus AST"
     
     def __init_subclass__(cls, **kwargs):   
@@ -49,7 +48,6 @@ class RhombusASTNode(ABC):
         
     #======// Typing //==========================================================================//
     
-    @abstractmethod
     def serialize(self, inline: bool = True) -> JSONValue:
         """Creates a dictionary containing the data serialized into the target format (primarily JSON).
 
@@ -67,8 +65,7 @@ class RhombusASTNode(ABC):
     
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
-    @abstractmethod
-    def deserialize(cls, data: JSONValue | Any, inline: bool, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
+    def deserialize(cls, data: JSONValue, inline: bool, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
         """Creates an instance of the class based on available data.
         
         Parameters:

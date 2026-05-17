@@ -38,23 +38,24 @@ class DensityFunction(RhombusASTNode):
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
     def deserialize(cls, data: JSONDict | str | float | int, inline: bool = IGNORED, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
-        fields = annotated_fields(cls)
         
         # Standard JSON object with 'type' key
         if isinstance(data, dict):
-            t: str | None = data.get("type")
-            if t is None:
+            type_field: str | None = data.get("type")
+            if type_field is None:
                 raise ValueError("Cannot deserialize density function from dict without key 'type'")
-            if ":" not in t:
-                t = "minecraft:" + t
-            cls = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(t)
-            if cls is None:
+            if ":" not in type_field:
+                type_field = "minecraft:" + type_field
+            target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
+            if target_class is None:
                 raise TypeError(
-                    f"Cannot deserialize density function with type id '{t}' from dict. "
+                    f"Cannot deserialize density function with type id '{type_field}' from dict. "
                     "No density function class with this id is defined"
                 )
             
-            return cls(**{
+            fields = annotated_fields(target_class)
+            
+            return target_class(**{
                 parameter: deserialize_any(value, tp)
                 for parameter, value in data.items()
                 if parameter in fields
@@ -72,7 +73,7 @@ class DensityFunction(RhombusASTNode):
             default = None
             if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
                 default = f.data
-            return Reference(data, definition=deserialize_any(default, inline=False) if default is not None else None)
+            return Reference(data, definition=deserialize_any(default, DensityFunction, inline=False) if default is not None else None)
 
         else:
             raise TypeError(f"Cannot decode type '{type(data).__name__}' as density function argument")
@@ -139,7 +140,7 @@ class Reference(DensityFunction):
             return self.reference
         elif not inline:
             from rhombus.std import vdft
-            return vdft.add(vdft.constant(0.0), self).serialize(inline=False)
+            return vdft.add(self, vdft.constant(0.0)).serialize(inline=False)
     
     def additional_described_files(self) -> dict[str, BeetFile]:
         files = {}

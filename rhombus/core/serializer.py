@@ -1,6 +1,5 @@
-from typing import get_origin, get_args, Union, TypeAliasType, Literal, Any, Callable
+from typing import get_origin, get_args, Union, TypeAliasType, Literal, Any
 from types import UnionType
-from collections import OrderedDict
 
 import beet
 
@@ -27,7 +26,7 @@ def serialize_any[T](o: T, inline: bool = True) -> JSONValue | T:
 
 @contextfunction(dp=config.ctx.datapack)
 def deserialize_any[T](v: Any, t: type[T], inline: bool = True, dp: beet.DataPack | None = FROM_CONTEXT) -> T:
-    "Main deserialization function"
+    "Main deserialization function for when the targettet type is known"
     
     origin = get_origin(t)
 

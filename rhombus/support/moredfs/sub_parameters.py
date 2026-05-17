@@ -7,9 +7,14 @@ from rhombus.core import (
     JSONDict,
     annotated_fields,
     serialize_any,
-    deserialize_any
+    deserialize_any,
+    IGNORED,
+    contextfunction,
+    FROM_CONTEXT
 )
 from rhombus.std import densityfunction, builtinmacro
+import beet
+from rhombus import config
 
 @dataclass
 class RandomSampler(SubParameters):
@@ -74,7 +79,8 @@ class RandomSampler(SubParameters):
         return cls(type="uniform", min=min, max=max)
     
     @classmethod
-    def deserialize(cls, data: JSONDict) -> "RandomSampler":
+    @contextfunction(dp=config.ctx.datapack)
+    def deserialize(cls, data: JSONDict, inline: bool = IGNORED, dp: beet.DataPack | None = FROM_CONTEXT) -> "RandomSampler":
         fields = annotated_fields(cls)
 
         return cls(**{
@@ -86,7 +92,7 @@ class RandomSampler(SubParameters):
         },
         **({"lambda": data["lambda"]} if data.get("lambda", None) is not None else {}))
     
-    def serialize(self) -> JSONDict:
+    def serialize(self, inline: bool = IGNORED) -> JSONDict:
         return {**{
             parameter: serialize_any(value)
             for parameter, value
