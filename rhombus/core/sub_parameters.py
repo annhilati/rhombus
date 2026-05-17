@@ -1,11 +1,8 @@
 from typing import Self
 
-import beet
-
-from rhombus.core.utils import JSONDict, annotated_fields, contextfunction, FROM_CONTEXT
-from rhombus.core.node import RhombusASTNode, IGNORED
-from rhombus.core.serializer import deserialize_any, serialize_any
-from rhombus import config
+from rhombus.core.utils import JSONDict, annotated_fields
+from rhombus.core.node import RhombusASTNode
+from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 
 __all__ = ["SubParameters"]
 
@@ -17,21 +14,20 @@ class SubParameters(RhombusASTNode):
     """
       
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
-    def deserialize(cls, data: JSONDict, inline: bool = IGNORED, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:        
+    def deserialize_toplevel(cls, data: JSONDict) -> Self:        
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: deserialize_any(value, tp)
+            parameter: deserialize_any_inline(value, tp)
             for parameter, value in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
         })
     
-    def serialize(self, inline: bool = IGNORED) -> JSONDict:
-        return {**{
-            parameter: serialize_any(value)
+    def serialize_toplevel(self) -> JSONDict:
+        return {
+            parameter: serialize_any_inline(value)
             for parameter, value
             in self.fields.items()
             if value is not None
-        }}
+        }

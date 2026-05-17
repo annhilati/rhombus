@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 from typing import ClassVar, Self
 
-import beet
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-from rhombus.core.utils import JSONDict, annotated_fields, BeetFile, FROM_CONTEXT, contextfunction
-from rhombus.core.node import RhombusASTNode, IGNORED
-from rhombus.core.serializer import deserialize_any, serialize_any
+from rhombus.core.node import RhombusASTNode
+from rhombus.core.serializer import deserialize_any_inline, deserialize_any_toplevel, serialize_any_inline
+from rhombus.core.utils import JSONDict, annotated_fields, BeetFile
 from rhombus import config
 
 __all__ = [
@@ -37,7 +36,7 @@ class DensityFunction(RhombusASTNode):
     
     def serialize_toplevel(self) -> JSONDict:
         return {"type": self.id, **{
-            parameter: serialize_any(value)
+            parameter: serialize_any_inline(value)
             for parameter, value
             in self.fields.items()
             if value is not None
@@ -63,7 +62,7 @@ class DensityFunction(RhombusASTNode):
             fields = annotated_fields(target_class)
             
             return target_class(**{
-                parameter: deserialize_any(value, tp)
+                parameter: deserialize_any_inline(value, tp)
                 for parameter, value in data.items()
                 if parameter in fields
                 for tp in (fields[parameter],)
@@ -81,7 +80,7 @@ class DensityFunction(RhombusASTNode):
         # Literal reference
         if isinstance(data, str):
             return Reference.deserialize_inline(data)
-        elif isinstance(data, (JSONDict, float, int)):
+        elif isinstance(data, (dict, float, int)):
             return cls.deserialize_toplevel(data)
         else:
             raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function inline")
@@ -142,16 +141,19 @@ class Reference(DensityFunction):
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
             default = f.data
             
-        return Reference(data, definition=deserialize_any(default, DensityFunction) if default is not None else None)
+        return Reference(data, definition=deserialize_any_toplevel(default, DensityFunction) if default is not None else None)
     
-    def serialize_toplevel(self):
+    def serialize_toplevel(self) -> JSONDict:
         from rhombus.std import vdft
         return vdft.add(self, vdft.constant(0.0)).serialize_toplevel()
+    
+    def serialize_inline(self) -> str:
+        return self.reference
     
     def additional_described_files(self) -> dict[str, BeetFile]:
         files = {}
         if self.definition is not None:
-            files[self.reference] = WorldgenDensityFunction(self.definition.serialize(inline=False))
+            files[self.reference] = WorldgenDensityFunction(self.definition.serialize_toplevel())
             files |= self.definition.additional_described_files()
         return files
     

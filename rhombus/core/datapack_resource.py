@@ -3,9 +3,9 @@ from typing import ClassVar, Self
 
 import beet
 
-from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, annotated_fields, contextfunction, FROM_CONTEXT
+from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, annotated_fields, contextfunction
 from rhombus.core.node import RhombusASTNode
-from rhombus.core.serializer import deserialize_any, serialize_any
+from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus import config
 
 __all__ = ["DatapackResource"]
@@ -23,49 +23,39 @@ class DatapackResource(RhombusASTNode):
 
     #======// Serialization //===================================================================//
     
+    def serialize_toplevel(self) -> JSONDict:
+        return {
+            parameter: serialize_any_inline(value)
+            for parameter, value
+            in self.fields.items()
+            if value is not None
+        }
+        
+    def serialize_inline(self) -> str:
+        return self.identifier
+    
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
-    def deserialize(cls, data: JSONDict | str, inline: bool = True, dp: beet.DataPack | None = FROM_CONTEXT) -> Self:
-        
-        # We are in the top of a file -> we expect a JSONDict
-        if not inline:
-            if not isinstance(data, dict):
-                raise ValueError(f"Expected a dict, got '{type(data).__name__}'") 
-            
-            fields = annotated_fields(cls)
+    def deserialize_toplevel(cls, data: JSONDict):
+        fields = annotated_fields(cls)
 
-            return cls(**{
-                parameter: deserialize_any(value, tp)
-                for parameter, value in data.items()
-                if parameter in fields
-                for tp in (fields[parameter],)
-            })
-            
-        # We are somewhere in a file -> we expect a string
-        elif inline:
-            if not isinstance(data, str):
-                raise ValueError(f"Expected a str, got '{type(data).__name__}'")
-            
-            id = "minecraft:" + data if not ":" in data else data
-            if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
-                return cls.deserialize(file.data, inline=False) # We deserialize the found data from top level context
-            return cls.referenced(id)
+        return cls(**{
+            parameter: deserialize_any_inline(value, tp)
+            for parameter, value in data.items()
+            if parameter in fields
+            for tp in (fields[parameter],)
+        })
         
+    @classmethod
+    def deserialize_inline(cls, data):
         
-    def serialize(self, inline: bool = True) -> JSONDict | str:
+        id = "minecraft:" + data if not ":" in data else data
         
-        # We are in the top of a file -> we deliver the serialized fields
-        if not inline:
-            return {
-                parameter: serialize_any(value)
-                for parameter, value in self.fields.items()
-                if value is not None
-            }
+        dp = config.ctx.datapack.get()
         
-        # We are somewhere in a file -> we deliver the reference string
-        elif inline:
-            return self.identifier
-        
+        if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
+            return cls.deserialize_toplevel(file.data) # We deserialize the found data from top level context
+        return cls.referenced(id)
+    
         
     #======// Dataclasses //=====================================================================//
 
@@ -74,7 +64,7 @@ class DatapackResource(RhombusASTNode):
         "The identifier of the datapack resource including the namespace."
         if self._reference is not None:
             return self._reference if ":" in self._reference else "minecraft:" + self._reference
-        return f"rhombus:generated/" + uuid_hash(self.serialize(inline=False))
+        return f"rhombus:generated/" + uuid_hash(self.serialize_toplevel())
 
     @identifier.setter
     def identifier(self, value: str | None) -> None:
@@ -85,7 +75,7 @@ class DatapackResource(RhombusASTNode):
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
-        return cls.deserialize(data=identifier, dp=dp) # The deserialization classmethod can do that
+        return cls.deserialize_inline(data=identifier) # The deserialization classmethod can do that
 
     @classmethod
     def referenced(cls, identifier: str, /) -> Self:
@@ -103,7 +93,7 @@ class DatapackResource(RhombusASTNode):
         return self.identifier == other.identifier
     
     def __hash__(self) -> int:
-        return hash(uuid_hash(self.serialize()))
+        return hash(uuid_hash(self.serialize_toplevel()))
     
     def as_dict(self) -> JSONDict:
-        return self.serialize(inline=False)
+        return self.serialize_toplevel()

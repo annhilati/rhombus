@@ -19,7 +19,7 @@ def compile(density: RhombusASTNode, identifier: str) -> dict[str, BeetFile]:
 
     files |= root.additional_described_files()
         
-    files[identifier] = WorldgenDensityFunction(root.serialize(inline=False))
+    files[identifier] = WorldgenDensityFunction(root.serialize_toplevel())
 
     return files
 
