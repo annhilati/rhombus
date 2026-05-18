@@ -30,6 +30,7 @@ __all__ = [
 ]
 
 from typing import Literal
+
 from rhombus.std.density import Density, densityfunction, ref
 from rhombus.std.noise import Noise
 from rhombus.std.utils import builtinmacro

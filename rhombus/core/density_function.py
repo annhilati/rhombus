@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-#======// Function Type Base Classes //==========================================================//
+#======// DensityFunction Base Class //==========================================================//
 
 class DensityFunction(RhombusASTNode):
     """Base class for density function types, which are the nodes of the density AST.
@@ -41,6 +41,8 @@ class DensityFunction(RhombusASTNode):
             in self.fields.items()
             if value is not None
         }}
+        
+    # serialize_inline() inherited from RhombusASTNode
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict | float | int) -> Self:
@@ -80,11 +82,14 @@ class DensityFunction(RhombusASTNode):
         # Literal reference
         if isinstance(data, str):
             return Reference.deserialize_inline(data)
+        # Constant or dictionary
         elif isinstance(data, (dict, float, int)):
             return cls.deserialize_toplevel(data)
         else:
             raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function inline")
         
+
+#======// Utility Base Classes //================================================================//
 
 @dataclass
 class SimpleFunctionBase(DensityFunction):
@@ -120,7 +125,7 @@ class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
     argument2: DensityFunction
 
     
-#======// Reference Classes //===================================================================//
+#======// Super Primitives //====================================================================//
 
 @dataclass    
 class Reference(DensityFunction):
@@ -143,6 +148,8 @@ class Reference(DensityFunction):
             
         return Reference(data, definition=deserialize_any_toplevel(default, DensityFunction) if default is not None else None)
     
+    # deserialize_toplevel() is not a realistic scenario
+    
     def serialize_toplevel(self) -> JSONDict:
         from rhombus.std import vdft
         return vdft.add(self, vdft.constant(0.0)).serialize_toplevel()
@@ -159,6 +166,7 @@ class Reference(DensityFunction):
     
     def __repr__(self) -> str:
         return self.reference
+    
     
 @dataclass
 class constant(DensityFunction):

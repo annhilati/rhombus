@@ -1,33 +1,15 @@
 from typing import Self, Any
 
-import beet
+from rhombus.core.utils import BeetFile, fields, JSONValue
 
-from rhombus.core.utils import BeetFile, fields, FROM_CONTEXT, JSONValue, contextfunction
-from rhombus import config
-
-__all__ = ["RhombusASTNode", "IGNORED"]
+__all__ = ["RhombusASTNode"]
     
-IGNORED = object()
-"Typing sentinel to indicate that inputs on an argument will have no effect"
-
+    
 class RhombusASTNode:
     "Base class for all nodes in a Rhombus AST"
     
     def __init_subclass__(cls, **kwargs):   
         super().__init_subclass__(**kwargs)
-
-        # if (sig := inspect.signature(getattr(cls, "serialize"))) is None:
-        #     raise TypeError
-        # else:
-        #     if "inline" not in sig.parameters:
-        #         raise TypeError("serialize must accept inline")
-        # if (sig := inspect.signature(getattr(cls, "deserialize"))) is None:
-        #     raise TypeError
-        # else:
-        #     if "inline" not in sig.parameters:
-        #         raise TypeError("serialize must accept inline")
-        #     if "dp" not in sig.parameters:
-        #         raise TypeError("serialize must accept inline")
 
         
     #======// Standard Implementations //========================================================//
@@ -46,7 +28,8 @@ class RhombusASTNode:
                 files |= value.additional_described_files()
         return files
         
-    #======// Typing //==========================================================================//
+        
+    #======// Serialization //===================================================================//
     
     def serialize_toplevel(self) -> JSONValue:
         """Returns a JSON value containing the data serialized into the target

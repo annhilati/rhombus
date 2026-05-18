@@ -59,7 +59,7 @@ class FastNoiseConfig(DatapackResource):
         }
     
     @classmethod
-    def referenced(cls, identifier):
+    def reference(cls, identifier):
         return cls(reference=identifier, type=None, frequency=None)
     
     @classmethod

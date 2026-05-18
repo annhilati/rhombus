@@ -5,7 +5,6 @@ from tempfile import TemporaryDirectory
 from beet.contrib.worldgen import WorldgenDensityFunction
 
 from rhombus.core.datapack_resource import BeetFile
-from rhombus.core.density_function import Reference, constant
 from rhombus.core.node import RhombusASTNode
 
 

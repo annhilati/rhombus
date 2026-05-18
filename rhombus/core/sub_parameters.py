@@ -13,6 +13,8 @@ class SubParameters(RhombusASTNode):
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)
     """
       
+    #======// Serialization //===================================================================//
+      
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> Self:        
         fields = annotated_fields(cls)
