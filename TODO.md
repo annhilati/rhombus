@@ -36,14 +36,6 @@
   - [ ] §11 Abstract compiler instructions, so that completely new classes can be hooked in
 
 
-Node subclass
-- how to serialize (calls serialization coordinator)
-  - !! differenciate whether on top level or inline
-    - as an argument? -> cluttered
-- how to deserialize (if cls known)
-  - !! differenciate whether on top level or inline 
-
-serialization coordinator
 
 
 # TODO Features

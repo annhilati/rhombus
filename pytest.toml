@@ -1,6 +1,6 @@
 [pytest]
 addopts = ["--spec"]
-required_plugins = [] # pytest_spec
+required_plugins = [] # pip install pytest_spec
 minversion = "9.0"
 testpaths = ["tests"]
 python_files = ["*.py"]

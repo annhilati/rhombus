@@ -20,6 +20,7 @@ def test_deserialize_literals():
     
     # References with available context
     with beet.DataPack(path="test_pack") as dp:
+        
         token = config.ctx.datapack.set(dp)
         
         dp.clear()

@@ -99,7 +99,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         
         A Beet datapack can be provided as context.
         """
-        return Density(DensityFunction.deserialize(d, inline=False, dp=dp))
+        return Density(DensityFunction.deserialize_toplevel(d))
     
     def compile(self, with_identifier: str, /) -> dict[str, BeetFile]:
         "Compiles the Density into Beet file class instances."

@@ -17,6 +17,7 @@ __all__ = [
 
 #======// DensityFunction Base Class //==========================================================//
 
+@dataclass(repr=False)
 class DensityFunction(RhombusASTNode):
     """Base class for density function types, which are the nodes of the density AST.
     
@@ -31,6 +32,7 @@ class DensityFunction(RhombusASTNode):
         super().__init_subclass__(**kwargs)
         if hasattr(cls, "id"):
             DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
+        
     
     #======// Serialization //===================================================================//
     
@@ -91,7 +93,7 @@ class DensityFunction(RhombusASTNode):
 
 #======// Utility Base Classes //================================================================//
 
-@dataclass
+@dataclass(repr=False)
 class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
@@ -117,12 +119,20 @@ class MultiArgumentsFunctionBase(DensityFunction):
 class MappedFunctionBase(MultiArgumentsFunctionBase):
     "Base class for density function types that map an argument `argument` to a value."
     argument: DensityFunction
+    
+    def __repr__(self) -> str:
+        print("Called!")
+        return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
 
 @dataclass
 class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
     "Base class for density function types with two arguments `argument1` and `argument2`."
     argument1: DensityFunction
     argument2: DensityFunction
+    
+    def __repr__(self) -> str:
+        print("Called!")
+        return self.__class__.__name__ + "(" + self.argument1.__repr__() + ", " + self.argument2.__repr__() + ")"
 
     
 #======// Super Primitives //====================================================================//
@@ -173,8 +183,18 @@ class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
             
-    def serialize_toplevel(self) -> float:
-        return self.argument
+    def serialize_toplevel(self) -> float | JSONDict:
+        
+        from rhombus.std import vdft
+        
+        def float_to_mul(value: float):
+
+            if abs(value) < 65536.0 * 16:
+                return value
+
+            return vdft.mul(float_to_mul(value / 65536.0), 65536.0,).serialize_inline()
+        
+        return float_to_mul(self.argument)
 
     def __repr__(self) -> str:
         return str(self.argument)

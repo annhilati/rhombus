@@ -1,15 +1,26 @@
 from typing import Self, Any
+from dataclasses import dataclass
 
 from rhombus.core.utils import BeetFile, fields, JSONValue
 
 __all__ = ["RhombusASTNode"]
     
-    
+@dataclass
 class RhombusASTNode:
     "Base class for all nodes in a Rhombus AST"
     
     def __init_subclass__(cls, **kwargs):   
         super().__init_subclass__(**kwargs)
+               
+    def __repr__(self) -> str:
+        # Philosophy:
+        # The __repr__ function should generate a string that is a valid Rhombus expression, with which the data can be reconstructed 
+        return self.__class__.__name__ + "(" + ", ".join([
+            param + "=" + value.__repr__()
+            for param, value
+            in self.fields.items()
+            if self.__dataclass_fields__[param].default != value
+        ]) + ")"
 
         
     #======// Standard Implementations //========================================================//

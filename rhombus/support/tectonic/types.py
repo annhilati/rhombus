@@ -6,12 +6,12 @@ from dataclasses import dataclass
 class invert(MappedFunctionBase):
     id: ClassVar[str] = "tectonic:invert"
 
-@dataclass
+@dataclass(repr=False)
 class config_constant(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "tectonic:config_constant"
     key: str
 
-@dataclass
+@dataclass(repr=False)
 class config_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "tectonic:config_noise"
     noise: Noise

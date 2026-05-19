@@ -14,7 +14,7 @@ from rhombus.std import densityfunction, builtinmacro
 import beet
 from rhombus import config
 
-@dataclass
+@dataclass(repr=False)
 class RandomSampler(SubParameters):
     """Describes a sampler for random values.
 
@@ -102,7 +102,7 @@ class RandomSampler(SubParameters):
     
 
 
-@dataclass
+@dataclass(repr=False)
 class DistanceMetric(SubParameters):
     """Describes a procedure to determine distances between n-dimensional points.
 
@@ -133,7 +133,7 @@ class DistanceMetric(SubParameters):
         return cls("minkowski", p=p)
 
 
-@dataclass
+@dataclass(repr=False)
 class ExtraOctaves(SubParameters):
     """
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#value-noise)
@@ -143,7 +143,7 @@ class ExtraOctaves(SubParameters):
     persistence: float
 
 
-@dataclass
+@dataclass(repr=False)
 class DerivativeComponent(SubParameters):
     """
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#derivative)

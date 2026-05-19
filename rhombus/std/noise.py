@@ -10,7 +10,7 @@ from rhombus.core.datapack_resource import DatapackResource
 __all__ = ["Noise"]
 
 
-@dataclass()
+@dataclass(repr=False)
 class Noise(DatapackResource):
     """Defines a perlin noise.
 

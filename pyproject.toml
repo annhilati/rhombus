@@ -11,7 +11,8 @@ authors = [
 dependencies = [
   "beet",
   "numpy",
-  "matplotlib"
+  "matplotlib",
+  "deepdiff"
 ]
 
 [project.urls]

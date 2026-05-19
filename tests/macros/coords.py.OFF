@@ -1,0 +1,12 @@
+import requests
+from rhombus import Density, coords
+
+
+def test_coords_integrity():
+    
+    reference = Density.from_dict(requests.get("https://raw.githubusercontent.com/klinbee/One-Island/refs/heads/main/One_Survival_Island/data/one_island/worldgen/density_function/coord/x.json").json())
+    
+    print(reference.as_dict())
+    print(coords.x().as_dict())
+    
+    assert reference == coords.x()

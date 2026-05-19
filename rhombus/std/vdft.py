@@ -16,14 +16,13 @@ from rhombus.core import (
     Reference,
     constant,
     JSONDict,
-    contextfunction,
-    FROM_CONTEXT,
+    contextfunction
 )
 from rhombus.std.noise import Noise
 from rhombus import config
 import beet
 
-constant_number_limit = 10000000
+constant_number_limit: float = 10000000.0
 
 __all__ = [
     "Reference", "constant",
@@ -72,7 +71,7 @@ class cache_all_in_cell(MappedFunctionBase):
 class cache_once(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_once"
 
-@dataclass
+@dataclass(repr=False)
 class clamp(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:clamp"
     input: DensityFunction # no references
@@ -85,7 +84,7 @@ class cube(MappedFunctionBase):
 class end_islands(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:end_islands"
 
-@dataclass
+@dataclass(repr=False)
 class find_top_surface(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:find_top_surface"
     density: DensityFunction
@@ -114,14 +113,14 @@ class min(DoubleArgumentFunctionBase):
 class mul(DoubleArgumentFunctionBase):
     id: ClassVar[str] = "minecraft:mul"
 
-@dataclass
+@dataclass(repr=False)
 class noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:noise"
     noise: Noise
     xz_scale: float
     y_scale: float
 
-@dataclass
+@dataclass(repr=False)
 class old_blended_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:old_blended_noise"
     xz_scale: float
@@ -133,7 +132,7 @@ class old_blended_noise(MultiArgumentsFunctionBase):
 class quarter_negative(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:quarter_negative"
 
-@dataclass
+@dataclass(repr=False)
 class range_choice(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:range_choice"
     input: DensityFunction
@@ -142,22 +141,22 @@ class range_choice(MultiArgumentsFunctionBase):
     when_in_range: DensityFunction
     when_out_of_range: DensityFunction
 
-@dataclass
+@dataclass(repr=False)
 class shift(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift"
     argument: Noise
 
-@dataclass
+@dataclass(repr=False)
 class shift_a(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift_a"
     argument: Noise
 
-@dataclass
+@dataclass(repr=False)
 class shift_b(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shift_b"
     argument: Noise
 
-@dataclass
+@dataclass(repr=False)
 class shifted_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:shifted_noise"
     noise: Noise
@@ -170,7 +169,7 @@ class shifted_noise(MultiArgumentsFunctionBase):
 class slide(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:slide"
 
-@dataclass
+@dataclass(repr=False)
 class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
     coordinate: DensityFunction
@@ -222,7 +221,7 @@ class square(MappedFunctionBase):
 class squeeze(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:squeeze"
 
-@dataclass
+@dataclass(repr=False)
 class terrain_shaper_spline(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:terrain_shaper_spline"
     spline: Literal["offset", "factor", "jaggedness"]
@@ -232,14 +231,14 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
     erosion: DensityFunction
     weirdness: DensityFunction
 
-@dataclass
+@dataclass(repr=False)
 class weird_scaled_sampler(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     rarity_value_mapper: Literal["type_1", "type_2"]
     noise: Noise
     input: DensityFunction
 
-@dataclass
+@dataclass(repr=False)
 class y_clamped_gradient(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
     from_y: int

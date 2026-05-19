@@ -1,12 +1,15 @@
 from typing import Callable, Final, Any, get_type_hints
-import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, beet, beet.library.base
+import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
+
+import beet, beet.library.base
 
 
 #======// Typing //==============================================================================//
 
 type JSONValue = dict[str, JSONValue] | list[JSONValue] | tuple[JSONValue] | str | int | float | bool | None
 type JSONDict = dict[str, JSONValue]
-type BeetFile = beet.library.base.NamespaceFile
+class BeetFile(beet.library.base.NamespaceFile):
+    data: JSONDict
 
 type Annotation = type
 type Dataclass = type

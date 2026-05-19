@@ -12,7 +12,7 @@ from rhombus import config
 __all__ = ["DatapackResource"]
 
 
-@dataclass
+@dataclass(repr=False)
 class DatapackResource(RhombusASTNode):
     """Base class for resources that are provided by a datapack outside of a density function.
     

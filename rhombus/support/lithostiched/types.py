@@ -6,12 +6,12 @@ from .fast_noise_config import FastNoiseConfig
 
 #======// Subparameters //=======================================================================//
 
-@dataclass
+@dataclass(repr=False)
 class InclusiveRange(SubParameters):
     min_inclusive: float
     max_inclusive: float
 
-@dataclass
+@dataclass(repr=False)
 class Selection(SubParameters):
     range: float | list[float] | InclusiveRange
     function: DensityFunction
@@ -19,7 +19,7 @@ class Selection(SubParameters):
 
 #======// Density Function Classes //============================================================//
 
-@dataclass
+@dataclass(repr=False)
 class axis(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "lithostitched:axis"
     axis: Literal["x", "y", "z"]
@@ -30,7 +30,7 @@ class ceil(MappedFunctionBase):
 class cos(MappedFunctionBase):
     id: ClassVar[str] = "lithostitched:cos"
 
-@dataclass
+@dataclass(repr=False)
 class fast_noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "lithostiched:fast_noise"
     config: FastNoiseConfig
@@ -43,7 +43,7 @@ class fast_noise(MultiArgumentsFunctionBase):
 class floor(MappedFunctionBase):
     id: ClassVar[str] = "lithostitched:floor"
 
-@dataclass
+@dataclass(repr=False)
 class mix(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "lithostitched:mix"
     input: DensityFunction
@@ -53,14 +53,14 @@ class mix(MultiArgumentsFunctionBase):
 class original_marker(SimpleFunctionBase):
     id: ClassVar[str] = "lithostitched:original_marker"
 
-@dataclass
+@dataclass(repr=False)
 class select(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "lithostitched:select"
     input: DensityFunction
     fallback: DensityFunction
     selections: list[Selection]
 
-@dataclass
+@dataclass(repr=False)
 class shift(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "lithostitched:shift"
     input: DensityFunction
