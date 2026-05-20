@@ -1,4 +1,4 @@
-"""Collection of the vanilla density function t.
+"""Collection of the vanilla density function type.
 
 
 """
@@ -105,13 +105,15 @@ def blend_offset() -> Density[vdft.blend_offset]:
     return Density(vdft.blend_offset())
 
 @builtinmacro
-def cache_2d(argument: densityfunction) -> Density[vdft.cache_2d]:
+def cache_2d(argument: densityfunction, *, partition: bool = True) -> Density[vdft.cache_2d]:
     """Only computes the input density once per horizontal position.
 
     ---
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+)
     `1.18.2-pre1` and above ┃ [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
+    if partition:
+        return Density.partitioned(vdft.cache_2d(argument))
     return Density(vdft.cache_2d(argument))
 
 @builtinmacro
@@ -129,7 +131,7 @@ def cache_all_in_cell(argument: densityfunction) -> Density[vdft.cache_all_in_ce
     return Density(vdft.cache_all_in_cell(argument))
 
 @builtinmacro
-def cache_once(argument: densityfunction) -> Density[vdft.cache_once]:
+def cache_once(argument: densityfunction, *, partition: bool = True) -> Density[vdft.cache_once]:
     """If this density function is referenced twice, it is only computed once per block position.
 
     Does not affect the density value.
@@ -138,6 +140,8 @@ def cache_once(argument: densityfunction) -> Density[vdft.cache_once]:
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+)
     `1.18.2-pre1` and above ┃ [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
+    if partition:
+        return Density.partitioned(vdft.cache_once(argument))
     return Density(vdft.cache_once(argument))
 
 @builtinmacro
@@ -194,13 +198,15 @@ def find_top_surface(density: densityfunction, upper_bound: densityfunction, low
     return Density(vdft.find_top_surface(density, upper_bound, lower_bound, cell_height))
 
 @builtinmacro
-def flat_cache(argument: densityfunction) -> Density[vdft.Reference]:
+def flat_cache(argument: densityfunction, *, partition: bool = True) -> Density[vdft.Reference]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
 
     ---
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+)
     `1.18.2-pre1` and above ┃ [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
+    if partition:
+        return Density.partitioned(vdft.flat_cache(argument))
     return Density(vdft.flat_cache(argument))
 
 @builtinmacro

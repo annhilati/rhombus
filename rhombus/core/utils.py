@@ -10,6 +10,8 @@ type JSONValue = dict[str, JSONValue] | list[JSONValue] | tuple[JSONValue] | str
 type JSONDict = dict[str, JSONValue]
 class BeetFile(beet.library.base.NamespaceFile):
     data: JSONDict
+    encoder: Callable[[JSONDict], str]
+    decoder: Callable[[str], JSONDict]
 
 type Annotation = type
 type Dataclass = type

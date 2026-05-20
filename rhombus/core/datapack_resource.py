@@ -41,7 +41,8 @@ class DatapackResource(RhombusASTNode):
 
         return cls(**{
             parameter: deserialize_any_inline(value, tp)
-            for parameter, value in data.items()
+            for parameter, value
+            in data.items()
             if parameter in fields
             for tp in (fields[parameter],)
         })
@@ -56,6 +57,16 @@ class DatapackResource(RhombusASTNode):
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
         return cls.reference(id)
+    
+    def additional_described_files(self) -> dict[str, BeetFile]:
+        files = {}
+        if not all(param is None for param in self.fields.values()):
+            files[self.identifier] = self.fileclass(self.serialize_toplevel())
+        
+            for param, value in self.fields.items():
+                if isinstance(value, RhombusASTNode):
+                    files |= value.additional_described_files()
+        return files
     
     @property
     def identifier(self) -> str:

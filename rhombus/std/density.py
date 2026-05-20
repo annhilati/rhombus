@@ -15,7 +15,6 @@ from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
-from rhombus.core.compiler import compile
 from rhombus.std import vdft
 
 __all__ = ["Density", "ref", "densityfunction"]
@@ -54,6 +53,11 @@ class Density[Function: DensityFunction = DensityFunction]:
         return densityfunction.unify(value)
     
     @classmethod
+    def reference(cls, identifier: str) -> Density[Reference]:
+        """Creates a Density refering to an externally provided density function."""
+        return cls(Reference(identifier))
+    
+    @classmethod
     def configured(cls, name: str, default: densityfunction) -> Density[Reference]:
         """Creates a Density that will be casted into a specific file when compiling."""
         name = "minecraft:" + name if not ":" in name else name
@@ -70,11 +74,6 @@ class Density[Function: DensityFunction = DensityFunction]:
             reference="rhombus:generated/" + uuid_hash(value.as_dict()),
             definition=value.AST)
         )
-    
-    @classmethod
-    def reference(cls, identifier: str) -> Density[Reference]:
-        """Creates a Density refering to an externally provided density function."""
-        return cls(Reference(identifier))
     
 
     #======// Toolchain //=======================================================================//
@@ -101,34 +100,60 @@ class Density[Function: DensityFunction = DensityFunction]:
         """
         return Density(DensityFunction.deserialize_toplevel(d))
     
-    def compile(self, with_identifier: str, /) -> dict[str, BeetFile]:
+    def compile(self, identifier: str, /) -> dict[str, BeetFile]:
         "Compiles the Density into Beet file class instances."
-        return compile(density=self.AST, identifier=with_identifier)
+        files: dict[str, BeetFile] = {}
 
-    def inject(self, dp: beet.DataPack, with_identifier: str) -> None:
+        if ":" not in identifier: identifier = "minecraft:" + identifier
+
+        files[identifier] = beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel())
+        files |= self.AST.additional_described_files()
+
+        return files
+
+    def inject(self, dp: beet.DataPack, identifier: str) -> None:
         """Implements the Density and all additionally required files in a datapack.
-        
         """
 
-        files = self.compile(with_identifier)
-
+        files = self.compile(identifier)    
         for id, file in files.items():
             dp[id] = file
-            # print(f"Implemented {type(file).__name__} '{id}'")
-            
-        # print(f"Finished implementing density function '{with_identifier}'")
+        
+    
+    #======// Debug //===========================================================================//
     
     def as_dict(self) -> JSONDict:
         """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>
         The dictionary will not be fully inline. References that require separate files will be references."""
-        return self.compile("a:a")["a:a"].data
+        return self.AST.serialize_toplevel()
 
-    def show_in_dir(self, with_name: str = "test"):
+    def show_in_dir(self, identifier: str = "test"):
         "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
-        from rhombus.core.compiler import show_in_temp
-        files = self.compile(with_name)
-        show_in_temp(files)
+        import sys, os, subprocess, tempfile, pathlib
         
+        files = self.compile(identifier)
+        
+        def open_folder(path: pathlib.Path) -> None:
+            if sys.platform == "win32":
+                os.startfile(path)
+            elif sys.platform == "darwin":
+                subprocess.run(["open", path])
+            else:
+                subprocess.run(["xdg-open", path])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = pathlib.Path(tmp)
+
+            for id, file in files.items():
+                namespace = id.split(":")[0]
+                name = id.split(":")[-1].replace("/", ".")
+                path = tmp / (namespace + "." + file.scope[-1] + "." + name + file.extension)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(file.encoder(file.data))
+
+            open_folder(tmp)
+            input("Press enter to let go temporary directory ... ")
+                
 
     #======// Arithmetic Magic //================================================================//
     
@@ -268,7 +293,7 @@ class densityfunction(DSLType, Density):
                 v = "minecraft:" + v
             return Density(Reference(v))
 
-        raise ValueError(f"Cannot resolve object of type '{type(v)}' to a density function")
+        raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
 
 
 def ref(identifier: str, /) -> Density[Reference]:
