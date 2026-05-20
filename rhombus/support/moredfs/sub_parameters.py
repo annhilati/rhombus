@@ -10,7 +10,7 @@ from rhombus.core import (
     deserialize_any_inline,
     contextfunction
 )
-from rhombus.std import densityfunction, builtinmacro
+from rhombus.std import AnyDensity, builtinmacro
 import beet
 from rhombus import config
 
@@ -152,6 +152,6 @@ class DerivativeComponent(SubParameters):
     direction: DensityFunction
 
     @builtinmacro
-    def __init__(self, step: int, direction: densityfunction):
+    def __init__(self, step: int, direction: AnyDensity):
         self.step = step
         self.direction = direction

@@ -2,13 +2,13 @@ from typing import Union, TypeAliasType, Callable, get_args, get_origin
 from types import UnionType
 from rhombus.core.utils import Decorator
 from rhombus.core.dsl.DSLType import DSLMethod
-from rhombus.std.density import Density, densityfunction
+from rhombus.std.density import Density, AnyDensity
 import inspect, functools
 
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
     
     def _apply_by_annotation(annotation: type) -> bool:
-        if annotation is densityfunction:
+        if annotation is AnyDensity:
             return True
         if get_origin(annotation) in [Union, UnionType]:
             args = get_args(annotation)
@@ -34,7 +34,7 @@ def WizardFactory(*, unwrap: bool = False) -> Decorator:
             for name in params_to_resolve:
                 if name in bound.arguments:
                     current_val = bound.arguments[name]
-                    resolved = densityfunction.unify(current_val)
+                    resolved = AnyDensity.unify(current_val)
                     # replace this with DSLmethod logic sometime
 
                     if unwrap:

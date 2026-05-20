@@ -1,5 +1,5 @@
 from rhombus import splines as s
-from rhombus.std.density import Density, densityfunction
+from rhombus.std.density import Density, AnyDensity
 from rhombus.std import functions as f, macro, vdft
 from rhombus.macros import math as m
 from math import pi, sqrt
@@ -9,7 +9,7 @@ __all__ = ["cos", "PDF", "sin", "smoothstep"]
 
 
 @macro
-def cos(argument: densityfunction, xRange: tuple[float, float] = (-pi, pi)) -> Density[vdft.spline]:
+def cos(argument: AnyDensity, xRange: tuple[float, float] = (-pi, pi)) -> Density[vdft.spline]:
     """Evaluates the cosine value of the input.
 
     Parameters:
@@ -19,7 +19,7 @@ def cos(argument: densityfunction, xRange: tuple[float, float] = (-pi, pi)) -> D
     return f.spline(argument, s.function_spline_points(_math.cos, xRange, points))
 
 @macro
-def logistic(argument: densityfunction, capacity: float = 1, growth_rate: float = 4, center: float = 0, xRange: tuple[float, float] = (-1, 1)) -> Density[vdft.spline]:
+def logistic(argument: AnyDensity, capacity: float = 1, growth_rate: float = 4, center: float = 0, xRange: tuple[float, float] = (-1, 1)) -> Density[vdft.spline]:
     """Evaluates the value of the input on a logistic function.
 
     Parameters:
@@ -35,7 +35,7 @@ def logistic(argument: densityfunction, capacity: float = 1, growth_rate: float 
     return f.spline(argument, s.function_spline_points(func, xRange))
 
 @macro
-def PDF(argument: densityfunction, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[vdft.spline]:
+def PDF(argument: AnyDensity, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[vdft.spline]:
     """Evaluates the value of the input on a probability density function.
 
     Parameters:
@@ -49,7 +49,7 @@ def PDF(argument: densityfunction, mean: float = 0, standard_deviation: float = 
     return f.spline(argument, s.function_spline_points(pdf, (mean - 3.5*standard_deviation, mean + 3.5*standard_deviation), 13))
 
 @macro
-def sin(argument: densityfunction, xRange: tuple[float, float] = (-pi, pi)) -> Density[vdft.spline]:
+def sin(argument: AnyDensity, xRange: tuple[float, float] = (-pi, pi)) -> Density[vdft.spline]:
     """Evaluates the sine value of the input.
 
     Parameters:
@@ -59,7 +59,7 @@ def sin(argument: densityfunction, xRange: tuple[float, float] = (-pi, pi)) -> D
     return f.spline(argument, s.function_spline_points(_math.sin, xRange, points))
 
 @macro
-def smoothstep(argument: densityfunction, xRange: tuple[float, float] = (-1, 1), yRange: tuple[float, float] = (-1, 1)) -> Density[vdft.spline]:
+def smoothstep(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1), yRange: tuple[float, float] = (-1, 1)) -> Density[vdft.spline]:
     """Evaluates a smoothstep transition of the input.
 
     The smoothstep curve rises smoothly from `yRange[0]` to `yRange[1]` while the

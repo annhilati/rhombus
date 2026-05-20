@@ -31,7 +31,7 @@ __all__ = [
 
 from typing import Literal
 
-from rhombus.std.density import Density, densityfunction, ref
+from rhombus.std.density import Density, AnyDensity, ref
 from rhombus.std.noise import Noise
 from rhombus.std.utils import builtinmacro
 from rhombus.std import vdft
@@ -40,7 +40,7 @@ from rhombus.std import vdft
 #======// Builtin Functions //===================================================================//
 
 @builtinmacro
-def abs(argument: densityfunction) -> Density[vdft.abs]:
+def abs(argument: AnyDensity) -> Density[vdft.abs]:
     """Calculates the absolute value of the input.
 
     ---
@@ -50,7 +50,7 @@ def abs(argument: densityfunction) -> Density[vdft.abs]:
     return Density(vdft.abs(argument))
 
 @builtinmacro
-def add(argument1: densityfunction, argument2: densityfunction) -> Density[vdft.add]:
+def add(argument1: AnyDensity, argument2: AnyDensity) -> Density[vdft.add]:
     """Adds two inputs together.
 
     ---
@@ -82,7 +82,7 @@ def blend_alpha() -> Density[vdft.blend_alpha]:
     return Density(vdft.blend_alpha())
 
 @builtinmacro
-def blend_density(argument: densityfunction) -> Density[vdft.blend_density]:
+def blend_density(argument: AnyDensity) -> Density[vdft.blend_density]:
     """Used for smooth transition to chunks generated in old versions.
 
     Does not affect the density value.
@@ -105,7 +105,7 @@ def blend_offset() -> Density[vdft.blend_offset]:
     return Density(vdft.blend_offset())
 
 @builtinmacro
-def cache_2d(argument: densityfunction, *, partition: bool = True) -> Density[vdft.cache_2d]:
+def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[vdft.cache_2d]:
     """Only computes the input density once per horizontal position.
 
     ---
@@ -117,7 +117,7 @@ def cache_2d(argument: densityfunction, *, partition: bool = True) -> Density[vd
     return Density(vdft.cache_2d(argument))
 
 @builtinmacro
-def cache_all_in_cell(argument: densityfunction) -> Density[vdft.cache_all_in_cell]:
+def cache_all_in_cell(argument: AnyDensity) -> Density[vdft.cache_all_in_cell]:
     """🚨 Should not be used in datapacks.
 
     ---
@@ -131,7 +131,7 @@ def cache_all_in_cell(argument: densityfunction) -> Density[vdft.cache_all_in_ce
     return Density(vdft.cache_all_in_cell(argument))
 
 @builtinmacro
-def cache_once(argument: densityfunction, *, partition: bool = True) -> Density[vdft.cache_once]:
+def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[vdft.cache_once]:
     """If this density function is referenced twice, it is only computed once per block position.
 
     Does not affect the density value.
@@ -145,7 +145,7 @@ def cache_once(argument: densityfunction, *, partition: bool = True) -> Density[
     return Density(vdft.cache_once(argument))
 
 @builtinmacro
-def clamp(input: densityfunction, min: float, max: float) -> Density[vdft.clamp]:
+def clamp(input: AnyDensity, min: float, max: float) -> Density[vdft.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
 
     **NOTE** [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
@@ -163,10 +163,10 @@ def constant(argument: float) -> Density[vdft.constant]:
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+)
     `1.18.2-pre1` and above ┃ [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#constant)
     """
-    return densityfunction.unify(argument)
+    return AnyDensity.unify(argument)
 
 @builtinmacro
-def cube(argument: densityfunction) -> Density[vdft.cube]:
+def cube(argument: AnyDensity) -> Density[vdft.cube]:
     """Raises the input to the power of 3.
     
     ---
@@ -188,7 +188,7 @@ def end_islands() -> Density[vdft.end_islands]:
     return Density(vdft.end_islands())
 
 @builtinmacro
-def find_top_surface(density: densityfunction, upper_bound: densityfunction, lower_bound: int, cell_height: int) -> Density[vdft.find_top_surface]:
+def find_top_surface(density: AnyDensity, upper_bound: AnyDensity, lower_bound: int, cell_height: int) -> Density[vdft.find_top_surface]:
     """Scans through a column of a input density and returns the topmost Y-level that is above `0`. If no such position exists withing the bounds, the `lower_bound` is returned.
 
     ---
@@ -198,7 +198,7 @@ def find_top_surface(density: densityfunction, upper_bound: densityfunction, low
     return Density(vdft.find_top_surface(density, upper_bound, lower_bound, cell_height))
 
 @builtinmacro
-def flat_cache(argument: densityfunction, *, partition: bool = True) -> Density[vdft.Reference]:
+def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[vdft.Reference]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
 
     ---
@@ -210,7 +210,7 @@ def flat_cache(argument: densityfunction, *, partition: bool = True) -> Density[
     return Density(vdft.flat_cache(argument))
 
 @builtinmacro
-def half_negative(argument: densityfunction) -> Density[vdft.half_negative]:
+def half_negative(argument: AnyDensity) -> Density[vdft.half_negative]:
     """If the input is negative, returns half of the input. Otherwise returns the input.
     
     ---
@@ -220,7 +220,7 @@ def half_negative(argument: densityfunction) -> Density[vdft.half_negative]:
     return Density(vdft.half_negative(argument))
 
 @builtinmacro
-def interpolated(argument: densityfunction) -> Density[vdft.interpolated]:
+def interpolated(argument: AnyDensity) -> Density[vdft.interpolated]:
     """Interpolates at each block in one cell based on the input density function value of some cells around. The size of each cell is 4 by 4. Used often in combination with `flat_cache`.
 
     ---
@@ -230,7 +230,7 @@ def interpolated(argument: densityfunction) -> Density[vdft.interpolated]:
     return Density(vdft.interpolated(argument))
 
 @builtinmacro
-def invert(argument: densityfunction) -> Density[vdft.invert]:
+def invert(argument: AnyDensity) -> Density[vdft.invert]:
     """Calculates `1/x`.
     
     **NOTE** That `invert` is `Infinity` for `0`.
@@ -242,7 +242,7 @@ def invert(argument: densityfunction) -> Density[vdft.invert]:
     return Density(vdft.invert(argument))
 
 @builtinmacro
-def max(argument1: densityfunction, argument2: densityfunction) -> Density[vdft.max]:
+def max(argument1: AnyDensity, argument2: AnyDensity) -> Density[vdft.max]:
     """Returns the maximum of two inputs.
 
     This can be used to combine the terrain masses of two density functions.
@@ -254,7 +254,7 @@ def max(argument1: densityfunction, argument2: densityfunction) -> Density[vdft.
     return Density(vdft.max(argument1, argument2))
 
 @builtinmacro
-def min(argument1: densityfunction, argument2: densityfunction) -> Density[vdft.min]:
+def min(argument1: AnyDensity, argument2: AnyDensity) -> Density[vdft.min]:
     """Returns the minimum of two inputs.
 
     This can be used to combine the cavities of two density functions.
@@ -266,7 +266,7 @@ def min(argument1: densityfunction, argument2: densityfunction) -> Density[vdft.
     return Density(vdft.min(argument1, argument2))
 
 @builtinmacro
-def mul(argument1: densityfunction, argument2: densityfunction) -> Density[vdft.mul]:
+def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[vdft.mul]:
     """Multiplies two inputs.
     
     **NOTE** that `Infinity * 0` is `NaN`.
@@ -313,7 +313,7 @@ def old_blended_noise(xz_scale: float, y_scale: float, xz_factor: float, y_facto
     return Density(vdft.old_blended_noise(xz_scale, y_scale, xz_factor, y_factor, smear_scale_multiplier))
 
 @builtinmacro
-def quarter_negative(argument: densityfunction) -> Density[vdft.quarter_negative]:
+def quarter_negative(argument: AnyDensity) -> Density[vdft.quarter_negative]:
     """If the input is negative, returns a quarter of the input. Otherwise returns the input.
     
     ---
@@ -323,7 +323,7 @@ def quarter_negative(argument: densityfunction) -> Density[vdft.quarter_negative
     return Density(vdft.quarter_negative(argument))
 
 @builtinmacro
-def range_choice(input: densityfunction, min_inclusive: float, max_exclusive: float, when_in_range: densityfunction, when_out_of_range: densityfunction) -> Density[vdft.range_choice]:
+def range_choice(input: AnyDensity, min_inclusive: float, max_exclusive: float, when_in_range: AnyDensity, when_out_of_range: AnyDensity) -> Density[vdft.range_choice]:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
 
     ```
@@ -367,7 +367,7 @@ def shift_b(argument: Noise) -> Density[vdft.shift_b]:
     return Density(vdft.shift_b(argument))
 
 @builtinmacro
-def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: densityfunction, shift_y: densityfunction, shift_z: densityfunction) -> Density[vdft.shifted_noise]:
+def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: AnyDensity, shift_y: AnyDensity, shift_z: AnyDensity) -> Density[vdft.shifted_noise]:
     """Samples a noise after shifting the input coordinates.
 
     Parameters:
@@ -385,7 +385,7 @@ def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: densit
     return Density(vdft.shifted_noise(noise, xz_scale, y_scale, shift_x, shift_y, shift_z))
 
 @builtinmacro
-def slide(argument: densityfunction) -> Density[vdft.slide]:
+def slide(argument: AnyDensity) -> Density[vdft.slide]:
     """*Technical description missing*
 
     Somehow brings values closer to zero. Everything below `Y=7` is `0.117`, everything above `Y=191` is `-0.0781`.
@@ -398,7 +398,7 @@ def slide(argument: densityfunction) -> Density[vdft.slide]:
     return Density(vdft.slide(argument))
 
 @builtinmacro
-def spline(coordinate: densityfunction, points: list[tuple[float, densityfunction, float]]) -> Density[vdft.spline]:
+def spline(coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]) -> Density[vdft.spline]:
     """Computes the value of a cubic spline for the input.
 
     The values for the points represent in order: `location`, `value` and `derivative`.
@@ -411,11 +411,11 @@ def spline(coordinate: densityfunction, points: list[tuple[float, densityfunctio
     ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgIGZpbGw6ICNDNEVFRDA7IC8qIExpZ2h0IG1vZGUgKi8KICAgIH0KCiAgICBAbWVkaWEgKHByZWZlcnMtY29sb3Itc2NoZW1lOiBkYXJrKSB7CiAgICAgIC5ncmVlbi1zaGFwZSB7CiAgICAgICAgZmlsbDogIzEyNTIyNTsgLyogRGFyayBtb2RlICovCiAgICAgIH0KICAgIH0KICA8L3N0eWxlPgogIDxwYXRoIGQ9Ik00MjAgMzBMMzkwIDYwTDQ4MCAxNTBMMzkwIDI0MEwzMzAgMTgwTDMwMCAyMTBMMzkwIDMwMEw1NDAgMTUwTDQyMCAzMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0xNTAgMEwzMCAxMjBMNjAgMTUwTDE1MCA2MEwyMTAgMTIwTDI0MCA5MEwxNTAgMFoiIGNsYXNzPSJncmVlbi1zaGFwZSIvPgogIDxwYXRoIGQ9Ik0zOTAgMEw0MjAgMzBMMTUwIDMwMEwwIDE1MEwzMCAxMjBMMTUwIDI0MEwzOTAgMFoiIGZpbGw9IiMxRUE0NDYiLz4KPC9zdmc+)
     `1.18.2-pre2` and above ┃ [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
     """
-    points = [(p[0], densityfunction.unify(p[1]).AST, p[2]) for p in points]
+    points = [(p[0], AnyDensity.unify(p[1]).AST, p[2]) for p in points]
     return Density(vdft.spline(coordinate, points))
 
 @builtinmacro
-def square(argument: densityfunction) -> Density[vdft.square]:
+def square(argument: AnyDensity) -> Density[vdft.square]:
     """Raises the input to the power of 2.
     
     ---
@@ -425,7 +425,7 @@ def square(argument: densityfunction) -> Density[vdft.square]:
     return Density(vdft.square(argument))
 
 @builtinmacro
-def squeeze(argument: densityfunction) -> Density[vdft.squeeze]:
+def squeeze(argument: AnyDensity) -> Density[vdft.squeeze]:
     """First clamps the input between `-1` and `1`, then transforms it using `x/2 - x*x*x/24`.
 
     ---
@@ -439,9 +439,9 @@ def terrain_shaper_spline(
     spline: Literal["offset", "factor", "jaggedness"],
     min_value: float,
     max_value: float,
-    continentalness: densityfunction,
-    erosion: densityfunction,
-    weirdness: densityfunction
+    continentalness: AnyDensity,
+    erosion: AnyDensity,
+    weirdness: AnyDensity
     ) -> Density[vdft.terrain_shaper_spline]:
     """Calculate the spline from the noise settings.
 
@@ -452,7 +452,7 @@ def terrain_shaper_spline(
     return Density(vdft.terrain_shaper_spline(spline, min_value, max_value, continentalness, erosion, weirdness))
 
 @builtinmacro
-def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input: densityfunction, noise: Noise) -> Density[vdft.weird_scaled_sampler]:
+def weird_scaled_sampler(rarity_value_mapper: Literal["type_1", "type_2"], input: AnyDensity, noise: Noise) -> Density[vdft.weird_scaled_sampler]:
     """According to the input value, scales and enhances (or weakens) some regions of the specified noise, and then returns the absolute value.
 
     ---

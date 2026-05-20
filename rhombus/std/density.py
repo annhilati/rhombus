@@ -17,7 +17,7 @@ from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import vdft
 
-__all__ = ["Density", "ref", "densityfunction"]
+__all__ = ["Density", "ref", "AnyDensity"]
 
 
 #======// Density Type //========================================================================//
@@ -48,9 +48,9 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Factories //=======================================================================//
 
     @classmethod
-    def constant(cls, value: densityfunction) -> Density:
+    def constant(cls, value: AnyDensity) -> Density:
         """Creates a Density constant to a float value or another descriptive value."""
-        return densityfunction.unify(value)
+        return AnyDensity.unify(value)
     
     @classmethod
     def reference(cls, identifier: str) -> Density[Reference]:
@@ -58,18 +58,18 @@ class Density[Function: DensityFunction = DensityFunction]:
         return cls(Reference(identifier))
     
     @classmethod
-    def configured(cls, name: str, default: densityfunction) -> Density[Reference]:
+    def configured(cls, name: str, default: AnyDensity) -> Density[Reference]:
         """Creates a Density that will be casted into a specific file when compiling."""
         name = "minecraft:" + name if not ":" in name else name
-        default = densityfunction.unify(default).AST # somehow neccesarry
+        default = AnyDensity.unify(default).AST # somehow neccesarry
         if isinstance(default, Reference):
             default = vdft.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
-    def partitioned(cls, value: densityfunction):
+    def partitioned(cls, value: AnyDensity):
         """Creates a Density whose value will be casted into a separate file when compiling."""
-        value = densityfunction.unify(value) # somehow not possible by decorator
+        value = AnyDensity.unify(value) # somehow not possible by decorator
         return Density(Reference(
             reference="rhombus:generated/" + uuid_hash(value.as_dict()),
             definition=value.AST)
@@ -158,7 +158,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[vdft.add]:
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(vdft.add(self, other))
     
@@ -166,7 +166,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[vdft.add]:
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(
             vdft.add(
@@ -177,7 +177,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __rsub__(self, other) -> Density[vdft.add]:
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(
             vdft.add(
@@ -188,7 +188,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __mul__(self, other) -> Density[vdft.mul]:
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(vdft.mul(self, other))
     
@@ -196,12 +196,12 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[vdft.mul]:
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(vdft.mul(self, vdft.invert(other)))
     
     def __rtruediv__(self, other) -> Density[vdft.mul]:
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(vdft.mul(other, vdft.invert(self)))
     
@@ -230,12 +230,12 @@ class Density[Function: DensityFunction = DensityFunction]:
             return s
 
     def __and__(self, other):
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(vdft.max(self, other))
     
     def __or__(self, other):
-        other = densityfunction.unify(other).AST
+        other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(vdft.min(self, other))
     
@@ -269,7 +269,7 @@ class Density[Function: DensityFunction = DensityFunction]:
 
 #======// Additional Density Types //============================================================//
 
-class densityfunction(DSLType, Density):
+class AnyDensity(DSLType, Density):
     "DSL Type"
     
     @classmethod
