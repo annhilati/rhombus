@@ -59,10 +59,17 @@ def compile_project(source: Path, symbol: str = None, output_dir: Path = None, i
         if output_dir is None: raise RhombusCLIProblem("Missing parameter: --out")
         if id is None: raise RhombusCLIProblem("Missing parameter: --id")
         
+        output_dir.mkdir(parents=True, exist_ok=True)
+        if (
+            len(list(output_dir.iterdir())) > 0
+            and not any(p.is_file() and "pack.mcmeta" in p.name for p in output_dir.iterdir())
+        ):
+            raise RhombusCLIProblem(
+                f"Directory {output_dir} is not empty, but also does not contain a datapack"
+            )
+        
         print(f"  Source: {source} :: {symbol}")
         print(f"  Output: {output_dir.resolve()}")
-        
-        output_dir.mkdir(parents=True, exist_ok=True)
         
         with beet.DataPack(path=output_dir) as dp:
             

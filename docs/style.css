@@ -1,10 +1,15 @@
 :root  > * {
     --md-primary-fg-color: #734DFF;
     --md-accent-fg-color: #8366ea;
+    --md-typeset-color: hsla(223, 14%, 90%, 0.954);
 }
 
 html {
     scrollbar-gutter: stable; /* Patch for scrollbars shifting the layout */
+}
+
+.md-typeset {
+    font-size: .70rem;
 }
 
 ::-webkit-scrollbar {
@@ -28,7 +33,7 @@ html {
 }
 
 .md-grid {
-    max-width: 1600px;
+    max-width: 1500px;
 }
 
 .grid.cards>ul>li:hover {
