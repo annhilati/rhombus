@@ -16,11 +16,9 @@ from rhombus.core import (
     Reference,
     constant,
     JSONDict,
-    contextfunction
+    uuid_hash
 )
 from rhombus.std.noise import Noise
-from rhombus import config
-import beet
 
 constant_number_limit: float = 10000000.0
 
@@ -44,6 +42,15 @@ __all__ = [
     "y_clamped_gradient"
 ]
 
+
+class autoCachedMappedFunctionBase(MappedFunctionBase):
+    
+    @classmethod
+    def deserialize_toplevel(cls, data: JSONDict) -> Reference:
+        definition = cls(DensityFunction.deserialize_inline(data["argument"]))
+        return Reference("rhombus:generated/" + uuid_hash(definition.serialize_toplevel()), definition)
+
+
 class abs(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:abs" 
 
@@ -62,13 +69,13 @@ class blend_density(MappedFunctionBase):
 class blend_offset(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:blend_offset"
 
-class cache_2d(MappedFunctionBase):
+class cache_2d(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_2d"
 
-class cache_all_in_cell(MappedFunctionBase):
+class cache_all_in_cell(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_all_in_cell"
 
-class cache_once(MappedFunctionBase):
+class cache_once(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_once"
 
 @dataclass(repr=False)
@@ -92,7 +99,7 @@ class find_top_surface(MultiArgumentsFunctionBase):
     lower_bound: int
     cell_height: int
 
-class flat_cache(MappedFunctionBase):
+class flat_cache(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:flat_cache"
 
 class half_negative(MappedFunctionBase):

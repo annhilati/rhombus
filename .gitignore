@@ -3,9 +3,10 @@
 .venv/
 .env
 test*.py
-dir
 
+dir
 beet.*
+out
 
 # Distribution & Packaging
 build/

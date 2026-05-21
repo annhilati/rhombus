@@ -12,7 +12,8 @@ dependencies = [
   "beet",
   "numpy",
   "matplotlib",
-  "deepdiff"
+  "deepdiff",
+  "rich"
 ]
 
 [project.urls]
@@ -30,3 +31,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["rhombus*"]
+
+[project.scripts]
+rhombus = "rhombus.cli:main"

@@ -1,9 +1,10 @@
+import inspect, functools
 from typing import Union, TypeAliasType, Callable, get_args, get_origin
 from types import UnionType
+
 from rhombus.core.utils import Decorator
 from rhombus.core.dsl.DSLType import DSLMethod
 from rhombus.std.density import Density, AnyDensity
-import inspect, functools
 
 def WizardFactory(*, unwrap: bool = False) -> Decorator:
     
@@ -50,21 +51,9 @@ def WizardFactory(*, unwrap: bool = False) -> Decorator:
     return decorator
 
 
-class macro[**P, R]:
-    """Shortcut for WizardFactory(unwrap=False)"""
-
-    def __init__(self, fn: Callable[P, R]):
-        self._wrapped = WizardFactory(unwrap=False)(fn)
-
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        return self._wrapped(*args, **kwargs)
+def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
+    return WizardFactory(unwrap=False)(fn)
 
 
-class builtinmacro[**P, R]:
-    """Shortcut for WizardFactory(unwrap=True)"""
-
-    def __init__(self, fn: Callable[P, R]):
-        self._wrapped = WizardFactory(unwrap=True)(fn)
-
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        return self._wrapped(*args, **kwargs)
+def builtinmacro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
+    return WizardFactory(unwrap=True)(fn)

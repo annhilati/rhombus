@@ -4,7 +4,9 @@ For more information on the use and parameters, see `.Noise`.
 
 from dataclasses import dataclass
 from typing import ClassVar
+
 from beet.contrib.worldgen import WorldgenNoise
+
 from rhombus.core.datapack_resource import DatapackResource
 
 __all__ = ["Noise"]
@@ -42,5 +44,5 @@ class Noise(DatapackResource):
     def __repr__(self) -> str:
         
         if all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is not None:
-            return self.identifier
+            return '"' + self.identifier + '"'
         return f"Noise({self.firstOctave}, {self.amplitudes!r})"
