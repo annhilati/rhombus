@@ -49,35 +49,39 @@ class DensityFunction(RhombusASTNode):
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict | float | int) -> Self:
         
-        # Standard JSON object with 'type' key
-        if isinstance(data, dict):
-            type_field: str | None = data.get("type")
-            if type_field is None:
-                raise ValueError("Cannot deserialize density function from dict without key 'type'")
-            if ":" not in type_field:
-                type_field = "minecraft:" + type_field
-            target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
-            if target_class is None:
-                raise TypeError(
-                    f"Cannot deserialize density function with type id '{type_field}' from dict. "
-                    "No density function class with this id is defined"
-                )
-            
-            fields = annotated_fields(target_class)
-            
-            return target_class(**{
-                parameter: deserialize_any_inline(value, tp)
-                for parameter, value in data.items()
-                if parameter in fields
-                for tp in (fields[parameter],)
-            })
-        
-        # Literal constant
-        elif isinstance(data, (int, float)):
-            return constant(float(data))
+        if cls is DensityFunction:
+            # Standard JSON object with 'type' key
+            if isinstance(data, dict):
+                type_field: str | None = data.get("type")
+                if type_field is None:
+                    raise ValueError("Cannot deserialize density function from dict without key 'type'")
+                if ":" not in type_field:
+                    type_field = "minecraft:" + type_field
+                target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
+                if target_class is None:
+                    raise TypeError(
+                        f"Cannot deserialize density function with type id '{type_field}' from dict. "
+                        "No density function class with this id is defined"
+                    )
+                    
+                return target_class.deserialize_toplevel(data)
+                    
+            # Literal constant
+            elif isinstance(data, (int, float)):
+                return constant(float(data))
 
-        else:
-            raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function at top level")
+            else:
+                raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function at top level")
+            
+        fields = annotated_fields(cls)
+
+        return cls(**{
+            parameter: deserialize_any_inline(value, tp)
+            for parameter, value in data.items()
+            if parameter in fields
+            for tp in (fields[parameter],)
+        })
+                
 
     @classmethod
     def deserialize_inline(cls, data: JSONDict | float | int | str):
@@ -121,7 +125,6 @@ class MappedFunctionBase(MultiArgumentsFunctionBase):
     argument: DensityFunction
     
     def __repr__(self) -> str:
-        print("Called!")
         return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
 
 @dataclass
@@ -131,7 +134,6 @@ class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
     argument2: DensityFunction
     
     def __repr__(self) -> str:
-        print("Called!")
         return self.__class__.__name__ + "(" + self.argument1.__repr__() + ", " + self.argument2.__repr__() + ")"
 
     
@@ -149,14 +151,12 @@ class Reference(DensityFunction):
     @classmethod
     def deserialize_inline(cls, data: str):
         data = "minecraft:" + data if ":" not in data else data
-
-        default = None
-        
+       
         dp = config.ctx.datapack.get()
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-            default = f.data
+            return DensityFunction.deserialize_toplevel(f.data)
             
-        return Reference(data, definition=deserialize_any_toplevel(default, DensityFunction) if default is not None else None)
+        return Reference(data, definition=None)
     
     # deserialize_toplevel() is not a realistic scenario
     
@@ -182,6 +182,10 @@ class Reference(DensityFunction):
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
+    
+    @classmethod
+    def deserialize_toplevel(cls, data: int | float):
+        return cls(float(data))
             
     def serialize_toplevel(self) -> float | JSONDict:
         

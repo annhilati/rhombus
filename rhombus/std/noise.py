@@ -38,3 +38,9 @@ class Noise(DatapackResource):
     # def __post_init__(self):
     #     if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
     #         raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
+    
+    def __repr__(self) -> str:
+        
+        if all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is not None:
+            return self.identifier
+        return f"Noise({self.firstOctave}, {self.amplitudes!r})"

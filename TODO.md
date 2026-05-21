@@ -32,7 +32,7 @@
 - [x] §9 New system for DataPackResources to store references. They shouldn't be a field in the init. (Not make them frozen anymore?)
   - [x] §9.1 Implement the referenced classmethod in the base class (utilize the field util when instanciating?)
   - [x] §9.2 Implement property setting and store reference secretly
-  - [ ] §10 Implement separation rules for caching functions
+  - [x] §10 Implement separation rules for caching functions
   - [ ] §11 Abstract compiler instructions, so that completely new classes can be hooked in
 
 

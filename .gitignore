@@ -5,6 +5,8 @@
 test*.py
 dir
 
+beet.*
+
 # Distribution & Packaging
 build/
 **.egg-info

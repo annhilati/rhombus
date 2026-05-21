@@ -176,31 +176,30 @@ class spline(DensityFunction):
     points: list[tuple[float, DensityFunction, float]]
 
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
-    def deserialize(cls, data: JSONDict, inline: bool = ..., dp: beet.DataPack | None = None) -> "spline":
+    def deserialize_toplevel(cls, data: JSONDict) -> "spline":
         return cls(
-            DensityFunction.deserialize(data["spline"]["coordinate"], ),
+            DensityFunction.deserialize_inline(data["spline"]["coordinate"]),
             [
                 (
                     point["location"],
-                    DensityFunction.deserialize({"type": "minecraft:spline", "spline": point["value"]})
+                    DensityFunction.deserialize_inline({"type": "minecraft:spline", "spline": point["value"]})
                         if isinstance(point["value"], dict) and point["value"].get("type") is None
-                    else DensityFunction(point["value"]),
+                        else DensityFunction.deserialize_inline(point["value"]),
                     point["derivative"]
                 )
                 for point in data["spline"]["points"]
             ]
         )
     
-    def serialize(self) -> JSONDict:
+    def serialize_toplevel(self) -> JSONDict:
         return {
             "type": self.id,
             "spline": {
-                "coordinate": self.coordinate.serialize(),
+                "coordinate": self.coordinate.serialize_inline(),
                 "points": [
                     {
                         "location": point[0],
-                        "value": point[1].serialize(),
+                        "value": point[1].serialize_inline(),
                         "derivative": point[2], 
                     }
                     for point in self.points
