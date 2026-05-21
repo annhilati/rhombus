@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
 from typing import ClassVar, Self
+from dataclasses import dataclass, field
 
 import beet
 import beet.contrib.worldgen as worldgen

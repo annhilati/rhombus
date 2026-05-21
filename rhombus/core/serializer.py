@@ -1,4 +1,4 @@
-from typing import get_origin, get_args, Union, TypeAliasType, Literal, Any
+from typing import Union, TypeAliasType, Literal, Any, get_origin, get_args
 from types import UnionType
 
 from rhombus.core.utils import JSONValue

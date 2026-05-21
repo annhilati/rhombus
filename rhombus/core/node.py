@@ -1,7 +1,7 @@
 from typing import Self, Any
 from dataclasses import dataclass
 
-from rhombus.core.utils import BeetFile, fields, JSONValue
+from rhombus.core.utils import JSONValue, BeetFile, fields
 
 __all__ = ["RhombusASTNode"]
     
