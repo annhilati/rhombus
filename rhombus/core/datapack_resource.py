@@ -60,7 +60,7 @@ class DatapackResource(RhombusASTNode):
     
     def additional_described_files(self) -> dict[str, BeetFile]:
         files = {}
-        if not all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is not None:
+        if not all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is None:
             files[self.identifier] = self.fileclass(self.serialize_toplevel())
         
             for param, value in self.fields.items():

@@ -1,8 +1,11 @@
 """
 Most of the Rhombus language runs on a few base classes and general function, which are defined here.
 
+`RhombusASTNode`
+    Base class for all nodes of the Rhombus AST structure.
+
 `DensityFunction`
-    Base class for density function types, which are the nodes of
+    Base class for density function types, which are nodes of
     the density function abstract syntax tree.
 
 `DatapackResource`
@@ -12,15 +15,12 @@ Most of the Rhombus language runs on a few base classes and general function, wh
 `SubParameters`
     Base class for groupings of parameters.
 
-`.codec`
-    The main functions for decoding parameters from and encoding them into JSON.
+`.serializer`
+    The main functions for serializing values from and into JSON.
 
 `.utils`
     General tooling and utility functions for typing, handling context,
     working with dataclasses and more.
-
-`.compiler`
-    Functions for compiling density abstract syntax trees into files.
 
 For informationen on how to implement classes to support features from mods, see the [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/).
 """

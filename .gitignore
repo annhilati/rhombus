@@ -2,7 +2,7 @@
 .vscode/
 .venv/
 .env
-test*.py
+/test*
 
 dir
 beet.*

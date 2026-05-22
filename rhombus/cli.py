@@ -1,19 +1,15 @@
 from __future__ import annotations
-import sys
-import traceback
-import subprocess
-import shutil
 from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from types import ModuleType
 from typing import Callable, Optional, Literal, Any
+import sys, traceback, shutil, subprocess
 
-import beet
-import typer, click
 from rhombus import Density
 from rich import print
+import beet
+import typer
 
-# Initialisiere die Typer-App
 app = typer.Typer(
     help="The Rhombus CLI",
     add_completion=False,
