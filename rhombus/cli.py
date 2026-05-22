@@ -1,24 +1,36 @@
 from __future__ import annotations
-from types import ModuleType
-from typing import Callable
-from pathlib import Path
-from pathlib import Path
+import sys
+import traceback
+import subprocess
+import shutil
 from importlib.util import spec_from_file_location, module_from_spec
-import argparse, sys, traceback, subprocess, shutil
+from pathlib import Path
+from types import ModuleType
+from typing import Callable, Optional, Literal, Any
 
 import beet
+import typer, click
 from rhombus import Density
 from rich import print
 
+# Initialisiere die Typer-App
+app = typer.Typer(
+    help="The Rhombus CLI",
+    add_completion=False,
+)
+
 class RhombusCLIProblem(Exception): ...
 
-def resolve_path_to_module(p: Path) -> ModuleType | None:
 
+def resolve_path_to_module(p: Path) -> ModuleType | None:
+    if not p.is_file() or p.suffix != ".py":
+        return None
+    
     spec = spec_from_file_location(p.stem, p)
     if spec is None:
         return None
+        
     module = module_from_spec(spec)
-
     sys.modules[p.stem] = module
 
     assert spec.loader is not None
@@ -26,109 +38,134 @@ def resolve_path_to_module(p: Path) -> ModuleType | None:
 
     return module
 
-def run_with_indent(cmd):
-    from builtins import print
+
+def run_with_indent(cmd: list[str], dir: Path = None) -> int:
+    from builtins import print as builtin_print
+    
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        text=True
+        text=True,
+        cwd=dir
     )
 
-    for line in process.stdout:
-        print(f"  {line}", end="")
+    if process.stdout:
+        for line in process.stdout:
+            builtin_print(f"  {line}", end="")
 
     return process.wait()
 
-def compile_project(source: Path, symbol: str = None, output_dir: Path = None, id: str = None) -> None:
+@app.command("help")
+def help():
+    print("TBA")
+
+@app.command("compile")
+def compile_project(
+    mode: Literal["m", "b"] = typer.Argument(
+        ...
+    ),
+    source: Path = typer.Argument(
+        ..., 
+        help="Path to a Beet project directory or a Python module."
+    ),
+    symbol: Optional[str] = typer.Argument(
+        None,
+        help="A Density in the regarding module or a nullary function returning one."
+    ),
+    outputdir: Optional[Path] = typer.Argument(
+        None,
+        help="Directory of the output datapack."
+    ),
+    target: Optional[str] = typer.Argument(
+        None,
+        help="Identifier used to implement the density function."
+    )
+    ) -> None:
+    "Kompiliert ein Beet-Projekt oder ein Rhombus DSL Python-Modul."
     
-    print("")
-    print("[white on #5137d4] Rhombus Compilation [/white on #5137d4]")
+    print("\n[white on #5137d4] Rhombus Compilation [/white on #5137d4]")
     
     if not source.exists():
         raise RhombusCLIProblem(f"Path {source} does not exist")
     
-    # Beet project directory
-    if (source.is_file() and "beet" in source.name) or (not source.is_file() and any(p.is_file() and p.name.startswith("beet") for p in source.iterdir())):
-        print(f"  Detected Beet project at {source}\n")
-        run_with_indent(["beet"])
     
-    # Python Module
-    elif (module := resolve_path_to_module(source)) is not None:
-        if symbol is None: raise RhombusCLIProblem("Missing parameter: symbol (after source)")
-        if output_dir is None: raise RhombusCLIProblem("Missing parameter: --out")
-        if id is None: raise RhombusCLIProblem("Missing parameter: --id")
+    if mode == "b":
+        print("  [grey]Running with Beet...\n")
+        run_with_indent(["beet"], source)
+    
+    elif mode == "m":
+        print("  [grey]From a Python module...\n")
         
-        output_dir.mkdir(parents=True, exist_ok=True)
+        if (module := resolve_path_to_module(source)) is None:
+            raise RhombusCLIProblem (f"Path {source} is not a module")
+        
+        if symbol is None:
+            raise RhombusCLIProblem ("Missing parameter symbol")
+        try:
+            symbol: Any = getattr(module, symbol)
+        except AttributeError:
+            raise RhombusCLIProblem(f"Symbol '{symbol}' not found in module '{source.stem}'")
+        
+        if outputdir is None:
+            raise RhombusCLIProblem ("Missing parameter outputdir")
+        if target is None:
+            raise RhombusCLIProblem ("Missing parameter target")
+    
+        outputdir.mkdir(parents=True, exist_ok=True)
         if (
-            len(list(output_dir.iterdir())) > 0
-            and not any(p.is_file() and "pack.mcmeta" in p.name for p in output_dir.iterdir())
+            len(list(outputdir.iterdir())) > 0
+            and not any(p.is_file() and "pack.mcmeta" in p.name for p in outputdir.iterdir())
         ):
-            raise RhombusCLIProblem(
-                f"Directory {output_dir} is not empty, but also does not contain a datapack"
-            )
-        
-        print(f"  Source: {source} :: {symbol}")
-        print(f"  Output: {output_dir.resolve()}")
-        
-        with beet.DataPack(path=output_dir) as dp:
-            
-            target = getattr(module, symbol)
-            
-            if isinstance(target, Density):
-                pass
-            elif isinstance(target, Callable):
-                target: Density = target()
-            else:
-                raise TypeError
-            
-            target.inject(dp, id)
-            
-    else:
-        raise RhombusCLIProblem(f"Nothing to compile at path {source}")
-    
-    print("\n[#5137d4]── Done " + "─" * round(0.6 * shutil.get_terminal_size().columns - 10))
+            raise RhombusCLIProblem(f"Directory {outputdir} is not empty, but also does not contain a datapack")
 
-
-def rhombus_parser() -> argparse.ArgumentParser:
-    CMD_rhombus = argparse.ArgumentParser(prog="rhombus")
-    CMD_rhombus_SCMDs = CMD_rhombus.add_subparsers(dest="command", required=True)
-
-    CMD_rhombus_compile = CMD_rhombus_SCMDs.add_parser("compile", help="Compile DSL files")
-    CMD_rhombus_compile.add_argument("source",  type=Path)
-    CMD_rhombus_compile.add_argument("symbol",  type=str,   default="main")
-    CMD_rhombus_compile.add_argument("--out",   type=Path)
-    CMD_rhombus_compile.add_argument("--id",    type=str)
-
-    return CMD_rhombus
+        if isinstance(symbol, Density):
+            pass
+        elif isinstance(symbol, Callable):
+            symbol = symbol()
+            if not isinstance(symbol, Density):
+                raise TypeError(f"Callable '{symbol}' did not return a Density object.")
+        else:
+            raise TypeError(f"Symbol '{symbol}' is neither a Density nor a Callable returning one.")
+        with beet.DataPack(path=outputdir) as dp:
+            symbol.inject(dp, target)
+            
+    terminal_width = shutil.get_terminal_size().columns
+    bar_length = max(10, round(0.6 * terminal_width - 10))
+    print(f"\n[#5137d4]── Done " + "─" * bar_length + "[/#5137d4]")
 
 
 def main() -> None:
-    
     try:
-        parser = rhombus_parser()
-        args = parser.parse_args()
+        app()
+    # except RhombusCLIProblem as e:
+    #     print(f"\n  [#62a8f0]Error[/#62a8f0]")
+    #     print(f"  [#62a8f0]╰─×[/#62a8f0] {str(e)}")
+    #     sys.exit(1)
+        
+    # except Exception as e:
+    #     tb = e.__traceback__
+    #     frames = traceback.extract_tb(tb)
+        
+    #     print(f"\n  [red]Unexpected {type(e).__name__}[/red]")
+    #     print(f"  [red]╰─×[/red] {str(e)}")
+        
+    #     if len(frames) >= 2:
+    #         first = frames[-1]
+    #         second = frames[-2]
+    #         print(f"\n    [red]This was first issued in '{first.name}' ({first.filename}, line {first.lineno})[/red]")
+    #         print(f"    [red]       {first.line}[/red]")
+    #         print(f"    [red]Then passed on to        '{second.name}' ({second.filename}, line {second.lineno})[/red]")
+    #         print(f"    [red]       {second.line}[/red]")
+    #     elif len(frames) == 1:
+    #         first = frames[-1]
+    #         print(f"\n    [red]This was issued in '{first.name}' ({first.filename}, line {first.lineno})[/red]")
+    #         print(f"    [red]       {first.line}[/red]")
+            
+    #     sys.exit(1)
+    except:
+        raise
 
-        if args.command == "compile":
-            compile_project(source=args.source, symbol=args.symbol, output_dir=args.out, id=args.id)
-        
-    except RhombusCLIProblem as e:
-        print("")
-        print(f"  [#62a8f0]Error")
-        print(f"  [#62a8f0]╰─×[/#62a8f0] {str(e)}")
-    
-    except Exception as e:
-        tb = e.__traceback__
-        frames = traceback.extract_tb(tb)
-        
-        print("")
-        print(f"  [red]Unexpected {type(e).__name__}")
-        print(f"  [red]╰─×[/red] {str(e)}")
-        
-        first = frames[-1]
-        second = frames[-2]
-        print("")
-        print(f"    [red]This was first issued in '{first.name}' ({first.filename}, line {first.lineno})")
-        print(f"    [red]       {first.line}")
-        print(f"    [red]Then passed on to        '{second.name}' ({second.filename}, line {second.lineno})")
-        print(f"    [red]       {second.line}")
+
+if __name__ == "__main__":
+    main()

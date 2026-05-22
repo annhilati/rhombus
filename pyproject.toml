@@ -13,7 +13,8 @@ dependencies = [
   "numpy",
   "matplotlib",
   "deepdiff",
-  "rich"
+  "rich",
+  "typer"
 ]
 
 [project.urls]
