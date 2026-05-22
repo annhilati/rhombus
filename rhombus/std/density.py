@@ -53,7 +53,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return AnyDensity.unify(value)
     
     @classmethod
-    def reference(cls, identifier: str) -> Density[Reference]:
+    def refer(cls, identifier: str) -> Density[Reference]:
         """Creates a Density refering to an externally provided density function."""
         return cls(Reference(identifier))
     
@@ -62,8 +62,6 @@ class Density[Function: DensityFunction = DensityFunction]:
         """Creates a Density that will be casted into a specific file when compiling."""
         name = "minecraft:" + name if not ":" in name else name
         default = AnyDensity.unify(default).AST # somehow neccesarry
-        if isinstance(default, Reference):
-            default = vdft.add(default, 0)
         return Density(Reference(name, default))
     
     @classmethod
@@ -260,14 +258,14 @@ class Density[Function: DensityFunction = DensityFunction]:
             return False
         return self.AST != other.AST
 
-    def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro or contribute to https://github.com/annhilati/rhombus/issues/4")
-    def __bool__(self): raise NotImplementedError
+    def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
+    def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
+    def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
+    def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
+    def __bool__(self): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
 
 
-#======// Additional Density Types //============================================================//
+#======// AnyDensity //==========================================================================//
 
 class AnyDensity(DSLType, Density):
     "DSL Type"
@@ -298,4 +296,4 @@ class AnyDensity(DSLType, Density):
 
 def ref(identifier: str, /) -> Density[Reference]:
     "Creates a Density that is a reference to an externally provided density function."
-    return Density.reference(identifier)
+    return Density.refer(identifier)

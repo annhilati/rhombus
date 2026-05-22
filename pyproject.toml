@@ -10,11 +10,11 @@ authors = [
 ]
 dependencies = [
   "beet",
+  "typer",
+  "rich",
+  "deepdiff",
   "numpy",
   "matplotlib",
-  "deepdiff",
-  "rich",
-  "typer"
 ]
 
 [project.urls]

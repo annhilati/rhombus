@@ -27,7 +27,7 @@ ensity.x
 
 Density.partitioned
 Density.configured
-Density.reference
+Density.refer
 Density.from_datapack
 Density.AST
 Density.compile
