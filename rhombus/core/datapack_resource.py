@@ -93,7 +93,7 @@ class DatapackResource(RhombusASTNode):
         if file is None:
             return None
         
-        return cls.deserialize_toplevel(data=file.data)
+        return cls.from_dict(file.data)
 
     @classmethod
     def refer(cls, identifier: str, /) -> Self:

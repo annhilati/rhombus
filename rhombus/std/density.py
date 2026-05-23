@@ -26,12 +26,13 @@ __all__ = ["Density", "ref", "AnyDensity"]
 class Density[Function: DensityFunction = DensityFunction]:
     """Class representing a density calculation.
     
-    For Rhombus language users, the constructor of this class is not needed. To define a new density instead use:
-    - Methods from `rhombus.language.functions` or other methods that return a `Density` for calculations.
-    - `.constant()`
-    - `.configured()` if a value is needed that can be easily altered in the compiled datapack later.
-    - `.partitioned()` if a density function has to be compiled to a separate file, but it is not important what this file is.
-    - `.reference()` to reference a density function that is provided externally, like by another datapack.
+    When just using Rhombus for defining density functions, the constructor of this
+    class is not needed. To define a new density instead use:
+    - Macros from `rhombus.std.functions`, from `rhombus.macros` or other.
+    - `.constant()` to create a new Density from any interpretable value.
+    - `.refer()` to reference a density function that is provided externally, like by another datapack.
+    - `.configured()` to create a value that can be easily altered or referenced in the compiled datapack later.
+    - `.partitioned()` to compile a density function to a separate file. This is mainly used to enable caching.
     """
 
     AST: Function
@@ -49,24 +50,25 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     @classmethod
     def constant(cls, value: AnyDensity) -> Density:
-        """Creates a Density constant to a float value or another descriptive value."""
+        """Creates a new `Density` object from any interpretable value."""
+        # TODO describe these possible values
         return AnyDensity.unify(value)
     
     @classmethod
     def refer(cls, identifier: str) -> Density[Reference]:
-        """Creates a Density refering to an externally provided density function."""
+        """Creates a new `Density` object refering to an externally provided density function."""
         return cls(Reference(identifier))
     
     @classmethod
     def configured(cls, name: str, default: AnyDensity) -> Density[Reference]:
-        """Creates a Density that will be casted into a specific file when compiling."""
+        """Creates a new `Density` object which value that can be easily altered or referenced in the compiled datapack later."""
         name = "minecraft:" + name if not ":" in name else name
-        default = AnyDensity.unify(default).AST # somehow neccesarry
+        default = AnyDensity.unify(default).AST
         return Density(Reference(name, default))
     
     @classmethod
     def partitioned(cls, value: AnyDensity):
-        """Creates a Density whose value will be casted into a separate file when compiling."""
+        """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
         value = AnyDensity.unify(value) # somehow not possible by decorator
         return Density(Reference(
             reference="rhombus:generated/" + uuid_hash(value.as_dict()),
