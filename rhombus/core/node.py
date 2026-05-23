@@ -1,16 +1,35 @@
-from typing import Self, Any
-from dataclasses import dataclass
+from typing import Self, Any, ClassVar, dataclass_transform
+import dataclasses
 
 from rhombus.core.utils import JSONValue, BeetFile, fields
 
 __all__ = ["RhombusASTNode"]
     
-@dataclass
-class RhombusASTNode:
+
+@dataclass_transform(field_specifiers=(dataclasses.Field, dataclasses.field))
+class NodeDataclassTransformer(type):
+
+    def __new__(mcls, name, bases, ns, **kwargs):
+        cls = super().__new__(mcls, name, bases, ns)
+
+        init = kwargs.pop("init", True)
+
+        if init:
+            cls = dataclasses.dataclass(
+                cls,
+                init=True,
+                repr=False,
+                eq=False
+            )
+
+        return cls
+
+class RhombusASTNode(metaclass=NodeDataclassTransformer):
     "Base class for all nodes in a Rhombus AST"
-    
-    def __init_subclass__(cls, **kwargs):   
-        super().__init_subclass__(**kwargs)
+  
+    __dataclass_fields__: ClassVar[dict[str, dataclasses.Field]]
+    __dataclass_params__: ClassVar[Any]
+    __match_args__:       ClassVar[tuple[str, ...]]
                
     def __repr__(self) -> str:
         # Philosophy:
@@ -21,6 +40,11 @@ class RhombusASTNode:
             in self.fields.items()
             if self.__dataclass_fields__[param].default != value
         ]) + ")"
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, RhombusASTNode):
+            return False
+        return self.fields == other.fields
 
         
     #======// Standard Implementations //========================================================//

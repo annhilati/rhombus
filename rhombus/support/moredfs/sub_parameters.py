@@ -1,6 +1,5 @@
 
 from typing import Literal
-from dataclasses import dataclass
 from rhombus.core import (
     SubParameters,
     DensityFunction,
@@ -14,7 +13,6 @@ from rhombus.std import AnyDensity, builtinmacro
 import beet
 from rhombus import config
 
-@dataclass(repr=False)
 class RandomSampler(SubParameters):
     """Describes a sampler for random values.
 
@@ -102,7 +100,6 @@ class RandomSampler(SubParameters):
     
 
 
-@dataclass(repr=False)
 class DistanceMetric(SubParameters):
     """Describes a procedure to determine distances between n-dimensional points.
 
@@ -133,7 +130,6 @@ class DistanceMetric(SubParameters):
         return cls("minkowski", p=p)
 
 
-@dataclass(repr=False)
 class ExtraOctaves(SubParameters):
     """
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#value-noise)
@@ -143,7 +139,6 @@ class ExtraOctaves(SubParameters):
     persistence: float
 
 
-@dataclass(repr=False)
 class DerivativeComponent(SubParameters):
     """
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#derivative)

@@ -2,17 +2,16 @@
 For more information on the use and parameters, see `.Noise`.
 """
 
-from dataclasses import dataclass
 from typing import ClassVar
 
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core.datapack_resource import DatapackResource
+from rhombus.core.utils import BeetFile
 
 __all__ = ["Noise"]
 
 
-@dataclass(repr=False)
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
@@ -32,17 +31,16 @@ class Noise(DatapackResource):
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Noise)
     """
  
-    fileclass: ClassVar = WorldgenNoise
+    fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
 
     firstOctave: int
     amplitudes:  list[float]
 
-    # def __post_init__(self):
-    #     if self.reference is None and (self.firstOctave is None or self.amplitudes is None):
-    #         raise ValueError("Noise must either have fields 'firstOctave' and 'amplitudes' or reference an externally provided noise")
+    def __post_init__(self):
+        if self.amplitudes:
+            self.amplitudes = [float(a) for a in self.amplitudes]
     
     def __repr__(self) -> str:
-        
-        if all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is not None:
+        if self.is_reference and self._reference is not None:
             return '"' + self.identifier + '"'
         return f"Noise({self.firstOctave}, {self.amplitudes!r})"

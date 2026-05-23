@@ -1,5 +1,4 @@
 from typing import ClassVar, Self
-from dataclasses import dataclass
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
@@ -17,7 +16,6 @@ __all__ = [
 
 #======// DensityFunction Base Class //==========================================================//
 
-@dataclass(repr=False)
 class DensityFunction(RhombusASTNode):
     """Base class for density function types, which are the nodes of the density AST.
     
@@ -97,7 +95,6 @@ class DensityFunction(RhombusASTNode):
 
 #======// Utility Base Classes //================================================================//
 
-@dataclass(repr=False)
 class SimpleFunctionBase(DensityFunction):
     "Base class for density function types with no arguments."
 
@@ -119,7 +116,6 @@ class MultiArgumentsFunctionBase(DensityFunction):
     `DensityFunction` instead and implement the methods manually.  
     """
 
-@dataclass
 class MappedFunctionBase(MultiArgumentsFunctionBase):
     "Base class for density function types that map an argument `argument` to a value."
     argument: DensityFunction
@@ -127,7 +123,6 @@ class MappedFunctionBase(MultiArgumentsFunctionBase):
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
 
-@dataclass
 class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
     "Base class for density function types with two arguments `argument1` and `argument2`."
     argument1: DensityFunction
@@ -139,7 +134,6 @@ class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
     
 #======// Super Primitives //====================================================================//
 
-@dataclass    
 class Reference(DensityFunction):
     reference: str
     definition: DensityFunction | None = None
@@ -183,13 +177,14 @@ class Reference(DensityFunction):
             return "Density.configured(" + f"\"{self.reference}\"" + f", {self.definition.__repr__()}" + ")"
     
     
-@dataclass
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     argument: float
     
     @classmethod
-    def deserialize_toplevel(cls, data: int | float):
+    def deserialize_toplevel(cls, data: dict | int | float):
+        if isinstance(data, dict):
+            return cls(float(data["argument"]))    
         return cls(float(data))
             
     def serialize_toplevel(self) -> float | JSONDict:

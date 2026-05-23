@@ -27,7 +27,7 @@ def test_deserialize_literals():
         
         dp["some:function"] = worldgen.WorldgenDensityFunction({"type": "minecraft:constant", "argument": 3.14})
         
-        assert DensityFunction.deserialize_inline("some:function") == Reference("some:function", definition=constant(3.14))
+        assert DensityFunction.deserialize_inline("some:function") == constant(3.14)
        
         config.ctx.datapack.reset(token)
         

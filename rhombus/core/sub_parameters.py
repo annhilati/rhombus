@@ -1,5 +1,4 @@
 from typing import Self
-from dataclasses import dataclass
 
 from rhombus.core.utils import JSONDict, annotated_fields
 from rhombus.core.node import RhombusASTNode
@@ -7,7 +6,6 @@ from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 
 __all__ = ["SubParameters"]
 
-@dataclass(repr=False)
 class SubParameters(RhombusASTNode):
     """Base class for parameter groups that are used inline in fields of density function types or another.
     

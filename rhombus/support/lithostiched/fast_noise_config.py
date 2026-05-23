@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import ClassVar, Literal, Optional
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict
@@ -11,7 +10,6 @@ class LithostichedFastNoiseConfig(JsonFile):
     scope: ClassVar[NamespaceFileScope] = ("lithostitched", "fast_noise_config")
     extension: ClassVar[str] = ".json"
 
-@dataclass
 class FastNoiseConfig(DatapackResource):
     """Defines a Lithostiched noise.
     
@@ -38,7 +36,7 @@ class FastNoiseConfig(DatapackResource):
     lacunarity:        Optional[float] = None # completely optional
     gain:              Optional[float] = None # completely optional
 
-    reference: Optional[str] = None
+    refer: Optional[str] = None
 
     def serialize(self) -> JSONDict:
         return {
@@ -59,7 +57,7 @@ class FastNoiseConfig(DatapackResource):
         }
     
     @classmethod
-    def reference(cls, identifier):
+    def refer(cls, identifier):
         return cls(reference=identifier, type=None, frequency=None)
     
     @classmethod

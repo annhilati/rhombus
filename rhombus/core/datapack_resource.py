@@ -1,5 +1,5 @@
 from typing import ClassVar, Self
-from dataclasses import dataclass, field
+from dataclasses import field
 
 import beet
 import beet.contrib.worldgen as worldgen
@@ -12,7 +12,6 @@ from rhombus import config
 __all__ = ["DatapackResource"]
 
 
-@dataclass(repr=False)
 class DatapackResource(RhombusASTNode):
     """Base class for resources that are provided by a datapack outside of a density function.
     
@@ -21,6 +20,7 @@ class DatapackResource(RhombusASTNode):
 
     fileclass: ClassVar[type[BeetFile]]
     _reference: str | None = field(init=False, default=None)
+
 
     #======// Serialization //===================================================================//
     
@@ -56,7 +56,7 @@ class DatapackResource(RhombusASTNode):
         
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
-        return cls.reference(id)
+        return cls.refer(id)
     
     def additional_described_files(self) -> dict[str, BeetFile]:
         files = {}
@@ -79,6 +79,10 @@ class DatapackResource(RhombusASTNode):
     #======// Workflow //========================================================================//
 
     @classmethod
+    def from_dict(cls, data: JSONDict) -> Self:
+        return cls.deserialize_toplevel(data)
+
+    @classmethod
     @contextfunction(dp=config.ctx.datapack)
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
         "Extracts a resource from a Beet datapack."
@@ -92,7 +96,7 @@ class DatapackResource(RhombusASTNode):
         return cls.deserialize_toplevel(data=file.data)
 
     @classmethod
-    def reference(cls, identifier: str, /) -> Self:
+    def refer(cls, identifier: str, /) -> Self:
         "Creates a reference to an externally provided resource."
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
         instance = cls(**{param: None for param in annotated_fields(cls)})
@@ -112,6 +116,15 @@ class DatapackResource(RhombusASTNode):
         
     #======// Other //===========================================================================//
 
+    @property
+    def is_reference(self) -> bool:
+        return all(v is None for f, v in self.fields.items() if f != "_reference")
+
+    def __repr__(self) -> str:
+        if self.is_reference and self._reference is not None:
+            return '"' + self.identifier + '"'
+        return super().__repr__()
+    
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
@@ -119,4 +132,3 @@ class DatapackResource(RhombusASTNode):
     
     def __hash__(self) -> int:
         return hash(uuid_hash(self.serialize_toplevel()))
-    
