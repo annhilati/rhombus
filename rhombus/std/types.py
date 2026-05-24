@@ -1,4 +1,4 @@
-"""'vdft' stands for 'vanilla density function types'.
+"""Vanilla density function types
 
 These are the data models for the vanilla density function types.
 
@@ -34,9 +34,8 @@ __all__ = [
     "noise", "old_blended_noise", 
     "quarter_negative", "range_choice",
     "shift", "shift_a", "shift_b",
-    "shifted_noise", "slide",
-    "spline", "square", "squeeze",
-    "terrain_shaper_spline",
+    "shifted_noise", "spline",
+    "square", "squeeze",
     "weird_scaled_sampler",
     "y_clamped_gradient"
 ]
@@ -105,6 +104,12 @@ class half_negative(MappedFunctionBase):
 class interpolated(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:interpolated"
 
+class interval_select(MultiArgumentsFunctionBase):
+    id: ClassVar[str] = "minecraft:interval_select"
+    input: DensityFunction
+    thresholds: list[float] # non-empty
+    functions: list[DensityFunction] # one Element more that thresholds
+
 class invert(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:invert"
 
@@ -163,9 +168,6 @@ class shifted_noise(MultiArgumentsFunctionBase):
     shift_y: DensityFunction
     shift_z: DensityFunction
 
-class slide(MappedFunctionBase):
-    id: ClassVar[str] = "minecraft:slide"
-
 class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
     coordinate: DensityFunction
@@ -215,21 +217,6 @@ class square(MappedFunctionBase):
 
 class squeeze(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:squeeze"
-
-class terrain_shaper_spline(MultiArgumentsFunctionBase):
-    id: ClassVar[str] = "minecraft:terrain_shaper_spline"
-    spline: Literal["offset", "factor", "jaggedness"]
-    min_value: float
-    max_value: float
-    continentalness: DensityFunction
-    erosion: DensityFunction
-    weirdness: DensityFunction
-
-class weird_scaled_sampler(MultiArgumentsFunctionBase):
-    id: ClassVar[str] = "minecraft:weird_scaled_sampler"
-    rarity_value_mapper: Literal["type_1", "type_2"]
-    noise: Noise
-    input: DensityFunction
 
 class y_clamped_gradient(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"

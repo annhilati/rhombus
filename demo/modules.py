@@ -6,7 +6,7 @@ import rhombus.core.density_function
 import rhombus.core.sub_parameters
 import rhombus.core.utils
 import rhombus.std.density
-import rhombus.std.vdft
+import rhombus.std.types
 import rhombus.std.functions
 import rhombus.std.noise
 import rhombus.macros.coords

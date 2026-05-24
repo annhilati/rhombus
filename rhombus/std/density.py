@@ -15,7 +15,7 @@ from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
-from rhombus.std import vdft
+from rhombus.std import types
 
 __all__ = ["Density", "ref", "AnyDensity"]
 
@@ -157,93 +157,93 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     #======// Arithmetic Magic //================================================================//
     
-    def __add__(self, other) -> Density[vdft.add]:
+    def __add__(self, other) -> Density[types.add]:
         other = AnyDensity.unify(other).AST
         self = self.AST
-        return Density(vdft.add(self, other))
+        return Density(types.add(self, other))
     
-    def __radd__(self, other) -> Density[vdft.add]:
+    def __radd__(self, other) -> Density[types.add]:
         return self.__add__(other)
     
-    def __sub__(self, other) -> Density[vdft.add]:
+    def __sub__(self, other) -> Density[types.add]:
         other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(
-            vdft.add(
+            types.add(
                 argument1=self,
-                argument2=vdft.mul(
+                argument2=types.mul(
                     argument1=other,
                     argument2=constant(-1.0)
             )))
     
-    def __rsub__(self, other) -> Density[vdft.add]:
+    def __rsub__(self, other) -> Density[types.add]:
         other = AnyDensity.unify(other).AST
         self = self.AST
         return Density(
-            vdft.add(
+            types.add(
                 argument1=other,
-                argument2=vdft.mul(
+                argument2=types.mul(
                     argument1=self,
                     argument2=constant(-1.0)
             )))
     
-    def __mul__(self, other) -> Density[vdft.mul]:
+    def __mul__(self, other) -> Density[types.mul]:
         other = AnyDensity.unify(other).AST
         self = self.AST
-        return Density(vdft.mul(self, other))
+        return Density(types.mul(self, other))
     
-    def __rmul__(self, other) -> Density[vdft.mul]:
+    def __rmul__(self, other) -> Density[types.mul]:
         return self.__mul__(other)
     
-    def __truediv__(self, other) -> Density[vdft.mul]:
+    def __truediv__(self, other) -> Density[types.mul]:
         other = AnyDensity.unify(other).AST
         self = self.AST
-        return Density(vdft.mul(self, vdft.invert(other)))
+        return Density(types.mul(self, types.invert(other)))
     
-    def __rtruediv__(self, other) -> Density[vdft.mul]:
+    def __rtruediv__(self, other) -> Density[types.mul]:
         other = AnyDensity.unify(other).AST
         self = self.AST
-        return Density(vdft.mul(other, vdft.invert(self)))
+        return Density(types.mul(other, types.invert(self)))
     
     @overload
-    def __pow__(self, other: Literal[2]) -> Density[vdft.square]: ...
+    def __pow__(self, other: Literal[2]) -> Density[types.square]: ...
     @overload
-    def __pow__(self, other: Literal[3]) -> Density[vdft.cube]: ...
+    def __pow__(self, other: Literal[3]) -> Density[types.cube]: ...
     @overload
-    def __pow__(self, other: int) -> Density[vdft.mul]: ...
+    def __pow__(self, other: int) -> Density[types.mul]: ...
     def __pow__(self, other):
         wrapped = self.AST
         if not isinstance(other, int):
             raise ValueError("Can't raise to non-integer powers")
         if other == 0:
-            return Density(vdft.constant(1))
+            return Density(types.constant(1))
         elif other == 1:
             return self
         elif other == 2:
-            return Density(vdft.square(wrapped))
+            return Density(types.square(wrapped))
         elif other == 3:
-            return Density(vdft.cube(wrapped))
+            return Density(types.cube(wrapped))
         elif other > 3:
-            s = Density(vdft.mul(wrapped, wrapped))
+            s = Density(types.mul(wrapped, wrapped))
             for i in range(other - 2):
-                s = Density(vdft.mul(s.AST, wrapped))
+                s = Density(types.mul(s.AST, wrapped))
             return s
 
     def __and__(self, other):
         other = AnyDensity.unify(other).AST
         self = self.AST
-        return Density(vdft.max(self, other))
+        return Density(types.max(self, other))
     
     def __or__(self, other):
         other = AnyDensity.unify(other).AST
         self = self.AST
-        return Density(vdft.min(self, other))
+        return Density(types.min(self, other))
     
-    def __abs__(self) -> "Density[vdft.abs]":
-        return Density(vdft.abs(self.AST))
+    def __abs__(self) -> "Density[types.abs]":
+        return Density(types.abs(self.AST))
     
-    def __neg__(self) -> Density[vdft.mul]:
-        return Density(vdft.mul(self.AST, constant(-1.0)))
+    def __neg__(self) -> Density[types.mul]:
+        return Density(types.mul(self.AST, constant(-1.0)))
     
     def __pos__(self) -> Self:
         return self

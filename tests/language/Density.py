@@ -1,14 +1,14 @@
 from rhombus import Density
-from rhombus.std import vdft
+from rhombus.std import types
 from rhombus import config
 import beet
 import beet.contrib.worldgen as worldgen
 
 def test_partitioning():
 
-    assert Density.partitioned(1.0) == Density(vdft.Reference(reference='rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', definition=vdft.constant(argument=1.0)))
+    assert Density.partitioned(1.0) == Density(types.Reference(reference='rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', definition=types.constant(argument=1.0)))
     
-    assert Density.configured("test", 1.0) == Density(vdft.Reference(reference='minecraft:test', definition=vdft.constant(argument=1.0)))
+    assert Density.configured("test", 1.0) == Density(types.Reference(reference='minecraft:test', definition=types.constant(argument=1.0)))
     
     with beet.DataPack(path="test_pack") as dp:
         

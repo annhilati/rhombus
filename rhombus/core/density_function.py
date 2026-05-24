@@ -132,7 +132,7 @@ class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
         return self.__class__.__name__ + "(" + self.argument1.__repr__() + ", " + self.argument2.__repr__() + ")"
 
     
-#======// Super Primitives //====================================================================//
+#======// Primitives //==========================================================================//
 
 class Reference(DensityFunction):
     reference: str
@@ -155,8 +155,8 @@ class Reference(DensityFunction):
     # deserialize_toplevel() is not a realistic scenario
     
     def serialize_toplevel(self) -> JSONDict:
-        from rhombus.std import vdft
-        return vdft.add(self, vdft.constant(0.0)).serialize_toplevel()
+        from rhombus.std import types
+        return types.add(self, constant(0.0)).serialize_toplevel()
     
     def serialize_inline(self) -> str:
         return self.reference
@@ -189,14 +189,14 @@ class constant(DensityFunction):
             
     def serialize_toplevel(self) -> float | JSONDict:
         
-        from rhombus.std import vdft
+        from rhombus.std import types
         
         def float_to_mul(value: float):
 
             if abs(value) < 65536.0 * 16:
                 return value
 
-            return vdft.mul(float_to_mul(value / 65536.0), 65536.0,).serialize_inline()
+            return types.mul(float_to_mul(value / 65536.0), 65536.0,).serialize_inline()
         
         return float_to_mul(self.argument)
 

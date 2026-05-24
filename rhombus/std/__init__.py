@@ -26,4 +26,4 @@ from rhombus.std.noise import *
 from rhombus.std.functions import *
 from rhombus.std.utils import builtinmacro, macro
 from rhombus.std import functions as f
-from rhombus.std import vdft
+from rhombus.std import types as t

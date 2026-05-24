@@ -15,7 +15,7 @@ __all__ = ["Noise"]
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
-    **NOTE** To add a reference to an existing noise, use `.referenced()` instead.
+    **NOTE** To reference an existing noise, use `~.refer()`.
     
     Parameters:
         firstOctave (int): Controls the base frequency of the noise. More negative values lead to more vast regions.<br>
@@ -37,6 +37,7 @@ class Noise(DatapackResource):
     amplitudes:  list[float]
 
     def __post_init__(self):
+        # This might need a better aproach in a base class
         if self.amplitudes:
             self.amplitudes = [float(a) for a in self.amplitudes]
     
