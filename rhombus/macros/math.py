@@ -1,5 +1,5 @@
 from rhombus import config as cfg
-from rhombus.std import Density, AnyDensity, functions as f, macro, types as types
+from rhombus.std import Density, AnyDensity, f, types, macro
 
 pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
 "The constant `π` to 16 decimals."

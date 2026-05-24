@@ -1,0 +1,45 @@
+name: Request Mod Support
+description: Request adding support for content from a mod or request an update to existing mod support.
+labels: ["Support Request"]
+projects: []
+assignees: []
+
+title: "[Mod Support]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide the mod details and any relevant documentation or changelog link.
+        If this is an update request, include the new version number.
+  - type: input
+    id: mod_name
+    attributes:
+      label: Mod name and version
+      description: Name the mod and include a version number if this is an update request.
+      placeholder: Example Mod 1.2.3
+    validations:
+      required: true
+  - type: input
+    id: documentation_link
+    attributes:
+      label: Documentation or changelog link
+      description: Provide a link to the mod documentation or changelog for the requested content.
+      placeholder: https://example.com/mod-docs
+    validations:
+      required: true
+  - type: textarea
+    id: requested_content
+    attributes:
+      label: Brief Overview
+      description: Describe the content from the mod that is to be added.
+      placeholder: "Density function types, datapack resources, etc. ..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: already_checked
+    attributes:
+      label: Content existence check
+      description: Confirm you have verified that the requested content does not already exist in the project.
+      options:
+        - label: I have checked and the requested content is not already supported by Rhombus.
+          required: true

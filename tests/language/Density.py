@@ -10,7 +10,7 @@ def test_partitioning():
     
     assert Density.configured("test", 1.0) == Density(types.Reference(reference='minecraft:test', definition=types.constant(argument=1.0)))
     
-    with beet.DataPack(path="test_pack") as dp:
+    with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
         
         token = config.ctx.datapack.set(dp)
         

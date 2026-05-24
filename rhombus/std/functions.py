@@ -24,37 +24,34 @@ __all__ = [
     "ref", "shift", "shift_a",
     "shift_b", "shifted_noise",
     "spline", "square", "squeeze",
-    "weird_scaled_sampler",
     "y_clamped_gradient"
 ]
 
-from typing import Literal
-
 from rhombus.std.density import Density, AnyDensity, ref
 from rhombus.std.noise import Noise
-from rhombus.std.utils import builtinmacro
+from rhombus.std.macros import macro
 from rhombus.std import types
 
 
 #======// Builtin Functions //===================================================================//
 
-@builtinmacro
+@macro
 def abs(argument: AnyDensity) -> Density[types.abs]:
     """Calculates the absolute value of the input.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#abs)
     """
-    return Density(types.abs(argument))
+    return Density(types.abs(argument.AST))
 
-@builtinmacro
+@macro
 def add(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.add]:
     """Adds two inputs together.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#add)
     """
-    return Density(types.add(argument1, argument2))
+    return Density(types.add(argument1.AST, argument2.AST))
 
 def beardifier() -> Density[types.beardifier]:
     """Adds [beards](https://minecraft.wiki/w/Structure_definition) for structures.<br>
@@ -76,7 +73,7 @@ def blend_alpha() -> Density[types.blend_alpha]:
     """
     return Density(types.blend_alpha())
 
-@builtinmacro
+@macro
 def blend_density(argument: AnyDensity) -> Density[types.blend_density]:
     """Used for smooth transition to chunks generated in old versions.
 
@@ -85,7 +82,7 @@ def blend_density(argument: AnyDensity) -> Density[types.blend_density]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_density)
     """
-    return Density(types.blend_density(argument))
+    return Density(types.blend_density(argument.AST))
 
 def blend_offset() -> Density[types.blend_offset]:
     """Used for smooth transition to chunks generated in old versions.
@@ -97,7 +94,7 @@ def blend_offset() -> Density[types.blend_offset]:
     """
     return Density(types.blend_offset())
 
-@builtinmacro
+@macro
 def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.cache_2d]:
     """Only computes the input density once per horizontal position.
 
@@ -105,10 +102,10 @@ def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.c
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
     if partition:
-        return Density.partitioned(types.cache_2d(argument))
-    return Density(types.cache_2d(argument))
+        return Density.partitioned(types.cache_2d(argument.AST))
+    return Density(types.cache_2d(argument.AST))
 
-@builtinmacro
+@macro
 def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[types.cache_all_in_cell]:
     """🚨 Should not be used in datapacks.
 
@@ -120,10 +117,10 @@ def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[t
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
     if partition:
-        return Density.partitioned(types.cache_all_in_cell(argument))
-    return Density(types.cache_all_in_cell(argument))
+        return Density.partitioned(types.cache_all_in_cell(argument.AST))
+    return Density(types.cache_all_in_cell(argument.AST))
 
-@builtinmacro
+@macro
 def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types.cache_once]:
     """If this density function is referenced twice, it is only computed once per block position.
 
@@ -133,10 +130,10 @@ def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
     if partition:
-        return Density.partitioned(types.cache_once(argument))
-    return Density(types.cache_once(argument))
+        return Density.partitioned(types.cache_once(argument.AST))
+    return Density(types.cache_once(argument.AST))
 
-@builtinmacro
+@macro
 def clamp(input: AnyDensity, min: float, max: float) -> Density[types.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
 
@@ -145,7 +142,7 @@ def clamp(input: AnyDensity, min: float, max: float) -> Density[types.clamp]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#clamp)
     """
-    return Density(types.clamp(input, min, max))
+    return Density(types.clamp(input.AST, min, max))
 
 def constant(argument: float) -> Density[types.constant]:
     """Declares a constant float value.
@@ -153,16 +150,16 @@ def constant(argument: float) -> Density[types.constant]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#constant)
     """
-    return AnyDensity.unify(argument)
+    return AnyDensity.unify(argument.AST)
 
-@builtinmacro
+@macro
 def cube(argument: AnyDensity) -> Density[types.cube]:
     """Raises the input to the power of 3.
     
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cube)
     """
-    return Density(types.cube(argument))
+    return Density(types.cube(argument.AST))
 
 def end_islands() -> Density[types.end_islands]:
     """Returns a value using a [special noise algorithm](https://mcsrc.dev/#1/26.1-snapshot-1/net/minecraft/world/level/levelgen/DensityFunctions#L565) used for end islands.<br>
@@ -175,16 +172,16 @@ def end_islands() -> Density[types.end_islands]:
     """
     return Density(types.end_islands())
 
-@builtinmacro
+@macro
 def find_top_surface(density: AnyDensity, upper_bound: AnyDensity, lower_bound: int, cell_height: int) -> Density[types.find_top_surface]:
     """Scans through a column of a input density and returns the topmost Y-level that is above `0`. If no such position exists withing the bounds, the `lower_bound` is returned.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#find_top_surface)
     """
-    return Density(types.find_top_surface(density, upper_bound, lower_bound, cell_height))
+    return Density(types.find_top_surface(density.AST, upper_bound.AST, lower_bound, cell_height))
 
-@builtinmacro
+@macro
 def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types.Reference]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
 
@@ -192,28 +189,28 @@ def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
     if partition:
-        return Density.partitioned(types.flat_cache(argument))
-    return Density(types.flat_cache(argument))
+        return Density.partitioned(types.flat_cache(argument.AST))
+    return Density(types.flat_cache(argument.AST))
 
-@builtinmacro
+@macro
 def half_negative(argument: AnyDensity) -> Density[types.half_negative]:
     """If the input is negative, returns half of the input. Otherwise returns the input.
     
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#half_negative)
     """
-    return Density(types.half_negative(argument))
+    return Density(types.half_negative(argument.AST))
 
-@builtinmacro
+@macro
 def interpolated(argument: AnyDensity) -> Density[types.interpolated]:
     """Interpolates at each block in one cell based on the input density function value of some cells around. The size of each cell is 4 by 4. Used often in combination with `flat_cache`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
     """
-    return Density(types.interpolated(argument))
+    return Density(types.interpolated(argument.AST))
 
-@builtinmacro
+@macro
 def interval_select(input: AnyDensity, thresholds: list[float], functions: list[AnyDensity]):
     """Selects between a number of density functions based on an input density function and a set of threshold values.
 
@@ -227,9 +224,9 @@ def interval_select(input: AnyDensity, thresholds: list[float], functions: list[
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interval_select)
     """
-    return Density(types.interval_select(input, thresholds, functions))
+    return Density(types.interval_select(input.AST, thresholds, [function.AST for function in functions]))
 
-@builtinmacro
+@macro
 def invert(argument: AnyDensity) -> Density[types.invert]:
     """Calculates `1/x`.
     
@@ -238,9 +235,9 @@ def invert(argument: AnyDensity) -> Density[types.invert]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#invert)
     """
-    return Density(types.invert(argument))
+    return Density(types.invert(argument.AST))
 
-@builtinmacro
+@macro
 def max(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.max]:
     """Returns the maximum of two inputs.
 
@@ -249,9 +246,9 @@ def max(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.max]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#max)
     """
-    return Density(types.max(argument1, argument2))
+    return Density(types.max(argument1.AST, argument2.AST))
 
-@builtinmacro
+@macro
 def min(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.min]:
     """Returns the minimum of two inputs.
 
@@ -260,9 +257,9 @@ def min(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.min]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#min)
     """
-    return Density(types.min(argument1, argument2))
+    return Density(types.min(argument1.AST, argument2.AST))
 
-@builtinmacro
+@macro
 def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.mul]:
     """Multiplies two inputs.
     
@@ -271,7 +268,7 @@ def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.mul]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#mul)
     """
-    return Density(types.mul(argument1, argument2))
+    return Density(types.mul(argument1.AST, argument2.AST))
 
 def noise(noise: Noise, xz_scale: float, y_scale: float) -> Density[types.noise]:
     """Samples a noise.
@@ -306,16 +303,16 @@ def old_blended_noise(xz_scale: float, y_scale: float, xz_factor: float, y_facto
     """
     return Density(types.old_blended_noise(xz_scale, y_scale, xz_factor, y_factor, smear_scale_multiplier))
 
-@builtinmacro
+@macro
 def quarter_negative(argument: AnyDensity) -> Density[types.quarter_negative]:
     """If the input is negative, returns a quarter of the input. Otherwise returns the input.
     
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#quarter_negative)
     """
-    return Density(types.quarter_negative(argument))
+    return Density(types.quarter_negative(argument.AST))
 
-@builtinmacro
+@macro
 def range_choice(input: AnyDensity, min_inclusive: float, max_exclusive: float, when_in_range: AnyDensity, when_out_of_range: AnyDensity) -> Density[types.range_choice]:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
 
@@ -329,7 +326,7 @@ def range_choice(input: AnyDensity, min_inclusive: float, max_exclusive: float, 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
     """
-    return Density(types.range_choice(input, min_inclusive, max_exclusive, when_in_range, when_out_of_range))
+    return Density(types.range_choice(input.AST, min_inclusive, max_exclusive, when_in_range.AST, when_out_of_range.AST))
 
 def shift(argument: Noise) -> Density[types.shift]:
     """Samples a noise at `(x/4, y/4, z/4)`, then multiplies it by `4`.
@@ -337,7 +334,7 @@ def shift(argument: Noise) -> Density[types.shift]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift)
     """
-    return Density(types.shift(argument))
+    return Density(types.shift(argument.AST))
 
 def shift_a(argument: Noise) -> Density[types.shift_a]:
     """Samples a noise at `(x/4, 0, z/4)`, then multiplies it by `4`.
@@ -345,7 +342,7 @@ def shift_a(argument: Noise) -> Density[types.shift_a]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_a)
     """
-    return Density(types.shift_a(argument))
+    return Density(types.shift_a(argument.AST))
 
 def shift_b(argument: Noise) -> Density[types.shift_b]:
     """Samples a noise at `(z/4, x/4, 0)`, then multiplies it by `4`.
@@ -353,9 +350,9 @@ def shift_b(argument: Noise) -> Density[types.shift_b]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_b)
     """
-    return Density(types.shift_b(argument))
+    return Density(types.shift_b(argument.AST))
 
-@builtinmacro
+@macro
 def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: AnyDensity, shift_y: AnyDensity, shift_z: AnyDensity) -> Density[types.shifted_noise]:
     """Samples a noise after shifting the input coordinates.
 
@@ -370,9 +367,9 @@ def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: AnyDen
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shifted_noise)
     """
-    return Density(types.shifted_noise(noise, xz_scale, y_scale, shift_x, shift_y, shift_z))
+    return Density(types.shifted_noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
 
-@builtinmacro
+@macro
 def spline(coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]) -> Density[types.spline]:
     """Computes the value of a cubic spline for the input.
 
@@ -385,26 +382,26 @@ def spline(coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
     """
-    points = [(p[0], AnyDensity.unify(p[1]).AST, p[2]) for p in points]
-    return Density(types.spline(coordinate, points))
+    points = [(p[0], p[1].AST, p[2]) for p in points]
+    return Density(types.spline(coordinate.AST, points))
 
-@builtinmacro
+@macro
 def square(argument: AnyDensity) -> Density[types.square]:
     """Raises the input to the power of 2.
     
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#square)
     """
-    return Density(types.square(argument))
+    return Density(types.square(argument.AST))
 
-@builtinmacro
+@macro
 def squeeze(argument: AnyDensity) -> Density[types.squeeze]:
     """First clamps the input between `-1` and `1`, then transforms it using `x/2 - x*x*x/24`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#squeeze)
     """
-    return Density(types.squeeze(argument))
+    return Density(types.squeeze(argument.AST))
 
 
 def y_clamped_gradient(from_y: int, to_y: int, from_value: float, to_value: float) -> Density[types.y_clamped_gradient]:

@@ -36,7 +36,6 @@ __all__ = [
     "shift", "shift_a", "shift_b",
     "shifted_noise", "spline",
     "square", "squeeze",
-    "weird_scaled_sampler",
     "y_clamped_gradient"
 ]
 

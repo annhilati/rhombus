@@ -19,7 +19,7 @@ def test_deserialize_literals():
     assert DensityFunction.deserialize_inline("some:reference") == Reference("some:reference")
     
     # References with available context
-    with beet.DataPack(path="test_pack") as dp:
+    with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
         
         token = config.ctx.datapack.set(dp)
         

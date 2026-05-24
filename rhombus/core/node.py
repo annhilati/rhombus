@@ -27,7 +27,7 @@ class NodeDataclassTransformer(type):
 class RhombusASTNode(metaclass=NodeDataclassTransformer):
     "Base class for all nodes in a Rhombus AST"
   
-    __dataclass_fields__: ClassVar[dict[str, dataclasses.Field]]
+    __dataclass_fields__: ClassVar[dict[str, dataclasses.Field[Any]]]
     __dataclass_params__: ClassVar[Any]
     __match_args__:       ClassVar[tuple[str, ...]]
                

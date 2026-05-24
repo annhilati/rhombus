@@ -1,9 +1,9 @@
-from rhombus.std import Density, AnyDensity, builtinmacro
+from rhombus.std import Density, AnyDensity, macro
 from rhombus.support.moredfs import types
 
 __all__ = []
 
-@builtinmacro
+@macro
 def acos(argument: AnyDensity) -> Density[types.acos]:
     """Returns the arc cosine of the input in radians.<br>
     ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
@@ -12,9 +12,9 @@ def acos(argument: AnyDensity) -> Density[types.acos]:
     
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#arc-cosine)
     """
-    return Density(types.acos(argument))
+    return Density(types.acos(argument.AST))
 
-@builtinmacro
+@macro
 def asin(argument: AnyDensity) -> Density[types.asin]:
     """Returns the arc sine of the input in radians.<br>
     ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
@@ -23,9 +23,9 @@ def asin(argument: AnyDensity) -> Density[types.asin]:
     
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#arc-sine)
     """
-    return Density(types.asin(argument))
+    return Density(types.asin(argument.AST))
 
-@builtinmacro
+@macro
 def atan(argument: AnyDensity) -> Density[types.atan]:
     """Returns the arc tangent of the input in radians.<br>
 
@@ -33,6 +33,6 @@ def atan(argument: AnyDensity) -> Density[types.atan]:
     
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#arc-tangent)
     """
-    return Density(types.atan(argument))
+    return Density(types.atan(argument.AST))
 
 ...

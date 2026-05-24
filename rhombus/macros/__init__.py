@@ -1,4 +1,7 @@
-"""Predefined functions for more complex calculations."""
+"""# Rhombus macro library
+Macros are functions with arbitrary arguments that return a `Density` object. They
+are useful for abstracting away common patterns and making your code more readable. 
+"""
 
 from rhombus.macros import (
     coords,

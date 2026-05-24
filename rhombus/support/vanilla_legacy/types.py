@@ -32,6 +32,6 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
 
 class weird_scaled_sampler(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
-    rarity_value_mapper: Literal["type_1", "type_2"]
-    noise: Noise
     input: DensityFunction
+    noise: Noise
+    rarity_value_mapper: Literal["type_1", "type_2"]

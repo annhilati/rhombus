@@ -1,29 +1,22 @@
-"""Collection of all standard symbols needed for composing density functions with Rhombus DSL
+"""
+# The Rhombus standard library
+This module contains all the symbols needed to develop vanilla terrain
+generation for datapacks, as well as some tools that are generally well-
+suited for this purpose.
 
-When using the Rhombus language to compose density function, you should import `*` from this module.  
-But be aware, that this will override some of Pythons buil-tin functions. You can get them again  
-from the `builtins` module.
+Typically, when developing terrain generation, you will want to import
+everything from this module. Note that some builtin symbols from Python
+might be overwritten. To get them back, you can import from `builtins`.
 
-They can be devided in:
-
-`Density`
-    The wrapper class for abstract syntax trees of density functions.
-
-`Noise`
-    Class to declare noises.
-
-`.functions`
-    Low-level built-in macros for the vanilla density function types.
-
-`.types`
-    Collection of the model classes for vanila density function types.  
-    They are not needed when composing density functions, except for
-    typing macros.
+```
+from rhombus import *
+from builtins import abs as python_abs
+```
 """
 
-from rhombus.std.density import *
 from rhombus.std.noise import *
+from rhombus.std.macros import *
+from rhombus.std.density import *
 from rhombus.std.functions import *
-from rhombus.std.utils import builtinmacro, macro
 from rhombus.std import functions as f
 from rhombus.std import types as t

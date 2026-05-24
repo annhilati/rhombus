@@ -41,3 +41,5 @@
 # TODO Features
 - Serialization
   - make serialization procedures extendable
+- Deserialization
+  - its not well controlled, which dft implementations are used for deserialization
