@@ -8,7 +8,7 @@ Essentially, they are like typing with Unions, but:
 """
 
 from typing import Callable, Any, get_args, get_origin, get_type_hints, overload, Union
-import functools, inspect, types
+import functools, inspect, types, sys
 
 class DSLTypeMeta(type):
 
@@ -182,7 +182,12 @@ class DSLMethod:
     @staticmethod
     def _make_wrapper[**P, R](func: Callable[P, R], deco_kwargs: dict[str, Any]) -> Callable[P, R]:
         sig = inspect.signature(func)
-        hints = get_type_hints(func)
+        module = sys.modules[func.__module__]
+
+        hints = get_type_hints(
+            func,
+            globalns=module.__dict__,
+        )
 
         def parse_value(val: Any, hint: Any) -> Any:
 

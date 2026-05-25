@@ -1,10 +1,3 @@
-"""
-In Rhombus, the abstract syntax trees of composed density functions are
-wrapped in instances of the `Density` class, which is defined here.
-
-For more information, see the `.Density` class.
-"""
-
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Self, Literal, overload
