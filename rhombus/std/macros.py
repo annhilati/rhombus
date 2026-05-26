@@ -1,8 +1,7 @@
 import inspect, functools
-from typing import Callable
+from typing import Callable, cast
 
 from rhombus.core.dsl.DSLType import DSLMethod
-from rhombus.core.utils import Decorator
 
 __all__ = ["macro"]
 
@@ -31,6 +30,6 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
             pass
         # Preserve original signature for tooling/inspection
         decorated.__signature__ = sig
-        return decorated
+        return cast(Callable[P, R], decorated)
 
-    return decorator(fn)
+    return cast(Callable[P, R], decorator(fn))
