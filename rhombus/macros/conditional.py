@@ -44,8 +44,13 @@ def _ensure_pair(value: SupportsIndex) -> tuple[float, float]:
     a, b = float(value[0]), float(value[1])
     return (a, b) if a <= b else (b, a)
 
-it = object()
-"Typing sentinel to denote, that the last specified input is meant"
+
+# TODO make this a genuine singleton sentinel
+class Itself:
+    pass
+
+it = Itself()
+"Typing sentinel to denote, that the last specified input is reused"
 
 class Relation(str, Enum):
     EQUALS = "=="
@@ -88,7 +93,6 @@ class Condition:
     def _default_input(self) -> Any:
         return None
 
-    # macro applied by reassignment
     def then(self, value: AnyDensity) -> "Causality":
         """Specifies the value that is returned, if the condition applies.
         
@@ -99,7 +103,7 @@ class Condition:
                 `~.otherwise(AnyDensity)`
         """
         return Causality(
-            _cases=[(self, value.AST)],
+            _cases=[(self, AnyDensity.unify(value).AST)],
             _default_input=self._default_input
 )
 
@@ -185,7 +189,7 @@ class NotCondition(Condition):
     inner: Condition
 
     def _compile(self, when_true: DensityFunction, when_false: DensityFunction) -> DensityFunction:
-        return self.inner._compile(when_false, when_true)
+        return self.inner._compile(when_true=when_false, when_false=when_true)
 
 
 #======// Logical Functions //===================================================================//
@@ -200,7 +204,7 @@ def ALL(*conditions: Condition) -> Condition:
     Equivalent to `condition1 & condition2`.
     """
     if not conditions:
-        raise ValueError("At least one condition is required")
+        raise ValueError("ALL() requires at least one condition")
     result = conditions[0]
     for cond in conditions[1:]:
         result = result & cond
@@ -211,7 +215,7 @@ def ANY(*conditions: Condition) -> Condition:
     Equivalent to `condition1 | condition2`.
     """
     if not conditions:
-        raise ValueError("At least one condition is required")
+        raise ValueError("ANY() requires at least one condition")
     result = conditions[0]
     for cond in conditions[1:]:
         result = result | cond
@@ -254,12 +258,11 @@ class Causality:
         _subject: DensityFunction
         _chain: ClassVar[Causality] = ...
 
-        def __init__(self, subject: AnyDensity = it):
+        def __init__(self, subject: AnyDensity | Itself = it):
             if subject is it:
                 if self._chain._default_input is None:
                     raise TypeError("elsewhen() with implicit input is only possible if the initial condition is not composed of multiple conditions")
                 subject = self._chain._default_input
-            self._chain._default_input = AnyDensity.unify(subject).AST
             self._subject = AnyDensity.unify(subject).AST
 
         def equals(self, value: float) -> Condition:
@@ -286,7 +289,7 @@ class Causality:
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
-        result = value.AST
+        result = AnyDensity.unify(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
         return Density(result)
@@ -297,7 +300,6 @@ class OtherPendingCondition:
     _chain: Causality
     _condition: Condition
 
-    # macro applied by reassignment
     def then(self, value: AnyDensity) -> Causality:
         """Specifies the value that is returned, if the condition applies.
         
@@ -307,15 +309,8 @@ class OtherPendingCondition:
             **Specify the fallback value and close the expression**
                 `~.otherwise(AnyDensity)`
         """
-        self._chain._cases.append((self._condition, value.AST))
+        self._chain._cases.append((self._condition, AnyDensity.unify(value).AST))
         return self._chain
-
-
-#======// Macro Application //===================================================================//
-
-Condition.then = macro(Condition.then)
-Causality.otherwise = macro(Causality.otherwise)
-OtherPendingCondition.then = macro(OtherPendingCondition.then)
 
 
 #======// Condition Fabric //====================================================================//

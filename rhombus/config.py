@@ -2,7 +2,7 @@ from contextvars import ContextVar
 from collections import OrderedDict
 import beet, warnings
 
-infinitesimal = 1/10000000
+infinitesimal = 1e-8
 
 class ctx:
 

@@ -150,7 +150,7 @@ def constant(argument: float) -> Density[types.constant]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#constant)
     """
-    return AnyDensity.unify(argument.AST)
+    return AnyDensity.unify(argument)
 
 @macro
 def cube(argument: AnyDensity) -> Density[types.cube]:

@@ -1,4 +1,5 @@
 # All
+import rhombus.core.node
 import rhombus.core.serializer
 import rhombus.core.compiler
 import rhombus.core.datapack_resource
@@ -9,10 +10,12 @@ import rhombus.std.density
 import rhombus.std.types
 import rhombus.std.functions
 import rhombus.std.noise
+import rhombus.std.macros
 import rhombus.macros.coords
 import rhombus.macros.emath
 import rhombus.macros.math
 import rhombus.macros.smath
+import rhombus.macros.conditionality
 import rhombus.support.ensity
 import rhombus.support.moredfs
 import rhombus.support.lithostiched
