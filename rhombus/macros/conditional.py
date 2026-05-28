@@ -6,9 +6,10 @@ The syntax goes like this:
 ```
 from rhombus.std.conditional import *
 
-out = (when(input, Relation.EQUAL, 1.0)
+out = (
+    when(input).equals(1.0)
         .then(10.0)
-    .elsewhen(Relation.EQUAL, 2.0)
+    .elsewhen(it).equals(2.0)
         .then(20.0)
     .otherwise(0.0)
 )
@@ -21,7 +22,7 @@ cases, algebraic methods should be used whenever possible.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Any, SupportsIndex, Sized, Never, ClassVar
+from typing import Any, SupportsIndex, Never, ClassVar
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
@@ -34,15 +35,17 @@ EPSILON = config.infinitesimal
 INFINITY = constant_number_limit
 
 __all__ = [
-    "when", "NOT", "ALL", "ANY"
+    "when", "NOT", "ALL", "ANY", "it"
 ]
 
-def _ensure_pair(value: Sized[SupportsIndex]) -> tuple[float, float]:
+def _ensure_pair(value: SupportsIndex) -> tuple[float, float]:
     if not isinstance(value, tuple) or len(value) != 2:
         raise TypeError("expected tuple with two floats")
     a, b = float(value[0]), float(value[1])
     return (a, b) if a <= b else (b, a)
 
+it = object()
+"Typing sentinel to denote, that the last specified input is meant"
 
 class Relation(str, Enum):
     EQUALS = "=="
@@ -89,8 +92,11 @@ class Condition:
     def then(self, value: AnyDensity) -> "Causality":
         """Specifies the value that is returned, if the condition applies.
         
-        Continue with `~.elsewhen()` to specify an alternative condition or
-        `~.otherwise()` to specify the fallback value and return the `Density` object.
+        ## Continuation
+            **Append another alternative condition**
+                `~.elsewhen(AnyDensity)`
+            **Specify the fallback value and close the expression**
+                `~.otherwise(AnyDensity)`
         """
         return Causality(
             _cases=[(self, value.AST)],
@@ -221,20 +227,39 @@ class Causality:
 
     def __post_init__(self):
         self.elsewhen._chain = self
-        # self.otherwise.instance = self
 
     class elsewhen:
         """Specifies a fallback option for the conditionality if none of the preceding
-        conditions apply. Returns the finished `Density` object.
+        conditions apply. When called without arguments, the input of the initial condition is used.
+
+        ## Continuation
+
+        **Equal to**  
+            `~.equals(float)`
+        **Unequal to**  
+            `~.unequal(float)`
+        **Greater than**  
+            `~.greater(float)`
+        **Less than**  
+            `~.less(float)`
+        **Greater or equal**  
+            `~.greatereq(float)`
+        **Less or equal**  
+            `~.lesseq(float)`
+        **Between**  
+            `~.between(float, float)`
+        **Outside of**  
+            `~.outside(float, float)`
         """
         _subject: DensityFunction
         _chain: ClassVar[Causality] = ...
 
-        def __init__(self, subject: AnyDensity = ...):
-            if subject is ...:
+        def __init__(self, subject: AnyDensity = it):
+            if subject is it:
                 if self._chain._default_input is None:
                     raise TypeError("elsewhen() with implicit input is only possible if the initial condition is not composed of multiple conditions")
                 subject = self._chain._default_input
+            self._chain._default_input = AnyDensity.unify(subject).AST
             self._subject = AnyDensity.unify(subject).AST
 
         def equals(self, value: float) -> Condition:
@@ -254,23 +279,13 @@ class Causality:
         def outside(self, low: float, high: float, /) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).outside(low, high))
         
-    # class otherwise:
-    #     instance: ClassVar[Causality] = ...
-
-    #     @overload
-    #     def __new__(cls, value: AnyDensity) -> Density[range_choice]: ...
-    #     @classmethod
-    #     def __new__(cls, value: AnyDensity) -> Density[range_choice]:
-    #         """Specifies a fallback option for the conditionality if none of the other
-    #         conditions apply. Returns the finished `Density` object.
-    #         """
-    #         result = AnyDensity.unify(value).AST
-    #         for condition, branch_value in reversed(cls.instance.cases):
-    #             result = condition.compile(branch_value, result)
-    #         return Density(result)
-
 
     def otherwise(self, value: AnyDensity) -> Density[range_choice]:
+        """Specified a fallback value that is returned if none of the conditions apply.
+        
+        Returns:
+            Density: The resulting density function representing the entire conditionality expression.
+        """
         result = value.AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
@@ -279,17 +294,21 @@ class Causality:
 
 @dataclass
 class OtherPendingCondition:
-    chain: Causality
-    condition: Condition
+    _chain: Causality
+    _condition: Condition
 
     # macro applied by reassignment
     def then(self, value: AnyDensity) -> Causality:
-        """Specifies the valure that will be returned, if the alternative condition
-        applies. Continue with `~.elsewhen()` to specify another alternative or
-        `~.otherwise()` to specify the fallback value and return the `Density` object.
+        """Specifies the value that is returned, if the condition applies.
+        
+        ## Continuation
+            **Append another alternative condition**
+                `~.elsewhen(AnyDensity)`
+            **Specify the fallback value and close the expression**
+                `~.otherwise(AnyDensity)`
         """
-        self.chain._cases.append((self.condition, value.AST))
-        return self.chain
+        self._chain._cases.append((self._condition, value.AST))
+        return self._chain
 
 
 #======// Macro Application //===================================================================//
@@ -305,14 +324,24 @@ class when:
     """Opens a new conditionality expression. 
     
     To continue, use one of the following methods to specify the condition:
-    - `~.equals(value)`
-    - `~.unequal(value)`
-    - `~.greater(value)`
-    - `~.less(value)`
-    - `~.greatereq(value)`
-    - `~.lesseq(value)`
-    - `~.between(low, high)`
-    - `~.outside(low, high)`
+    ## Continuation
+
+        **Equal to**  
+            `~.equals(float)`
+        **Unequal to**  
+            `~.unequal(float)`
+        **Greater than**  
+            `~.greater(float)`
+        **Less than**  
+            `~.less(float)`
+        **Greater or equal**  
+            `~.greatereq(float)`
+        **Less or equal**  
+            `~.lesseq(float)`
+        **Between**  
+            `~.between(float, float)`
+        **Outside of**  
+            `~.outside(float, float)`
     """
     _subject: DensityFunction
 
