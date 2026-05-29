@@ -1,5 +1,7 @@
 from rhombus import config as cfg
 from rhombus.std import Density, AnyDensity, f, types, macro
+from rhombus.macros.conditional import when, it
+from typing import Literal
 
 pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
 "The constant `π` to 16 decimals."
@@ -35,37 +37,25 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
     return result
 
 @macro
-def linsqrt01(argument: AnyDensity) -> Density[types.add]:
+def sqrt_linear_01(argument: AnyDensity) -> Density[types.add]:
     return 0.41731 + 0.59016*argument
 
 @macro
-def ratsqrt01(argument: AnyDensity) -> Density[types.mul]:
+def sqrt_rational_01(argument: AnyDensity) -> Density[types.mul]:
     return argument / (0.41731+0.59016*argument)
 
 
 #======// Number Theory //=======================================================================//
 
 @macro
-def heaviside(argument: AnyDensity) -> Density[types.range_choice]:
+def heaviside(argument: AnyDensity, *, at_zero: float | Literal["Infinity", "NaN"]) -> Density[types.range_choice]:
     """Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive.<br>
-
-    **NOTE** This implementation uses a definition where `heaviside(0) = 0.5`.
 
     ---
     ⚙️ Implementation utilizes `range_choice` ┃ `CC(·) = 2 × CC(argument) + 5`
     """
-    return f.range_choice(
-        input=argument,
-        min_inclusive=0,
-        max_exclusive=cfg.infinitesimal,
-        when_in_range=0.5,
-        when_out_of_range=f.range_choice(
-            input=argument,
-            min_inclusive=-types.constant_number_limit,
-            max_exclusive=0,
-            when_in_range=0,
-            when_out_of_range=1.0
-        ))
+    at_zero = {"Infinity": f.constant(1)/0, "NaN": f.constant(0)/0}[at_zero] if isinstance(at_zero, str) else at_zero
+    return when(argument).equals(0.0).then(at_zero).elsewhen(it).less(0.0).then(0.0).otherwise(1.0)
 
 @macro
 def ramp(argument: AnyDensity) -> Density[types.max]:
@@ -78,18 +68,7 @@ def sgn(argument: AnyDensity) -> Density[types.range_choice]:
 
     ⚙️ This implementation uses `range_choice`.
     """
-    return f.range_choice(
-        input=argument,
-        min_inclusive=0,
-        max_exclusive=cfg.infinitesimal,
-        when_in_range=0,
-        when_out_of_range=f.range_choice(
-            input=argument,
-            min_inclusive=-types.constant_number_limit,
-            max_exclusive=0,
-            when_in_range=-1.0,
-            when_out_of_range=1.0
-        ))
+    return when(argument).equals(0.0).then(0.0).elsewhen(it).less(0.0).then(-1.0).otherwise(1.0)
 
 
 #======// Arithmetic //==========================================================================//
