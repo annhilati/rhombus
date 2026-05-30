@@ -1,35 +1,114 @@
-import inspect, functools
-from typing import Callable, cast
+import inspect, functools, sys
+import types
+from typing import Callable, Any, Annotated, Union, cast, get_type_hints, get_args, get_origin
 
-from rhombus.core.dsl.DSLType import DSLMethod
+from rhombus.std.density import Density, AnyDensity
 
 __all__ = ["macro"]
 
 
 def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
-    """Decorator to help with building macros. Macros are functions that return a `Density` object.
-    
-    When the macro is called any parameters annotated with `AnyDensity` will be
-    resolved to `Density` objects. Then, the arguments can savely be used in builtin
-    factories or other macros.
+    """Decorator to help with building macros.
 
-    Builtin factories that use this decorator should alway pass the `~.AST` attribute
-    of the resolved arguments, because `Density` itself is not a valid node type.
+    Macros are functions that return a `Density` object.
+
+    When the macro is called, any parameters annotated with `AnyDensity` will be
+    resolved to `Density` objects. Nested containers like list, set, tuple, dict
+    and unions are handled recursively.
+
+    Builtin factories that use this decorator should always pass the `~.AST`
+    attribute of the resolved arguments, because `Density` itself is not a
+    valid node type.
     """
 
     def decorator[**P, R](func: Callable[P, R]) -> Callable[P, R]:
         sig = inspect.signature(func)
-        
-        # Apply DSLMethod to the whole function instead of manually unifying
-        decorated = DSLMethod(func)
-        try:
-            functools.wraps(func)(decorated)
-        except Exception:
-            # if DSLMethod returns a callable object that isn't a function,
-            # functools.wraps may fail; ignore in that case
-            pass
-        # Preserve original signature for tooling/inspection
-        decorated.__signature__ = sig
-        return cast(Callable[P, R], decorated)
+        module = sys.modules[func.__module__]
+
+        hints = get_type_hints(
+            func,
+            globalns=module.__dict__,
+            include_extras=True,
+        )
+
+        def is_anydensity_hint(hint: Any) -> bool:
+            if hint is AnyDensity:
+                return True
+
+            origin = get_origin(hint)
+
+            if origin is Annotated:
+                return is_anydensity_hint(get_args(hint)[0])
+
+            if origin is Union or isinstance(hint, types.UnionType):
+                return any(is_anydensity_hint(arg) for arg in get_args(hint))
+
+            return False
+
+        def resolve_value(val: Any, hint: Any) -> Any:
+            origin = get_origin(hint)
+            args = get_args(hint)
+
+            # Leaf: AnyDensity -> Density.constant(...)
+            if is_anydensity_hint(hint):
+                return val if isinstance(val, Density) else Density.constant(val)
+
+            # Union / |: try the first matching branch
+            if origin is Union or isinstance(hint, types.UnionType):
+                first_exception: Exception | None = None
+
+                for arg in args:
+                    try:
+                        return resolve_value(val, arg)
+                    except Exception as exc:
+                        if first_exception is None:
+                            first_exception = exc
+
+                if first_exception is not None:
+                    raise first_exception
+                return val
+
+            # Containers: recurse
+            try:
+                if origin is list and args:
+                    return [resolve_value(v, args[0]) for v in val]
+
+                if origin is set and args:
+                    return {resolve_value(v, args[0]) for v in val}
+
+                if origin is tuple and args:
+                    # tuple[T, ...]
+                    if len(args) == 2 and args[1] is Ellipsis:
+                        return tuple(resolve_value(v, args[0]) for v in val)
+                    # tuple[T1, T2, ...]
+                    return tuple(resolve_value(v, a) for v, a in zip(val, args))
+
+                if origin is dict and args:
+                    k_hint, v_hint = args
+                    return {
+                        resolve_value(k, k_hint): resolve_value(v, v_hint)
+                        for k, v in val.items()
+                    }
+
+            except TypeError:
+                # Nicht iterierbar, obwohl der Hint Container sagt
+                return val
+
+            return val
+
+        @functools.wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            bound = sig.bind(*args, **kwargs)
+            bound.apply_defaults()
+
+            for name, value in bound.arguments.items():
+                hint = hints.get(name)
+                if hint is not None:
+                    bound.arguments[name] = resolve_value(value, hint)
+
+            return func(*bound.args, **bound.kwargs)
+
+        wrapper.__signature__ = sig
+        return cast(Callable[P, R], wrapper)
 
     return cast(Callable[P, R], decorator(fn))

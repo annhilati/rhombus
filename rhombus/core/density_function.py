@@ -169,10 +169,12 @@ class Reference(DensityFunction):
         return files
     
     def __repr__(self) -> str:
+        from rhombus.std import types
         if self.definition is None:
             return '"' + self.reference + '"'
         elif "generated" in self.reference:
-            return "Density.partitioned(" + self.definition.__repr__() + ")"
+            # TODO: this should not be hardcoded
+            return "Density.partitioned(" + self.definition.__repr__() + ")" if not isinstance(self.definition, (types.cache_2d, types.cache_once, types.flat_cache, types.cache_all_in_cell)) else self.definition.__repr__()
         else:
             return "Density.configured(" + f"\"{self.reference}\"" + f", {self.definition.__repr__()}" + ")"
     

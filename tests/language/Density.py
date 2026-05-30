@@ -21,3 +21,18 @@ def test_partitioning():
         assert dp[worldgen.WorldgenDensityFunction]["a:config"] == worldgen.WorldgenDensityFunction(3.14)
        
         config.ctx.datapack.reset(token)
+        
+
+def test_unify_values():
+    
+    # int
+    assert Density.constant(1) == Density(types.constant(1.0))
+    
+    # float
+    assert Density.constant(4.5) == Density(types.constant(4.5))
+    
+    # str
+    assert Density.constant("test:reference") == Density(types.Reference("test:reference"))
+    
+    # DensityFunction
+    assert Density.constant(types.constant(1.0)) == Density(types.constant(1.0))

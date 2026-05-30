@@ -43,9 +43,16 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     @classmethod
     def constant(cls, value: AnyDensity) -> Density:
-        """Creates a new `Density` object from any interpretable value."""
-        # TODO describe these possible values
-        return AnyDensity.unify(value)
+        """Creates a new `Density` object from any interpretable value.
+        
+        Allowed are:
+            - `float` and `int` numbers
+            - `str` references
+            - `dict` with the `type` key
+            - `Density` objects
+            - `DensityFunction` objects
+        """
+        return _unify(value)
     
     @classmethod
     def refer(cls, identifier: str) -> Density[Reference]:
@@ -56,17 +63,14 @@ class Density[Function: DensityFunction = DensityFunction]:
     def configured(cls, name: str, default: AnyDensity) -> Density[Reference]:
         """Creates a new `Density` object which value that can be easily altered or referenced in the compiled datapack later."""
         name = "minecraft:" + name if not ":" in name else name
-        default = AnyDensity.unify(default).AST
+        default = Density.constant(default).AST
         return Density(Reference(name, default))
     
     @classmethod
     def partitioned(cls, value: AnyDensity):
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
-        value = AnyDensity.unify(value) # somehow not possible by decorator
-        return Density(Reference(
-            reference="rhombus:generated/" + uuid_hash(value.as_dict()),
-            definition=value.AST)
-        )
+        value = Density.constant(value)
+        return Density.configured("rhombus:generated/" + uuid_hash(value.as_dict()), value.AST)
     
 
     #======// Toolchain //=======================================================================//
@@ -83,6 +87,28 @@ class Density[Function: DensityFunction = DensityFunction]:
             return None
 
         return Density.from_dict(file.data, dp=dp)
+    
+    @classmethod
+    @contextfunction(dp=config.ctx.datapack)
+    def from_datapack_noise_router(cls,
+        dp: beet.DataPack,
+        noise_settings: str,
+        noise_router: str | Literal[
+            "barrier", "continents", "depth", "erosion", "final_density", "fluid_level_floodedness", "fluid_level_spread",
+            "lava", "preliminary_surface_level", "ridges", "temperature", "vegetation", "vein_gap", "vein_ridged", "vein_toggle"
+        ]
+    ) -> Density | None:
+
+        identifier = "minecraft:" + noise_settings if not ":" in noise_settings else noise_settings
+
+        file = dp[beet_worldgen.WorldgenNoiseSettings].get(identifier)
+        if file is None:
+            return None
+
+        if file.data.get("noise_router") is None or file.data.get("noise_router").get(noise_router) is None:
+            return None
+
+        return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
     
     @classmethod
     @contextfunction(dp=config.ctx.datapack)
@@ -108,7 +134,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         """Implements the Density and all additionally required files in a datapack.
         """
 
-        files = self.compile(identifier)    
+        files = self.compile(identifier)
         for id, file in files.items():
             dp[id] = file
         
@@ -151,7 +177,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[types.add]:
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(types.add(self, other))
     
@@ -159,7 +185,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[types.add]:
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(
             types.add(
@@ -170,7 +196,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __rsub__(self, other) -> Density[types.add]:
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(
             types.add(
@@ -181,7 +207,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __mul__(self, other) -> Density[types.mul]:
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(types.mul(self, other))
     
@@ -189,12 +215,12 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[types.mul]:
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(types.mul(self, types.invert(other)))
     
     def __rtruediv__(self, other) -> Density[types.mul]:
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(types.mul(other, types.invert(self)))
     
@@ -223,12 +249,12 @@ class Density[Function: DensityFunction = DensityFunction]:
             return s
 
     def __and__(self, other):
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(types.max(self, other))
     
     def __or__(self, other):
-        other = AnyDensity.unify(other).AST
+        other = Density.constant(other).AST
         self = self.AST
         return Density(types.min(self, other))
     
@@ -262,32 +288,55 @@ class Density[Function: DensityFunction = DensityFunction]:
 
 #======// AnyDensity //==========================================================================//
 
-class AnyDensity(DSLType, Density):
-    "DSL Type"
+# class AnyDensity(DSLType, Density):
+#     "DSL Type"
     
-    @classmethod
-    def unify(cls, v: int | float | str | Density | DensityFunction, **kwargs) -> Density:
-        """Interprets a QoL argument input and returns a Density object.
-        Applies logic like splitting large literal constants into calculations
-        before constructing constant AST nodes.
-        """
+#     @classmethod
+#     def unify(cls, v: int | float | str | Density | DensityFunction, **kwargs) -> Density:
+#         """Interprets a QoL argument input and returns a Density object.
+#         Applies logic like splitting large literal constants into calculations
+#         before constructing constant AST nodes.
+#         """
 
-        if isinstance(v, Density):
-            return v
+#         if isinstance(v, Density):
+#             return v
 
-        if isinstance(v, DensityFunction):
-            return Density(v)
+#         if isinstance(v, DensityFunction):
+#             return Density(v)
 
-        if isinstance(v, (int, float)):
-            return Density(constant(float(v)))
+#         if isinstance(v, (int, float)):
+#             return Density(constant(float(v)))
 
-        if isinstance(v, str):
-            if ":" not in v:
-                v = "minecraft:" + v
-            return Density(Reference(v))
+#         if isinstance(v, str):
+#             if ":" not in v:
+#                 v = "minecraft:" + v
+#             return Density(Reference(v))
 
-        raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
+#         raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
 
+type AnyDensity = Density | float | int | str
+
+def _unify(v: int | float | str | Density | DensityFunction) -> Density:
+    """Interprets a QoL argument input and returns a Density object.
+    Applies logic like splitting large literal constants into calculations
+    before constructing constant AST nodes.
+    """
+
+    if isinstance(v, Density):
+        return v
+
+    if isinstance(v, DensityFunction):
+        return Density(v)
+
+    if isinstance(v, (int, float)):
+        return Density(constant(float(v)))
+
+    if isinstance(v, str):
+        if ":" not in v:
+            v = "minecraft:" + v
+        return Density(Reference(v))
+
+    raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
 
 def ref(identifier: str, /) -> Density[Reference]:
     "Creates a Density that is a reference to an externally provided density function."

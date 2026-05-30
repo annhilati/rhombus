@@ -103,7 +103,7 @@ class Condition:
                 `~.otherwise(AnyDensity)`
         """
         return Causality(
-            _cases=[(self, AnyDensity.unify(value).AST)],
+            _cases=[(self, Density.constant(value).AST)],
             _default_input=self._default_input
 )
 
@@ -263,7 +263,7 @@ class Causality:
                 if self._chain._default_input is None:
                     raise TypeError("elsewhen() with implicit input is only possible if the initial condition is not composed of multiple conditions")
                 subject = self._chain._default_input
-            self._subject = AnyDensity.unify(subject).AST
+            self._subject = Density.constant(subject).AST
 
         def equals(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).equals(value))
@@ -289,7 +289,7 @@ class Causality:
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
-        result = AnyDensity.unify(value).AST
+        result = Density.constant(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
         return Density(result)
@@ -309,7 +309,7 @@ class OtherPendingCondition:
             **Specify the fallback value and close the expression**
                 `~.otherwise(AnyDensity)`
         """
-        self._chain._cases.append((self._condition, AnyDensity.unify(value).AST))
+        self._chain._cases.append((self._condition, Density.constant(value).AST))
         return self._chain
 
 
