@@ -27,7 +27,7 @@ __all__ = [
     "y_clamped_gradient"
 ]
 
-from rhombus.std.density import Density, AnyDensity, ref
+from rhombus.std.density import Density, AnyDensity
 from rhombus.std.noise import Noise
 from rhombus.std.macros import macro
 from rhombus.std import types
@@ -328,6 +328,10 @@ def range_choice(input: AnyDensity, min_inclusive: float, max_exclusive: float, 
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
     """
     return Density(types.range_choice(input.AST, min_inclusive, max_exclusive, when_in_range.AST, when_out_of_range.AST))
+
+def ref(identifier: str, /) -> Density[types.Reference]:
+    """References an externally provided density function."""
+    return Density.refer(identifier)
 
 def shift(argument: Noise) -> Density[types.shift]:
     """Samples a noise at `(x/4, y/4, z/4)`, then multiplies it by `4`.

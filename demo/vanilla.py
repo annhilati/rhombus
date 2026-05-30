@@ -8,8 +8,8 @@ noise_continentalness = Noise(-9, [1.0, 1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0])
 noise_ridge = Noise(-7, [1.0, 2.0, 1.0, 0.0, 0.0, 0.0])
 noise_cave_layer = Noise(-8, [1.0])
 
-shift_z = flat_cache((cache_2d(shift_b(argument=noise_offset))))
-shift_x = flat_cache((cache_2d(shift_a(argument=noise_offset))))
+shift_z = flat_cache(cache_2d(shift_b(argument=noise_offset)))
+shift_x = flat_cache(cache_2d(shift_a(argument=noise_offset)))
 y = coords.y()
 
 overworld_erosion = flat_cache(shifted_noise(noise=noise_erosion, shift_x=shift_x, shift_y=0.0, shift_z=shift_z, xz_scale=0.25, y_scale=0.0))

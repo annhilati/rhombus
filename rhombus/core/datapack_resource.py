@@ -106,7 +106,7 @@ class DatapackResource(RhombusASTNode):
     @identifier.setter
     def identifier(self, value: str | None) -> None:
         if not isinstance(value, str):
-            raise TypeError(f"Cannot asign non-str value '{value} to reference identifier'")
+            raise TypeError(f"Cannot asign non-str value '{value}' to reference identifier")
         self._reference = value
         
     def as_dict(self) -> JSONDict:

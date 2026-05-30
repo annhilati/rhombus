@@ -1,10 +1,3 @@
-"""'vdft' stands for 'vanilla density function types'.
-
-These are the data models for the vanilla density function types.
-
-They are not needed for normal use of the Rhombus language.
-"""
-
 from typing import ClassVar, Literal
 from rhombus.core import (
     DensityFunction,

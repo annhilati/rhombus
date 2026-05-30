@@ -6,7 +6,6 @@ import beet.contrib.worldgen as beet_worldgen
 
 from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
-from rhombus.core.dsl.DSLType import DSLType
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import types
 
@@ -98,6 +97,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             "lava", "preliminary_surface_level", "ridges", "temperature", "vegetation", "vein_gap", "vein_ridged", "vein_toggle"
         ]
     ) -> Density | None:
+        "Creates a `Density` object from a noise router entry of a noise settings file in a Beet datapack."
 
         identifier = "minecraft:" + noise_settings if not ":" in noise_settings else noise_settings
 
@@ -274,6 +274,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         if not isinstance(other, Density):
             return False
         return self.AST == other.AST
+    
     def __ne__(self, other): 
         if not isinstance(other, Density):
             return False
@@ -283,38 +284,13 @@ class Density[Function: DensityFunction = DensityFunction]:
     def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
     def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
     def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
-    def __bool__(self): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
+    def __bool__(self):      raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
 
 
 #======// AnyDensity //==========================================================================//
 
-# class AnyDensity(DSLType, Density):
-#     "DSL Type"
-    
-#     @classmethod
-#     def unify(cls, v: int | float | str | Density | DensityFunction, **kwargs) -> Density:
-#         """Interprets a QoL argument input and returns a Density object.
-#         Applies logic like splitting large literal constants into calculations
-#         before constructing constant AST nodes.
-#         """
-
-#         if isinstance(v, Density):
-#             return v
-
-#         if isinstance(v, DensityFunction):
-#             return Density(v)
-
-#         if isinstance(v, (int, float)):
-#             return Density(constant(float(v)))
-
-#         if isinstance(v, str):
-#             if ":" not in v:
-#                 v = "minecraft:" + v
-#             return Density(Reference(v))
-
-#         raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
-
 type AnyDensity = Density | float | int | str
+"Type for denoting that any straightforward Density shorthand can be used."
 
 def _unify(v: int | float | str | Density | DensityFunction) -> Density:
     """Interprets a QoL argument input and returns a Density object.
@@ -337,7 +313,3 @@ def _unify(v: int | float | str | Density | DensityFunction) -> Density:
         return Density(Reference(v))
 
     raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
-
-def ref(identifier: str, /) -> Density[Reference]:
-    "Creates a Density that is a reference to an externally provided density function."
-    return Density.refer(identifier)
