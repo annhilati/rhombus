@@ -4,4 +4,4 @@ When importing from here, make sure to do this after importing the "standard" sy
 """
 
 from .functions import *
-from .types import *
+from . import types

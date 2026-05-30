@@ -1,6 +1,8 @@
 __all__ = [
     "slide",
-    "terrain_shaper_spline"
+    "terrain_shaper_spline",
+    "weird_scaled_sampler",
+    "spline"
 ]
 
 from typing import Literal

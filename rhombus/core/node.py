@@ -1,9 +1,9 @@
 from typing import Self, Any, ClassVar, dataclass_transform
 import dataclasses
 
-from rhombus.core.utils import JSONValue, BeetFile, fields
+from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
 
-__all__ = ["RhombusASTNode"]
+__all__ = ["RhombusASTNode", "count_nodes", "count_node_values"]
     
 
 @dataclass_transform(field_specifiers=(dataclasses.Field, dataclasses.field))
@@ -45,6 +45,9 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         if not isinstance(other, RhombusASTNode):
             return False
         return self.fields == other.fields
+    
+    def __hash__(self) -> int:
+        return hash(uuid_hash(self.serialize_toplevel()))
 
         
     #======// Standard Implementations //========================================================//
@@ -103,3 +106,94 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         within a nested file structure.
         """
         return cls.deserialize_toplevel(data=data)
+
+
+def count_nodes(node: RhombusASTNode) -> dict[type[RhombusASTNode], int]:
+    """Recursively counts RhombusASTNode instances by the direct RhombusASTNode subclass type.
+
+    Nodes whose class is a subclass of a direct RhombusASTNode descendant are
+    counted as that direct descendant, not separately.
+    """
+    if not isinstance(node, RhombusASTNode):
+        raise TypeError("Expected RhombusASTNode instance")
+
+    counts: dict[type[RhombusASTNode], int] = {}
+    seen: set[int] = set()
+
+    def direct_rhombus_type(value: RhombusASTNode) -> type[RhombusASTNode]:
+        cls = type(value)
+        if RhombusASTNode in cls.__bases__:
+            return cls
+        for base in cls.__mro__[1:]:
+            if RhombusASTNode in base.__bases__:
+                return base
+        return cls
+
+    def visit(value: Any) -> None:
+        if isinstance(value, RhombusASTNode):
+            if id(value) in seen:
+                return
+            seen.add(id(value))
+            direct_type = direct_rhombus_type(value)
+            counts[direct_type] = counts.get(direct_type, 0) + 1
+            for child in value.fields.values():
+                visit(child)
+        elif isinstance(value, dict):
+            for item in value.keys():
+                visit(item)
+            for item in value.values():
+                visit(item)
+        elif isinstance(value, (list, tuple, set)):
+            for item in value:
+                visit(item)
+
+    visit(node)
+    return counts
+
+
+def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
+    """Recursively count unique nodes.
+
+    Nodes that are equal are grouped.
+    """
+
+    if not isinstance(node, RhombusASTNode):
+        raise TypeError("Expected RhombusASTNode instance")
+
+    counts: dict[RhombusASTNode, int] = {}
+    seen: set[int] = set()
+
+    def increment(value: RhombusASTNode) -> None:
+        for existing in counts:
+            if existing == value:
+                counts[existing] += 1
+                return
+
+        counts[value] = 1
+
+    def visit(value: Any) -> None:
+        if isinstance(value, RhombusASTNode):
+
+            # Zyklen verhindern
+            if id(value) in seen:
+                return
+            seen.add(id(value))
+
+            increment(value)
+
+            for child in value.fields.values():
+                visit(child)
+
+        elif isinstance(value, dict):
+            for item in value.keys():
+                visit(item)
+            for item in value.values():
+                visit(item)
+
+        elif isinstance(value, (list, tuple, set)):
+            for item in value:
+                visit(item)
+
+    visit(node)
+
+    return counts

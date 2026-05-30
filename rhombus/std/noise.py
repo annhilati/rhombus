@@ -45,3 +45,7 @@ class Noise(DatapackResource):
         if self.is_reference and self._reference is not None:
             return '"' + self.identifier + '"'
         return f"Noise({self.firstOctave}, {self.amplitudes!r})"
+    
+    def __call__(self, xz_scale: float, y_scale: float):
+        from rhombus.std.functions import noise
+        return noise(self, xz_scale, y_scale)

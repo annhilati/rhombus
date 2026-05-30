@@ -1,5 +1,5 @@
 from typing import Callable, Final, Any, get_type_hints
-import hashlib, uuid, json, functools, inspect, dataclasses, contextvars, dataclasses
+import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
 
 import beet, beet.library.base
 

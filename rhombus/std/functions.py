@@ -162,13 +162,14 @@ def cube(argument: AnyDensity) -> Density[types.cube]:
     return Density(types.cube(argument.AST))
 
 def end_islands() -> Density[types.end_islands]:
-    """Returns a value using a [special noise algorithm](https://mcsrc.dev/#1/26.1-snapshot-1/net/minecraft/world/level/levelgen/DensityFunctions#L565) used for end islands.<br>
+    """Returns a value using a special noise algorithm used for end islands.<br>
     The minimum value is set to `-0.84375`, the maximum value to `0.5625`.
     
     ⚠️ In versions before 1.19, only returns a constant value of `0.0`.
 
     ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands)
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands) -
+    [Noise Algorithm Definition](https://mcsrc.dev/#1/26.1-snapshot-1/net/minecraft/world/level/levelgen/DensityFunctions#L565)
     """
     return Density(types.end_islands())
 
@@ -230,7 +231,7 @@ def interval_select(input: AnyDensity, thresholds: list[float], functions: list[
 def invert(argument: AnyDensity) -> Density[types.invert]:
     """Calculates `1/x`.
     
-    **NOTE** That `invert` is `Infinity` for `0`.
+    **NOTE** That `invert(0)` is `Infinity`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#invert)

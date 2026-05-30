@@ -318,7 +318,7 @@ class OtherPendingCondition:
 class when:
     """Opens a new conditionality expression. 
     
-    To continue, use one of the following methods to specify the condition:
+    To continue, use one  of the following methods to specify the condition:
     ## Continuation
 
         **Equal to**  

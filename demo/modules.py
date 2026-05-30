@@ -15,7 +15,7 @@ import rhombus.macros.coords
 import rhombus.macros.emath
 import rhombus.macros.math
 import rhombus.macros.smath
-import rhombus.macros.conditionality
+import rhombus.macros.conditional
 import rhombus.support.ensity
 import rhombus.support.moredfs
 import rhombus.support.lithostiched

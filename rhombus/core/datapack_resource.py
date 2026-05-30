@@ -89,7 +89,7 @@ class DatapackResource(RhombusASTNode):
         
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
 
-        file = dp[worldgen.WorldgenDensityFunction].get(identifier)
+        file = dp[worldgen.WorldgenDensityFunction][identifier]
         if file is None:
             return None
         
@@ -130,5 +130,6 @@ class DatapackResource(RhombusASTNode):
             return False
         return self.identifier == other.identifier
     
-    def __hash__(self) -> int:
-        return hash(uuid_hash(self.serialize_toplevel()))
+    def __hash__(self):
+        # We need to expliciely set it like this again here, because defining __eq__ sets __hash__ to None
+        return super().__hash__()

@@ -82,7 +82,7 @@ def x():
     x = innermost
     for i in range(25):
         x = f.add(
-            argument1=2**i if i != 24 else -2**i,
+            argument1=2**i if 2**i < 1_000_000 else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -2**i / 65536.0)),
             argument2=f.mul(
                 argument1=f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**(-56-i), y_scale=0, shift_x=0.99, shift_y=0, shift_z=1.01)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=-1.0),
                 argument2=x

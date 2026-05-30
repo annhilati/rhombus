@@ -148,7 +148,7 @@ class Reference(DensityFunction):
        
         dp = config.ctx.datapack.get()
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-            return DensityFunction.deserialize_toplevel(f.data)
+            return Reference(data, DensityFunction.deserialize_toplevel(f.data)) # TODO: Make it an option whether to return content or defined reference?
             
         return Reference(data, definition=None)
     

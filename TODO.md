@@ -11,7 +11,6 @@
 - How to name arguments in builtins vs macros? Technical or scientific?
 - Supply Spline Points as SubParam?
   - Maybe an additional factory
-- resolve DensityDescriptor on Density instances?
 
 
 - [x] §1 Decode Datapack Resources dynamically from `DensityFunction` subclasses
@@ -45,3 +44,4 @@
   - its not well controlled, which dft implementations are used for deserialization
 - AnyDensity-Situation
   - yeah this needs to be rethought
+- Examine, whether to use frozen dataclasses for nodes

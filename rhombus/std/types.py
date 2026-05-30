@@ -5,7 +5,7 @@ These are the data models for the vanilla density function types.
 They are not needed for normal use of the Rhombus language.
 """
 
-from typing import ClassVar, Literal
+from typing import ClassVar
 from rhombus.core import (
     DensityFunction,
     SimpleFunctionBase,
@@ -53,6 +53,9 @@ class abs(MappedFunctionBase):
 
 class add(DoubleArgumentFunctionBase): 
     id: ClassVar[str] = "minecraft:add"
+    
+    def __repr__(self) -> str:
+        return "(" + self.argument1.__repr__() + " + " + self.argument2.__repr__() + ")"
 
 class beardifier(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:beardifier"
@@ -120,6 +123,9 @@ class min(DoubleArgumentFunctionBase):
 
 class mul(DoubleArgumentFunctionBase):
     id: ClassVar[str] = "minecraft:mul"
+    
+    def __repr__(self) -> str:
+        return "(" + self.argument1.__repr__() + " * " + self.argument2.__repr__() + ")"
 
 class noise(MultiArgumentsFunctionBase):
     id: ClassVar[str] = "minecraft:noise"
@@ -208,7 +214,7 @@ class spline(DensityFunction):
         "Only for debugging.<br>Open the spline in a pyplot."
         from rhombus.splines import show_spline
         if any((not isinstance(p[1], constant) for p in self.points)):
-            raise Exception # TODO
+            raise ValueError("Can only show splines with numeric values")
         show_spline([(p[0], p[1].argument, p[2]) for p in self.points])
     
 class square(MappedFunctionBase):

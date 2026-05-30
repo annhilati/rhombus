@@ -15,7 +15,9 @@ from rhombus.std import Noise
 
 __all__ = [
     "slide",
-    "terrain_shaper_spline"
+    "terrain_shaper_spline",
+    "weird_scaled_sampler",
+    "spline"
 ]
 
 class slide(MappedFunctionBase):
