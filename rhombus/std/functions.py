@@ -101,8 +101,8 @@ def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.c
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
-    if partition:
-        return Density.partitioned(types.cache_2d(argument.AST))
+    # if partition:
+    #     return Density.partitioned(types.cache_2d(argument.AST))
     return Density(types.cache_2d(argument.AST))
 
 @macro
@@ -116,8 +116,8 @@ def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[t
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
-    if partition:
-        return Density.partitioned(types.cache_all_in_cell(argument.AST))
+    # if partition:
+    #     return Density.partitioned(types.cache_all_in_cell(argument.AST))
     return Density(types.cache_all_in_cell(argument.AST))
 
 @macro
@@ -129,8 +129,8 @@ def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
-    if partition:
-        return Density.partitioned(types.cache_once(argument.AST))
+    # if partition:
+    #     return Density.partitioned(types.cache_once(argument.AST))
     return Density(types.cache_once(argument.AST))
 
 @macro
@@ -189,8 +189,8 @@ def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    if partition:
-        return Density.partitioned(types.flat_cache(argument.AST))
+    # if partition:
+    #     return Density.partitioned(types.flat_cache(argument.AST))
     return Density(types.flat_cache(argument.AST))
 
 @macro
@@ -271,7 +271,7 @@ def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.mul]:
     """
     return Density(types.mul(argument1.AST, argument2.AST))
 
-def noise(noise: Noise, xz_scale: float, y_scale: float) -> Density[types.noise]:
+def noise(noise: Noise, xz_scale: float = 1, y_scale: float = 1) -> Density[types.noise]:
     """Samples a noise.
 
     Parameters:

@@ -1,5 +1,11 @@
-from rhombus.core import *
+from rhombus.core import RhombusASTNode
 import anytree
+import json
+from typing import NamedTuple, Any
+from rhombus.core.utils import uuid_hash
+from rhombus.core.density_function import DensityFunction, Reference
+from rhombus.std import types
+import copy
 
 def count_nodes(node: RhombusASTNode) -> dict[type[RhombusASTNode], int]:
     """Recursively counts RhombusASTNode instances by the direct RhombusASTNode subclass type.
@@ -131,10 +137,6 @@ def collect_references(node: RhombusASTNode) -> list[Reference]:
 
 
 
-from typing import Any
-import anytree
-
-
 def build_reference_tree(
     root: RhombusASTNode,
     root_name: str,
@@ -229,3 +231,105 @@ def build_reference_tree(
         build_node(ref, tree_root, {root_name})
 
     return tree_root
+
+
+class DensityFunctionSizeInfo(NamedTuple):
+    nodes_uncached: int
+    nodes_in_unique_cached: int
+    unique_unknown_references: int
+    total_unknown_references: int
+
+def size(node: DensityFunction) -> DensityFunctionSizeInfo:
+    if not isinstance(node, DensityFunction):
+        raise TypeError("Expected DensityFunction instance")
+
+    nodes_uncached: int = 0
+    nodes_in_unique_cached: int = 0
+    unique_unknown_references: set[str] = set()
+    total_unknown_references: int = 0
+
+    seen_cachable_references: set[str] = set()
+
+    def visit(value: Any, we_are_in_cached: bool = False) -> None:
+        nonlocal nodes_uncached, nodes_in_unique_cached, unique_unknown_references, total_unknown_references
+
+        if isinstance(value, DensityFunction):
+
+            # Case: This is a regular DensityFunction node
+            if not we_are_in_cached:
+                nodes_uncached += 1
+            # Case: This is a DensityFunction node that is part of a unique cached subtree
+            else:
+                nodes_in_unique_cached += 1
+
+            if isinstance(value, Reference):
+
+                # Case: Reference with unknown definition
+                if value.definition is None:
+                    unique_unknown_references.add(value.reference)
+                    total_unknown_references += 1
+
+                # Case: Reference with known definition
+                else:
+                    # Case: Reference definition is cachable
+                    if isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)): # TODO: this shouldn't be hardcoded
+                        # Case: We have not seen this cachable reference before
+                        if value.reference not in seen_cachable_references:
+                            seen_cachable_references.add(value.reference)
+                            visit(value.definition, we_are_in_cached=True)
+
+                return # We do not want to count the references fields twice
+
+            for child in value.fields.values():
+                visit(child, we_are_in_cached)
+
+        elif isinstance(value, dict):
+            for item in value.keys():
+                visit(item, we_are_in_cached)
+            for item in value.values():
+                visit(item, we_are_in_cached)
+
+        elif isinstance(value, (list, tuple, set)):
+            for item in value:
+                visit(item, we_are_in_cached)
+
+    visit(node)
+
+    return DensityFunctionSizeInfo(
+        nodes_uncached=nodes_uncached,
+        nodes_in_unique_cached=nodes_in_unique_cached,
+        unique_unknown_references=len(unique_unknown_references),
+        total_unknown_references=total_unknown_references
+    )
+
+class ReplacementInfo(NamedTuple):
+    ...
+
+# TODO    
+def cache_redundances(root: DensityFunction, max_nodes: int = 10) -> tuple[DensityFunction, ReplacementInfo]:
+
+    occurances = count_node_values(root)
+
+    def visit_and_replace_if_needed(value: DensityFunction | Any) -> DensityFunction | Any:
+        if isinstance(value, DensityFunction):
+
+            if size(value).nodes_uncached > max_nodes:
+                # Ersetze value durch eine Referenz
+                ref_name = "rhombus:generated/" + uuid_hash(value.serialize_toplevel())
+                reference = Reference(ref_name, definition=value)
+                return reference
+
+            for v in value.fields.values():
+                return visit_and_replace_if_needed(v)
+
+        elif isinstance(value, dict):
+            for item in value.keys():
+                return visit_and_replace_if_needed(item)
+            for item in value.values():
+                return visit_and_replace_if_needed(item)
+
+        elif isinstance(value, (list, tuple, set)):
+            for item in value:
+                return visit_and_replace_if_needed(item)
+
+    return visit_and_replace_if_needed(root), ReplacementInfo()
