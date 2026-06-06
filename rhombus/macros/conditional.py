@@ -1,5 +1,5 @@
 """
-This module provides a basic strong semantic interface for realising
+This module provides a basic fluent interface for realising
 conditionality with `range_choice` expressions.
 
 The syntax goes like this:
@@ -316,7 +316,7 @@ class OtherPendingCondition:
 #======// Condition Fabric //====================================================================//
 
 class when:
-    """Opens a new conditionality expression. 
+    """Opens a new conditionality fluent interface. 
     
     To continue, use one  of the following methods to specify the condition:
     ## Continuation

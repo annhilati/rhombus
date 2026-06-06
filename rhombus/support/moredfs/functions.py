@@ -1,4 +1,5 @@
 from rhombus.std import Density, AnyDensity, macro
+from rhombus.core import DensityFunction
 from rhombus.support.moredfs import types
 
 __all__ = []
@@ -36,3 +37,22 @@ def atan(argument: AnyDensity) -> Density[types.atan]:
     return Density(types.atan(argument.AST))
 
 ...
+
+
+class when_finite:
+    """Opens a new `or_else` fluent interface. 
+    
+    ## Continuation
+
+        **Declare a fallback value**  
+            `~.otherwise(AnyDensity)`
+    """
+    _subject: DensityFunction
+
+    @macro
+    def __init__(self, subject: AnyDensity):
+        self._subject = subject.AST
+
+    @macro
+    def otherwise(self, value: AnyDensity) -> Density[types.or_else]:
+        return Density(types.or_else(self._subject, value))

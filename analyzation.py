@@ -240,6 +240,16 @@ class DensityFunctionSizeInfo(NamedTuple):
     total_unknown_references: int
 
 def size(node: DensityFunction) -> DensityFunctionSizeInfo:
+    """Gathers information about the size of a density function in terms of number of nodes.
+
+    Returns:
+        DensityFunctionSizeInfo
+            - `nodes_uncached`: Number of nodes that are not part of a unique cached subtree
+            - `nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
+            - `unique_unknown_references`: Number of unique references with unknown definition
+            - `total_unknown_references`: Total number of references with unknown definition (counting duplicates)
+
+    """
     if not isinstance(node, DensityFunction):
         raise TypeError("Expected DensityFunction instance")
 
@@ -278,7 +288,7 @@ def size(node: DensityFunction) -> DensityFunctionSizeInfo:
                             seen_cachable_references.add(value.reference)
                             visit(value.definition, we_are_in_cached=True)
 
-                return # We do not want to count the references fields twice
+                return # We do not want to count the references' fields twice
 
             for child in value.fields.values():
                 visit(child, we_are_in_cached)
