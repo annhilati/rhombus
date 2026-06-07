@@ -74,7 +74,7 @@ Fields of `DensityFunction` subclasses must be called exactly like their counter
 ```py
 @dataclass # See how the dataclass decorator is required here,
            # because we declare only here what fields the function type has
-class shifted_noise(MultiArgumentsFunctionBase):
+class shifted_noise(DensityFunction):
     id: ClassVar[str] = "minecraft:shifted_noise"
     noise: Noise
     xz_scale: float

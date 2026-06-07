@@ -131,5 +131,5 @@ class DatapackResource(RhombusASTNode):
         return self.identifier == other.identifier
     
     def __hash__(self):
-        # We need to expliciely set it like this again here, because defining __eq__ sets __hash__ to None
+        # We need to explicitely set it here again, because defining __eq__ sets __hash__ to None
         return super().__hash__()

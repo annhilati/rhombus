@@ -2,6 +2,12 @@
 <p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p>
 <p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
 
+<p align="center">
+    <!-- <a href="#"><img alt="Static Badge" src="https://img.shields.io/pypi/v/rhombus?style=for-the-badge&logo=pypi&logoColor=white&labelColor=4c75a9&label=Version&color=161926"></a> -->
+    <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Python 3.13+-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=4c75a9&color=161926"></a>
+    <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Beet-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=b90d38&color=161926"></a>
+</p>
+
 ### Abstract
 
 Rhombus is a Python sub-language delivered as a package that can be used to create expressions resembling the abstract syntax trees of density functions for Minecraft.<br>

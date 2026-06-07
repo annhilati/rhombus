@@ -30,6 +30,9 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     __dataclass_fields__: ClassVar[dict[str, dataclasses.Field[Any]]]
     __dataclass_params__: ClassVar[Any]
     __match_args__:       ClassVar[tuple[str, ...]]
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Base class RhombusASTNode cannot be instantiated directly. Please use a subclass with defined fields.")
                
     def __repr__(self) -> str:
         # Philosophy:
@@ -79,9 +82,9 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         Any default values for latter nodes are lost. To retrieve the data
         associated with the references, use `~.additional_described_files()`.
         """
-        raise NotImplementedError
+        raise NotImplementedError(f"Class {self.__class__.__name__} is missing implementation of serialize_toplevel()")
     
-    def serialize_inline(self) -> JSONValue:
+    def serialize_inline(self):
         """Returns a JSON value containing the data serialized into the target
         format (usually a dict), like it would be used within a nested file
         structure.
@@ -94,15 +97,15 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         return self.serialize_toplevel()
     
     @classmethod
-    def deserialize_toplevel(cls, data) -> Self:
+    def deserialize_toplevel(cls, data: JSONValue) -> Self:
         """Creates an instance of the class from data like it would be found at
         the top of a file structure. 
         """
-        raise NotImplementedError
+        raise NotImplementedError(f"Class {cls.__name__} is missing implementation of deserialize_toplevel()")
     
     @classmethod
-    def deserialize_inline(cls, data) -> Self:
+    def deserialize_inline(cls, data: JSONValue):
         """Creates an instance of the class from data like it would be found
         within a nested file structure.
         """
-        return cls.deserialize_toplevel(data=data)
+        return cls.deserialize_toplevel(data)

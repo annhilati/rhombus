@@ -1,20 +1,20 @@
 [project]
 name = "rhombus"
-version = "0.0.1"
+version = "0.1.0-dev1"
 description = ""
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 license = { file = "LICENSE" }
 authors = [
   { name = "Annhilati"},
 ]
 dependencies = [
-  "beet",
-  "typer",
-  "rich",
-  "deepdiff",
-  "numpy",
-  "matplotlib",
+  "beet==0.111.0", # includes pyyaml
+  "typer==0.25.1",
+  "rich==15.0.0",
+  "deepdiff==9.1.0",
+  "numpy==2.3.3",
+  "matplotlib==3.10.8",
 ]
 
 [project.urls]

@@ -9,7 +9,7 @@ from rhombus import config
 
 __all__ = [
     "DensityFunction",
-    "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase", "MultiArgumentsFunctionBase",
+    "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase",
     "Reference", "constant"
 ]
 
@@ -17,7 +17,14 @@ __all__ = [
 #======// DensityFunction Base Class //==========================================================//
 
 class DensityFunction(RhombusASTNode):
-    """Base class for density function types, which are the nodes of the density AST.
+    """Base class for density function types with any number of arguments of primitive types.
+
+    When inheriting from this class, add fields with the same names as keys required in the
+    density function JSON definition.
+
+    If types are needed in the fields that are not of type `DensityFunction`, of a subclass
+    of `DatapackResource` or otherwise JSON-compatible (like literals and `SubParameter`
+    subclasses), implement the serialization methods manually.
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/density_functions/)
     """
@@ -42,7 +49,7 @@ class DensityFunction(RhombusASTNode):
             if value is not None
         }}
         
-    # serialize_inline() inherited from RhombusASTNode
+    # serialize_inline() is inherited from RhombusASTNode
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict | float | int) -> Self:
@@ -50,16 +57,19 @@ class DensityFunction(RhombusASTNode):
         if cls is DensityFunction:
             # Standard JSON object with 'type' key
             if isinstance(data, dict):
+                
                 type_field: str | None = data.get("type")
+                
                 if type_field is None:
-                    raise ValueError("Cannot deserialize density function from dict without key 'type'")
+                    raise ValueError("Cannot deserialize density function from dictionary without key 'type'")
                 if ":" not in type_field:
                     type_field = "minecraft:" + type_field
+                
                 target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
                 if target_class is None:
                     raise TypeError(
-                        f"Cannot deserialize density function with type id '{type_field}' from dict. "
-                        "No density function class with this id is defined"
+                        f"Cannot deserialize density function with type id '{type_field}' from dictionary. "
+                        "No DensityFunction subclass with this id is defined"
                     )
                     
                 return target_class.deserialize_toplevel(data)
@@ -82,7 +92,7 @@ class DensityFunction(RhombusASTNode):
                 
 
     @classmethod
-    def deserialize_inline(cls, data: JSONDict | float | int | str):
+    def deserialize_inline(cls, data: JSONDict | float | int | str) -> Self:
         # Literal reference
         if isinstance(data, str):
             return Reference.deserialize_inline(data)
@@ -90,7 +100,7 @@ class DensityFunction(RhombusASTNode):
         elif isinstance(data, (dict, float, int)):
             return cls.deserialize_toplevel(data)
         else:
-            raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function inline")
+            raise TypeError(f"Cannot deserialize inline density function from type '{data.__class__.__name__}'")
         
 
 #======// Utility Base Classes //================================================================//
@@ -105,25 +115,14 @@ class SimpleFunctionBase(DensityFunction):
     def serialize_toplevel(self) -> JSONDict:
         return {"type": self.id}
     
-class MultiArgumentsFunctionBase(DensityFunction):
-    """Base class for density function types with any number of arguments of primitive types.
-
-    When inheriting from this class, add the `@dataclass` decorator to the new class  
-    and add fields with the same keys as required in the density function JSON definition.
-
-    If types are needed in the fields that are not of type `DensityFunction`,  
-    of a subclass of `DatapackResource` or JSON-compatible, inherit from  
-    `DensityFunction` instead and implement the methods manually.  
-    """
-
-class MappedFunctionBase(MultiArgumentsFunctionBase):
+class MappedFunctionBase(DensityFunction):
     "Base class for density function types that map an argument `argument` to a value."
     argument: DensityFunction
     
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
 
-class DoubleArgumentFunctionBase(MultiArgumentsFunctionBase):
+class DoubleArgumentFunctionBase(DensityFunction):
     "Base class for density function types with two arguments `argument1` and `argument2`."
     argument1: DensityFunction
     argument2: DensityFunction
@@ -139,8 +138,10 @@ class Reference(DensityFunction):
     definition: DensityFunction | None = None
 
     def __post_init__(self):
-        if not isinstance(self.definition, DensityFunction) and self.definition is not None:
-            raise ValueError(f"Cannot initialize Reference object with default of type {type(self.definition)}")
+        if not isinstance(self.reference, str) or not self.reference:
+            raise ValueError("Reference objects must have a reference string defined")
+        if self.definition is not None and not isinstance(self.definition, DensityFunction):
+            raise ValueError(f"Cannot initialize Reference object with default of type {self.definition.__class__.__name__}")
     
     @classmethod
     def deserialize_inline(cls, data: str):
@@ -150,7 +151,7 @@ class Reference(DensityFunction):
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
             return Reference(data, DensityFunction.deserialize_toplevel(f.data)) # TODO: Make it an option whether to return content or defined reference?
             
-        return Reference(data, definition=None)
+        return Reference(data)
     
     # deserialize_toplevel() is not a realistic scenario
     
@@ -190,7 +191,6 @@ class constant(DensityFunction):
         return cls(float(data))
             
     def serialize_toplevel(self) -> float | JSONDict:
-        
         from rhombus.std import types
         
         def float_to_mul(value: float):

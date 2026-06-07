@@ -14,9 +14,9 @@ class BeetFile(beet.library.base.NamespaceFile):
     decoder: Callable[[str], JSONDict]
 
 type Annotation = type
+type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
 type Dataclass = type
 type DataclassInstance = object
-type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
 
 #======// Data //================================================================================//
 

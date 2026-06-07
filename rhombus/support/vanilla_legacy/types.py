@@ -16,7 +16,7 @@ __all__ = [
 class slide(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:slide"
 
-class terrain_shaper_spline(MultiArgumentsFunctionBase):
+class terrain_shaper_spline(DensityFunction):
     id: ClassVar[str] = "minecraft:terrain_shaper_spline"
     spline: Literal["offset", "factor", "jaggedness"]
     min_value: float
@@ -25,7 +25,7 @@ class terrain_shaper_spline(MultiArgumentsFunctionBase):
     erosion: DensityFunction
     weirdness: DensityFunction
 
-class weird_scaled_sampler(MultiArgumentsFunctionBase):
+class weird_scaled_sampler(DensityFunction):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     input: DensityFunction
     noise: Noise

@@ -57,44 +57,75 @@ def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
+    # Use a stable serialized representation as grouping key to avoid
+    # relying on object identity or potentially brittle equality semantics.
+    import json
 
-    counts: dict[RhombusASTNode, int] = {}
-    seen: set[int] = set()
+    counts_by_key: dict[str, int] = {}
+    example_node_by_key: dict[str, RhombusASTNode] = {}
+    # Use path-local seen set to avoid infinite recursion on cycles while still
+    # allowing counting of the same shared node when encountered from multiple
+    # parents.
 
-    def increment(value: RhombusASTNode) -> None:
-        for existing in counts:
-            if existing == value:
-                counts[existing] += 1
-                return
+    def canonical_form(value: Any):
+        """Create a deterministic, fully expanded representation for grouping."""
+        # Primitive JSON values
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return ("lit", value)
 
-        counts[value] = 1
-
-    def visit(value: Any) -> None:
+        # Nodes: represent by class name and ordered fields
         if isinstance(value, RhombusASTNode):
+            return (
+                type(value).__name__,
+                tuple((fname, canonical_form(fval)) for fname, fval in value.fields.items())
+            )
 
-            # Zyklen verhindern
-            if id(value) in seen:
+        # Collections
+        if isinstance(value, dict):
+            return ("dict", tuple(sorted((canonical_form(k), canonical_form(v)) for k, v in value.items())))
+
+        if isinstance(value, (list, tuple, set)):
+            return ("seq", tuple(canonical_form(v) for v in value))
+
+        # Fallback to string representation
+        return ("other", repr(value))
+
+    def key_for(value: RhombusASTNode) -> str:
+        return json.dumps(canonical_form(value), sort_keys=True, ensure_ascii=True, separators=(",",":"))
+
+    def visit(value: Any, path_seen: set[int]) -> None:
+        if isinstance(value, RhombusASTNode):
+            # prevent cycles within the current traversal path
+            if id(value) in path_seen:
                 return
-            seen.add(id(value))
+            new_path = set(path_seen)
+            new_path.add(id(value))
 
-            increment(value)
+            k = key_for(value)
+            counts_by_key[k] = counts_by_key.get(k, 0) + 1
+            example_node_by_key.setdefault(k, value)
 
             for child in value.fields.values():
-                visit(child)
+                visit(child, new_path)
 
         elif isinstance(value, dict):
             for item in value.keys():
-                visit(item)
+                visit(item, path_seen)
             for item in value.values():
-                visit(item)
+                visit(item, path_seen)
 
         elif isinstance(value, (list, tuple, set)):
             for item in value:
-                visit(item)
+                visit(item, path_seen)
 
-    visit(node)
+    visit(node, set())
 
-    return counts
+    # convert back to mapping node -> count using one representative node per key
+    result: dict[RhombusASTNode, int] = {}
+    for k, cnt in counts_by_key.items():
+        result[example_node_by_key[k]] = cnt
+
+    return result
 
 def collect_references(node: RhombusASTNode) -> list[Reference]:
     """Gibt alle Reference-Instanzen im Baum zurück."""
@@ -312,25 +343,45 @@ def size(node: DensityFunction) -> DensityFunctionSizeInfo:
         total_unknown_references=total_unknown_references
     )
 
-class ReplacementInfo(NamedTuple):
-    ...
-
 # TODO    
-def cache_redundances(root: DensityFunction, max_nodes: int = 10) -> tuple[DensityFunction, ReplacementInfo]:
+def cache_redundances(root: DensityFunction, max_nodes: int = 10) -> tuple[DensityFunction, dict[DensityFunction, int]]:
+    """Returns `root` but replaces all sub trees that occur multilpe times and have a size
+    of more than `max_nodes` uncached nodes with partitioned and cached versions.
+    """
 
     occurances = count_node_values(root)
+    replacement_info: dict[DensityFunction, int] = {}
+
+    def clone_node(node: DensityFunction) -> DensityFunction:
+        return node.__class__(**{
+            field_name: field_value
+            for field_name, field_value in node.fields.items()
+        })
 
     def visit_and_replace_if_needed(value: DensityFunction | Any) -> DensityFunction | Any:
         if isinstance(value, DensityFunction):
 
-            if size(value).nodes_uncached > max_nodes:
-                # Ersetze value durch eine Referenz
-                ref_name = "rhombus:generated/" + uuid_hash(value.serialize_toplevel())
-                reference = Reference(ref_name, definition=value)
+            if occurances[value] > 1 and size(value).nodes_uncached > max_nodes:
+                # Optimize children first before caching
+                optimized = clone_node(value)
+                for field_name, field_value in value.fields.items():
+                    new_value = visit_and_replace_if_needed(field_value)
+                    setattr(optimized, field_name, new_value)
+                
+                # Wrap optimized content in cache_once and reference
+                ref_name = "rhombus:generated/" + uuid_hash(optimized.serialize_toplevel())
+                reference = Reference(ref_name, definition=types.cache_once(optimized))
+                replacement_info[value] = 1 if value not in replacement_info else replacement_info[value] + 1
                 return reference
 
-            for v in value.fields.values():
-                return visit_and_replace_if_needed(v)
+            # Not a candidate for caching, so just optimize children
+            new = clone_node(value)
+
+            for field_name, field_value in value.fields.items():
+                new_value = visit_and_replace_if_needed(field_value)
+                setattr(new, field_name, new_value)
+
+            return new
 
         elif isinstance(value, dict):
             for item in value.keys():
@@ -342,4 +393,6 @@ def cache_redundances(root: DensityFunction, max_nodes: int = 10) -> tuple[Densi
             for item in value:
                 return visit_and_replace_if_needed(item)
 
-    return visit_and_replace_if_needed(root), ReplacementInfo()
+        return value
+
+    return visit_and_replace_if_needed(root), replacement_info

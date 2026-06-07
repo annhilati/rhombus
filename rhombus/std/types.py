@@ -11,7 +11,6 @@ from rhombus.core import (
     SimpleFunctionBase,
     MappedFunctionBase,
     DoubleArgumentFunctionBase,
-    MultiArgumentsFunctionBase,
     Reference,
     constant,
     JSONDict,
@@ -78,7 +77,7 @@ class cache_all_in_cell(autoCachedMappedFunctionBase):
 class cache_once(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:cache_once"
 
-class clamp(MultiArgumentsFunctionBase):
+class clamp(DensityFunction):
     id: ClassVar[str] = "minecraft:clamp"
     input: DensityFunction # no references
     min: float
@@ -90,7 +89,7 @@ class cube(MappedFunctionBase):
 class end_islands(SimpleFunctionBase):
     id: ClassVar[str] = "minecraft:end_islands"
 
-class find_top_surface(MultiArgumentsFunctionBase):
+class find_top_surface(DensityFunction):
     id: ClassVar[str] = "minecraft:find_top_surface"
     density: DensityFunction
     upper_bound: DensityFunction
@@ -106,7 +105,7 @@ class half_negative(MappedFunctionBase):
 class interpolated(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:interpolated"
 
-class interval_select(MultiArgumentsFunctionBase):
+class interval_select(DensityFunction):
     id: ClassVar[str] = "minecraft:interval_select"
     input: DensityFunction
     thresholds: list[float] # non-empty
@@ -127,13 +126,13 @@ class mul(DoubleArgumentFunctionBase):
     def __repr__(self) -> str:
         return "(" + self.argument1.__repr__() + " * " + self.argument2.__repr__() + ")"
 
-class noise(MultiArgumentsFunctionBase):
+class noise(DensityFunction):
     id: ClassVar[str] = "minecraft:noise"
     noise: Noise
     xz_scale: float
     y_scale: float
 
-class old_blended_noise(MultiArgumentsFunctionBase):
+class old_blended_noise(DensityFunction):
     id: ClassVar[str] = "minecraft:old_blended_noise"
     xz_scale: float
     y_scale: float
@@ -144,7 +143,7 @@ class old_blended_noise(MultiArgumentsFunctionBase):
 class quarter_negative(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:quarter_negative"
 
-class range_choice(MultiArgumentsFunctionBase):
+class range_choice(DensityFunction):
     id: ClassVar[str] = "minecraft:range_choice"
     input: DensityFunction
     min_inclusive: float
@@ -152,19 +151,19 @@ class range_choice(MultiArgumentsFunctionBase):
     when_in_range: DensityFunction
     when_out_of_range: DensityFunction
 
-class shift(MultiArgumentsFunctionBase):
+class shift(DensityFunction):
     id: ClassVar[str] = "minecraft:shift"
     argument: Noise
 
-class shift_a(MultiArgumentsFunctionBase):
+class shift_a(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_a"
     argument: Noise
 
-class shift_b(MultiArgumentsFunctionBase):
+class shift_b(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_b"
     argument: Noise
 
-class shifted_noise(MultiArgumentsFunctionBase):
+class shifted_noise(DensityFunction):
     id: ClassVar[str] = "minecraft:shifted_noise"
     noise: Noise
     xz_scale: float
@@ -223,7 +222,7 @@ class square(MappedFunctionBase):
 class squeeze(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:squeeze"
 
-class y_clamped_gradient(MultiArgumentsFunctionBase):
+class y_clamped_gradient(DensityFunction):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
     from_y: int
     to_y: int
