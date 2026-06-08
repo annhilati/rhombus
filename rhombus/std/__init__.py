@@ -18,6 +18,5 @@ from rhombus.std.noise import *
 from rhombus.std.macros import *
 from rhombus.std.density import *
 from rhombus.std.functions import *
-# from rhombus.std.conditional import *
 from rhombus.std import functions as f
 from rhombus.std import types as t

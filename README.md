@@ -1,6 +1,4 @@
-<h1 align="center"><sub><img src="docs/logo.png" height="35"></sub> Rhombus <sub><img src="docs/logo.png" height="35"></sub></h1>
-<p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p>
-<p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
+<img width="2000" alt="Header" src="https://github.com/user-attachments/assets/f39be076-e1dd-4470-920c-e13b4f236dfd" />
 
 <p align="center">
     <!-- <a href="#"><img alt="Static Badge" src="https://img.shields.io/pypi/v/rhombus?style=for-the-badge&logo=pypi&logoColor=white&labelColor=4c75a9&label=Version&color=161926"></a> -->
@@ -8,16 +6,20 @@
     <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Beet-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=b90d38&color=161926"></a>
 </p>
 
-### Abstract
+<!-- <h1 align="center"><sub><img src="docs/logo.png" height="35"></sub> Rhombus <sub><img src="docs/logo.png" height="35"></sub></h1>
+<p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p> -->
+<p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
 
-Rhombus is a Python sub-language delivered as a package that can be used to create expressions resembling the abstract syntax trees of density functions for Minecraft.<br>
-It allows you to comfortably write density functions while benefiting from Python's forgiving syntax.
 
-###### <sub>This project is pretty similar to [misode/gaia-beet](https://github.com/misode/gaia-beet), which you might also find useful. But know that I started developing Rhombus before I knew about it.<br>The similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that Rhombus is not primarily a beet plugin — although integration is possible and recommended — but rather it is to be seen as a coherent, albeit simple language and it will be further developed and improved in exactly this sense.</sub>
+**Minecraft terrain generation currently requires pure JSON structures, which can grow into large, nested, hard-to-understand trees. Rhombus instead offers flexible abstraction and a comprehensive Python interface that significantly improves readability, project structures, and development speed.**
 
-> [!note]
+Rhombus is an eDSL delivered as a Python package that allows worldgen developers to comfortably write expressions resembling the abstract syntax trees of density functions for Minecraft while benefiting from Python's forgiving syntax.
+
+<h6><sub>This project is pretty similar to <a href="https://github.com/misode/gaia-beet">misode/gaia-beet</a>, which you might also find useful. Know that I started developing Rhombus before I knew about it, the similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that Rhombus does not see itself as a mere Beet plugin — although we heavily rely on it — but rather as a coherent, mostly separated language and it will be further developed and improved in exactly this sense.</sub></h6>
+
+<!-- > [!note]
 > **State of Development**<br>
-> Rhombus already has most features I imagined it to have. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API. 
+> Rhombus already has most features I imagined it to have. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API.  -->
 
 ## Key Advantages
 - 📦 **Object-oriented Design**<br>
@@ -25,26 +27,61 @@ Full use of Python’s object model for composing, reusing, and structuring dens
 - 📝 **Native Comments**<br>
 Since Python code is in use, comments work naturally without any custom syntax.
 - 📖 **Integrated Documentation**<br>
-Functions and classes provide detailed docstrings describing behavior, parameters, and usage.
-- ⚡ **Efficient Worldgen Performance**<br>
-Density expressions are transpiled into as few files as possible, reducing overhead during chunk generation.
-- ⚙️ **High Compatability**<br>
-As long as the density function definiton format remains unchanged in new version, generated data works across all Minecraft versions.
-- 🛠️ **Generous Modding-API**<br>
-Classes can be used to derive support for any features from mods.
+Functions and classes provide docstrings describing behavior, parameters, and usage.
+- ⚡ **Performance Optimization**<br>
+Recurring expressions and resource intense operations are automatically cached.
+- 🗄️ **Macro Library**<br>
+Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
 
-## Features
-- **Unified Density Type**: 
-Represents any computed density value, independent of its underlying implementation.
-- **Intuitive AST Construction**:
-Density function trees can be built using arithmetic operators, provided interfaces, or custom methods.
-- **Data Model Base Classes**:
-Most funcionality comes from few base classes, so inheriting new classes is very easy.
-- **Complete Vanilla Coverage**:
-High-level Python interfaces for all vanilla density function types.
-- **Advanced Macros**:
-Shortcuts for more complex, commonly needed processes.
 
-## What Rombus is not and what we cannot guarantee it will become
-- **A Visualizer Tool**:
-Currently, all exising density function visualizing tools are based on JavaScript, making it difficult to embed in Rhombus. But by working with Rhombus in combination with [Beet watch](https://mcbeet.dev/getting_started/#building-the-pack) and Misode's [Worldgen Tools Extension](https://marketplace.visualstudio.com/items?itemName=Misodee.worldgen-tools) you can get quite efficient anyway.
+## Impressions
+```sh
+pip install git+https://github.com/annhilati/rhombus.git
+```
+
+```py
+from rhombus import *
+
+continent_noise = Noise(-10, [2, 1, 2, 2, 2, 1, 1, 1, 1])
+erosion_noise   = Noise(-9, [3.5, 0, 2, 4, 2, 2, 3])
+
+erosion = clamp(noise(erosion_noise, xz_scale=1.3, y_scale=0) - 0.1, min=-1, max=1)
+
+height_map = spline(erosion, [
+        (-1,    -1,     0),
+        (-0.6,  -0.95,  0),
+        (-0.61, -0.6,   0),
+        (-0.2,  -0.55,  0),
+        (-0.21, -0.2,   0),
+        ( 0.05, -0.2,   0),
+        ( 0.21,  0.2,   0),
+        ( 0.6,   0.3,   0),
+        ( 0.61,  0.8,   0),
+        ( 1,     0.8,   0)
+])
+
+FINAL_DESTINY = height_map + y_clamped_gradient(from_y=64, to_y=256, from_value=1.001, to_value=-1.001)
+```
+
+Don't want to handwrite a 500+ node float manipulation function to get the current coordinate?
+```py
+from rhombus import *
+
+def radius() -> Density:
+    x = coords.x()
+    z = coords.z()
+
+    return emath.sqrt(x**2 + z**2, iterations=1)
+```
+
+Using a mod?
+```py
+from rhombus import *
+from rhombus.support import moredfs # Or your mod of choice
+
+def radius() -> Density:
+    x = moredfs.x()
+    y = moredfs.y()
+
+    return moredfs.sqrt(x**2 + y**2)
+```

@@ -345,7 +345,7 @@ def size(node: DensityFunction) -> DensityFunctionSizeInfo:
 
 # TODO    
 def cache_redundances(root: DensityFunction, max_nodes: int = 10) -> tuple[DensityFunction, dict[DensityFunction, int]]:
-    """Returns `root` but replaces all sub trees that occur multilpe times and have a size
+    """Returns `root` but replaces all recurring sub trees that have a size
     of more than `max_nodes` uncached nodes with partitioned and cached versions.
     """
 

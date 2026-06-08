@@ -1,6 +1,6 @@
 """
-This module provides a basic fluent interface for realising
-conditionality with `range_choice` expressions.
+This module provides a basic fluent interface for realising conditionality
+with `range_choice` expressions.
 
 The syntax goes like this:
 ```
