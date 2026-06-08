@@ -1,3 +1,7 @@
+<img width="1280" height="360" alt="Header (2)" src="https://github.com/user-attachments/assets/f39be076-e1dd-4470-920c-e13b4f236dfd" />
+
+
+
 <h1 align="center"><sub><img src="docs/logo.png" height="35"></sub> Rhombus <sub><img src="docs/logo.png" height="35"></sub></h1>
 <p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p>
 <p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
