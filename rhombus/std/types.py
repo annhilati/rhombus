@@ -18,7 +18,8 @@ from rhombus.core import (
 )
 from rhombus.std.noise import Noise
 
-constant_number_limit: float = 10000000.0
+literal_number_limit: float = 10000000.0
+"The maximum literal value allowed for shorthands for density functions and in the argument field of the `minecraft:constant` type"
 
 __all__ = [
     "Reference", "constant",

@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 import numpy as np, matplotlib.pyplot as plt
 
 
-def function_spline_points(f: Callable[[float], float], sample_interval: tuple[float, float], points=5, step_size=1e-8) -> list[tuple[float, float, float]]:
+def sample_spline_points(f: Callable[[float], float], interval: tuple[float, float], points=5, *, step_size=1e-8) -> list[tuple[float, float, float]]:
     """Samples spline points based of an arbitrary function.
 
     Ideal for functions that satisfy:
@@ -23,12 +23,12 @@ def function_spline_points(f: Callable[[float], float], sample_interval: tuple[f
 
     Parameters:
         f (float -> float): The function to sample the spline points from.
-        sample_interval ((float, float)): The interval between to sample the function.
+        interval ((float, float)): The interval between to sample the function.
         points (int): The amount of points to sample between within the sample interval.
         step_size (float): The infinitesimal value that is used to calculate derivatives.
     """
 
-    xs = np.linspace(sample_interval[0], sample_interval[1], points)
+    xs = np.linspace(interval[0], interval[1], points)
     points = []
 
     for x in xs:
@@ -56,6 +56,58 @@ def poly_spline_points(
         (x0, f(x0), df(x0)),
         (x1, f(x1), df(x1))
     ]
+
+
+def spline_points_to_cubics(
+    points: list[tuple[float, float, float]],
+    shifted: bool = False
+) -> list[tuple[float, float, float, float]]:
+    """
+    Returns the coefficients of the segments of a hermite spline based of spline points.
+
+    Parameters:
+        shifted (bool): Whether to shift the segment functions with its coordinates shifted to its begin.<br>
+            If False returns the coefficients for the function as if it was globally plotted, but domain restricted.<br>
+            If True, returns (a, b, c, d) for `s(x) = a + b*(x-x_i) + c*(x-x_i)^2 + d*(x-x_i)^3`.<br>
+
+    Returns:
+        out (list[(float, float, float, float)]): A list of coefficients of cubic polynomials.<br>
+            The i-th polynomial corresponds to the segment between the i-th and the i+1-th point (after being sorted).
+    """
+
+    points = sorted(points, key=lambda p: p[0])
+
+    if len(points) < 2:
+        return []
+
+    segments: list[tuple[float, float, float, float]] = []
+
+    for i in range(len(points) - 1):
+        x0, y0, m0 = points[i]
+        x1, y1, m1 = points[i + 1]
+
+        h = x1 - x0
+        if h == 0:
+            raise ValueError("x values must be distinct")
+
+        dy = y1 - y0
+
+        a = y0
+        b = m0
+        c = (3 * dy - h * (2 * m0 + m1)) / (h * h)
+        d = (h * (m0 + m1) - 2 * dy) / (h ** 3)
+
+        if shifted:
+            segments.append((a, b, c, d))
+        else:
+            A = d
+            B = c - 3 * d * x0
+            C = b - 2 * c * x0 + 3 * d * x0**2
+            D = a - b * x0 + c * x0**2 - d * x0**3
+
+            segments.append((A, B, C, D))
+
+    return segments
 
 
 def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) -> Figure:
@@ -119,55 +171,3 @@ def show_spline(points: list[tuple[float, float, float]], *, show: bool = True) 
     plt.title("Cubic Hermite spline")
     if show: plt.show()
     return plt.gcf()
-
-
-def spline_points_to_cubics(
-    points: list[tuple[float, float, float]],
-    shifted: bool = False
-) -> list[tuple[float, float, float, float]]:
-    """
-    Returns the coefficients of the segments of a hermite spline based of spline points.
-
-    Parameters:
-        shifted (bool): Whether to shift the segment functions with its coordinates shifted to its begin.<br>
-            If False returns the coefficients for the function as if it was globally plotted, but domain restricted.<br>
-            If True, returns (a, b, c, d) for `s(x) = a + b*(x-x_i) + c*(x-x_i)^2 + d*(x-x_i)^3`.<br>
-
-    Returns:
-        out (list[(float, float, float, float)]): A list of coefficients of cubic polynomials.<br>
-            The i-th polynomial corresponds to the segment between the i-th and the i+1-th point (after being sorted).
-    """
-
-    points = sorted(points, key=lambda p: p[0])
-
-    if len(points) < 2:
-        return []
-
-    segments: list[tuple[float, float, float, float]] = []
-
-    for i in range(len(points) - 1):
-        x0, y0, m0 = points[i]
-        x1, y1, m1 = points[i + 1]
-
-        h = x1 - x0
-        if h == 0:
-            raise ValueError("x values must be distinct")
-
-        dy = y1 - y0
-
-        a = y0
-        b = m0
-        c = (3 * dy - h * (2 * m0 + m1)) / (h * h)
-        d = (h * (m0 + m1) - 2 * dy) / (h ** 3)
-
-        if shifted:
-            segments.append((a, b, c, d))
-        else:
-            A = d
-            B = c - 3 * d * x0
-            C = b - 2 * c * x0 + 3 * d * x0**2
-            D = a - b * x0 + c * x0**2 - d * x0**3
-
-            segments.append((A, B, C, D))
-
-    return segments

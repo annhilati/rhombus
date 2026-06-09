@@ -9,8 +9,8 @@ These methods typically include infinite series, such as Taylor series, or itera
 
 from typing import Callable
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std import f, macro, types
-from rhombus.macros.math import pi
+from rhombus.std import functions, macro, types
+from rhombus.macros.math import pi, sum as msum
 
 __all__ = []
 
@@ -49,12 +49,11 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
     """
     from math import factorial
 
-    result = f.constant(1)
-    for k in range(1, terms + 1):
-        term = (argument ** k) / factorial(k)
-        result += term
+    if terms <= 0:
+        return functions.constant(1)
 
-    return result
+    terms_list = [functions.constant(1)] + [ (argument ** k) / factorial(k) for k in range(1, terms + 1) ]
+    return msum(*terms_list)
 
 @macro
 def ln(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
@@ -62,15 +61,13 @@ def ln(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
 
     ⚙️ This implementation uses the [Taylor series of the natural logarithm](https://en.wikipedia.org/wiki/Taylor_series#Natural_logarithm).
     """
-    y = argument - f.constant(1)
+    y = argument - functions.constant(1)
 
-    result = f.constant(0)
-    for k in range(1, terms + 1):
-        coeff = -1 if (k % 2 == 0) else 1
-        term = coeff * (y ** k) / k
-        result += term
+    if terms <= 0:
+        return functions.constant(0)
 
-    return result
+    terms_list = [((-1 if (k % 2 == 0) else 1) * (y ** k) / k) for k in range(1, terms + 1)]
+    return msum(*terms_list)
 
 #======// Trigonometry //========================================================================//
 
@@ -83,14 +80,8 @@ def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """
     from math import factorial
 
-    result = argument
-    for k in range(1, terms + 1):
-        power = 2 * k + 1
-        coeff = -1 if (k % 2) else 1
-        term = coeff * (argument ** power) / factorial(power)
-        result += term
-
-    return result
+    terms_list = [argument] + [((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / factorial(2 * k + 1)) for k in range(1, terms + 1)]
+    return msum(*terms_list)
 
 @macro
 def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -101,14 +92,8 @@ def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """
     from math import factorial
 
-    result = f.constant(1)
-    for k in range(1, terms + 1):
-        power = 2 * k
-        coeff = -1 if (k % 2) else 1
-        term = coeff * (argument ** power) / factorial(power)
-        result += term
-
-    return result
+    terms_list = [functions.constant(1)] + [((-1 if (k % 2) else 1) * (argument ** (2 * k)) / factorial(2 * k)) for k in range(1, terms + 1)]
+    return msum(*terms_list)
 
 @macro
 def tan(argument: AnyDensity, terms: int = 3) -> Density[types.mul]:
@@ -130,13 +115,11 @@ def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """
     from math import factorial
 
-    result = f.constant(0)
-    for k in range(terms):
-        coeff = factorial(2*k) / (4**k * factorial(k)**2 * (2*k + 1))
-        term = coeff * (argument ** (2*k + 1))
-        result = result + term
+    if terms <= 0:
+        return functions.constant(0)
 
-    return result
+    terms_list = [(factorial(2*k) / (4**k * factorial(k)**2 * (2*k + 1))) * (argument ** (2*k + 1)) for k in range(terms)]
+    return msum(*terms_list)
 
 @macro
 def acos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -154,13 +137,11 @@ def atan(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚙️ This implementation uses the [Taylor series of arc tangent](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
     ⚠️ Bigger inputs need more terms before converging.
     """
-    result = f.constant(0)
-    for k in range(terms):
-        coeff = -1 if (k % 2) else 1
-        term = coeff * (argument ** (2*k + 1)) / (2*k + 1)
-        result = result + term
+    if terms <= 0:
+        return functions.constant(0)
 
-    return result
+    terms_list = [((-1 if (k % 2) else 1) * (argument ** (2*k + 1)) / (2*k + 1)) for k in range(terms)]
+    return msum(*terms_list)
 
 @macro
 def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -171,13 +152,11 @@ def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """
     from math import factorial
 
-    result = f.constant(0)
-    for k in range(terms):
-        power = 2*k + 1
-        term = (argument ** power) / factorial(power)
-        result = result + term
+    if terms <= 0:
+        return functions.constant(0)
 
-    return result
+    terms_list = [ (argument ** (2*k + 1)) / factorial(2*k + 1) for k in range(terms) ]
+    return msum(*terms_list)
 
 @macro
 def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -188,10 +167,5 @@ def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """
     from math import factorial
 
-    result = f.constant(1)
-    for k in range(1, terms + 1):
-        power = 2*k
-        term = (argument ** power) / factorial(power)
-        result = result + term
-
-    return result
+    terms_list = [functions.constant(1)] + [ (argument ** (2*k)) / factorial(2*k) for k in range(1, terms + 1) ]
+    return msum(*terms_list)

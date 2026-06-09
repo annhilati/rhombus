@@ -232,8 +232,8 @@ class Density[Function: DensityFunction = DensityFunction]:
     def __pow__(self, other: int) -> Density[types.mul]: ...
     def __pow__(self, other):
         wrapped = self.AST
-        if not isinstance(other, int):
-            raise ValueError("Can't raise to non-integer powers")
+        if not isinstance(other, int) or other < 0:
+            raise ValueError("Can only raise to positive integers")
         if other == 0:
             return Density(types.constant(1))
         elif other == 1:
@@ -262,6 +262,9 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density(types.abs(self.AST))
     
     def __neg__(self) -> Density[types.mul]:
+        from rhombus.macros.math import Infinity
+        if self == Infinity: # To safe one node xD
+            return Density(constant(-1)) / Density(constant(0))
         return Density(types.mul(self.AST, constant(-1.0)))
     
     def __pos__(self) -> Self:

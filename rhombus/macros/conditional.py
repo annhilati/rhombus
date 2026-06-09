@@ -26,13 +26,13 @@ from typing import Any, SupportsIndex, Never, ClassVar
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.std.types import range_choice, constant_number_limit
+from rhombus.std.types import range_choice, literal_number_limit
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro
 from rhombus import config
 
 EPSILON = config.infinitesimal
-INFINITY = constant_number_limit
+OMEGA = literal_number_limit
 
 __all__ = [
     "when", "NOT", "ALL", "ANY", "it"
@@ -128,8 +128,8 @@ class ComparisonCondition(Condition):
             low, high = _ensure_pair(self.value)
             return range_choice(
                 input=self.input,
-                min_inclusive=max(low, -INFINITY),
-                max_exclusive=min(high + EPSILON, INFINITY),
+                min_inclusive=max(low, -OMEGA),
+                max_exclusive=min(high + EPSILON, OMEGA),
                 when_in_range=when_true,
                 when_out_of_range=when_false
             )
@@ -137,19 +137,19 @@ class ComparisonCondition(Condition):
         # Other
         if relation == Relation.LESS_THAN:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (-INFINITY, v - EPSILON))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.BETWEEN, (-OMEGA, v - EPSILON))._compile(when_true, when_false)
 
         if relation == Relation.LESS_OR_EQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (-INFINITY, v))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.BETWEEN, (-OMEGA, v))._compile(when_true, when_false)
 
         if relation == Relation.GREATER_THAN:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (v + EPSILON, INFINITY))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.BETWEEN, (v + EPSILON, OMEGA))._compile(when_true, when_false)
 
         if relation == Relation.GREATER_OR_EQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (v, INFINITY))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.BETWEEN, (v, OMEGA))._compile(when_true, when_false)
 
         # Derived relations
         if relation == Relation.EQUALS:

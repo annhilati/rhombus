@@ -1,11 +1,14 @@
-from rhombus import splines as s
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std import functions as f, macro, types
-from rhombus.macros import math as m
-from math import pi, sqrt
-import math as _math
+"""The `smath` module features Hermite spline approximations of common mathematical functions.
+"""
 
-__all__ = ["cos", "PDF", "sin", "smoothstep"]
+import math as py_math
+from math import sqrt, pi
+
+from rhombus.std import Density, AnyDensity, functions, types, macro
+from rhombus.macros import math
+from rhombus import splines
+
+__all__ = ["cos", "nPDF", "sin", "smoothstep"]
 
 
 @macro
@@ -14,12 +17,23 @@ def cos(argument: AnyDensity, xRange: tuple[float, float] = (-pi, pi)) -> Densit
 
     Parameters:
         xRange ((float, float)): The interval over which the function can take inputs.
+            A wider interval will automatically use more spline points to maintain accuracy.
     """
     points = max(round(2 * (xRange[1] - xRange[0]) / pi + 1), 3)
-    return f.spline(argument, s.function_spline_points(_math.cos, xRange, points))
+    return functions.spline(argument, splines.sample_spline_points(py_math.cos, xRange, points))
 
 @macro
-def logistic(argument: AnyDensity, capacity: float = 1, growth_rate: float = 4, center: float = 0, xRange: tuple[float, float] = (-1, 1)) -> Density[types.spline]:
+def erf(argument: AnyDensity, xRange: tuple[float, float] = (-3, 3)) -> Density[types.spline]:
+    """Evaluates the value of the input on Gaussian error function."""
+    return functions.spline(argument, splines.sample_spline_points(py_math.erf, xRange))
+
+@macro
+def logistic(argument: AnyDensity,
+        capacity: float = 1,
+        growth_rate: float = 4,
+        center: float = 0,
+        xRange: tuple[float, float] = (-1, 1)
+    ) -> Density[types.spline]:
     """Evaluates the value of the input on a logistic function.
 
     Parameters:
@@ -31,12 +45,12 @@ def logistic(argument: AnyDensity, capacity: float = 1, growth_rate: float = 4, 
     ---
     [Wikipedia](https://en.wikipedia.org/wiki/Logistic_function)
     """
-    func = lambda x: capacity/(1+_math.exp(- growth_rate * (x-center)))
-    return f.spline(argument, s.function_spline_points(func, xRange))
+    func = lambda x: capacity/(1+py_math.exp(- growth_rate * (x-center)))
+    return functions.spline(argument, splines.sample_spline_points(func, xRange))
 
 @macro
-def PDF(argument: AnyDensity, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[types.spline]:
-    """Evaluates the value of the input on a probability density function.
+def nPDF(argument: AnyDensity, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[types.spline]:
+    """Evaluates the value of the input on a normal distributed probability density function.
 
     Parameters:
         mean (float): The center of the normal distribution.
@@ -45,8 +59,25 @@ def PDF(argument: AnyDensity, mean: float = 0, standard_deviation: float = 1/sqr
     ---
     [Wikipedia](https://en.wikipedia.org/wiki/Normal_distribution)
     """
-    pdf = lambda x: 1/(standard_deviation * _math.sqrt(2 * _math.pi)) * _math.exp(-0.5 * ((x - mean) / standard_deviation) ** 2)
-    return f.spline(argument, s.function_spline_points(pdf, (mean - 3.5*standard_deviation, mean + 3.5*standard_deviation), 13))
+    pdf = lambda x: (
+        1/(standard_deviation * py_math.sqrt(2 * py_math.pi))
+        * py_math.exp(-0.5 * ((x - mean) / standard_deviation) ** 2)
+    )
+    return functions.spline(argument, splines.sample_spline_points(pdf, (mean - 3.5*standard_deviation, mean + 3.5*standard_deviation), 13))
+
+@macro
+def nCDF(argument: AnyDensity, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[types.spline]:
+    """Evaluates the value of the input on a normal distributed cumulative distribution function.
+
+    Parameters:
+        mean (float): The center of the normal distribution.
+        standard_deviation (float): Controlls the spread or dispersion of the function relative to its mean.
+
+    ---
+    [Wikipedia](https://en.wikipedia.org/wiki/Normal_distribution)
+    """
+    cdf = lambda x: 0.5 * (1 + py_math.erf((x - mean) / (standard_deviation * py_math.sqrt(2))))
+    return functions.spline(argument, splines.sample_spline_points(cdf, (mean - 3.5*standard_deviation, mean + 3.5*standard_deviation), 13))
 
 @macro
 def sin(argument: AnyDensity, xRange: tuple[float, float] = (-pi, pi)) -> Density[types.spline]:
@@ -54,9 +85,10 @@ def sin(argument: AnyDensity, xRange: tuple[float, float] = (-pi, pi)) -> Densit
 
     Parameters:
         xRange ((float, float)): The interval over which the function can take inputs.
+            A wider interval will automatically use more spline points to maintain accuracy.
     """
     points = max(round(2 * (xRange[1] - xRange[0]) / pi + 1), 3)
-    return f.spline(argument, s.function_spline_points(_math.sin, xRange, points))
+    return functions.spline(argument, splines.sample_spline_points(py_math.sin, xRange, points))
 
 @macro
 def smoothstep(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1), yRange: tuple[float, float] = (-1, 1)) -> Density[types.spline]:
@@ -74,4 +106,4 @@ def smoothstep(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1), yRan
     ---
     [Wikipedia](https://en.wikipedia.org/wiki/Smoothstep)
     """
-    return f.spline(argument, [(xRange[0], yRange[0], 0), (xRange[1], yRange[1], 0)])
+    return functions.spline(argument, [(xRange[0], yRange[0], 0), (xRange[1], yRange[1], 0)])

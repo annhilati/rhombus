@@ -5,5 +5,6 @@ are useful for abstracting away common patterns and making your code more readab
 
 from rhombus.macros import (
     coords,
-    math, emath, smath
+    conditional,
+    math, smath, emath,
 )
