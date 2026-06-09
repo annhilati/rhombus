@@ -28,7 +28,6 @@ from enum import Enum
 from rhombus.core.density_function import DensityFunction
 from rhombus.std.types import range_choice, literal_number_limit
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
 from rhombus import config
 
 EPSILON = config.infinitesimal
@@ -197,7 +196,7 @@ class NotCondition(Condition):
 def NOT(condition: Condition, /) -> Condition:
     """Negates a condition. Equivalent to `~condition`.
     """
-    return ~condition
+    return ~ condition
 
 def ALL(*conditions: Condition) -> Condition:
     """Combines multiple conditions with a logical AND.
@@ -233,8 +232,9 @@ class Causality:
         self.elsewhen._chain = self
 
     class elsewhen:
-        """Specifies a fallback option for the conditionality if none of the preceding
-        conditions apply. When called without arguments, the input of the initial condition is used.
+        """Specifies a fallback option for the conditionality if none of the
+        preceding conditions apply. When called without arguments, the input
+        of the initial condition is used.
 
         ## Continuation
 
@@ -261,7 +261,7 @@ class Causality:
         def __init__(self, subject: AnyDensity | Itself = it):
             if subject is it:
                 if self._chain._default_input is None:
-                    raise TypeError("elsewhen() with implicit input is only possible if the initial condition is not composed of multiple conditions")
+                    raise TypeError("elsewhen(it) is undefined because the initial condition was not composed of multiple conditions")
                 subject = self._chain._default_input
             self._subject = Density.constant(subject).AST
 
@@ -340,10 +340,8 @@ class when:
     """
     _subject: DensityFunction
 
-    @macro
     def __init__(self, subject: AnyDensity):
-        self._subject = subject.AST
-
+        self._subject = Density.constant(subject).AST
 
     def equals(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.EQUALS, value=value)

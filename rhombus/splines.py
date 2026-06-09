@@ -88,7 +88,7 @@ def spline_points_to_cubics(
 
         h = x1 - x0
         if h == 0:
-            raise ValueError("x values must be distinct")
+            raise ValueError(f"Two x values ('{x0}' and '{x1}') cannot be equal")
 
         dy = y1 - y0
 

@@ -5,7 +5,7 @@ These are the data models for the vanilla density function types.
 They are not needed for normal use of the Rhombus language.
 """
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 from rhombus.core import (
     DensityFunction,
     SimpleFunctionBase,
@@ -18,8 +18,10 @@ from rhombus.core import (
 )
 from rhombus.std.noise import Noise
 
-literal_number_limit: float = 10000000.0
-"The maximum literal value allowed for shorthands for density functions and in the argument field of the `minecraft:constant` type"
+literal_number_limit: Literal[10000000] = 10000000.0
+"""The maximum literal value allowed as a density function shorthand and
+in the `argument` field of the `minecraft:constant` density function type
+"""
 
 __all__ = [
     "Reference", "constant",

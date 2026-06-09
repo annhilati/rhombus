@@ -27,7 +27,7 @@ class cos(MappedFunctionBase):
     id: ClassVar[str] = "lithostitched:cos"
 
 class fast_noise(DensityFunction):
-    id: ClassVar[str] = "lithostiched:fast_noise"
+    id: ClassVar[str] = "lithostitched:fast_noise"
     config: FastNoiseConfig
     xz_scale: float
     y_scale: float

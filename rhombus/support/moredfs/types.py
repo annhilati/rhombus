@@ -93,7 +93,7 @@ class gapped_grid_square_spiral():
     out_of_bounds_argument: DensityFunction
 
 class gradient_magnitude(DensityFunction):
-    id: ClassVar[str] = "mroedfs:gradient_magnitude"
+    id: ClassVar[str] = "moredfs:gradient_magnitude"
     argument: DensityFunction
     step_x: int = None
     step_y: int = None

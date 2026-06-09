@@ -31,3 +31,13 @@ def download_vanilla_data(version: str, outputtdir: Path) -> None:
 
     shutil.rmtree(extracted_root)
     zip_path.unlink(True)
+
+def debug_dft(d: dict[str, type]):
+    """Get the complete module path of a type."""
+    from builtins import max
+    d = {k: v for k, v in sorted(d.items())}
+    width = max((len(str(id)) for id in d), default=0)
+    info = "\n".join([
+        f"{str(id).ljust(width)} : {typ.__module__}.{typ.__qualname__}" for id, typ in d.items()
+    ])
+    return info

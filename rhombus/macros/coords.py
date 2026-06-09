@@ -66,6 +66,44 @@ _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_n
 
 # Differences between the x and z: shift_x and shift_z are swapped in every shifted_noise-sampler
 
+def _coord_component(shift_x, shift_z, quad_shift_x, quad_shift_z):
+    innermost = f.range_choice(
+        input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=shift_x, shift_y=0, shift_z=shift_z)),
+        min_inclusive=0.0,
+        max_exclusive=5e-324,
+        when_in_range=1.0,
+        when_out_of_range=0.0,
+    )
+
+    value = innermost
+    for i in range(25):
+        value = f.add(
+            argument1=2**i if 2**i < 1_000_000 else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -2**i / 65536.0)),
+            argument2=f.mul(
+                argument1=f.range_choice(
+                    input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**(-56-i), y_scale=0, shift_x=shift_x, shift_y=0, shift_z=shift_z)),
+                    min_inclusive=0.0,
+                    max_exclusive=5e-324,
+                    when_in_range=1.0,
+                    when_out_of_range=-1.0,
+                ),
+                argument2=value,
+            ),
+        )
+
+    outermost_mul = f.mul(
+        argument1=f.range_choice(
+            input=f.shifted_noise(noise=_coord_quad_noise, xz_scale=2**-25, y_scale=0, shift_x=quad_shift_x, shift_y=0, shift_z=quad_shift_z),
+            min_inclusive=-2.0,
+            max_exclusive=2.0,
+            when_in_range=-4.0,
+            when_out_of_range=4.0,
+        ),
+        argument2=value,
+    )
+
+    return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
+
 def x():
     """Returns the X-coordinate of the current block.
 
@@ -77,23 +115,12 @@ def x():
 
     ⚙️ Implementation utilizes float precision loss at extremely small noise scales ┃ `CC(·) = 512`
     """
-    innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=0.99, shift_y=0, shift_z=1.01)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
-
-    x = innermost
-    for i in range(25):
-        x = f.add(
-            argument1=2**i if 2**i < 1_000_000 else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -2**i / 65536.0)),
-            argument2=f.mul(
-                argument1=f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**(-56-i), y_scale=0, shift_x=0.99, shift_y=0, shift_z=1.01)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=-1.0),
-                argument2=x
-        ))
-
-    outermost_mul = f.mul(
-        argument1=f.range_choice(input=f.shifted_noise(noise=_coord_quad_noise, xz_scale=2**-25, y_scale=0, shift_x=0.9821958456973294, shift_y=0, shift_z=0), min_inclusive=-2.0, max_exclusive=2.0, when_in_range=-4.0, when_out_of_range=4.0),
-        argument2=x
+    return _coord_component(
+        shift_x=0.99,
+        shift_z=1.01,
+        quad_shift_x=0.9821958456973294,
+        quad_shift_z=0,
     )
-
-    return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
 def z():
     """Returns the Z-coordinate of the current block.
@@ -106,23 +133,12 @@ def z():
 
     ⚙️ Implementation utilizes float precision loss at extremely small noise scales ┃ `CC(·) = 512`
     """
-    innermost = f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=1.01, shift_y=0, shift_z=0.99)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=0.0)
-
-    x = innermost
-    for i in range(25):
-        x = f.add(
-            argument1=2**i if 2**i < 1_000_000 else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -2**i / 65536.0)),
-            argument2=f.mul(
-                argument1=f.range_choice(input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**(-56-i), y_scale=0, shift_x=1.01, shift_y=0, shift_z=0.99)), min_inclusive=0.0, max_exclusive=5e-324, when_in_range=1.0, when_out_of_range=-1.0),
-                argument2=x
-        ))
-
-    outermost_mul = f.mul(
-        argument1=f.range_choice(input=f.shifted_noise(noise=_coord_quad_noise, xz_scale=2**-25, y_scale=0, shift_x=0, shift_y=0, shift_z=0.9821958456973294), min_inclusive=-2.0, max_exclusive=2.0, when_in_range=-4.0, when_out_of_range=4.0),
-        argument2=x
+    return _coord_component(
+        shift_x=1.01,
+        shift_z=0.99,
+        quad_shift_x=0,
+        quad_shift_z=0.9821958456973294,
     )
-
-    return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
 def y():
     """Returns the Y-coordinate of the current block.

@@ -35,7 +35,6 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         raise NotImplementedError("Base class RhombusASTNode cannot be instantiated directly. Please use a subclass with defined fields.")
                
     def __repr__(self) -> str:
-        # Philosophy:
         # The __repr__ function should generate a string that is a valid Rhombus expression, with which the data can be reconstructed 
         return self.__class__.__name__ + "(" + ", ".join([
             param + "=" + value.__repr__()

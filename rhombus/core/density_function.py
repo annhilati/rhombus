@@ -68,7 +68,7 @@ class DensityFunction(RhombusASTNode):
                 target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
                 if target_class is None:
                     raise TypeError(
-                        f"Cannot deserialize density function with type id '{type_field}' from dictionary. "
+                        f"Cannot deserialize density function with type '{type_field}' from dictionary. "
                         "No DensityFunction subclass with this id is defined"
                     )
                     
@@ -79,7 +79,7 @@ class DensityFunction(RhombusASTNode):
                 return constant(float(data))
 
             else:
-                raise TypeError(f"Cannot deserialize type '{type(data).__name__}' to density function at top level")
+                raise TypeError(f"Cannot deserialize density function from type '{data.__class__.__name__}' at top level")
             
         fields = annotated_fields(cls)
 
@@ -139,7 +139,7 @@ class Reference(DensityFunction):
 
     def __post_init__(self):
         if not isinstance(self.reference, str) or not self.reference:
-            raise ValueError("Reference objects must have a reference string defined")
+            raise ValueError("Reference must have a reference of type str defined")
         if self.definition is not None and not isinstance(self.definition, DensityFunction):
             raise ValueError(f"Cannot initialize Reference object with default of type {self.definition.__class__.__name__}")
     

@@ -1,12 +1,15 @@
+import rhombus
 from rhombus import *
 from rhombus.core import *
 from rhombus.support import *
 from rhombus import splines
 
+rhombus
+rhombus.core.node
+
 #======// Language //============================================================================//
 
 Density.x
-DensityDescriptor
 
 Noise
 
@@ -24,6 +27,7 @@ tectonic.x
 moredfs.x
 lithostiched.x
 ensity.x
+vanilla_legacy.x
 
 Density.partitioned
 Density.configured
@@ -37,6 +41,7 @@ Density.show_in_dir
 
 #======// Core //================================================================================//
 
+RhombusASTNode
 DensityFunction
 DatapackResource
 SubParameters

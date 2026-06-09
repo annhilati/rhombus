@@ -36,9 +36,7 @@ class FastNoiseConfig(DatapackResource):
     lacunarity:        Optional[float] = None # completely optional
     gain:              Optional[float] = None # completely optional
 
-    refer: Optional[str] = None
-
-    def serialize(self) -> JSONDict:
+    def serialize_toplevel(self) -> JSONDict:
         return {
             "type": self.type,
             "frequency": self.frequency,
@@ -56,10 +54,7 @@ class FastNoiseConfig(DatapackResource):
             } if self.type == "lithostiched:simplex" else {}),
         }
     
-    @classmethod
-    def refer(cls, identifier):
-        return cls(reference=identifier, type=None, frequency=None)
-    
+   
     @classmethod
     def SimplexNoise(
         cls,

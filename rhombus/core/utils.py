@@ -84,7 +84,7 @@ def fields(o: DataclassInstance) -> dict[str, Any]:
     try:
         flds = dataclasses.fields(o)
     except TypeError:
-        raise TypeError(f"must be called with a dataclass type or instance, not: {o}")
+        raise TypeError(f"must be called with a dataclass instance, not: {o}")
     return dict(sorted({
         f.name: getattr(o, f.name, None)
         for f in flds
