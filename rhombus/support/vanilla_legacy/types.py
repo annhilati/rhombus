@@ -1,8 +1,7 @@
 from typing import ClassVar, Literal
 from rhombus.core import (
     DensityFunction,
-    MappedFunctionBase,
-    MultiArgumentsFunctionBase
+    MappedFunctionBase
 )
 from rhombus.std import Noise
 

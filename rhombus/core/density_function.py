@@ -1,4 +1,5 @@
-from typing import ClassVar, Self
+from typing import ClassVar, Self, Any
+from types import ModuleType
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
@@ -10,9 +11,34 @@ from rhombus import config
 __all__ = [
     "DensityFunction",
     "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase",
-    "Reference", "constant"
+    "Reference", "constant",
+    "register"
 ]
 
+
+def register(*obj: type["DensityFunction"] | ModuleType | Any):
+    """Registers `DensityFunction` type subclasses in the deserialization register.
+    
+    An `obj` can be a `DensityFunction` subclass, a module or any other object
+    with attributes. For the latter two cases, all attributes that are
+    `DensityFunction` subclasses will be registered. (Only recursive for modules)
+    """
+    def try_register(o: Any):
+        if isinstance(o, type) and issubclass(o, DensityFunction):
+            if hasattr(o, "id") and isinstance(o.id, str):
+                DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[o.id] = o
+        else:
+            if hasattr(o, "__dict__"):
+                for attribute in o.__dict__.values():
+                    try_register(attribute)
+
+    for o in obj:
+        if isinstance(o, type) and issubclass(o, DensityFunction):
+            if not hasattr(o, "id") or not isinstance(o.id, str):
+                raise ValueError(f"Cannot register density function type '{o.__name__}' without class variable 'id' defined")
+            
+        try_register(o)
+        
 
 #======// DensityFunction Base Class //==========================================================//
 
@@ -32,12 +58,7 @@ class DensityFunction(RhombusASTNode):
     
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
     "Dict of all defined classes inheriting from `DensityFunction` with their ids as the keys."
-      
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if hasattr(cls, "id"):
-            DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[cls.id] = cls
-        
+              
     
     #======// Serialization //===================================================================//
     

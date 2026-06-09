@@ -11,3 +11,6 @@ from rhombus import (
     config,
     splines
 )
+from rhombus.core.density_function import register
+
+register(t)
