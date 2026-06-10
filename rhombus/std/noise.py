@@ -2,14 +2,14 @@
 For more information on the use and parameters, see `.Noise`.
 """
 
+__all__ = ["Noise"]
+
 from typing import ClassVar
 
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import BeetFile
-
-__all__ = ["Noise"]
 
 
 class Noise(DatapackResource):

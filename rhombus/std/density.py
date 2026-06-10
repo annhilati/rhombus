@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+__all__ = ["Density", "AnyDensity"]
+
+
 from dataclasses import dataclass
 from typing import Self, Literal, overload
 import beet
@@ -8,9 +12,6 @@ from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import types
-
-__all__ = ["Density", "AnyDensity"]
-
 
 #======// Density Type //========================================================================//
 

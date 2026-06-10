@@ -1,10 +1,10 @@
-import inspect, functools, sys
-import types
-from typing import Callable, Any, Annotated, Union, cast, get_type_hints, get_args, get_origin
-
-from rhombus.std.density import Density, AnyDensity
-
 __all__ = ["macro"]
+
+from typing import Callable, Any, Annotated, Union, cast, get_type_hints, get_args, get_origin
+import inspect, functools, sys, types
+
+from rhombus.core.utils import Annotation
+from rhombus.std.density import Density, AnyDensity
 
 
 def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
@@ -31,7 +31,7 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
             include_extras=True,
         )
 
-        def is_anydensity_hint(hint: Any) -> bool:
+        def is_anydensity_hint(hint: Annotation) -> bool:
             if hint is AnyDensity:
                 return True
 
@@ -45,7 +45,7 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
 
             return False
 
-        def resolve_value(val: Any, hint: Any) -> Any:
+        def resolve_value(val: Any, hint: Annotation) -> Any:
             origin = get_origin(hint)
             args = get_args(hint)
 
@@ -91,7 +91,6 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
                     }
 
             except TypeError:
-                # Nicht iterierbar, obwohl der Hint Container sagt
                 return val
 
             return val

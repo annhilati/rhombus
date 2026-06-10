@@ -39,3 +39,4 @@
 - Serialization
   - make serialization procedures extendable
 - Examine, whether to use frozen dataclasses for nodes
+- Rethink, where to auto cache and how and what to repr for cached situations

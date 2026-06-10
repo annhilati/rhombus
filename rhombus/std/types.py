@@ -5,6 +5,26 @@ These are the data models for the vanilla density function types.
 They are not needed for normal use of the Rhombus language.
 """
 
+__all__ = [
+    "Reference", "constant",
+    "abs", "add", "beardifier",
+    "blend_alpha", "blend_density",
+    "blend_offset", "cache_2d",
+    "cache_all_in_cell", "cache_once",
+    "clamp", "cube", "end_islands",
+    "find_top_surface", "flat_cache",
+    "half_negative", "interpolated",
+    "interval_select", "invert",
+    "max", "min", "mul", "noise",
+    "old_blended_noise", 
+    "quarter_negative", "range_choice",
+    "shift", "shift_a", "shift_b",
+    "shifted_noise", "spline",
+    "square", "squeeze",
+    "y_clamped_gradient"
+]
+
+
 from typing import ClassVar, Literal
 from rhombus.core import (
     DensityFunction,
@@ -22,25 +42,6 @@ literal_number_limit: Literal[10000000] = 10000000.0
 """The maximum literal value allowed as a density function shorthand and
 in the `argument` field of the `minecraft:constant` density function type
 """
-
-__all__ = [
-    "Reference", "constant",
-    "abs", "add", "beardifier",
-    "blend_alpha", "blend_density",
-    "blend_offset", "cache_2d",
-    "cache_all_in_cell", "cache_once",
-    "clamp", "cube", "end_islands",
-    "find_top_surface", "flat_cache",
-    "half_negative", "interpolated",
-    "invert", "max", "min", "mul",
-    "noise", "old_blended_noise", 
-    "quarter_negative", "range_choice",
-    "shift", "shift_a", "shift_b",
-    "shifted_noise", "spline",
-    "square", "squeeze",
-    "y_clamped_gradient"
-]
-
 
 class autoCachedMappedFunctionBase(MappedFunctionBase):
     
@@ -112,7 +113,7 @@ class interval_select(DensityFunction):
     id: ClassVar[str] = "minecraft:interval_select"
     input: DensityFunction
     thresholds: list[float] # non-empty
-    functions: list[DensityFunction] # one Element more that thresholds
+    functions: list[DensityFunction] # one Element more than thresholds
 
 class invert(MappedFunctionBase):
     id: ClassVar[str] = "minecraft:invert"
@@ -213,7 +214,7 @@ class spline(DensityFunction):
         }
 
     def show(self):
-        "Only for debugging.<br>Open the spline in a pyplot."
+        "Only for debugging. Opens the spline in a pyplot."
         from rhombus.splines import show_spline
         if any((not isinstance(p[1], constant) for p in self.points)):
             raise ValueError("Can only show splines with numeric values")

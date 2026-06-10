@@ -2,6 +2,9 @@
 This module provides a basic fluent interface for realising conditionality
 with `range_choice` expressions.
 
+**IMPORTANT** If the conditionality produces a density function with recurring parts,
+they will automatically be cached.
+
 The syntax goes like this:
 ```
 from rhombus.std.conditional import *
@@ -14,10 +17,6 @@ out = (
     .otherwise(0.0)
 )
 ```
-
-Please note, that using conditionality with large density function trees as
-inputs can inflate the resulting density function significantly. In such
-cases, algebraic methods should be used whenever possible.
 """
 
 from __future__ import annotations
@@ -92,7 +91,7 @@ class Condition:
     def _default_input(self) -> Any:
         return None
 
-    def then(self, value: AnyDensity) -> "Causality":
+    def then(self, value: AnyDensity | Itself) -> "Causality":
         """Specifies the value that is returned, if the condition applies.
         
         ## Continuation
@@ -101,6 +100,10 @@ class Condition:
             **Specify the fallback value and close the expression**
                 `~.otherwise(AnyDensity)`
         """
+        if value is it:
+            if self._default_input is None:
+                raise TypeError("then(it) is undefined because the initial condition was not composed of a condition with input")
+            value = self._default_input
         return Causality(
             _cases=[(self, Density.constant(value).AST)],
             _default_input=self._default_input
@@ -283,16 +286,22 @@ class Causality:
             return OtherPendingCondition(self._chain, when(self._subject).outside(low, high))
         
 
-    def otherwise(self, value: AnyDensity) -> Density[range_choice]:
+    def otherwise(self, value: AnyDensity | Itself) -> Density[range_choice]:
         """Specified a fallback value that is returned if none of the conditions apply.
         
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
+        from rhombus.macros.performance import autocache
+
+        if value is it:
+            if self._default_input is None:
+                raise TypeError("otherwise(it) is undefined because the initial condition was not composed of a condition with input")
+            value = self._default_input
         result = Density.constant(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return Density(result)
+        return autocache(Density(result)) # TODO: restrict the to be cached AST parts to the actual inputs of the conditional
 
 
 @dataclass
@@ -300,7 +309,7 @@ class OtherPendingCondition:
     _chain: Causality
     _condition: Condition
 
-    def then(self, value: AnyDensity) -> Causality:
+    def then(self, value: AnyDensity | Itself) -> Causality:
         """Specifies the value that is returned, if the condition applies.
         
         ## Continuation
@@ -309,6 +318,10 @@ class OtherPendingCondition:
             **Specify the fallback value and close the expression**
                 `~.otherwise(AnyDensity)`
         """
+        if value is it:
+            if self._chain._default_input is None:
+                raise TypeError("then(it) is undefined because the initial condition was not composed of a condition with input")
+            value = self._chain._default_input
         self._chain._cases.append((self._condition, Density.constant(value).AST))
         return self._chain
 

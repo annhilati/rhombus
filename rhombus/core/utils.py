@@ -18,6 +18,7 @@ type Decorator[**P, T] = Callable[[Callable[P, T]], Callable[P, T]]
 type Dataclass = type
 type DataclassInstance = object
 
+
 #======// Data //================================================================================//
 
 def uuid_hash(data: JSONDict) -> str:

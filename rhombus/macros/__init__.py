@@ -4,7 +4,7 @@ are useful for abstracting away common patterns and making code more readable.
 """
 
 from rhombus.macros import (
-    coords,
-    conditional,
+    conditional, performance,
     math, smath, emath,
+    coords,
 )
