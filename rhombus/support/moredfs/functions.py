@@ -1,8 +1,9 @@
+__all__ = []
+
+
 from rhombus.std import Density, AnyDensity, macro
 from rhombus.core import DensityFunction
 from rhombus.support.moredfs import types
-
-__all__ = []
 
 @macro
 def acos(argument: AnyDensity) -> Density[types.acos]:

@@ -1,8 +1,10 @@
 from typing import ClassVar, Literal, Optional
+
+from beet.library.base import JsonFile, NamespaceFileScope
+
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict
 
-from beet.library.base import JsonFile, NamespaceFileScope
 
 class LithostichedFastNoiseConfig(JsonFile):
     """Class representing a Lithostiched noise configuration file."""

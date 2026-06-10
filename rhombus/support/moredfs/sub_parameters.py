@@ -1,5 +1,5 @@
-
 from typing import Literal
+
 from rhombus.core import (
     SubParameters,
     DensityFunction,
@@ -7,24 +7,21 @@ from rhombus.core import (
     annotated_fields,
     serialize_any_inline,
     deserialize_any_inline,
-    contextfunction
 )
-from rhombus.std import AnyDensity, macro
-import beet
-from rhombus import config
+from rhombus.std import Density, AnyDensity
 
 class RandomSampler(SubParameters):
     """Describes a sampler for random values.
 
     **NOTE** Use these factories for instanciating:
-    - `.Beta()` 
-    - `.Binomial()` 
-    - `.Exponential()` 
-    - `.Gamma()` 
-    - `.Geometric()` 
-    - `.Normal()` 
-    - `.Poisson()` 
-    - `.Uniform()` 
+    - `~.Beta()` 
+    - `~.Binomial()` 
+    - `~.Exponential()` 
+    - `~.Gamma()` 
+    - `~.Geometric()` 
+    - `~.Normal()` 
+    - `~.Poisson()` 
+    - `~.Uniform()` 
     
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#random-sampler-types)
     """
@@ -75,7 +72,6 @@ class RandomSampler(SubParameters):
         return cls(type="uniform", min=min, max=max)
     
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
     def deserialize(cls, data: JSONDict) -> "RandomSampler":
         fields = annotated_fields(cls)
 
@@ -104,10 +100,10 @@ class DistanceMetric(SubParameters):
     """Describes a procedure to determine distances between n-dimensional points.
 
     **NOTE** Use these factories for instanciating:
-    - `.Chebyshev()` 
-    - `.Euclidean()` 
-    - `.Manhattan()` 
-    - `.Minowski()` 
+    - `~.Chebyshev()` 
+    - `~.Euclidean()` 
+    - `~.Manhattan()` 
+    - `~.Minowski()` 
     
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#distance-metric-types)
     """
@@ -146,7 +142,6 @@ class DerivativeComponent(SubParameters):
     step: int       # > 0
     direction: DensityFunction
 
-    @macro
     def __init__(self, step: int, direction: AnyDensity):
         self.step = step
-        self.direction = direction.AST
+        self.direction = Density.constant(direction).AST

@@ -3,8 +3,6 @@
 # Every Problem
 
 - configuration feels random and has to be standardized
-- The wizards and their factory are not the best conceptualized
-- wizards dont work on classmethods?
 
 # Design
 - What kind of methods are attributes of Density objects?
@@ -40,6 +38,4 @@
 # TODO Features
 - Serialization
   - make serialization procedures extendable
-- Deserialization
-  - its not well controlled, which dft implementations are used for deserialization
 - Examine, whether to use frozen dataclasses for nodes

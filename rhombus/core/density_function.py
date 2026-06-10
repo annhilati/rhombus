@@ -1,5 +1,6 @@
-from typing import ClassVar, Self, Any
+from typing import ClassVar, Self, Any, Iterable
 from types import ModuleType
+import warnings
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
@@ -16,28 +17,54 @@ __all__ = [
 ]
 
 
-def register(*obj: type["DensityFunction"] | ModuleType | Any):
-    """Registers `DensityFunction` type subclasses in the deserialization register.
+def register(*add: type["DensityFunction"] | ModuleType | Any, rm: Iterable[str | type["DensityFunction"]] = []) -> dict[str, tuple[str, type["DensityFunction"]]]:
+    """Registers or removes `DensityFunction` type subclasses from the deserialization register.
     
-    An `obj` can be a `DensityFunction` subclass, a module or any other object
-    with attributes. For the latter two cases, all attributes that are
-    `DensityFunction` subclasses will be registered. (Only recursive for modules)
+    Parameters:
+        *add (type[DensityFunction] | module | Any): Objects to register density function types from.
+            If it is not a `DensityFunction` subclass, its attributes will be searched for
+            such. If it is a module, the serach is recursive.
+        rm (str | type[DensityFunction]): Density function types to remove from the deserialization register.
+
+    Returns:
+        The deserialization register after registration. Maps density function
+            type identifiers to tuples of the selected `DensityFunction` classes'
+            module paths and type objects.
     """
+    registrations = {}
+
     def try_register(o: Any):
         if isinstance(o, type) and issubclass(o, DensityFunction):
             if hasattr(o, "id") and isinstance(o.id, str):
-                DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES[o.id] = o
+                registrations[o.id] = o
         else:
             if hasattr(o, "__dict__"):
                 for attribute in o.__dict__.values():
                     try_register(attribute)
 
-    for o in obj:
+    for o in add:
         if isinstance(o, type) and issubclass(o, DensityFunction):
             if not hasattr(o, "id") or not isinstance(o.id, str):
                 raise ValueError(f"Cannot register density function type '{o.__name__}' without class variable 'id' defined")
             
         try_register(o)
+
+    DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES |= registrations
+
+    for rem in rm:
+        if isinstance(rem, str):
+            keys_to_remove = [k for k in DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES if k == rem or (":" not in rem and k == f"minecraft:{rem}")]
+            for k in keys_to_remove:
+                DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.pop(k, None)
+        elif isinstance(rem, type):
+            keys_to_remove = [k for k, v in DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.items() if v is rem]
+            for k in keys_to_remove:
+                DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.pop(k, None)
+
+    if add and not registrations:
+        warnings.warn("No DensityFunction subclasses were found to register from the given objects", UserWarning)
+
+    return {id: (f"{typ.__module__}.{typ.__qualname__}", typ) for id, typ in sorted(DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.items())}
         
 
 #======// DensityFunction Base Class //==========================================================//

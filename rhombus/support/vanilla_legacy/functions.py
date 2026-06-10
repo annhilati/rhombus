@@ -5,16 +5,14 @@ __all__ = [
     "spline"
 ]
 
+
 from typing import Literal
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.noise import Noise
 from rhombus.std.macros import macro
-from rhombus.support.vanilla_legacy import types
 
-
-#======// Builtin Functions //===================================================================//
-
+from . import types
 
 @macro
 def slide(argument: AnyDensity) -> Density[types.slide]:

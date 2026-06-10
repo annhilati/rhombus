@@ -14,6 +14,8 @@ from builtins import abs as python_abs
 ```
 """
 
+__version__ = "26.2"
+
 from rhombus.std.noise import *
 from rhombus.std.macros import *
 from rhombus.std.density import *

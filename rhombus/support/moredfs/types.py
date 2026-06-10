@@ -1,5 +1,7 @@
 from typing import ClassVar, Self, Literal, Optional
+
 from rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase
+
 from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
 
 #======// Density Function Base Classes //=======================================================//

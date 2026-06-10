@@ -1,2 +1,2 @@
-from rhombus.support.lithostiched import *
+from rhombus.support.lithostitched import *
 

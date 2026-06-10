@@ -1,4 +1,5 @@
 from typing import ClassVar
+
 from rhombus.core.density_function import SimpleFunctionBase
 
 class floating_islands(SimpleFunctionBase):

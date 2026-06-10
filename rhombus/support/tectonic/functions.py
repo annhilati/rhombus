@@ -1,5 +1,6 @@
 from rhombus.std import Noise, Density, AnyDensity, macro
-from rhombus.support.tectonic import types
+
+from . import types
 
 
 @macro

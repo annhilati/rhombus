@@ -1,6 +1,8 @@
 from typing import ClassVar, Literal
+
 from rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase
 from rhombus.core.sub_parameters import SubParameters
+
 from .fast_noise_config import FastNoiseConfig
 
 #======// Subparameters //=======================================================================//

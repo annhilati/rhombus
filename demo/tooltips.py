@@ -25,7 +25,7 @@ splines
 # Support
 tectonic.x
 moredfs.x
-lithostiched.x
+lithostitched.x
 ensity.x
 vanilla_legacy.x
 

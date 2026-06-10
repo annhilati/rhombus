@@ -1,7 +1,6 @@
 # All
 import rhombus.core.node
 import rhombus.core.serializer
-import rhombus.core.compiler
 import rhombus.core.datapack_resource
 import rhombus.core.density_function
 import rhombus.core.sub_parameters
@@ -18,9 +17,7 @@ import rhombus.macros.smath
 import rhombus.macros.conditional
 import rhombus.support.ensity
 import rhombus.support.moredfs
-import rhombus.support.lithostiched
+import rhombus.support.lithostitched
 import rhombus.support.tectonic
 import rhombus.splines
 import rhombus.config
-
-from matplotlib.backend_bases import * # Base classes
