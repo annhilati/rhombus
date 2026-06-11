@@ -15,8 +15,8 @@ from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std import types, AnyDensity, Density, macro
 
 class DensityFunctionSizeInfo(NamedTuple):
-    nodes_uncached: int
-    nodes_in_unique_cached: int
+    toplevel_nodes: int
+    unique_cached_nodes: int
     unique_unknown_references: int
     total_unknown_references: int
 
@@ -98,59 +98,66 @@ def _count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
     return result
 
 
-def _size(node: DensityFunction) -> DensityFunctionSizeInfo:
-    """Gathers information about the size of a density function in terms of number of nodes.
+def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
-    Returns:
-        DensityFunctionSizeInfo
-            - `nodes_uncached`: Number of nodes that are not part of a unique cached subtree
-            - `nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
-            - `unique_unknown_references`: Number of unique references with unknown definition
-            - `total_unknown_references`: Total number of references with unknown definition (counting duplicates)
-
-    """
     if not isinstance(node, DensityFunction):
         raise TypeError("Expected DensityFunction instance")
 
-    nodes_uncached: int = 0
-    nodes_in_unique_cached: int = 0
-    unique_unknown_references: set[str] = set()
-    total_unknown_references: int = 0
+    count_toplevel_nodes: int = 0
+    count_unique_cached_nodes: int = 0
+    count_total_unknown_references: int = 0
+    collect_unique_unknown_references: set[str] = set()
 
-    seen_cachable_references: set[str] = set()
+    files = Density(node).compile("rhombus:main")
+    reference_definitions: dict[str, DensityFunction] = {
+        ref.reference: ref.definition
+        for ref in node.inscribed_toplevel_nodes
+        if isinstance(ref, Reference) and ref.definition is not None
+    }
+    visited_references: set[str] = set()
 
     def visit(value: Any, we_are_in_cached: bool = False) -> None:
-        nonlocal nodes_uncached, nodes_in_unique_cached, unique_unknown_references, total_unknown_references
+        nonlocal count_toplevel_nodes, count_unique_cached_nodes, collect_unique_unknown_references, count_total_unknown_references
 
         if isinstance(value, DensityFunction):
 
-            # Case: This is a regular DensityFunction node
-            if not we_are_in_cached:
-                nodes_uncached += 1
-            # Case: This is a DensityFunction node that is part of a unique cached subtree
-            else:
-                nodes_in_unique_cached += 1
+            if not isinstance(value, Reference):
+                if not we_are_in_cached:
+                    count_toplevel_nodes += 1
+                else:
+                    count_unique_cached_nodes += 1
 
             if isinstance(value, Reference):
+                if value.definition is not None:
+                    if value.reference not in visited_references:
+                        visited_references.add(value.reference)
+                        visit(value.definition, we_are_in_cached=we_are_in_cached)
+                        visited_references.remove(value.reference)
+                    return
 
-                # Case: Reference with unknown definition
-                if value.definition is None:
-                    unique_unknown_references.add(value.reference)
-                    total_unknown_references += 1
+                if value.reference in reference_definitions:
+                    if value.reference not in visited_references:
+                        visited_references.add(value.reference)
+                        visit(reference_definitions[value.reference], we_are_in_cached=we_are_in_cached)
+                        visited_references.remove(value.reference)
+                    return
 
-                # Case: Reference with known definition
+                if value.reference in visited_references:
+                    return
+
+                if files.get(value.reference):
+                    visited_references.add(value.reference)
+                    visit(Density.from_dict(files[value.reference].data).AST, we_are_in_cached=we_are_in_cached)
+                    visited_references.remove(value.reference)
                 else:
-                    # Case: Reference definition is cachable
-                    if isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)): # TODO: this shouldn't be hardcoded
-                        # Case: We have not seen this cachable reference before
-                        if value.reference not in seen_cachable_references:
-                            seen_cachable_references.add(value.reference)
-                            visit(value.definition, we_are_in_cached=True)
+                    collect_unique_unknown_references.add(value.reference)
+                    count_total_unknown_references += 1
+                return
 
-                return # We do not want to count the references' fields twice
-
-            for child in value.fields.values():
-                visit(child, we_are_in_cached)
+            if isinstance(value, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)): # TODO This should not be hardcoded
+                we_are_in_cached = True
+            for node in value.fields.values():
+                visit(node, we_are_in_cached=we_are_in_cached)
 
         elif isinstance(value, dict):
             for item in value.keys():
@@ -162,13 +169,13 @@ def _size(node: DensityFunction) -> DensityFunctionSizeInfo:
             for item in value:
                 visit(item, we_are_in_cached)
 
-    visit(node)
+    visit(Density.from_dict(files["rhombus:main"].data).AST)
 
     return DensityFunctionSizeInfo(
-        nodes_uncached=nodes_uncached,
-        nodes_in_unique_cached=nodes_in_unique_cached,
-        unique_unknown_references=len(unique_unknown_references),
-        total_unknown_references=total_unknown_references
+        toplevel_nodes=count_toplevel_nodes,
+        unique_cached_nodes=count_unique_cached_nodes,
+        unique_unknown_references=len(collect_unique_unknown_references),
+        total_unknown_references=count_total_unknown_references
     )
 
 def _wrap_redundances(
@@ -194,14 +201,14 @@ def _wrap_redundances(
 
             # Skip further caching if this is already a reference with cache_once
             if isinstance(value, Reference) and isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)): # TODO: this shouldn't be hardcoded
+                # TODO also wrap redundances for the children; all that occur multiple times inside or with outsiders
                 return value
 
-            if occurances[value] > 1 and _size(value).nodes_uncached > max_nodes:
+            if occurances[value] > 1 and _df_size_info(value).toplevel_nodes > max_nodes:
                 # Cache this recurring node WITHOUT optimizing its children first
                 # This prevents nested cache_once wrappers on child nodes
-                reference = wrapper(value)
                 replacement_info[value] = 1 if value not in replacement_info else replacement_info[value] + 1
-                return reference
+                return wrapper(value)
 
             # Not a candidate for caching, so just optimize children
             new = clone_node(value)
@@ -231,7 +238,16 @@ def _wrap_redundances(
 def autocache(argument: AnyDensity, *, caching_function: DensityFunction = types.flat_cache) -> Density:
     wrapper = lambda value: Reference("rhombus:generated/" + uuid_hash(value.serialize_toplevel()), definition=caching_function(value))
     return Density(_wrap_redundances(argument.AST, max_nodes=6, wrapper=wrapper)[0])
-    # TODO check whether to autocache inside of reference definitions
+    # TODO see _wrap_redundances
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:
-    return _size(df.AST)
+    """Returns information about the size of a density function.
+    
+    Returns:
+        DensityFunctionSizeInfo
+            - `~.nodes_uncached`: Number of nodes that are not part of a unique cached subtree
+            - `~.nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
+            - `~.unique_unknown_references`: Number of unique references with unknown definition
+            - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
+    """
+    return _df_size_info(df.AST)

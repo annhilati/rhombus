@@ -58,15 +58,16 @@ class DatapackResource(RhombusASTNode):
             return cls.deserialize_toplevel(file.data)
         return cls.refer(id)
     
-    def additional_described_files(self) -> dict[str, BeetFile]:
-        files = {}
+    @property
+    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+        nodes = set()
         if not all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is None:
-            files[self.identifier] = self.fileclass(self.serialize_toplevel())
+            nodes.add(self)
         
             for param, value in self.fields.items():
                 if isinstance(value, RhombusASTNode):
-                    files |= value.additional_described_files()
-        return files
+                    nodes |= value.inscribed_toplevel_nodes
+        return nodes
     
     @property
     def identifier(self) -> str:

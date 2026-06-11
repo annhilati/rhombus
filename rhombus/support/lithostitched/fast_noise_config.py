@@ -15,7 +15,8 @@ class LithostichedFastNoiseConfig(JsonFile):
 class FastNoiseConfig(DatapackResource):
     """Defines a Lithostiched noise.
     
-    **NOTE** Because Lithostiched noises have a lot of interdependent fields, use these fabrics instead:
+    **NOTE** Because Lithostitched noises have a lot of interdependent fields, use
+    these fabrics for instanciating:
     - `.SimplexNoise()`
     - `.CellularNoise()`
     - `.PerlinNoise()`

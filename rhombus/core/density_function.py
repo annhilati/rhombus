@@ -81,6 +81,7 @@ class DensityFunction(RhombusASTNode):
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/density_functions/)
     """
+    fileclass: ClassVar[type[BeetFile]] = WorldgenDensityFunction
     id: ClassVar[str]
     
     REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
@@ -210,12 +211,13 @@ class Reference(DensityFunction):
     def serialize_inline(self) -> str:
         return self.reference
     
-    def additional_described_files(self) -> dict[str, BeetFile]:
-        files = {}
+    @property
+    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+        nodes = set()
         if self.definition is not None:
-            files[self.reference] = WorldgenDensityFunction(self.definition.serialize_toplevel())
-            files |= self.definition.additional_described_files()
-        return files
+            nodes.add(self)
+            nodes |= self.definition.inscribed_toplevel_nodes
+        return nodes
     
     def __repr__(self) -> str:
         from rhombus.std import types

@@ -10,6 +10,7 @@ import beet.contrib.worldgen as beet_worldgen
 
 from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
+from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import types
 
@@ -124,10 +125,20 @@ class Density[Function: DensityFunction = DensityFunction]:
         "Compiles the Density into Beet file class instances."
         files: dict[str, BeetFile] = {}
 
-        if ":" not in identifier: identifier = "minecraft:" + identifier
+        for node in self.AST.inscribed_toplevel_nodes:
 
+            # TODO This should not be hardcoded
+            if isinstance(node, Reference):
+                id = node.reference
+            elif isinstance(node, DatapackResource):
+                id = node.identifier
+            else:
+                raise NotImplementedError
+
+            files[id] = node.fileclass(node.serialize_toplevel())
+
+        if ":" not in identifier: identifier = "minecraft:" + identifier
         files[identifier] = beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel())
-        files |= self.AST.additional_described_files()
 
         return files
 

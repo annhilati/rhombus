@@ -31,6 +31,8 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     __dataclass_params__: ClassVar[Any]
     __match_args__:       ClassVar[tuple[str, ...]]
 
+    fileclass: ClassVar[type[BeetFile]]
+
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Base class RhombusASTNode cannot be instantiated directly. Please use a subclass with defined fields.")
                
@@ -56,17 +58,18 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     
     @property
     def fields(self) -> dict[str, Any]:
-        "Standard implemenation for getting all parameters of the Node paired with their values."
+        "Standard implemenation for getting all parameters of the Node paired with their values"
         return fields(self)
     
-    def additional_described_files(self) -> dict[str, BeetFile]:
-        "Standard implementation for recursive search for additional files. Returns all files of all entries in `~.fields`."
-        # Additionaly and excluding the one with the content of ~.serialize()
-        files = {}
+    @property
+    def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
+        "Recursive search for all inscribed nodes, that will require a file when compiling"
+        # TODO Idea: do not return files but Nodes
+        nodes = set()
         for param, value in self.fields.items():
             if isinstance(value, RhombusASTNode):
-                files |= value.additional_described_files()
-        return files
+                nodes |= value.inscribed_toplevel_nodes
+        return nodes
         
         
     #======// Serialization //===================================================================//

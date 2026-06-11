@@ -1,19 +1,9 @@
 from typing import ClassVar, Literal
 
 from rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase
-from rhombus.core.sub_parameters import SubParameters
+from rhombus.core.utils import JSONDict
 
 from .fast_noise_config import FastNoiseConfig
-
-#======// Subparameters //=======================================================================//
-
-class InclusiveRange(SubParameters):
-    min_inclusive: float
-    max_inclusive: float
-
-class Selection(SubParameters):
-    range: float | list[float] | InclusiveRange
-    function: DensityFunction
 
 
 #======// Density Function Classes //============================================================//
@@ -51,10 +41,54 @@ class original_marker(SimpleFunctionBase):
 
 class select(DensityFunction):
     id: ClassVar[str] = "lithostitched:select"
+
     input: DensityFunction
     fallback: DensityFunction
-    selections: list[Selection]
+    selections: list[tuple[float | tuple[float, float], DensityFunction]]
 
+    @staticmethod
+    def _deserialize_range(value: float | list[float]) -> float | tuple[float, float]:
+        if isinstance(value, list):
+            return (value[0], value[1])
+        return value
+
+    @staticmethod
+    def _serialize_range(value: float | tuple[float, float]) -> float | list[float]:
+        if isinstance(value, tuple):
+            return [value[0], value[1]]
+
+        return value
+
+    @classmethod
+    def deserialize_toplevel(cls, data: JSONDict) -> "select":
+        return cls(
+            DensityFunction.deserialize_inline(data["input"]),
+            DensityFunction.deserialize_inline(data["fallback"]),
+            [
+                (
+                    cls._deserialize_range(item["range"]),
+                    DensityFunction.deserialize_inline(item["function"]),
+                )
+                for item in data["selections"]
+            ],
+        )
+
+    def serialize_toplevel(self) -> JSONDict:
+        return {
+            "type": self.id,
+            "select": {
+                "input": self.input.serialize_inline(),
+                "fallback": self.fallback.serialize_inline(),
+                "selections": [
+                    {
+                        "range": self._serialize_range(rng),
+                        "function": fn.serialize_inline(),
+                    }
+                    for rng, fn in self.selections
+                ],
+            },
+        }
+    
 class shift(DensityFunction):
     id: ClassVar[str] = "lithostitched:shift"
     input: DensityFunction
