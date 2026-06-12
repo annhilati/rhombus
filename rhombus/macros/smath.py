@@ -47,6 +47,12 @@ def erf(argument: AnyDensity, xRange: tuple[float, float] = (-3, 3)) -> Density[
     return functions.spline(argument, splines.sample_spline_points(py_math.erf, xRange))
 
 @macro
+def exp(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1), base: float = py_math.e) -> Density[types.spline]:
+    """Evaluates the value of the input on an exponential function."""
+    func = lambda x: base**x
+    return functions.spline(argument, splines.sample_spline_points(py_math.erf, xRange))
+
+@macro
 def logistic(argument: AnyDensity,
         capacity: float = 1,
         growth_rate: float = 4,
