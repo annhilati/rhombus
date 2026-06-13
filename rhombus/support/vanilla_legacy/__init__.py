@@ -1,6 +1,7 @@
-"""Collection of Features thet were part of Minecraft, but where changed or removed.
+"""Provides backward compatibility for Minecraft world generation features that have been altered or removed.
 
-When importing from here, make sure to do this after importing the "standard" symbols.
+This module restores legacy density functions and noise types to maintain compatibility with older world designs.
+When importing from this module, ensure it is done after importing standard symbols to avoid conflicts.
 """
 
 from .functions import *

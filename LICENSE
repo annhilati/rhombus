@@ -3,18 +3,20 @@ Copyright (c) 2026 Annhilati
 All rights reserved.
 
 Permission is granted to view and download the source code of this
-repository for personal use and for the purpose of contributing to the
+software for personal use and for the purpose of contributing to the
 original project.
 
 You may:
 - Read and study the source code
 - Modify the code locally
-- Submit improvements or fixes via pull requests to the original repository
+- Submit improvements or fixes to the original projects
 
 You may NOT:
-- Redistribute the source code
+- Redistribute the source code (This does not apply to a fork of the software
+                                itself, unless the purpose of the fork is to
+                                maintain an alternative development branch of
+                                the original project)
 - Publish modified versions of the project
-- Create public forks that distribute the code
 - Sell, sublicense, or commercially exploit the software
 
 All contributions submitted to this repository become part of the project

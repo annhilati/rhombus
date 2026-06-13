@@ -1,6 +1,6 @@
 """
-This module provides a basic fluent interface for realising conditionality
-with `range_choice` expressions.
+This module provides a fluent interface for realising conditionality by
+constructing nested `range_choice` expressions.
 
 **IMPORTANT** If the conditionality produces a density function with recurring parts,
 they will automatically be cached.
@@ -43,12 +43,18 @@ def _ensure_pair(value: SupportsIndex) -> tuple[float, float]:
     return (a, b) if a <= b else (b, a)
 
 
-# TODO make this a genuine singleton sentinel
 class Itself:
-    pass
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    def __repr__(self):
+        return "it"
 
 it = Itself()
 "Typing sentinel to denote, that the last specified input is reused"
+
 
 class Relation(str, Enum):
     EQUALS = "=="
@@ -301,7 +307,7 @@ class Causality:
         result = Density.constant(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return autocache(Density(result)) # TODO: restrict the to be cached AST parts to the actual inputs of the conditional
+        return autocache(Density(result)) # IDEA: restrict the to be cached AST parts to the actual inputs of the conditional
 
 
 @dataclass

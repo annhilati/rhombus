@@ -1,3 +1,9 @@
+"""Integration with the Datapack Toolkit ecosystem.
+
+Provides utilities for reading and parsing Datapack Toolkit configuration files (dpconfig).
+This ensures that Rhombus can interact seamlessly with automated datapack build processes.
+"""
+
 import beet
 import yaml, json
 

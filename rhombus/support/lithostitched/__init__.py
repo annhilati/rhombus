@@ -1,4 +1,7 @@
-"""[Lithostiched](https://modrinth.com/mod/lithostitched) by Apollo
+"""### [Lithostiched](https://modrinth.com/mod/lithostitched) by Apollo
+
+Offers a comprehensive suite of extended density functions and utilities for advanced world generation.
+This module enables finer control over terrain shaping and noise manipulation within the datapack ecosystem.
 
 ---
 [Wiki](https://github.com/Apollounknowndev/lithostitched/wiki)

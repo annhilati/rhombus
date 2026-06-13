@@ -64,7 +64,6 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     @property
     def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
         "Recursive search for all inscribed nodes, that will require a file when compiling"
-        # TODO Idea: do not return files but Nodes
         nodes = set()
         for param, value in self.fields.items():
             if isinstance(value, RhombusASTNode):

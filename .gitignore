@@ -3,16 +3,11 @@
 .venv/
 .env
 test*
+.test*
 
-dir
+# Indev Testing
 beet.*
-out
 .beet_cache/
-
-# Distribution & Packaging
-build/
-**.egg-info
-**/__pycache__/
 
 # pytest
 !tests/**/**.py
@@ -22,3 +17,8 @@ test_pack/
 # Zensical
 .cache/
 site/
+
+# Distribution & Packaging
+build/
+**.egg-info
+**/__pycache__/
