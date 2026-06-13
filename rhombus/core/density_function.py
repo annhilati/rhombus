@@ -32,8 +32,13 @@ def register(*add: type["DensityFunction"] | ModuleType | Any, rm: Iterable[str 
             module paths and type objects.
     """
     registrations = {}
+    visited = set()
 
     def try_register(o: Any):
+        if id(o) in visited:
+            return
+        visited.add(id(o))
+        
         if isinstance(o, type) and issubclass(o, DensityFunction):
             if hasattr(o, "id") and isinstance(o.id, str):
                 registrations[o.id] = o
@@ -205,6 +210,9 @@ class Reference(DensityFunction):
     # deserialize_toplevel() is not a realistic scenario
     
     def serialize_toplevel(self) -> JSONDict:
+        if self.definition is not None:
+            # This is still experimental. TODO check if this makes every case
+            return self.definition.serialize_toplevel()
         from rhombus.std import types
         return types.add(self, constant(0.0)).serialize_toplevel()
     
@@ -220,6 +228,7 @@ class Reference(DensityFunction):
         return nodes
     
     def __repr__(self) -> str:
+        # TODO yes, it is convenient for copying it and using it as source code, but it's confusing as hell
         from rhombus.std import types
         if self.definition is None:
             return '"' + self.reference + '"'

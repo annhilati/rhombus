@@ -199,16 +199,20 @@ def _wrap_redundances(
     def visit_and_replace_if_needed(value: DensityFunction | Any) -> DensityFunction | Any:
         if isinstance(value, DensityFunction):
 
-            # Skip further caching if this is already a reference with cache_once
-            if isinstance(value, Reference) and isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)): # TODO: this shouldn't be hardcoded
-                # TODO also wrap redundances for the children; all that occur multiple times inside or with outsiders
-                return value
+            is_already_cached_ref = isinstance(value, Reference) and isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)) # TODO: this shouldn't be hardcoded
 
-            if occurances[value] > 1 and _df_size_info(value).toplevel_nodes > max_nodes:
-                # Cache this recurring node WITHOUT optimizing its children first
-                # This prevents nested cache_once wrappers on child nodes
-                replacement_info[value] = 1 if value not in replacement_info else replacement_info[value] + 1
-                return wrapper(value)
+            if not is_already_cached_ref and occurances.get(value, 0) > 1 and _df_size_info(value).toplevel_nodes > max_nodes:
+                # Cache this recurring node, but first optimize its internal redundancies!
+                # By running _wrap_redundances on it as a new root, we find subtrees
+                # that recur *within* this node, without redundantly caching nodes that 
+                # only recur globally.
+                optimized_value, inner_replacements = _wrap_redundances(value, max_nodes=max_nodes, wrapper=wrapper)
+                
+                for k, v in inner_replacements.items():
+                    replacement_info[k] = replacement_info.get(k, 0) + v
+                    
+                replacement_info[value] = replacement_info.get(value, 0) + 1
+                return wrapper(optimized_value)
 
             # Not a candidate for caching, so just optimize children
             new = clone_node(value)
@@ -235,10 +239,12 @@ def _wrap_redundances(
 
 
 @macro
-def autocache(argument: AnyDensity, *, caching_function: DensityFunction = types.flat_cache) -> Density:
+def autocache(argument: AnyDensity, *, caching_function: DensityFunction = types.cache_once, max_nodes: int = 5) -> Density:
+    """Optimizes a density function by automatically caching all recurring calculations.
+    
+    """
     wrapper = lambda value: Reference("rhombus:generated/" + uuid_hash(value.serialize_toplevel()), definition=caching_function(value))
-    return Density(_wrap_redundances(argument.AST, max_nodes=6, wrapper=wrapper)[0])
-    # TODO see _wrap_redundances
+    return Density(_wrap_redundances(argument.AST, max_nodes=max_nodes, wrapper=wrapper)[0])
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:
     """Returns information about the size of a density function.

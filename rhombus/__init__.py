@@ -14,3 +14,6 @@ from rhombus import (
 from rhombus.core.density_function import register
 
 register(t)
+
+# Convenience when importing *
+from rich import print

@@ -14,6 +14,7 @@ from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import types
 
+
 #======// Density Type //========================================================================//
 
 @dataclass
