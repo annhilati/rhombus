@@ -11,7 +11,7 @@
 <p align="center"><code>pip install git+https://github.com/annhilati/rhombus.git</code></p>
 
 
-**Minecraft terrain generation currently requires pure JSON structures, which can grow into large, nested, hard-to-understand trees. Rhombus instead offers flexible abstraction and a comprehensive Python interface that significantly improves readability, project structures, and development speed.**
+**Minecraft terrain generation currently relies on large, deeply nested JSON structures that quickly become difficult to read and maintain. Rhombus introduces powerful abstractions and a comprehensive Python API, making world generation code cleaner, more modular, and significantly faster to develop.**
 
 Rhombus is an eDSL delivered as a Python package that allows worldgen developers to comfortably write expressions resembling the abstract syntax trees of density functions for Minecraft while benefiting from Python's forgiving syntax.
 

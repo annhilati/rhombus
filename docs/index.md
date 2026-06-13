@@ -3,7 +3,7 @@ icon: lucide/lightbulb
 title: Introduction
 ---
 
-Density function are Minecraft's way to describe, how terrain should look at a certain point.
+Density functions are Minecraft's way to describe, how terrain should look at a certain point.
 Starting with 1.18.2, they are data driven, which means that terrain can be modified through a [datapack](https://minecraft.wiki/w/Data_pack), without the need to know how to program in Java. 
 
 However, like many other things in datapacks, writing these is difficult due to the incomprehensible source format and the lack of good development environments.

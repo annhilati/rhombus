@@ -27,8 +27,20 @@ def slide(argument: AnyDensity) -> Density[types.slide]:
     """
     return Density(types.slide(argument.AST))
 
-def spline(*args, **kwargs):
-    raise NotImplementedError # TODO
+@macro
+def spline(coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]], min_value: float, max_value: float) -> Density[types.spline]:
+    """Computes the value of a cubic spline for the input.
+
+    The values for the points represent in order: `location`, `value` and `derivative`.
+
+    For values beyond the outermost spline points, the value of the nearest spline point is returned.
+    
+    ---
+    ![](data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCA1NDAgMzAwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxzdHlsZT4KICAgIC5ncmF5LXNoYXBlIHsKICAgICAgZmlsbDogI0M2QzZDNjsgLyogTGlnaHQgbW9kZSAqLwogICAgfQoKICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmdyYXktc2hhcGUgewogICAgICAgIGZpbGw6ICM1NjU2NTY7IC8qIERhcmsgbW9kZSAqLwogICAgICB9CiAgICB9CiAgPC9zdHlsZT4KICA8cGF0aCBkPSJNMTUwIDBMMjQwIDkwTDIxMCAxMjBMMTIwIDMwTDE1MCAwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik00MjAgMzBMNTQwIDE1MEw0MjAgMjcwTDM5MCAyNDBMNDgwIDE1MEwzOTAgNjBMNDIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzMwIDE4MEwzMDAgMjEwTDM5MCAzMDBMNDIwIDI3MEwzMzAgMTgwWiIgZmlsbD0iI0YwOTQwOSIvPgogIDxwYXRoIGQ9Ik0xMjAgMzBMMTUwIDYwTDYwIDE1MEwxNTAgMjQwTDEyMCAyNzBMMCAxNTBMMTIwIDMwWiIgY2xhc3M9ImdyYXktc2hhcGUiLz4KICA8cGF0aCBkPSJNMzkwIDBMNDIwIDMwTDE1MCAzMDBMMTIwIDI3MEwzOTAgMFoiIGZpbGw9IiNGMDk0MDkiLz4KPC9zdmc+)
+    `1.18.2-pre1` to `1.18.2` ┃ [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#The_legacy_"spline") • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
+    """
+    points = [(p[0], p[1].AST, p[2]) for p in points]
+    return Density(types.spline(coordinate.AST, points, min_value, max_value))
 
 @macro
 def terrain_shaper_spline(

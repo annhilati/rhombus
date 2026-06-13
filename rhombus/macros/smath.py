@@ -2,7 +2,7 @@
 """
 
 __all__ = [
-    "atan", "cos", "coth", "normalCDF", "normalPDF", "sin", "smoothstep", "tan", "tanh", "erf", "logistic", "tan", "tanh"
+    "atan", "cos", "coth", "normalCDF", "normalPDF", "sin", "smoothstep", "tan", "tanh", "erf", "logistic"
 ]
 
 import math as py_math

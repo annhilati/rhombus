@@ -29,6 +29,8 @@ e  = 2.7182818284590452 #35360287471352662497757247093699959574966
 @macro
 def sum(*arguments: AnyDensity) -> Density[types.add]:
     "Returns the sum of any number of arguments."
+    if len(arguments) == 0:
+        return Density.constant(0)
     if len(arguments) == 1:
         return arguments[0]
     
@@ -43,6 +45,8 @@ def sum(*arguments: AnyDensity) -> Density[types.add]:
 @macro
 def prod(*arguments: AnyDensity) -> Density[types.mul]:
     "Returns the product of any number of arguments."
+    if len(arguments) == 0:
+        return Density.constant(0)
     if len(arguments) == 1:
         return arguments[0]
     

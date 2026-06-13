@@ -10,7 +10,7 @@ nav = [
         # "usage/workflow.md",
         {"Get Started" = [
             "syntax.md",
-            "cli.md",
+            # "cli.md",
             "datapack_development.md",
             "mod_development.md",
         ]}

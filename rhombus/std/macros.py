@@ -103,7 +103,13 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
             for name, value in bound.arguments.items():
                 hint = hints.get(name)
                 if hint is not None:
-                    bound.arguments[name] = resolve_value(value, hint)
+                    param = sig.parameters[name]
+                    if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                        bound.arguments[name] = tuple(resolve_value(v, hint) for v in value)
+                    elif param.kind == inspect.Parameter.VAR_KEYWORD:
+                        bound.arguments[name] = {k: resolve_value(v, hint) for k, v in value.items()}
+                    else:
+                        bound.arguments[name] = resolve_value(value, hint)
 
             return func(*bound.args, **bound.kwargs)
 

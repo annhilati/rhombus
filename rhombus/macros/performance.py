@@ -126,20 +126,19 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                     count_toplevel_nodes += 1
                 else:
                     count_unique_cached_nodes += 1
+                # print(we_are_in_cached, value) # DEBUG
 
             if isinstance(value, Reference):
                 if value.definition is not None:
                     if value.reference not in visited_references:
                         visited_references.add(value.reference)
                         visit(value.definition, we_are_in_cached=we_are_in_cached)
-                        visited_references.remove(value.reference)
                     return
 
                 if value.reference in reference_definitions:
                     if value.reference not in visited_references:
                         visited_references.add(value.reference)
                         visit(reference_definitions[value.reference], we_are_in_cached=we_are_in_cached)
-                        visited_references.remove(value.reference)
                     return
 
                 if value.reference in visited_references:
@@ -148,7 +147,6 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                 if files.get(value.reference):
                     visited_references.add(value.reference)
                     visit(Density.from_dict(files[value.reference].data).AST, we_are_in_cached=we_are_in_cached)
-                    visited_references.remove(value.reference)
                 else:
                     collect_unique_unknown_references.add(value.reference)
                     count_total_unknown_references += 1
@@ -256,4 +254,5 @@ def get_size(df: Density) -> DensityFunctionSizeInfo:
             - `~.unique_unknown_references`: Number of unique references with unknown definition
             - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
     """
+    # TODO evaluate how to count constants vs literals and references per se
     return _df_size_info(df.AST)
