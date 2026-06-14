@@ -33,7 +33,7 @@ class RandomSampler(SubParameters):
     # binomial
     trials: int         = None # 0 < x < 1000000
     # binomial / geometric
-    probability: float  = None # 0 =< x =< 1
+    probability: float  = None # 0 <= x <= 1
     # exponential / poisson
     Lambda: float       = None # > 0
     # gamma
@@ -72,26 +72,27 @@ class RandomSampler(SubParameters):
         return cls(type="uniform", min=min, max=max)
     
     @classmethod
-    def deserialize(cls, data: JSONDict) -> "RandomSampler":
+    def deserialize_toplevel(cls, data: JSONDict) -> "RandomSampler":
         fields = annotated_fields(cls)
 
         return cls(**{
-            parameter: deserialize_any_inline(value, tp)
-            for parameter, value in data.items()
-            if parameter in fields
-            for tp in (fields[parameter],)
-            if parameter != "lambda"
-        },
-        **({"lambda": data["lambda"]} if data.get("lambda", None) is not None else {}))
+                parameter: deserialize_any_inline(value, tp)
+                for parameter, value in data.items()
+                if parameter in fields
+                for tp in (fields[parameter],)
+                if parameter != "lambda"
+            },
+            **({"Lambda": data["lambda"]} if data.get("lambda", None) is not None else {})
+        )
     
-    def serialize(self) -> JSONDict:
+    def serialize_toplevel(self) -> JSONDict:
         return {**{
-            parameter: serialize_any_inline(value)
-            for parameter, value
-            in self.fields.items()
-            if value is not None and parameter != "Lambda"
-        },
-        **({"lambda": self.Lambda} if self.Lambda is not None else {})
+                parameter: serialize_any_inline(value)
+                for parameter, value
+                in self.fields.items()
+                if value is not None and parameter != "Lambda"
+            },
+            **({"lambda": self.Lambda} if self.Lambda is not None else {})
         }
     
 

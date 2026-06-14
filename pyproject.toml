@@ -9,7 +9,7 @@ authors = [
   { name = "Annhilati"},
 ]
 dependencies = [
-  "beet==0.111.0", # includes pyyaml
+  "beet==0.111.0", # -> pyyaml
   "typer==0.25.1",
   "rich==15.0.0",
   "deepdiff==9.1.0",
@@ -18,12 +18,11 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/annhilati/rhombus"
-"Documentation" = "https://annhilati.github.io/rhombus"
-# "Changelog" = ""
-"Repository" = "https://github.com/annhilati/rhombus"
-"Bug Tracker" = "https://github.com/annhilati/rhombus/issues"
-# "Download" = "https://pypi.org/project/rhombus/"
+homepage = "https://github.com/annhilati/rhombus"
+documentation = "https://annhilati.github.io/rhombus"
+# "changelog" = ""
+repository = "https://github.com/annhilati/rhombus"
+issues = "https://github.com/annhilati/rhombus/issues"
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -33,5 +32,5 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["rhombus*"]
 
-[project.scripts]
-rhombus = "rhombus.cli:main"
+# [project.scripts]
+# rhombus = "rhombus.cli:main"

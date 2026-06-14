@@ -1,7 +1,6 @@
 ---
 icon: lucide/footprints
 title: Walkthrough
-status: deprecated
 ---
 
 ## Installation
@@ -25,7 +24,7 @@ Importing everything from `Rhombus` or importing `Rhombus` itself should be enou
 An easy example could look like this:
 
 ```py
-from Rhombus import *
+from rhombus import *
 
 n = Noise(-5, amplitudes=[1.0])
 # We're defining a noise as a separate object. All resources, that can be provided in a datapack,
@@ -33,7 +32,7 @@ n = Noise(-5, amplitudes=[1.0])
 # (In vanilla this only regards noises, but support for similar things from mods is given)
 
 final_destiny = noise(n, xz_scale=1, y_scale=0) + y_clamped_gradient(from_value=1.2, to_value=-1.2, from_y=5, to_y=24)
-# Additional to functions, various Python operators can be used. Including +, -, *, /, & and |. 
+# In addition to functions, various Python operators can be used. Including +, -, *, /, & and |. 
 ```
 
 An object representing a density function we call *Density*.

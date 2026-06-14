@@ -137,7 +137,6 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                     count_toplevel_nodes += 1
                 else:
                     count_unique_cached_nodes += 1
-                # print(we_are_in_cached, value) # DEBUG
 
             if isinstance(value, Reference):
                 if value.definition is not None:

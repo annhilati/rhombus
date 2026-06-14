@@ -53,19 +53,19 @@ erosion_noise   = Noise(-9, [3.5, 0, 2, 4, 2, 2, 3])
 erosion = clamp(noise(erosion_noise, xz_scale=1.3, y_scale=0) - 0.1, min=-1, max=1)
 
 height_map = spline(erosion, [
-        (-1,    -1,     0),
-        (-0.6,  -0.95,  0),
-        (-0.61, -0.6,   0),
-        (-0.2,  -0.55,  0),
-        (-0.21, -0.2,   0),
-        ( 0.05, -0.2,   0),
-        ( 0.21,  0.2,   0),
-        ( 0.6,   0.3,   0),
-        ( 0.61,  0.8,   0),
-        ( 1,     0.8,   0)
+    (-1,    -1,     0),
+    (-0.6,  -0.95,  0),
+    (-0.61, -0.6,   0),
+    (-0.2,  -0.55,  0),
+    (-0.21, -0.2,   0),
+    ( 0.05, -0.2,   0),
+    ( 0.21,  0.2,   0),
+    ( 0.6,   0.3,   0),
+    ( 0.61,  0.8,   0),
+    ( 1,     0.8,   0)
 ])
 
-FINAL_DESTINY = height_map + y_clamped_gradient(from_y=64, to_y=256, from_value=1.001, to_value=-1.001)
+FINAL = heightmap.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 ```
 
 Don't want to handwrite a 500+ node float manipulation function to get the current coordinate?

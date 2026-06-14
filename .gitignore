@@ -11,7 +11,7 @@ beet.*
 .beet_cache/
 
 # pytest
-!tests/**/**.py
+!tests/
 .pytest_cache/
 test_pack/
 

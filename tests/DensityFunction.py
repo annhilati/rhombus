@@ -41,4 +41,5 @@ def test_serialize_literals():
     assert Reference("some:reference").serialize_inline()                            == "some:reference"
     assert Reference("some:reference", definition=constant(3.14)).serialize_inline() == "some:reference"
     
-    assert Reference("some:reference").serialize_toplevel() == {"type": "minecraft:add", "argument1": "some:reference", "argument2": 0.0} # Be aware of the order of arguments
+    assert Reference("some:reference").serialize_toplevel() == {"type": "minecraft:add", "argument1": "some:reference", "argument2": 0.0}
+        # Be aware of the order of arguments

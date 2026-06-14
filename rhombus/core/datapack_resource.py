@@ -49,11 +49,8 @@ class DatapackResource(RhombusASTNode):
         
     @classmethod
     def deserialize_inline(cls, data: str):
-        
         id = "minecraft:" + data if not ":" in data else data
-        
         dp = config.ctx.datapack.get()
-        
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
         return cls.refer(id)

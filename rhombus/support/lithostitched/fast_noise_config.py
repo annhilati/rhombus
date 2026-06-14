@@ -20,7 +20,7 @@ class FastNoiseConfig(DatapackResource):
     - `.SimplexNoise()`
     - `.CellularNoise()`
     - `.PerlinNoise()`
-    - `.referenced()`
+    - `.refer()`
     
     """
     fileclass: ClassVar = LithostichedFastNoiseConfig

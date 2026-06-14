@@ -19,12 +19,12 @@ nav = [
         "devs/development.md",
         "devs/brand.md",
         "devs/macros.md",
-        "devs/docstring_guide.md",
-        {"Mod Support" = [
+        {"Adding Mod Support" = [
             "devs/mod_support/index.md",
-            "devs/mod_support/density_functions.md",
-            "devs/mod_support/datapack_resources.md",
-            "devs/mod_support/sub_parameters.md"
+            {"🏗️ in Rework" = "devs/mod_support/index.md"}
+            # "devs/mod_support/density_functions.md",
+            # "devs/mod_support/datapack_resources.md",
+            # "devs/mod_support/sub_parameters.md"
         ]},
     ]}
 ]
@@ -52,6 +52,7 @@ generator = false
 new = "Recently added"
 
 [project.markdown_extensions]
+pymdownx.blocks.caption = {}
 pymdownx.superfences = {}
 pymdownx.tabbed = { alternate_style = true }
 pymdownx.details = {}
