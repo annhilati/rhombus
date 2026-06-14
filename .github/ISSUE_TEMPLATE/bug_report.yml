@@ -1,0 +1,67 @@
+name: Bug Report
+description: Create a report to help us improve Rhombus.
+title: "[Bug]: "
+labels: ["! BUG"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! 
+        Please verify that you are using the newest version of Rhombus before submitting.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When trying to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide code snippets or steps to reproduce the issue.
+      placeholder: |
+        1. Write the following code: `...`
+        2. Run `...`
+        3. The following error is thrown / output is generated: `...`
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  # - type: input
+  #   id: rhombus_version
+  #   attributes:
+  #     label: Rhombus Version
+  #     description: What version of Rhombus are you using?
+  #     placeholder: "e.g. 1.0.0 or main branch"
+  #   validations:
+  #     required: true
+
+  # - type: input
+  #   id: python_version
+  #   attributes:
+  #     label: Python Version
+  #     description: Which Python version are you using?
+  #     placeholder: "e.g. 3.12.2"
+  #   validations:
+  #     required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I have checked for existing issues before opening this one.
+          required: true
+        # - label: I agree to follow this project's Code of Conduct.
+        #   required: true

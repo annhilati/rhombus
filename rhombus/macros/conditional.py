@@ -20,6 +20,11 @@ out = (
 """
 
 from __future__ import annotations
+
+__all__ = [
+    "when", "NOT", "ALL", "ANY", "it"
+]
+
 from dataclasses import dataclass, field
 from typing import Any, SupportsIndex, Never, ClassVar
 from enum import Enum
@@ -31,10 +36,6 @@ from rhombus import config
 
 EPSILON = config.infinitesimal
 OMEGA = literal_number_limit
-
-__all__ = [
-    "when", "NOT", "ALL", "ANY", "it"
-]
 
 def _ensure_pair(value: SupportsIndex) -> tuple[float, float]:
     if not isinstance(value, tuple) or len(value) != 2:

@@ -203,7 +203,9 @@ class Reference(DensityFunction):
        
         dp = config.ctx.datapack.get()
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-            return Reference(data, DensityFunction.deserialize_toplevel(f.data)) # TODO: Make it an option whether to return content or defined reference?
+            if config.ctx.deserialize_reference_with_content.get():
+                return DensityFunction.deserialize_toplevel(f.data)
+            return Reference(data, DensityFunction.deserialize_toplevel(f.data))
             
         return Reference(data)
     
@@ -211,7 +213,6 @@ class Reference(DensityFunction):
     
     def serialize_toplevel(self) -> JSONDict:
         if self.definition is not None:
-            # This is still experimental. TODO check if this makes every case
             return self.definition.serialize_toplevel()
         from rhombus.std import types
         return types.add(self, constant(0.0)).serialize_toplevel()

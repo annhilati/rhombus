@@ -122,7 +122,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         """
         return Density(DensityFunction.deserialize_toplevel(d))
     
-    def compile(self, identifier: str, /) -> dict[str, BeetFile]:
+    def compile(self, identifier: str = "main", /) -> dict[str, BeetFile]:
         "Compiles the Density into Beet file class instances."
         files: dict[str, BeetFile] = {}
 
@@ -185,6 +185,11 @@ class Density[Function: DensityFunction = DensityFunction]:
 
             open_folder(tmp)
             input("Press enter to let go temporary directory ... ")
+            
+    def __len__(self) -> int:
+        from rhombus.macros import performance
+        info = performance.get_size(self)
+        return info.toplevel_nodes + info.unique_cached_nodes
                 
 
     #======// Arithmetic Magic //================================================================//

@@ -4,6 +4,7 @@
 .env
 test*
 .test*
+_test*
 
 # Indev Testing
 beet.*

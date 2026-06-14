@@ -14,7 +14,7 @@ dependencies = [
   "rich==15.0.0",
   "deepdiff==9.1.0",
   "numpy==2.3.3",
-  "matplotlib==3.10.8",
+  "matplotlib==3.11.0",
 ]
 
 [project.urls]

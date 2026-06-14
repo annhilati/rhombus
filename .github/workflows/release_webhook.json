@@ -1,0 +1,11 @@
+{
+    "content": null,
+    "embeds": [
+        {
+            "title": "📦 Publish Successful",
+            "description": "Version [`${{ env.VERSION }}` ](https://pypi.org/project/rhombus/${{env.VERSION}}/) of **Rhombus** has been published to PyPI! 🚀",
+            "color": 6703855
+        }
+    ],
+    "attachments": []
+}

@@ -1,16 +1,3 @@
-# Missing
-
-# Every Problem
-
-- configuration feels random and has to be standardized
-
-# Design
-- What kind of methods are attributes of Density objects?
-- How to name arguments in builtins vs macros? Technical or scientific?
-- Supply Spline Points as SubParam?
-  - Maybe an additional factory
-
-
 - [x] §1 Decode Datapack Resources dynamically from `DensityFunction` subclasses
   - [x] §1.1 Annotate with concrete Datapack Resource classes instead of `DatapackResource` in `DensityFunction` fields
 - [x] §2 Decode density functions from a `DataPack`
@@ -36,7 +23,5 @@
 
 
 # TODO Features
-- Serialization
-  - make serialization procedures extendable
 - Examine, whether to use frozen dataclasses for nodes
 - Rethink, where to auto cache and how and what to repr for cached situations

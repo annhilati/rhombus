@@ -1,0 +1,68 @@
+name: Publish Python Package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Extract the version from pyproject.toml to use it in notifications
+      - name: Extract version
+        run: |
+          VERSION=$(grep -m 1 -E '^\s*version\s*=' pyproject.toml | sed -E "s/.*['\"]([^'\"]+)['\"].*/\1/")
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # Install dependencies for building packages
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine pytest pytest_spec
+
+      # Run tests to ensure code quality before publishing
+      - name: Run tests
+        run: |
+          pytest
+
+      # Build the Python package
+      - name: Build package
+        run: |
+          python -m build
+
+      # Upload the package to PyPI
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: |
+          twine upload dist/*
+
+      # Send a Discord notification with an embed via Webhook
+      - name: Discord Webhook Notification
+        if: success()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK" ]; then
+            PAYLOAD=$(cat .github/workflows/publish_webhook.json)
+            PAYLOAD="${PAYLOAD//\{\{VERSION\}\}/$VERSION}"
+            PAYLOAD="${PAYLOAD//\{\{RUN_URL\}\}/${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
+
+            curl -X POST -H "Content-Type: application/json" -d "$PAYLOAD" $DISCORD_WEBHOOK
+          else
+            echo "No DISCORD_WEBHOOK secret found. Skipping notification."
+          fi

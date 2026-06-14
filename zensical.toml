@@ -16,14 +16,15 @@ nav = [
         ]}
     ]},
     {"Rhombus Developers" = [
-        "extending/development.md",
-        "extending/macros.md",
-        "extending/docstring_guide.md",
+        "devs/development.md",
+        "devs/brand.md",
+        "devs/macros.md",
+        "devs/docstring_guide.md",
         {"Mod Support" = [
-            "extending/mod_support/index.md",
-            "extending/mod_support/density_functions.md",
-            "extending/mod_support/datapack_resources.md",
-            "extending/mod_support/sub_parameters.md"
+            "devs/mod_support/index.md",
+            "devs/mod_support/density_functions.md",
+            "devs/mod_support/datapack_resources.md",
+            "devs/mod_support/sub_parameters.md"
         ]},
     ]}
 ]

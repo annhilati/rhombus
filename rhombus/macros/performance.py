@@ -10,6 +10,12 @@ __all__ = ["autocache", "get_size"]
 
 from typing import NamedTuple, Any, Callable
 import json
+import sys
+
+# Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
+# We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
+if sys.getrecursionlimit() < 10000:
+    sys.setrecursionlimit(10000)
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std import types, AnyDensity, Density, macro
@@ -28,65 +34,70 @@ def _count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
-    # Use a stable serialized representation as grouping key to avoid
-    # relying on object identity or potentially brittle equality semantics.
 
     counts_by_key: dict[str, int] = {}
     example_node_by_key: dict[str, RhombusASTNode] = {}
-    # Use path-local seen set to avoid infinite recursion on cycles while still
-    # allowing counting of the same shared node when encountered from multiple
-    # parents.
+    
+    node_keys: dict[int, Any] = {} # id -> canonical form
 
-    def canonical_form(value: Any):
+    def get_canonical(value: Any, seen: set[int] | None = None):
         """Create a deterministic, fully expanded representation for grouping."""
-        # Primitive JSON values
         if isinstance(value, (str, int, float, bool)) or value is None:
             return ("lit", value)
+            
+        val_id = id(value)
+        if val_id in node_keys:
+            return node_keys[val_id]
 
-        # Nodes: represent by class name and ordered fields
+        if seen is None:
+            seen = set()
+
+        if val_id in seen:
+            return ("cycle", val_id)
+        
+        new_seen = seen | {val_id}
+
         if isinstance(value, RhombusASTNode):
-            return (
+            res = (
                 type(value).__name__,
-                tuple((fname, canonical_form(fval)) for fname, fval in value.fields.items())
+                tuple((fname, get_canonical(fval, new_seen)) for fname, fval in value.fields.items())
             )
-
-        # Collections
-        if isinstance(value, dict):
-            return ("dict", tuple(sorted((canonical_form(k), canonical_form(v)) for k, v in value.items())))
-
-        if isinstance(value, (list, tuple, set)):
-            return ("seq", tuple(canonical_form(v) for v in value))
-
-        # Fallback to string representation
-        return ("other", repr(value))
-
-    def key_for(value: RhombusASTNode) -> str:
-        return json.dumps(canonical_form(value), sort_keys=True, ensure_ascii=True, separators=(",",":"))
+        elif isinstance(value, dict):
+            res = ("dict", tuple(sorted((get_canonical(k, new_seen), get_canonical(v, new_seen)) for k, v in value.items())))
+        elif isinstance(value, (list, tuple, set)):
+            res = ("seq", tuple(get_canonical(v, new_seen) for v in value))
+        else:
+            res = ("other", repr(value))
+            
+        node_keys[val_id] = res
+        return res
 
     def visit(value: Any, path_seen: set[int]) -> None:
+        val_id = id(value)
+        if val_id in path_seen:
+            return
+            
+        new_path = path_seen | {val_id}
+
+        # Visit children first (post-order traversal). 
+        # This ensures get_canonical only needs 1 level of recursion for already visited children!
         if isinstance(value, RhombusASTNode):
-            # prevent cycles within the current traversal path
-            if id(value) in path_seen:
-                return
-            new_path = set(path_seen)
-            new_path.add(id(value))
-
-            k = key_for(value)
-            counts_by_key[k] = counts_by_key.get(k, 0) + 1
-            example_node_by_key.setdefault(k, value)
-
             for child in value.fields.values():
                 visit(child, new_path)
-
+                
+            form = get_canonical(value)
+            k = json.dumps(form, sort_keys=True, ensure_ascii=True, separators=(",",":"))
+            counts_by_key[k] = counts_by_key.get(k, 0) + 1
+            example_node_by_key.setdefault(k, value)
+            
         elif isinstance(value, dict):
-            for item in value.keys():
-                visit(item, path_seen)
-            for item in value.values():
-                visit(item, path_seen)
+            for k, v in value.items():
+                visit(k, new_path)
+                visit(v, new_path)
 
         elif isinstance(value, (list, tuple, set)):
             for item in value:
-                visit(item, path_seen)
+                visit(item, new_path)
 
     visit(node, set())
 
@@ -194,12 +205,12 @@ def _wrap_redundances(
             for field_name, field_value in node.fields.items()
         })
 
-    def visit_and_replace_if_needed(value: DensityFunction | Any) -> DensityFunction | Any:
+    def visit_and_replace_if_needed(value: DensityFunction | Any, nodes_being_cached: frozenset[DensityFunction] = frozenset()) -> DensityFunction | Any:
         if isinstance(value, DensityFunction):
 
             is_already_cached_ref = isinstance(value, Reference) and isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)) # TODO: this shouldn't be hardcoded
 
-            if not is_already_cached_ref and occurances.get(value, 0) > 1 and _df_size_info(value).toplevel_nodes > max_nodes:
+            if not is_already_cached_ref and occurances.get(value, 0) > 1 and _df_size_info(value).toplevel_nodes > max_nodes and value not in nodes_being_cached:
                 # Cache this recurring node, but first optimize its internal redundancies!
                 # By running _wrap_redundances on it as a new root, we find subtrees
                 # that recur *within* this node, without redundantly caching nodes that 
@@ -212,24 +223,31 @@ def _wrap_redundances(
                 replacement_info[value] = replacement_info.get(value, 0) + 1
                 return wrapper(optimized_value)
 
+            new_nodes_being_cached = nodes_being_cached
+            if is_already_cached_ref and hasattr(value.definition, "argument"):
+                new_nodes_being_cached = nodes_being_cached | frozenset([value.definition.argument])
+
             # Not a candidate for caching, so just optimize children
             new = clone_node(value)
 
             for field_name, field_value in value.fields.items():
-                new_value = visit_and_replace_if_needed(field_value)
+                new_value = visit_and_replace_if_needed(field_value, new_nodes_being_cached)
                 setattr(new, field_name, new_value)
 
             return new
 
         elif isinstance(value, dict):
-            for item in value.keys():
-                return visit_and_replace_if_needed(item)
-            for item in value.values():
-                return visit_and_replace_if_needed(item)
+            return {
+                visit_and_replace_if_needed(k, nodes_being_cached): visit_and_replace_if_needed(v, nodes_being_cached)
+                for k, v in value.items()
+            }
 
-        elif isinstance(value, (list, tuple, set)):
-            for item in value:
-                return visit_and_replace_if_needed(item)
+        elif isinstance(value, list):
+            return [visit_and_replace_if_needed(item, nodes_being_cached) for item in value]
+        elif isinstance(value, tuple):
+            return tuple(visit_and_replace_if_needed(item, nodes_being_cached) for item in value)
+        elif isinstance(value, set):
+            return {visit_and_replace_if_needed(item, nodes_being_cached) for item in value}
 
         return value
 

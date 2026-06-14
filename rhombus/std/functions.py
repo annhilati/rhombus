@@ -179,6 +179,8 @@ def interval_select(input: AnyDensity, thresholds: list[float], functions: list[
 def range_choice(input: AnyDensity, min_inclusive: float, max_exclusive: float, when_in_range: AnyDensity, when_out_of_range: AnyDensity) -> Density[types.range_choice]:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
 
+    **NOTE** To create logic or conditional expressions, use `rhombus.macros.conditional`.
+
     ```
     if input >= min_inclucive:
         if input < max_exclusive:

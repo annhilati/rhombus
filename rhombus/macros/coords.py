@@ -110,10 +110,6 @@ def x():
     **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     💾 This macro will ensure proper caching by claiming separate files.
-
-    ---
-
-    ⚙️ Implementation utilizes float precision loss at extremely small noise scales ┃ `CC(·) = 512`
     """
     return _coord_component(
         shift_x=0.99,
@@ -128,10 +124,6 @@ def z():
     **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     💾 This macro will ensure proper caching by claiming separate files.
-
-    ---
-
-    ⚙️ Implementation utilizes float precision loss at extremely small noise scales ┃ `CC(·) = 512`
     """
     return _coord_component(
         shift_x=1.01,
@@ -142,8 +134,5 @@ def z():
 
 def y():
     """Returns the Y-coordinate of the current block.
-
-    ---
-    ⚙️ Implementation utilizes `y_clamped_gradient` ┃ `CC(·) = 1`
     """
     return f.y_clamped_gradient(-4062, 4062, -4062, 4062)
