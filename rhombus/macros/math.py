@@ -8,6 +8,7 @@ __all__ = [
     "Infinity", "NaN",
     "pi", "e",
     "sum", "prod",
+    "fastRound", "fastFloor", "fastCeil",
     "round", "floor", "ceil",
     "mod", "floordiv",
     "heaviside", "ramp", "sgn", "monus",
@@ -66,16 +67,24 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
     return result
 
 @macro
-def floordiv(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
+def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
     """Returns the floor division of two inputs (`argument1 // argument2`) within the specified range.
-    Values where the quotient falls outside this range's rounding intervals will be left unrounded."""
-    return floor(dividend / divisor, range=range)
+    Values where the quotient falls outside this range's rounding intervals will be left unrounded.
+    
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use.
+    """
+    return fastFloor(dividend / divisor)
 
 @macro
-def mod(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.add]:
+def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
-    Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
-    return perf.autocache(dividend - divisor * floor(dividend / divisor, range=range))
+    Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo.
+    
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use.
+    """
+    return perf.autocache(dividend - divisor * fastFloor(dividend / divisor))
 
 #======// Step Functions //======================================================================//
 
@@ -100,67 +109,31 @@ def ramp(argument: AnyDensity) -> Density[types.max]:
     return f.max(argument, 0)
 
 @macro
-def round(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
-    """Rounds the input to the nearest integer within the specified range.
-    Values outside this range's rounding intervals will be left unrounded."""
-    start_int = py_math.ceil(range[0])
-    end_int = py_math.floor(range[1])
+def fastRound(argument: AnyDensity) -> Density[types.add]:
+    """Rounds the input to the nearest integer.
     
-    if start_int > end_int:
-        raise ValueError("'range' requires a lower and upper bound")
-        
-    expr = cond.when(argument).between(start_int - 0.5, start_int + 0.5).then(float(start_int))
-    
-    i = start_int + 1
-    while i <= end_int:
-        expr = expr.elsewhen(cond.it).between(i - 0.5, i + 0.5).then(float(i))
-        i += 1
-        
-    return expr.otherwise(cond.it)
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
+    """
+    return argument + f.constant(1.5) * f.constant(2**52) - f.constant(1.5) * f.constant(2**52)
 
 @macro
-def floor(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
-    """Rounds the input down to the nearest integer within the specified range.
-    Values outside this range's rounding intervals will be left unrounded."""
-    from rhombus import config
-    EPS = config.infinitesimal
+def fastFloor(argument: AnyDensity) -> Density[types.add]:
+    """Rounds the input down to the nearest integer.
     
-    start_int = py_math.floor(range[0])
-    end_int = py_math.floor(range[1])
-    
-    if start_int > end_int:
-        raise ValueError("'range' requires a lower and upper bound")
-        
-    expr = cond.when(argument).between(start_int, start_int + 1.0 - EPS).then(float(start_int))
-    
-    i = start_int + 1
-    while i <= end_int:
-        expr = expr.elsewhen(cond.it).between(i, i + 1.0 - EPS).then(float(i))
-        i += 1
-        
-    return expr.otherwise(cond.it)
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use.
+    """
+    return fastRound(argument - 0.5)
 
 @macro
-def ceil(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
-    """Rounds the input up to the nearest integer within the specified range.
-    Values outside this range's rounding intervals will be left unrounded."""
-    from rhombus import config
-    EPS = config.infinitesimal
+def fastCeil(argument: AnyDensity) -> Density[types.add]:
+    """Rounds the input up to the nearest integer.
     
-    start_int = py_math.ceil(range[0])
-    end_int = py_math.ceil(range[1])
-    
-    if start_int > end_int:
-        raise ValueError("'range' requires a lower and upper bound")
-        
-    expr = cond.when(argument).between(start_int - 1.0 + EPS, start_int).then(float(start_int))
-    
-    i = start_int + 1
-    while i <= end_int:
-        expr = expr.elsewhen(cond.it).between(i - 1.0 + EPS, i).then(float(i))
-        i += 1
-        
-    return expr.otherwise(cond.it)
+    This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
+    """
+    return fastRound(argument + 0.5)
 
 
 #======// Approximations //======================================================================//

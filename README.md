@@ -65,7 +65,7 @@ height_map = spline(erosion, [
     ( 1,     0.8,   0)
 ])
 
-FINAL = heightmap.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
+FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 ```
 
 Don't want to handwrite a 500+ node float manipulation function to get the current coordinate?

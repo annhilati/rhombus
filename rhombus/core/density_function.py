@@ -6,7 +6,7 @@ from beet.contrib.worldgen import WorldgenDensityFunction
 
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.core.utils import JSONDict, BeetFile, annotated_fields
+from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 from rhombus import config
 
 __all__ = [
@@ -255,12 +255,12 @@ class constant(DensityFunction):
     def serialize_toplevel(self) -> float | JSONDict:
         from rhombus.std import types
         
-        def float_to_mul(value: float):
+        def float_to_mul(value: float) -> JSONValue:
 
-            if abs(value) < 65536.0 * 16:
+            if abs(value) < types.literal_number_limit * 16:
                 return value
 
-            return types.mul(float_to_mul(value / 65536.0), 65536.0,).serialize_inline()
+            return types.mul(float_to_mul(value / types.literal_number_limit), types.literal_number_limit,).serialize_inline()
         
         return float_to_mul(self.argument)
 

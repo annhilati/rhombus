@@ -66,7 +66,7 @@ _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_n
 
 # Differences between the x and z: shift_x and shift_z are swapped in every shifted_noise-sampler
 
-def _coord_component(shift_x, shift_z, quad_shift_x, quad_shift_z):
+def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_shift_z: float):
     innermost = f.range_choice(
         input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=shift_x, shift_y=0, shift_z=shift_z)),
         min_inclusive=0.0,
@@ -109,7 +109,8 @@ def x():
 
     **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    💾 This macro will ensure proper caching by claiming separate files.
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
     """
     return _coord_component(
         shift_x=0.99,
@@ -123,7 +124,8 @@ def z():
 
     **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    💾 This macro will ensure proper caching by claiming separate files.
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
     """
     return _coord_component(
         shift_x=1.01,

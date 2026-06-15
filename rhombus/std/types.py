@@ -38,7 +38,7 @@ from rhombus.core import (
 )
 from rhombus.std.noise import Noise
 
-literal_number_limit: Literal[10000000] = 10000000.0
+literal_number_limit: Literal[1000000] = 1000000.0
 """The maximum literal value allowed as a density function shorthand and
 in the `argument` field of the `minecraft:constant` density function type
 """

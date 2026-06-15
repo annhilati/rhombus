@@ -7,13 +7,97 @@ the abstract syntax tree of the input.
 These methods typically include infinite series, such as Taylor series, or iterative methods, such as Newton's method.
 """
 
+__all__ = []
+
 from typing import Callable
+import math as py_math
+
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std import functions, macro, types
 from rhombus.macros.math import pi, sum as msum
+from rhombus.macros import conditional as cond, performance as perf
 
-__all__ = []
 
+
+#======// Rounding //============================================================================//
+
+@macro
+def round(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
+    """Rounds the input to the nearest integer within the specified range.
+    Values outside this range's rounding intervals will be left unrounded."""
+    start_int = py_math.ceil(range[0])
+    end_int = py_math.floor(range[1])
+    
+    if start_int > end_int:
+        raise ValueError("'range' requires a lower and upper bound")
+        
+    expr = cond.when(argument).between(start_int - 0.5, start_int + 0.5).then(float(start_int))
+    
+    i = start_int + 1
+    while i <= end_int:
+        expr = expr.elsewhen(cond.it).between(i - 0.5, i + 0.5).then(float(i))
+        i += 1
+        
+    return expr.otherwise(cond.it)
+
+@macro
+def floor(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
+    """Rounds the input down to the nearest integer within the specified range.
+    Values outside this range's rounding intervals will be left unrounded."""
+    from rhombus import config
+    EPS = config.infinitesimal
+    
+    start_int = py_math.floor(range[0])
+    end_int = py_math.floor(range[1])
+    
+    if start_int > end_int:
+        raise ValueError("'range' requires a lower and upper bound")
+        
+    expr = cond.when(argument).between(start_int, start_int + 1.0 - EPS).then(float(start_int))
+    
+    i = start_int + 1
+    while i <= end_int:
+        expr = expr.elsewhen(cond.it).between(i, i + 1.0 - EPS).then(float(i))
+        i += 1
+        
+    return expr.otherwise(cond.it)
+
+@macro
+def ceil(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
+    """Rounds the input up to the nearest integer within the specified range.
+    Values outside this range's rounding intervals will be left unrounded."""
+    from rhombus import config
+    EPS = config.infinitesimal
+    
+    start_int = py_math.ceil(range[0])
+    end_int = py_math.ceil(range[1])
+    
+    if start_int > end_int:
+        raise ValueError("'range' requires a lower and upper bound")
+        
+    expr = cond.when(argument).between(start_int - 1.0 + EPS, start_int).then(float(start_int))
+    
+    i = start_int + 1
+    while i <= end_int:
+        expr = expr.elsewhen(cond.it).between(i - 1.0 + EPS, i).then(float(i))
+        i += 1
+        
+    return expr.otherwise(cond.it)
+
+
+#======// Arithmetic //==========================================================================//
+
+@macro
+def floordiv(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
+    """Returns the floor division of two inputs (`argument1 // argument2`) within the specified range.
+    Values where the quotient falls outside this range's rounding intervals will be left unrounded."""
+    return floor(dividend / divisor, range=range)
+
+@macro
+def mod(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.add]:
+    """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
+    Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
+    return perf.autocache(dividend - divisor * floor(dividend / divisor, range=range))
 
 @macro
 def sqrt(argument: AnyDensity, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.mul]:
