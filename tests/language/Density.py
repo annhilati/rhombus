@@ -6,7 +6,7 @@ import beet.contrib.worldgen as worldgen
 
 def test_partitioning():
 
-    assert Density.partitioned(1.0) == Density(types.Reference(reference='rhombus:generated/d0ff5974b6aa52cf562bea5921840c03', definition=types.constant(argument=1.0)))
+    assert Density.partitioned(1.0) == Density(types.Reference(reference='rhombus:partitioned/d0ff5974b6aa52cf562bea5921840c03', definition=types.constant(argument=1.0)))
     
     assert Density.configured("test", 1.0) == Density(types.Reference(reference='minecraft:test', definition=types.constant(argument=1.0)))
     

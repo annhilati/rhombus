@@ -1,5 +1,6 @@
 from typing import Self, Any, ClassVar, dataclass_transform
 import dataclasses
+import copy
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
 
@@ -46,12 +47,22 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         ]) + ")"
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, RhombusASTNode):
+        if type(self) is not type(other):
             return False
         return self.fields == other.fields
     
     def __hash__(self) -> int:
         return hash(uuid_hash(self.serialize_toplevel()))
+
+    def __copy__(self) -> Self:
+        return self.__class__(**self.fields)
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+        new_fields = {
+            name: copy.deepcopy(value, memo)
+            for name, value in self.fields.items()
+        }
+        return self.__class__(**new_fields)
 
         
     #======// Standard Implementations //========================================================//

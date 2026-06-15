@@ -12,7 +12,7 @@ from rhombus import config
 __all__ = [
     "DensityFunction",
     "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase",
-    "Reference", "constant",
+    "Reference", "constant", "Unknown",
     "register"
 ]
 
@@ -121,10 +121,12 @@ class DensityFunction(RhombusASTNode):
                 
                 target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
                 if target_class is None:
-                    raise TypeError(
-                        f"Cannot deserialize density function with type '{type_field}' from dictionary. "
-                        "No DensityFunction subclass with this id is defined"
+                    warnings.warn(
+                        f"Could not deserialize density function with type '{type_field}' from dictionary "
+                        "because no DensityFunction subclass with that id is defined. "
+                        "A 'Unknown' type instance was created instead, containing the raw data."
                     )
+                    return Unknown.deserialize_toplevel(data)
                     
                 return target_class.deserialize_toplevel(data)
                     
@@ -229,14 +231,13 @@ class Reference(DensityFunction):
         return nodes
     
     def __repr__(self) -> str:
-        # TODO yes, it is convenient for copying it and using it as source code, but it's confusing as hell
         from rhombus.std import types
         if self.definition is None:
             return '"' + self.reference + '"'
-        elif "generated" in self.reference: # TODO: this should not be hardcoded
-            types_with_implicit_partitioning = (types.cache_2d, types.cache_once, types.flat_cache, types.cache_all_in_cell) # TODO: this should not be hardcoded
-            if isinstance(self.definition, types_with_implicit_partitioning):
-                return self.definition.__repr__()
+        elif "partitioned" in self.reference: # TODO: this should not be hardcoded
+            # types_with_implicit_partitioning = (types.cache_2d, types.cache_once, types.flat_cache, types.cache_all_in_cell) # TODO: this should not be hardcoded
+            # if isinstance(self.definition, types_with_implicit_partitioning):
+            #     return self.definition.__repr__()
             return "Density.partitioned(" + self.definition.__repr__() + ")" 
         else:
             return "Density.configured(\"" + self.reference + f"\", {self.definition.__repr__()}" + ")"
@@ -266,3 +267,15 @@ class constant(DensityFunction):
 
     def __repr__(self) -> str:
         return str(self.argument)
+    
+    
+class Unknown(DensityFunction):
+    id: str
+    data: JSONDict
+    
+    @classmethod
+    def deserialize_toplevel(cls, data: JSONDict) -> Self:
+        return cls(data["type"], {k: v for k, v in data.items() if k != "type"})
+    
+    def serialize_inline(self) -> JSONDict:
+        return self.data | {"type": self.id}

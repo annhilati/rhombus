@@ -85,4 +85,4 @@ Rhombus provides several class methods on the `Density` class for this:
 
 *   **`Density.refer("namespace:id")`**: Creates a reference to an externally defined density function.
 *   **`Density.configured("my_pack:my_shape", default=...)`**: Creates a density object that acts as a configurable reference. It defines the `default` density tree, but attaches the identifier `my_pack:my_shape` to it so it can be easily referenced or overridden elsewhere.
-*   **`Density.partitioned(value)`**: Wraps a density expression and instructs Rhombus to compile it into a separate, auto-generated JSON file (e.g., `rhombus:generated/abc123...`). This is crucial for **caching**, as Minecraft can cache the outputs of density functions that live in their own files, preventing expensive recalculations.
+*   **`Density.partitioned(value)`**: Wraps a density expression and instructs Rhombus to compile it into a separate, auto-generated JSON file (e.g., `rhombus:partitioned/abc123...`). This is crucial for **caching**, as Minecraft can cache the outputs of density functions that live in their own files, preventing expensive recalculations.

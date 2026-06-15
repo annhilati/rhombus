@@ -72,7 +72,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     def partitioned(cls, value: AnyDensity):
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
         value = Density.constant(value)
-        return Density.configured("rhombus:generated/" + uuid_hash(value.as_dict()), value.AST)
+        return Density.configured("rhombus:partitioned/" + uuid_hash(value.as_dict()), value.AST)
     
 
     #======// Toolchain //=======================================================================//

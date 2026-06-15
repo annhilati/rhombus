@@ -1,7 +1,7 @@
 import beet
 import beet.contrib.worldgen as worldgen
 
-from rhombus.core import DensityFunction, constant, Reference
+from rhombus.core import DensityFunction, constant, Reference, Unknown
 # only core Modules
 from rhombus import config
 
@@ -43,3 +43,7 @@ def test_serialize_literals():
     
     assert Reference("some:reference").serialize_toplevel() == {"type": "minecraft:add", "argument1": "some:reference", "argument2": 0.0}
         # Be aware of the order of arguments
+        
+def test_Unknown_type():
+    
+    assert DensityFunction.deserialize_toplevel({"type": "this:does_not_exist", "arg1": 1, "arg2": 2}) == Unknown("this:does_not_exist", {"arg1": 1, "arg2": 2})

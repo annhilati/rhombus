@@ -32,6 +32,7 @@ from rhombus.std.noise import Noise
 from rhombus.std.macros import macro
 from rhombus.std import types
 
+# TODO: return type is not correct for caching functions
 
 #======// Basic Arithmetic //====================================================================//
 
@@ -345,7 +346,10 @@ def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.c
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
+    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+            argument = Density(argument.AST.definition)
         return Density.partitioned(types.cache_2d(argument.AST))
     return Density(types.cache_2d(argument.AST))
 
@@ -360,7 +364,10 @@ def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[t
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
+    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+            argument = Density(argument.AST.definition)
         return Density.partitioned(types.cache_all_in_cell(argument.AST))
     return Density(types.cache_all_in_cell(argument.AST))
 
@@ -373,18 +380,24 @@ def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
+    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+            argument = Density(argument.AST.definition)
         return Density.partitioned(types.cache_once(argument.AST))
     return Density(types.cache_once(argument.AST))
 
 @macro
-def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types.Reference]:
+def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types.flat_cache]:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
+    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+            argument = Density(argument.AST.definition)
         return Density.partitioned(types.flat_cache(argument.AST))
     return Density(types.flat_cache(argument.AST))
 

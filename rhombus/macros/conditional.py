@@ -299,7 +299,7 @@ class Causality:
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
-        from rhombus.macros.performance import autocache
+        from rhombus.macros.performance import cachespecific
 
         if value is it:
             if self._default_input is None:
@@ -308,7 +308,7 @@ class Causality:
         result = Density.constant(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return autocache(Density(result)) # IDEA: restrict the to be cached AST parts to the actual inputs of the conditional
+        return cachespecific(Density(result), self._default_input or None)
 
 
 @dataclass

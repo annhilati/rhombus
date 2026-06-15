@@ -8,6 +8,7 @@ __all__ = [
     "Infinity", "NaN",
     "pi", "e",
     "sum", "prod",
+    "min", "max",
     "fastRound", "fastFloor", "fastCeil",
     "round", "floor", "ceil",
     "mod", "floordiv",
@@ -63,6 +64,38 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
 
     for x in it:
         result = result * x
+
+    return result
+
+@macro
+def min(*arguments: AnyDensity) -> Density[types.min]:
+    "Returns the minimum of any number of arguments."
+    if len(arguments) == 0:
+        return Density.constant(0)
+    if len(arguments) == 1:
+        return arguments[0]
+    
+    it = iter(arguments)
+    result = next(it) | next(it)
+
+    for x in it:
+        result = result | x
+
+    return result
+
+@macro
+def max(*arguments: AnyDensity) -> Density[types.max]:
+    "Returns the maximum of any number of arguments."
+    if len(arguments) == 0:
+        return Density.constant(0)
+    if len(arguments) == 1:
+        return arguments[0]
+    
+    it = iter(arguments)
+    result = next(it) & next(it)
+
+    for x in it:
+        result = result & x
 
     return result
 

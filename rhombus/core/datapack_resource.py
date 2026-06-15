@@ -1,5 +1,6 @@
-from typing import ClassVar, Self
+from typing import ClassVar, Self, Any
 from dataclasses import field
+import copy
 
 import beet
 import beet.contrib.worldgen as worldgen
@@ -20,7 +21,39 @@ class DatapackResource(RhombusASTNode):
 
     fileclass: ClassVar[type[BeetFile]]
     _reference: str | None = field(init=False, default=None)
+    
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, type(self)):
+            return False
+        return self.identifier == other.identifier
+    
+    @property
+    def is_reference(self) -> bool:
+        return all(v is None for f, v in self.fields.items() if f != "_reference") and self._reference is not None
+    
+    def __copy__(self) -> Self:
+        if self.is_reference:
+            return self.refer(self._reference)
+        return self.__class__(**self.fields)
+    
+    def __deepcopy__(self, memo: dict[int, Any]) -> Self:
+        if self._reference is not None:
+            return self.refer(self._reference)
+        new_fields = {
+            name: copy.deepcopy(value, memo)
+            for name, value in self.fields.items()
+        }
+        return self.__class__(**new_fields)
 
+
+    def __repr__(self) -> str:
+        if self.is_reference and self._reference is not None:
+            return '"' + self.identifier + '"'
+        return super().__repr__()
+    
+    def __hash__(self):
+        # We need to explicitely set it here again, because defining __eq__ sets __hash__ to None
+        return super().__hash__()
 
     #======// Serialization //===================================================================//
     
@@ -110,24 +143,3 @@ class DatapackResource(RhombusASTNode):
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."
         return self.serialize_toplevel()
-
-        
-    #======// Other //===========================================================================//
-
-    @property
-    def is_reference(self) -> bool:
-        return all(v is None for f, v in self.fields.items() if f != "_reference")
-
-    def __repr__(self) -> str:
-        if self.is_reference and self._reference is not None:
-            return '"' + self.identifier + '"'
-        return super().__repr__()
-    
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, type(self)):
-            return False
-        return self.identifier == other.identifier
-    
-    def __hash__(self):
-        # We need to explicitely set it here again, because defining __eq__ sets __hash__ to None
-        return super().__hash__()

@@ -27,6 +27,7 @@ __all__ = [
 
 from typing import ClassVar, Literal
 from rhombus.core import (
+    RhombusASTNode,
     DensityFunction,
     SimpleFunctionBase,
     MappedFunctionBase,
@@ -48,7 +49,7 @@ class autoCachedMappedFunctionBase(MappedFunctionBase):
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> Reference:
         definition = cls(DensityFunction.deserialize_inline(data["argument"]))
-        return Reference("rhombus:generated/" + uuid_hash(definition.serialize_toplevel()), definition)
+        return Reference("rhombus:partitioned/" + uuid_hash(definition.serialize_toplevel()), definition)
 
 
 class abs(MappedFunctionBase):
@@ -212,6 +213,15 @@ class spline(DensityFunction):
                 ]
             }
         }
+        
+    @property
+    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+        "Recursive search for all inscribed nodes, that will require a file when compiling"
+        nodes = set()
+        nodes |= self.coordinate.inscribed_toplevel_nodes
+        for point in self.points:
+            nodes |= point[1].inscribed_toplevel_nodes
+        return nodes
 
     def show(self):
         "Only for debugging. Opens the spline in a pyplot."

@@ -5,12 +5,11 @@ This is primarily the `autocache` macro, which extracts recurring parts of
 the AST of the entered density function and wrapps them in `cache_once`. 
 """
 
-__all__ = ["autocache", "get_size"]
+__all__ = ["autocache", "cachespecific", "get_size"]
 
 
-from typing import NamedTuple, Any, Callable
-import json
-import sys
+from typing import NamedTuple, Any, Callable, Iterable
+import json, sys, copy
 
 # Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
 # We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
@@ -186,48 +185,53 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
         total_unknown_references=count_total_unknown_references
     )
 
-def _wrap_redundances(
+
+
+
+def _cache_nodes(
         root: DensityFunction,
-        max_nodes: int = 6,
-        wrapper: Callable[[DensityFunction], DensityFunction] = lambda value: Reference("rhombus:generated/" + uuid_hash(value.serialize_toplevel()), definition=types.cache_once(value))
+        condition: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
+        wrapper: Callable[[DensityFunction], DensityFunction] =\
+            lambda df: Reference("rhombus:partitioned/" + uuid_hash(df.serialize_toplevel()), definition=types.cache_once(df))
     ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
-    """Returns `root` but replaces all recurring sub trees that have a size
-    of more than `max_nodes` uncached nodes with partitioned and cached versions.
-    """
 
     occurances = _count_node_values(root)
     replacement_info: dict[DensityFunction, int] = {}
 
-    def clone_node(node: DensityFunction) -> DensityFunction:
-        return node.__class__(**{
-            field_name: field_value
-            for field_name, field_value in node.fields.items()
-        })
-
     def visit_and_replace_if_needed(value: DensityFunction | Any, nodes_being_cached: frozenset[DensityFunction] = frozenset()) -> DensityFunction | Any:
+        # Check if the current value is a DensityFunction node. 
         if isinstance(value, DensityFunction):
 
             is_already_cached_ref = isinstance(value, Reference) and isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)) # TODO: this shouldn't be hardcoded
 
-            if not is_already_cached_ref and occurances.get(value, 0) > 1 and _df_size_info(value).toplevel_nodes > max_nodes and value not in nodes_being_cached:
-                # Cache this recurring node, but first optimize its internal redundancies!
-                # By running _wrap_redundances on it as a new root, we find subtrees
-                # that recur *within* this node, without redundantly caching nodes that 
-                # only recur globally.
-                optimized_value, inner_replacements = _wrap_redundances(value, max_nodes=max_nodes, wrapper=wrapper)
+            # If the node has NOT already been manually wrapped in a cache wrapper,
+            # AND the specified condition is met (e.g., because it occurs frequently or is the target of `cacheall`),
+            # AND it is not already cached by a wrapper higher up in the tree (to prevent double caching):
+            if not is_already_cached_ref and condition(value, occurances) and value not in nodes_being_cached:
+                
+                # First, recursively optimize the node's inner children
+                # before caching the entire node.
+                optimized_value, inner_replacements = _cache_nodes(value, condition, wrapper)
                 
                 for k, v in inner_replacements.items():
                     replacement_info[k] = replacement_info.get(k, 0) + v
                     
                 replacement_info[value] = replacement_info.get(value, 0) + 1
+                
+                # Place the optimized node in the caching wrapper and return it.
                 return wrapper(optimized_value)
 
             new_nodes_being_cached = nodes_being_cached
+            
+            # If the current node is already a caching reference (e.g., set by the user or in a previous step),
+            # then we add the inner argument to the “blacklist” (nodes_being_cached).
+            # This prevents us from accidentally caching this argument again when traversing down into the children.
             if is_already_cached_ref and hasattr(value.definition, "argument"):
                 new_nodes_being_cached = nodes_being_cached | frozenset([value.definition.argument])
 
-            # Not a candidate for caching, so just optimize children
-            new = clone_node(value)
+            # The current node is not cached (here). Either the condition did not match, 
+            # or it was already cached. We clone it and recursively optimize its fields.
+            new = copy.copy(value)
 
             for field_name, field_value in value.fields.items():
                 new_value = visit_and_replace_if_needed(field_value, new_nodes_being_cached)
@@ -235,22 +239,44 @@ def _wrap_redundances(
 
             return new
 
+        # If the value is a standard Python collection, we simply traverse the elements recursively.
         elif isinstance(value, dict):
             return {
                 visit_and_replace_if_needed(k, nodes_being_cached): visit_and_replace_if_needed(v, nodes_being_cached)
                 for k, v in value.items()
             }
 
-        elif isinstance(value, list):
-            return [visit_and_replace_if_needed(item, nodes_being_cached) for item in value]
-        elif isinstance(value, tuple):
-            return tuple(visit_and_replace_if_needed(item, nodes_being_cached) for item in value)
-        elif isinstance(value, set):
-            return {visit_and_replace_if_needed(item, nodes_being_cached) for item in value}
+        elif isinstance(value, (list, tuple, set, frozenset)):
+            return type(value)([visit_and_replace_if_needed(item, nodes_being_cached) for item in value])
 
         return value
 
     return visit_and_replace_if_needed(root), replacement_info
+
+
+def _get_occurance_and_size_condition(max_nodes: int) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    "Applies if the node exceeds a specified size and occurs multiple times."
+    def condition(node: DensityFunction, occurances: dict[RhombusASTNode, int]) -> bool:
+        return occurances.get(node, 0) > 1 and _df_size_info(node).toplevel_nodes > max_nodes
+    return condition
+
+def _get_identity_condition(target_nodes: Iterable[RhombusASTNode]) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    "Applies if the node is one of the specified target nodes."
+    targets = []
+    for n in target_nodes:
+        if isinstance(n, Density):
+            targets.append(n.AST)
+        else:
+            targets.append(n)
+
+    def condition(node: DensityFunction, occurances: dict[RhombusASTNode, int]) -> bool:
+        for target in targets:
+            if isinstance(target, type) and isinstance(node, target):
+                return True
+            if node == target:
+                return True
+        return False
+    return condition
 
 
 @macro
@@ -258,8 +284,16 @@ def autocache(argument: AnyDensity, *, caching_function: DensityFunction = types
     """Optimizes a density function by automatically caching all recurring calculations.
     
     """
-    wrapper = lambda value: Reference("rhombus:generated/" + uuid_hash(value.serialize_toplevel()), definition=caching_function(value))
-    return Density(_wrap_redundances(argument.AST, max_nodes=max_nodes, wrapper=wrapper)[0])
+    wrapper = lambda value: Reference("rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()), definition=caching_function(value))
+    return Density(_cache_nodes(argument.AST, condition=_get_occurance_and_size_condition(max_nodes), wrapper=wrapper)[0])
+
+@macro
+def cachespecific(argument: AnyDensity, *nodes: RhombusASTNode, caching_function: DensityFunction = types.cache_once) -> Density:
+    """Optimizes a density function by automatically caching all specified nodes."""
+    wrapper = lambda node: Reference("rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()), definition=caching_function(node))
+    condition = lambda node, occurances: _get_identity_condition(nodes)(node, occurances) and occurances.get(node, 0) > 1
+        # Cache if node is own of specified and it occurs multiple times
+    return Density(_cache_nodes(argument.AST, condition=condition, wrapper=wrapper)[0])
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:
     """Returns information about the size of a density function.
