@@ -122,12 +122,12 @@ def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
 @macro
 def sgn(argument: AnyDensity) -> Density[types.range_choice]:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
-    return cond.when(argument).equals(0.0).then(0.0).elsewhen(cond.it).lessthan(0.0).then(-1.0).otherwise(1.0)
+    return cond.when(argument).equals(0.0).then(0.0).elsewhen(cond.it).less(0.0).then(-1.0).otherwise(1.0)
 
 @macro
 def heaviside(argument: AnyDensity, *, at_zero: AnyDensity = 0.5) -> Density[types.range_choice]:
     "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
-    return cond.when(argument).equals(0.0).then(at_zero).elsewhen(cond.it).lessthan(0.0).then(0.0).otherwise(1.0)
+    return cond.when(argument).equals(0.0).then(at_zero).elsewhen(cond.it).less(0.0).then(0.0).otherwise(1.0)
 
 @macro
 def monus(argument1: AnyDensity, argument2: AnyDensity):

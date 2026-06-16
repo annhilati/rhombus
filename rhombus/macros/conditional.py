@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 from dataclasses import dataclass, field
-from typing import Any, SupportsIndex, Never, ClassVar
+from typing import Any, Never, ClassVar
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
@@ -36,12 +36,6 @@ from rhombus import config
 
 EPSILON = config.infinitesimal
 OMEGA = literal_number_limit # TODO: Check whether this is bound to the range_choice arguments or the general limit
-
-def _ensure_pair(value: SupportsIndex) -> tuple[float, float]:
-    if not isinstance(value, tuple) or len(value) != 2:
-        raise TypeError("expected tuple with two floats")
-    a, b = float(value[0]), float(value[1])
-    return (a, b) if a <= b else (b, a)
 
 
 class Itself:
@@ -66,7 +60,7 @@ class Relation(str, Enum):
     GREATER_OR_EQUAL = ">="
     BETWEEN = "between"
     OUTSIDE = "outside"
-    ABOVE_UNDER = "above_under"
+    ABOVE_BUT_UNDER = "above_under"
 
 
 #======// Condition //===========================================================================//
@@ -131,21 +125,18 @@ class ComparisonCondition(Condition):
         return self.input
 
     def _compile(self, when_true: DensityFunction, when_false: DensityFunction) -> DensityFunction:
+        
+        def ensure_pair(value: tuple[float, float]) -> tuple[float, float]:
+            if not isinstance(value, tuple) or len(value) != 2:
+                raise TypeError("expected tuple with two floats")
+            a, b = float(value[0]), float(value[1])
+            return (a, b) if a <= b else (b, a)
+        
         relation = self.relation
 
         # Primitive case
-        if relation == Relation.BETWEEN:
-            low, high = _ensure_pair(self.value)
-            return range_choice(
-                input=self.input,
-                min_inclusive=max(low, -OMEGA),
-                max_exclusive=min(high + EPSILON, OMEGA),
-                when_in_range=when_true,
-                when_out_of_range=when_false
-            )
-            
-        if relation == Relation.ABOVE_UNDER:
-            low, high = _ensure_pair(self.value)
+        if relation == Relation.ABOVE_BUT_UNDER:
+            low, high = ensure_pair(self.value)
             return range_choice(
                 input=self.input,
                 min_inclusive=max(low, -OMEGA),
@@ -155,34 +146,38 @@ class ComparisonCondition(Condition):
             )
 
         # Other
+        if relation == Relation.BETWEEN:
+            low, high = ensure_pair(self.value)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON))._compile(when_true, when_false)
+
         if relation == Relation.LESS_THAN:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (-OMEGA, v - EPSILON))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (-OMEGA, v))._compile(when_true, when_false)
 
         if relation == Relation.LESS_OR_EQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (-OMEGA, v))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (-OMEGA, v + EPSILON))._compile(when_true, when_false)
 
         if relation == Relation.GREATER_THAN:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (v + EPSILON, OMEGA))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (v + EPSILON, OMEGA))._compile(when_true, when_false)
 
         if relation == Relation.GREATER_OR_EQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (v, OMEGA))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (v, OMEGA))._compile(when_true, when_false)
 
         # Derived relations
         if relation == Relation.EQUALS:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (v, v + EPSILON))._compile(when_true, when_false)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (v, v + EPSILON))._compile(when_true, when_false)
 
         if relation == Relation.UNEQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (v, v + EPSILON))._compile(when_true=when_false, when_false=when_true)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (v, v + EPSILON))._compile(when_true=when_false, when_false=when_true)
 
         if relation == Relation.OUTSIDE:
-            low, high = _ensure_pair(self.value)
-            return ComparisonCondition(self.input, Relation.BETWEEN, (low, high + EPSILON))._compile(when_false=when_true, when_true=when_false)
+            low, high = ensure_pair(self.value)
+            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON))._compile(when_false=when_true, when_true=when_false)
 
         raise ValueError(f"Unsupported relation: {relation}")
 
@@ -288,20 +283,20 @@ class Causality:
 
         def equals(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).equals(value))
-        def unequal(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).unequal(value))
-        def greaterthan(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).greaterthan(value))
-        def lessthan(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).lessthan(value))
-        def greatereq(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).greatereq(value))
-        def lesseq(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).lesseq(value))
+        def unequals(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).unequals(value))
+        def greater(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).greater(value))
+        def less(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).less(value))
+        def atleast(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).atleast(value))
+        def atmost(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).atmost(value))
         def between(self, low: float, high: float, /) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).between(low, high))
-        def aboveunder(self, low: float, high: float, /) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).aboveunder(low, high))
+        def atleast_but_less(self, low: float, high: float, /) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).atleast_but_less(low, high))
         def outside(self, low: float, high: float, /) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).outside(low, high))
         
@@ -354,22 +349,25 @@ class when:
     To continue, use one  of the following methods to specify the condition:
     ## Continuation
 
-        **Equal to**  
-            `~.equals(float)`
-        **Unequal to**  
-            `~.unequal(float)`
-        **Greater than**  
-            `~.greater(float)`
-        **Less than**  
-            `~.less(float)`
-        **Greater or equal**  
-            `~.greatereq(float)`
-        **Less or equal**  
-            `~.lesseq(float)`
-        **Between**  
-            `~.between(float, float)`
-        **Outside of**  
-            `~.outside(float, float)`
+        **`~.equals(float)`**  
+            `self == other`
+        **`~.unequals(float)`**  
+            `self != other`
+        **`~.greater(float)`**  
+            `self > other`
+        **`~.less(float)`**  
+            `self < other`
+        **`~.atleast(float)`**  
+            `self >= other`
+        **`~.atmost(float)`**  
+            `self <= other`
+        **`~.between(float, float)`**  
+            `low <= self <= high`
+        **`~.outside(float, float)`**  
+            `self < low` or `self > high`
+        **`~.atleast_but_less(float, float)`**
+            `low <= self < high`
+            This is the standard case for `range_choice`.
     """
     _subject: DensityFunction
 
@@ -378,19 +376,19 @@ class when:
 
     def equals(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.EQUALS, value=value)
-    def unequal(self, value: float) -> Condition:
+    def unequals(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.UNEQUAL, value=value)
-    def greaterthan(self, value: float) -> Condition:
+    def greater(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.GREATER_THAN, value=value)
-    def lessthan(self, value: float) -> Condition:
+    def less(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.LESS_THAN, value=value)
-    def greatereq(self, value: float) -> Condition:
+    def atleast(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value)
-    def lesseq(self, value: float) -> Condition:
+    def atmost(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value)
     def between(self, low: float, high: float, /) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.BETWEEN, value=(low, high))
-    def aboveunder(self, low: float, high: float, /) -> Condition:
-        return ComparisonCondition(input=self._subject, relation=Relation.ABOVE_UNDER, value=(low, high))
+    def atleast_but_less(self, low: float, high: float, /) -> Condition:
+        return ComparisonCondition(input=self._subject, relation=Relation.ABOVE_BUT_UNDER, value=(low, high))
     def outside(self, low: float, high: float, /) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.OUTSIDE, value=(low, high))
