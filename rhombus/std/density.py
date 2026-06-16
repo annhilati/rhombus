@@ -64,8 +64,11 @@ class Density[Function: DensityFunction = DensityFunction]:
     @classmethod
     def configured(cls, name: str, default: AnyDensity) -> Density[Reference]:
         """Creates a new `Density` object which value that can be easily altered or referenced in the compiled datapack later."""
+        caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
         name = "minecraft:" + name if not ":" in name else name
         default = Density.constant(default).AST
+        if isinstance(default, types.Reference) and isinstance(default.definition, caching_types):
+            default = default.definition
         return Density(Reference(name, default))
     
     @classmethod

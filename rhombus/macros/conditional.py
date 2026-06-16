@@ -35,7 +35,7 @@ from rhombus.std.density import Density, AnyDensity
 from rhombus import config
 
 EPSILON = config.infinitesimal
-OMEGA = literal_number_limit
+OMEGA = literal_number_limit # TODO: Check whether this is bound to the range_choice arguments or the general limit
 
 def _ensure_pair(value: SupportsIndex) -> tuple[float, float]:
     if not isinstance(value, tuple) or len(value) != 2:
@@ -66,6 +66,7 @@ class Relation(str, Enum):
     GREATER_OR_EQUAL = ">="
     BETWEEN = "between"
     OUTSIDE = "outside"
+    ABOVE_UNDER = "above_under"
 
 
 #======// Condition //===========================================================================//
@@ -139,6 +140,16 @@ class ComparisonCondition(Condition):
                 input=self.input,
                 min_inclusive=max(low, -OMEGA),
                 max_exclusive=min(high + EPSILON, OMEGA),
+                when_in_range=when_true,
+                when_out_of_range=when_false
+            )
+            
+        if relation == Relation.ABOVE_UNDER:
+            low, high = _ensure_pair(self.value)
+            return range_choice(
+                input=self.input,
+                min_inclusive=max(low, -OMEGA),
+                max_exclusive=min(high, OMEGA),
                 when_in_range=when_true,
                 when_out_of_range=when_false
             )
@@ -279,16 +290,18 @@ class Causality:
             return OtherPendingCondition(self._chain, when(self._subject).equals(value))
         def unequal(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).unequal(value))
-        def greater(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).greater(value))
-        def less(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).less(value))
+        def greaterthan(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).greaterthan(value))
+        def lessthan(self, value: float) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).lessthan(value))
         def greatereq(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).greatereq(value))
         def lesseq(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).lesseq(value))
         def between(self, low: float, high: float, /) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).between(low, high))
+        def aboveunder(self, low: float, high: float, /) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).aboveunder(low, high))
         def outside(self, low: float, high: float, /) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).outside(low, high))
         
@@ -367,9 +380,9 @@ class when:
         return ComparisonCondition(input=self._subject, relation=Relation.EQUALS, value=value)
     def unequal(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.UNEQUAL, value=value)
-    def greater(self, value: float) -> Condition:
+    def greaterthan(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.GREATER_THAN, value=value)
-    def less(self, value: float) -> Condition:
+    def lessthan(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.LESS_THAN, value=value)
     def greatereq(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value)
@@ -377,5 +390,7 @@ class when:
         return ComparisonCondition(input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value)
     def between(self, low: float, high: float, /) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.BETWEEN, value=(low, high))
+    def aboveunder(self, low: float, high: float, /) -> Condition:
+        return ComparisonCondition(input=self._subject, relation=Relation.ABOVE_UNDER, value=(low, high))
     def outside(self, low: float, high: float, /) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.OUTSIDE, value=(low, high))
