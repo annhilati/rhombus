@@ -101,8 +101,7 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
 
 @macro
 def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
-    """Returns the floor division of two inputs (`argument1 // argument2`) within the specified range.
-    Values where the quotient falls outside this range's rounding intervals will be left unrounded.
+    """Returns the floor division of two inputs (`argument1 // argument2`).
     
     **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
@@ -111,8 +110,7 @@ def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.ran
 
 @macro
 def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
-    """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
-    Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo.
+    """Returns the modulo of two inputs (`argument1 % argument2`).
     
     **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
@@ -163,7 +161,7 @@ def fastFloor(argument: AnyDensity) -> Density[types.add]:
 def fastCeil(argument: AnyDensity) -> Density[types.add]:
     """Rounds the input up to the nearest integer.
     
-    This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return fastRound(argument + 0.5)
