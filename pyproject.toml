@@ -24,13 +24,16 @@ documentation = "https://annhilati.github.io/rhombus"
 repository = "https://github.com/annhilati/rhombus"
 issues = "https://github.com/annhilati/rhombus/issues"
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["rhombus*"]
-
 # [project.scripts]
 # rhombus = "rhombus.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["rhombus"]
+artifacts = ["rhombus/preview/dist"]
+
+[tool.hatch.build.hooks.custom]
+path = "build_frontend.py"
