@@ -245,7 +245,7 @@ class Causality:
     _default_input: DensityFunction | None = None
 
     def __post_init__(self):
-        self.elsewhen._chain = self
+        self.elsewhen = type(self).elsewhen()._bind(self)
 
     class elsewhen:
         """Specifies a fallback option for the conditionality if none of the
@@ -254,32 +254,50 @@ class Causality:
 
         ## Continuation
 
-        **Equal to**  
-            `~.equals(float)`
-        **Unequal to**  
-            `~.unequal(float)`
-        **Greater than**  
-            `~.greater(float)`
-        **Less than**  
-            `~.less(float)`
-        **Greater or equal**  
-            `~.greatereq(float)`
-        **Less or equal**  
-            `~.lesseq(float)`
-        **Between**  
-            `~.between(float, float)`
-        **Outside of**  
-            `~.outside(float, float)`
+            **`~.equals(float)`**  
+                `self == other`
+            **`~.unequals(float)`**  
+                `self != other`
+            **`~.greater(float)`**  
+                `self > other`
+            **`~.less(float)`**  
+                `self < other`
+            **`~.atleast(float)`**  
+                `self >= other`
+            **`~.atmost(float)`**  
+                `self <= other`
+            **`~.between(float, float)`**  
+                `low <= self <= high`
+            **`~.outside(float, float)`**  
+                `self < low` or `self > high`
+            **`~.atleast_but_less(float, float)`**
+                `low <= self < high`
+                This is the standard case for `range_choice`.
         """
-        _subject: DensityFunction
-        _chain: ClassVar[Causality] = ...
+        _chain: Causality
+        _subject: DensityFunction | None = None
 
         def __init__(self, subject: AnyDensity | Itself = it):
+            self._subject = None
+            self._pending_subject = subject
+
+        def _bind(self, chain: Causality):
+            self._chain = chain
+
+            subject = self._pending_subject
             if subject is it:
                 if self._chain._default_input is None:
-                    raise TypeError("elsewhen(it) is undefined because the initial condition was not composed of multiple conditions")
+                    raise TypeError(
+                        "elsewhen(it) is undefined because the initial condition was not composed of multiple conditions"
+                    )
                 subject = self._chain._default_input
+
             self._subject = Density.constant(subject).AST
+            del self._pending_subject
+            return self
+
+        def __call__(self, subject: AnyDensity | Itself = it):
+            return type(self)(subject)._bind(self._chain)
 
         def equals(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).equals(value))

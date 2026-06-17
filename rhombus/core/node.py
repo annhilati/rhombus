@@ -11,6 +11,20 @@ __all__ = ["RhombusASTNode"]
 class NodeDataclassTransformer(type):
 
     def __new__(mcls, name, bases, ns, **kwargs):
+        user_post_init = ns.get("__post_init__")
+
+        def __post_init__(self):
+            if user_post_init is not None:
+                user_post_init(self)
+            for field in dataclasses.fields(self):
+                if field.init:
+                    object.__setattr__(
+                        self,
+                        field.name,
+                        RhombusASTNode._freeze_field_value(getattr(self, field.name))
+                    )
+
+        ns["__post_init__"] = __post_init__
         cls = super().__new__(mcls, name, bases, ns)
 
         init = kwargs.pop("init", True)
@@ -22,6 +36,15 @@ class NodeDataclassTransformer(type):
                 repr=False,
                 eq=False
             )
+
+            original_init = cls.__init__
+
+            def __init__(self, *args, **kwargs):
+                object.__setattr__(self, "_rhombus_frozen", False)
+                original_init(self, *args, **kwargs)
+                object.__setattr__(self, "_rhombus_frozen", True)
+
+            cls.__init__ = __init__
 
         return cls
 
@@ -36,6 +59,26 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError("Base class RhombusASTNode cannot be instantiated directly. Please use a subclass with defined fields.")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if getattr(self, "_rhombus_frozen", False):
+            raise dataclasses.FrozenInstanceError(f"cannot assign to field '{name}'")
+        object.__setattr__(self, name, value)
+
+    @staticmethod
+    def _freeze_field_value(value: Any) -> Any:
+        if isinstance(value, list):
+            return tuple(RhombusASTNode._freeze_field_value(v) for v in value)
+        if isinstance(value, tuple):
+            return tuple(RhombusASTNode._freeze_field_value(v) for v in value)
+        if isinstance(value, set):
+            return frozenset(RhombusASTNode._freeze_field_value(v) for v in value)
+        if isinstance(value, dict):
+            return {
+                RhombusASTNode._freeze_field_value(k): RhombusASTNode._freeze_field_value(v)
+                for k, v in value.items()
+            }
+        return value
                
     def __repr__(self) -> str:
         # The __repr__ function should generate a string that is a valid Rhombus expression, with which the data can be reconstructed 
@@ -76,9 +119,22 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
         "Recursive search for all inscribed nodes, that will require a file when compiling"
         nodes = set()
-        for param, value in self.fields.items():
-            if isinstance(value, RhombusASTNode):
-                nodes |= value.inscribed_toplevel_nodes
+        for value in self.fields.values():
+            nodes |= self._collect_inscribed_toplevel_nodes(value)
+        return nodes
+
+    @classmethod
+    def _collect_inscribed_toplevel_nodes(cls, value: Any) -> set["RhombusASTNode"]:
+        nodes = set()
+        if isinstance(value, RhombusASTNode):
+            nodes |= value.inscribed_toplevel_nodes
+        elif isinstance(value, dict):
+            for key, item in value.items():
+                nodes |= cls._collect_inscribed_toplevel_nodes(key)
+                nodes |= cls._collect_inscribed_toplevel_nodes(item)
+        elif isinstance(value, (list, tuple, set, frozenset)):
+            for item in value:
+                nodes |= cls._collect_inscribed_toplevel_nodes(item)
         return nodes
         
         

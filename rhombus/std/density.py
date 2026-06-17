@@ -130,7 +130,8 @@ class Density[Function: DensityFunction = DensityFunction]:
         files: dict[str, BeetFile] = {}
 
         for node in self.AST.inscribed_toplevel_nodes:
-
+            if node is self.AST:
+                continue
             # TODO This should not be hardcoded
             if isinstance(node, Reference):
                 id = node.reference

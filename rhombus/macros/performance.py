@@ -9,7 +9,7 @@ __all__ = ["autocache", "cachespecific", "get_size"]
 
 
 from typing import NamedTuple, Any, Callable, Iterable
-import json, sys, copy
+import dataclasses, json, sys
 
 # Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
 # We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
@@ -229,15 +229,12 @@ def _cache_nodes(
             if is_already_cached_ref and hasattr(value.definition, "argument"):
                 new_nodes_being_cached = nodes_being_cached | frozenset([value.definition.argument])
 
-            # The current node is not cached (here). Either the condition did not match, 
-            # or it was already cached. We clone it and recursively optimize its fields.
-            new = copy.copy(value)
-
-            for field_name, field_value in value.fields.items():
-                new_value = visit_and_replace_if_needed(field_value, new_nodes_being_cached)
-                setattr(new, field_name, new_value)
-
-            return new
+            # The current node is not cached (here). Either the condition did not match,
+            # or it was already cached. Build a new node with recursively optimized fields.
+            return dataclasses.replace(value, **{
+                field_name: visit_and_replace_if_needed(field_value, new_nodes_being_cached)
+                for field_name, field_value in value.fields.items()
+            })
 
         # If the value is a standard Python collection, we simply traverse the elements recursively.
         elif isinstance(value, dict):

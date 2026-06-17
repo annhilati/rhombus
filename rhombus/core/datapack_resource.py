@@ -131,14 +131,14 @@ class DatapackResource(RhombusASTNode):
         "Creates a reference to an externally provided resource."
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
         instance = cls(**{param: None for param in annotated_fields(cls)})
-        instance.identifier = identifier
+        object.__setattr__(instance, "_reference", identifier)
         return instance
     
     @identifier.setter
     def identifier(self, value: str | None) -> None:
         if not isinstance(value, str):
             raise TypeError(f"Cannot assign non-string value '{value}' to reference identifier")
-        self._reference = value
+        object.__setattr__(self, "_reference", value)
         
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."

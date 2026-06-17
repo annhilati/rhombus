@@ -7,5 +7,5 @@ def test_deserialization():
     
     # Reference
     n = Noise(None, None)
-    n.identifier = "some:noise"
+    setattr(n, "identifier", "some:noise")
     assert Noise.deserialize_inline("some:noise") == n

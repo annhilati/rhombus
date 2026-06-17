@@ -39,7 +39,7 @@ class Noise(DatapackResource):
     def __post_init__(self):
         # This might need a better aproach in a base class
         if self.amplitudes:
-            self.amplitudes = [float(a) for a in self.amplitudes]
+            object.__setattr__(self, "amplitudes", [float(a) for a in self.amplitudes])
     
     def __repr__(self) -> str:
         if self.is_reference and self._reference is not None:
