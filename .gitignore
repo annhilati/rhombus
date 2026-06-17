@@ -24,3 +24,6 @@ build/
 **.egg-info
 **/__pycache__/
 rhombus/preview/dist/
+
+# Typescript Build
+*.tsbuildinfo
