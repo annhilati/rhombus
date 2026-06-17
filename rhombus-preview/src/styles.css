@@ -169,6 +169,7 @@ input {
 .workspace {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
 }
 
@@ -179,6 +180,7 @@ input {
 .pane {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: rgba(10, 12, 18, 0.55);
@@ -264,6 +266,18 @@ input {
   height: 100%;
   display: block;
   image-rendering: pixelated;
+}
+
+.resizer {
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.resizer:hover, .resizer:active {
+  background: var(--accent);
 }
 
 @media (max-width: 960px) {
