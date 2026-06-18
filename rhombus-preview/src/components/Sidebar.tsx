@@ -1,19 +1,14 @@
-import type { ContextFile, TreeNode } from '../types'
+import type { ContextFile, FileTreeNode } from '../types'
 import { fileKey } from '../lib/registry'
 
 interface SidebarProps {
-  tree: TreeNode[]
+  tree: FileTreeNode[]
   selectedKey: string | null
   onSelectFile: (file: ContextFile) => void
   width?: number
 }
 
-function FileButton({
-  file,
-  label,
-  selectedKey,
-  onSelectFile,
-}: {
+function FileButton({ file, label, selectedKey, onSelectFile, }: {
   file: ContextFile
   label: string
   selectedKey: string | null
@@ -35,7 +30,7 @@ function FileButton({
   )
 }
 
-function renderNode(node: TreeNode, selectedKey: string | null, onSelectFile: (file: ContextFile) => void) {
+function renderNode(node: FileTreeNode, selectedKey: string | null, onSelectFile: (file: ContextFile) => void) {
   if (node.kind === 'file' && node.file) {
     return <FileButton file={node.file} label={node.label} selectedKey={selectedKey} onSelectFile={onSelectFile} />
   }

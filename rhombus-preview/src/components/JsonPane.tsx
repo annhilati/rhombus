@@ -97,7 +97,7 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
             minimap: { enabled: false },
             fontSize: 13,
             scrollBeyondLastLine: false,
-            wordWrap: 'on',
+            wordWrap: 'off',
             automaticLayout: true,
             renderLineHighlight: 'none',
             tabSize: 2,

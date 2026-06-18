@@ -20,10 +20,10 @@ export interface SidebarFileEntry {
   displayName: string
 }
 
-export interface TreeNode {
+export interface FileTreeNode {
   key: string
   label: string
   kind: 'registry' | 'namespace' | 'folder' | 'file'
   file?: ContextFile
-  children?: TreeNode[]
+  children?: FileTreeNode[]
 }

@@ -1,14 +1,14 @@
-import type { ContextFile, TreeNode } from '../types'
+import type { ContextFile, FileTreeNode } from '../types'
 import { normalizeRegistryName, parseFileId } from './registry'
 
-function compareNodes(a: TreeNode, b: TreeNode): number {
+function compareNodes(a: FileTreeNode, b: FileTreeNode): number {
   const rank = { registry: 0, namespace: 1, folder: 2, file: 3 } as const
   const delta = rank[a.kind] - rank[b.kind]
   if (delta !== 0) return delta
   return a.label.localeCompare(b.label)
 }
 
-function insertPath(children: TreeNode[], parts: string[], file: ContextFile, keyPrefix: string): void {
+function insertPath(children: FileTreeNode[], parts: string[], file: ContextFile, keyPrefix: string): void {
   if (parts.length === 0) {
     const existing = children.find((entry) => entry.kind === 'file' && entry.file && entry.file.id === file.id)
     if (!existing) {
@@ -60,8 +60,8 @@ function insertPath(children: TreeNode[], parts: string[], file: ContextFile, ke
   insertPath(node.children, tail, file, keyPrefix)
 }
 
-export function buildTree(files: ContextFile[]): TreeNode[] {
-  const registries = new Map<string, TreeNode>()
+export function buildTree(files: ContextFile[]): FileTreeNode[] {
+  const registries = new Map<string, FileTreeNode>()
 
   for (const file of files) {
     const registry = normalizeRegistryName(file.registry)
@@ -97,7 +97,7 @@ export function buildTree(files: ContextFile[]): TreeNode[] {
 
   const sortedRegistries = [...registries.values()].sort((a, b) => a.label.localeCompare(b.label))
   for (const registryNode of sortedRegistries) {
-    const visit = (node: TreeNode) => {
+    const visit = (node: FileTreeNode) => {
       if (node.children) {
         node.children.sort(compareNodes)
         for (const child of node.children) visit(child)
