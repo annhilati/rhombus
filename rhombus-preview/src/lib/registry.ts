@@ -3,7 +3,7 @@ import type { ContextFile, RegistrySection, VisualizationKind } from '../types'
 export function normalizeRegistryName(raw: string): string {
   const lower = raw.trim().toLowerCase()
   if (lower === 'worldgen/noise' || lower === 'minecraft:noise' || lower === 'noise') {
-    return 'minecraft:noise'
+    return 'noise'
   }
   if (
     lower === 'worldgen/density_function' ||
@@ -11,22 +11,25 @@ export function normalizeRegistryName(raw: string): string {
     lower === 'density_function' ||
     lower === 'density-function'
   ) {
-    return 'minecraft:density_function'
+    return 'density_function'
   }
-  return raw
+  
+  const colonIndex = lower.indexOf(':')
+  if (colonIndex >= 0) {
+    return lower.slice(colonIndex + 1)
+  }
+  return lower
 }
 
 export function prettyRegistryTitle(raw: string): string {
   const normalized = normalizeRegistryName(raw)
-  if (normalized === 'minecraft:noise') return 'minecraft:noise'
-  if (normalized === 'minecraft:density_function') return 'minecraft:density_function'
-  return raw
+  return normalized.replace(/[_-]/g, ' ').toUpperCase()
 }
 
 export function getVisualizationKind(registry: string): VisualizationKind {
   const normalized = normalizeRegistryName(registry)
-  if (normalized === 'minecraft:noise') return 'noise'
-  if (normalized === 'minecraft:density_function') return 'density_function'
+  if (normalized === 'noise') return 'noise'
+  if (normalized === 'density_function') return 'density_function'
   return null
 }
 

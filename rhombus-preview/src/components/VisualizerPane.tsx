@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import type { ContextFile } from '../types'
-import { getVisualizationKind, normalizeRegistryName } from '../lib/registry'
+import { getVisualizationKind, normalizeRegistryName, prettyRegistryTitle } from '../lib/registry'
 import { loadDeepslateRuntime } from '../lib/deepslate'
 import { DensityFunction, NoiseGeneratorSettings, NoiseParameters, NoiseRouter, NormalNoise, RandomState, XoroshiroRandom, clampedMap } from 'deepslate'
 import { viridis } from '../lib/colormap'
@@ -17,7 +17,8 @@ function drawCanvas(
   zoom: number,
   panX: number,
   panZ: number,
-  yLevel: number
+  yLevel: number,
+  onError: (msg: string | null) => void
 ) {
   const pixelSize = 2
   const rect = canvas.getBoundingClientRect()
@@ -30,20 +31,31 @@ function drawCanvas(
   if (!ctx2d) return
 
   const image = ctx2d.createImageData(width, height)
+  onError(null) // clear previous errors
 
   for (let py = 0; py < height; py += 1) {
     for (let px = 0; px < width; px += 1) {
       const worldX = panX + (px * pixelSize - rect.width / 2) / zoom
       const worldZ = panZ + (py * pixelSize - rect.height / 2) / zoom
       
-      const sample = sampler(worldX, yLevel, worldZ)
-      const color = asColor(sample)
-      
-      const offset = (py * width + px) * 4
-      image.data[offset] = color[0]
-      image.data[offset + 1] = color[1]
-      image.data[offset + 2] = color[2]
-      image.data[offset + 3] = 255
+      try {
+        const blockX = Math.floor(worldX)
+        const blockZ = Math.floor(worldZ)
+        const sample = sampler(blockX, yLevel, blockZ)
+        if (Number.isNaN(sample)) {
+          throw new Error(`Density function evaluated to NaN at X=${worldX.toFixed(1)} Z=${worldZ.toFixed(1)}`)
+        }
+        const color = asColor(sample)
+        
+        const offset = (py * width + px) * 4
+        image.data[offset] = color[0]
+        image.data[offset + 1] = color[1]
+        image.data[offset + 2] = color[2]
+        image.data[offset + 3] = 255
+      } catch (err) {
+        onError(err instanceof Error ? err.message : String(err))
+        return // Stop drawing entirely
+      }
     }
   }
 
@@ -61,6 +73,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
   const [runtimeReady, setRuntimeReady] = useState(false)
   const dragRef = useRef<{ active: boolean; x: number; z: number } | null>(null)
   const [hoverData, setHoverData] = useState<{ x: number, z: number, val: number } | null>(null)
+  const [renderTimeMs, setRenderTimeMs] = useState<number | null>(null)
   const [seedStr, setSeedStr] = useState('12345')
   const seed = useMemo(() => {
     try {
@@ -69,6 +82,25 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
       return 12345n
     }
   }, [seedStr])
+
+  const scale = useMemo(() => {
+    const targetBlocks = 100 / zoom
+    const magnitude = Math.pow(10, Math.floor(Math.log10(targetBlocks)))
+    const normalized = targetBlocks / magnitude
+    
+    let niceBlocks: number
+    if (normalized < 1.5) niceBlocks = 1 * magnitude
+    else if (normalized < 3.5) niceBlocks = 2 * magnitude
+    else if (normalized < 7.5) niceBlocks = 5 * magnitude
+    else niceBlocks = 10 * magnitude
+    
+    niceBlocks = Number(niceBlocks.toPrecision(2))
+    
+    return {
+      blocks: niceBlocks,
+      pixels: niceBlocks * zoom
+    }
+  }, [zoom])
 
   useEffect(() => {
     let cancelled = false
@@ -89,7 +121,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
 
     const normalized = normalizeRegistryName(file.registry)
     try {
-      if (normalized === 'minecraft:density_function') {
+      if (normalized === 'density_function') {
         const settings = NoiseGeneratorSettings.create({
           noise: { minY: 0, height: 256, xzSize: 1, ySize: 1 },
           noiseRouter: NoiseRouter.create({
@@ -104,7 +136,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
           const col = viridis(clamped <= 0.5 ? clamped - 0.05 : clamped + 0.05)
           return [col[0] * 255, col[1] * 255, col[2] * 255]
         }
-      } else if (normalized === 'minecraft:noise') {
+      } else if (normalized === 'noise') {
         const random = XoroshiroRandom.create(seed)
         const params = NoiseParameters.fromJson(file.content)
         const noise = new NormalNoise(random, params)
@@ -121,11 +153,23 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
     return { sampler: samplerFn, asColor: asColorFn, parseError }
   }, [file, runtimeReady, kind, seed])
 
+  const [runtimeError, setRuntimeError] = useState<string | null>(null)
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || kind === null || !runtimeReady) return
 
-    const update = () => drawCanvas(canvas, sampler, asColor, zoom, panX, panZ, yLevel)
+    if (parseError) {
+      setRuntimeError(null)
+      return
+    }
+
+    const update = () => {
+      const t0 = performance.now()
+      drawCanvas(canvas, sampler, asColor, zoom, panX, panZ, yLevel, setRuntimeError)
+      const t1 = performance.now()
+      setRenderTimeMs(t1 - t0)
+    }
     update()
 
     const observer = new ResizeObserver(update)
@@ -141,12 +185,11 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
       <div className="pane-header">
         <div className="pane-title">Visualization</div>
         <div className="pane-meta">
-          {normalizeRegistryName(file.registry)} · {runtimeReady ? 'deepslate ready' : 'deepslate loading'}
+          {prettyRegistryTitle(file.registry)} · {runtimeReady ? `deepslate ready${renderTimeMs !== null ? ` (${Math.round(renderTimeMs)}ms)` : ''}` : 'deepslate loading'}
         </div>
       </div>
       <div className="visualizer-toolbar">
-        <label>
-          Zoom
+        <label>Zoom
           <input
             type="range"
             min="0.1"
@@ -156,8 +199,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
             onChange={(event) => setZoom(Number(event.target.value))}
           />
         </label>
-        <label>
-          Y
+        <label>Y
           <input
             type="range"
             min="-64"
@@ -167,8 +209,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
             onChange={(event) => setYLevel(Number(event.target.value))}
           />
         </label>
-        <label>
-          Seed
+        <label>Seed
           <div style={{ display: 'flex', gap: '4px' }}>
             <input
               type="text"
@@ -181,9 +222,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
               onClick={() => setSeedStr(Math.floor(Math.random() * 2147483647).toString())}
               style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               title="Randomize Seed"
-            >
-              🎲
-            </button>
+            >🎲</button>
           </div>
         </label>
         <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanZ(0); setYLevel(64); setSeedStr('12345') }}>
@@ -213,8 +252,12 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
           const py = event.clientY - rect.top
           const worldX = panX + (px - rect.width / 2) / zoom
           const worldZ = panZ + (py - rect.height / 2) / zoom
-          const val = sampler(worldX, yLevel, worldZ)
-          setHoverData({ x: Math.floor(worldX), z: Math.floor(worldZ), val })
+          try {
+            const val = sampler(worldX, yLevel, worldZ)
+            setHoverData({ x: Math.floor(worldX), z: Math.floor(worldZ), val })
+          } catch {
+            setHoverData(null)
+          }
         }}
         onPointerUp={(event) => {
           dragRef.current = null
@@ -227,17 +270,52 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
         }}
       >
         <div style={{ position: 'absolute', top: 12, left: 12, padding: '8px 10px', background: 'rgba(0,0,0,0.6)', borderRadius: 6, fontSize: 12, pointerEvents: 'none', color: '#fff' }}>
-          <div>Zoom {zoom.toFixed(2)}x</div>
+          <div>Zoom: {zoom.toFixed(2)}x</div>
           <div>y: {yLevel.toFixed(0)}</div>
-          {hoverData && (
-            <div style={{ marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.2)', color: 'var(--accent)' }}>
+          {hoverData && !Number.isNaN(hoverData.val) && (
+            <div style={{ marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.2)', color: 'var(--accent2)' }}>
               x: {hoverData.x} z: {hoverData.z}
               <br/>
-              𝝆: {hoverData.val.toFixed(5)}
+              𝝆: {hoverData.val.toFixed(3)}
             </div>
           )}
         </div>
+        <div style={{ position: 'absolute', bottom: 16, right: 16, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
+          <div style={{
+            width: scale.pixels,
+            height: 6,
+            borderLeft: '2px solid #fff',
+            borderRight: '2px solid #fff',
+            borderBottom: '2px solid #fff',
+            marginBottom: 4
+          }} />
+          <div style={{
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: 500,
+          }}>
+            {scale.blocks} blocks
+          </div>
+        </div>
         <canvas ref={canvasRef} className="visualizer-canvas" />
+        {(parseError || runtimeError) && (
+          <div style={{
+            position: 'absolute',
+            bottom: 12,
+            left: 12,
+            right: 12,
+            background: 'var(--danger)',
+            color: '#fff',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            fontSize: '13px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            zIndex: 20,
+            pointerEvents: 'none'
+          }}>
+            <strong>Deepslate Error:</strong> {parseError || runtimeError}
+          </div>
+        )}
       </div>
     </section>
   )

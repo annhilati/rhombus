@@ -1,5 +1,5 @@
 import type { ContextFile, FileTreeNode } from '../types'
-import { normalizeRegistryName, parseFileId } from './registry'
+import { normalizeRegistryName, parseFileId, prettyRegistryTitle } from './registry'
 
 function compareNodes(a: FileTreeNode, b: FileTreeNode): number {
   const rank = { registry: 0, namespace: 1, folder: 2, file: 3 } as const
@@ -71,7 +71,7 @@ export function buildTree(files: ContextFile[]): FileTreeNode[] {
     if (!registryNode) {
       registryNode = {
         key: registry,
-        label: registry,
+        label: prettyRegistryTitle(registry),
         kind: 'registry',
         children: [],
       }

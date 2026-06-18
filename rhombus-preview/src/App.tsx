@@ -53,7 +53,7 @@ export default function App() {
   return (
     <div className="app">
       <Sidebar tree={fileTree} selectedKey={selectedKey} onSelectFile={(file) => setSelectedKey(fileKey(file))} width={sidebarWidth} />
-      <Resizer onResize={(dx) => setSidebarWidth((w) => Math.max(200, Math.min(800, w + dx)))} />
+      <Resizer value={sidebarWidth} onChange={setSidebarWidth} min={200} max={850} />
       <main className="main-area">
         {status === 'loading' &&                  <div className="status-banner">Loading context files from {getContextEndpoint()}...</div>}
         {status === 'error'   &&                  <div className="status-banner status-error">Could not load files: {error}</div>}
@@ -62,7 +62,7 @@ export default function App() {
         {selectedFile && (
           <div className={`workspace ${registryLabel ? 'has-visualizer' : 'json-only'}`}>
             <JsonPane file={selectedFile} allFiles={files} onSelectFile={(f) => setSelectedKey(fileKey(f))} width={registryLabel ? jsonPaneWidth : undefined} />
-            {registryLabel && <Resizer onResize={(dx) => setJsonPaneWidth((w) => Math.max(200, Math.min(1200, w + dx)))} />}
+            {registryLabel && <Resizer value={jsonPaneWidth} onChange={setJsonPaneWidth} min={200} max={1200} />}
             <VisualizerPane file={selectedFile} allFiles={files} />
           </div>
         )}
