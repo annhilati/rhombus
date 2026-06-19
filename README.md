@@ -12,6 +12,7 @@
     <!-- <a href="#"><img alt="Static Badge" src="https://img.shields.io/pypi/v/rhombus?style=for-the-badge&logo=pypi&logoColor=white&labelColor=4c75a9&label=Version&color=161926"></a> -->
     <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Python 3.14+-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=4c75a9&color=161926"></a>
     <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Beet-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=b90d38&color=161926"></a>
+    <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Deepslate-x?style=for-the-badge&logo=typescript&logoColor=ffffff&labelColor=4b77c3&color=161926"></a>
     <br>
 </p>
 
@@ -38,6 +39,35 @@ Recurring expressions and resource intense operations are automatically cached.
 - 🗄️ **Macro Library**<br>
 Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
 
+## Features
+## Features
+- Live file-watched Density Preview
+- Macro Library
+  - Math
+    - Infinity, NaN
+    - sum, prod
+    - fastRound, fastFloor, fastCeil
+  - Spline approximations
+    - Sampler for any Python function
+    - sin, cos, tan, atan, coth
+    - exp
+    - smoothstep, normPDF, normCDF, erf
+  - Performance
+    - automatically cache specific sub functions inside of a function
+    - automatically cache all recurring sub functions inside of a function
+  - Expensive iterative Methods:
+    - sqrt
+    - exp, ln
+    - round, ceil, floor
+  - Maps
+    - extrude_heightmap
+  - Fluent Interface for conditionality
+  - Coordinate reconstruction
+- Mod Support
+  - Lithostitched
+  - More Density Functions
+  - Tectonic
+  - En-sityFunctions
 
 ## Impressions
 ```sh

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Editor from '@monaco-editor/react'
 import type { ContextFile } from '../types'
 import { prettyRegistryTitle } from '../lib/registry'
@@ -29,34 +29,54 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
   const allFilesRef = useRef(allFiles)
   const onSelectFileRef = useRef(onSelectFile)
 
+  const editorRef = useRef<any>(null)
+  const monacoRef = useRef<any>(null)
+  const decorationsCollectionRef = useRef<any>(null)
+
+  const updateDecorations = () => {
+    if (!editorRef.current || !monacoRef.current) return
+    const editor = editorRef.current
+    const monaco = monacoRef.current
+    const model = editor.getModel()
+    if (!model) return
+
+    const links: any[] = []
+    const lines = model.getLinesContent()
+    lines.forEach((line: string, i: number) => {
+      const regex = /"([^"\\]*(?:\\.[^"\\]*)*)"/g
+      let match
+      while ((match = regex.exec(line)) !== null) {
+        const str = match[1]
+        const target = allFiles.find((f) => f.id === str || f.id === str + '.json')
+        if (target) {
+          links.push({
+            range: new monaco.Range(i + 1, match.index + 2, i + 1, match.index + 2 + str.length),
+            options: {
+              inlineClassName: 'monaco-custom-link',
+              hoverMessage: { value: `Ctrl+Click to open **${target.id}**` }
+            }
+          })
+        }
+      }
+    })
+
+    if (decorationsCollectionRef.current) {
+      decorationsCollectionRef.current.set(links)
+    }
+  }
+
   useEffect(() => {
     allFilesRef.current = allFiles
     onSelectFileRef.current = onSelectFile
-  }, [allFiles, onSelectFile])
+    updateDecorations()
+  }, [allFiles, onSelectFile, value])
 
   const handleEditorMount = (editor: any, monaco: any) => {
-    const provider = monaco.languages.registerLinkProvider('json', {
-      provideLinks: (model: any) => {
-        const links: any[] = []
-        const lines = model.getLinesContent()
-        lines.forEach((line: string, i: number) => {
-          const regex = /"([^"\\]*(?:\\.[^"\\]*)*)"/g
-          let match
-          while ((match = regex.exec(line)) !== null) {
-            const str = match[1]
-            const target = allFilesRef.current.find((f) => f.id === str || f.id === str + '.json')
-            if (target) {
-              links.push({
-                range: new monaco.Range(i + 1, match.index + 2, i + 1, match.index + 2 + str.length),
-                url: `rhombus://file/${target.id}`,
-                tooltip: `Go to ${target.id}`
-              })
-            }
-          }
-        })
-        return { links }
-      }
-    })
+    editorRef.current = editor
+    monacoRef.current = monaco
+    decorationsCollectionRef.current = editor.createDecorationsCollection()
+    
+    updateDecorations()
 
     editor.onMouseDown((e: any) => {
       if (e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT) {
@@ -77,7 +97,8 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
     })
 
     editor.onDidDispose(() => {
-      provider.dispose()
+      editorRef.current = null
+      monacoRef.current = null
     })
   }
 
@@ -95,7 +116,7 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
           options={{
             readOnly: true,
             minimap: { enabled: false },
-            fontSize: 13,
+            fontSize: 16,
             scrollBeyondLastLine: false,
             wordWrap: 'off',
             automaticLayout: true,

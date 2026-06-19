@@ -132,13 +132,8 @@ class Density[Function: DensityFunction = DensityFunction]:
         for node in self.AST.inscribed_toplevel_nodes:
             if node is self.AST:
                 continue
-            # TODO This should not be hardcoded
-            if isinstance(node, Reference):
-                id = node.reference
-            elif isinstance(node, DatapackResource):
-                id = node.identifier
-            else:
-                raise NotImplementedError
+            
+            id = node.reference
 
             files[id] = node.fileclass(node.serialize_toplevel())
 

@@ -106,6 +106,9 @@ class DatapackResource(RhombusASTNode):
             return self._reference if ":" in self._reference else "minecraft:" + self._reference
         return f"rhombus:generated/" + uuid_hash(self.serialize_toplevel())
     
+    @property
+    def reference(self):
+        return self.identifier
         
     #======// Workflow //========================================================================//
 

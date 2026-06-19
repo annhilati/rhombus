@@ -190,14 +190,18 @@ class DoubleArgumentFunctionBase(DensityFunction):
 #======// Primitives //==========================================================================//
 
 class Reference(DensityFunction):
-    reference: str
+    target: str
     definition: DensityFunction | None = None
 
     def __post_init__(self):
-        if not isinstance(self.reference, str) or not self.reference:
-            raise ValueError("Reference must have a reference of type str defined")
+        if not isinstance(self.target, str) or not self.target:
+            raise ValueError("Reference must have a target of type str defined")
         if self.definition is not None and not isinstance(self.definition, DensityFunction):
             raise ValueError(f"Cannot initialize Reference object with default of type {self.definition.__class__.__name__}")
+            
+    @property
+    def reference(self) -> str:
+        return self.target
     
     @classmethod
     def deserialize_inline(cls, data: str):
@@ -220,7 +224,7 @@ class Reference(DensityFunction):
         return types.add(self, constant(0.0)).serialize_toplevel()
     
     def serialize_inline(self) -> str:
-        return self.reference
+        return self.target
     
     @property
     def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:

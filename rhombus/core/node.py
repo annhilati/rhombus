@@ -122,6 +122,10 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         for value in self.fields.values():
             nodes |= self._collect_inscribed_toplevel_nodes(value)
         return nodes
+    
+    @property
+    def reference(self) -> str:
+        return f"rhombus/generated/{uuid_hash(self.serialize_toplevel())}"
 
     @classmethod
     def _collect_inscribed_toplevel_nodes(cls, value: Any) -> set["RhombusASTNode"]:

@@ -1,13 +1,13 @@
 import type { ContextFile } from '../types'
 
-const DEFAULT_ENDPOINT = (import.meta.env.VITE_CONTEXT_ENDPOINT as string | undefined) ?? '/data'
-
-export function getContextEndpoint(): string {
-  return DEFAULT_ENDPOINT
+export function getEventsEndpoint(endpoint: string): string {
+  return `${endpoint.replace(/\/+$/, '')}/events`
 }
 
-export async function loadContextFiles(endpoint = DEFAULT_ENDPOINT): Promise<ContextFile[]> {
-  const response = await fetch(endpoint, {
+export async function loadContextFiles(endpoint: string): Promise<ContextFile[]> {
+  const url = `${endpoint.replace(/\/+$/, '')}/data?t=${Date.now()}`
+  const response = await fetch(url, {
+    cache: 'no-store',
     headers: {
       Accept: 'application/json',
     },

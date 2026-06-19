@@ -21,13 +21,28 @@ body {
   background: var(--background2)
 }
 
+/* ======// Sidebar //========================================================================// */
+.endpoint-input {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+}
+.endpoint-input:focus-visible {
+  color: white;
+  outline: none;
+}
+
 /* ======// File Viewer //====================================================================// */
 .tree-node {
   margin: 2px 0;
 }
 
 details.tree-node > summary, .tree-node.file {
-  font-size: 18px;
+  font-size: 16px;
   padding: 6px 8px 6px 14px;
   color: #d9e0ee;
   border-radius: 8px;
@@ -45,9 +60,8 @@ details.tree-node > summary {
   gap: 4px;
 }
 
-.tree-node.file {
-  gap: 8px;
-}
+.tree-node.file { gap: 8px; }
+.tree-node.file.is-selected { background: color-mix(in srgb, var(--muted), transparent 90%); }
 
 .collapsable > summary:hover, .file:hover {
   background: rgba(255, 255, 255, 0.05);
@@ -74,9 +88,6 @@ details.tree-node:not(.collapsable) > summary {
 
 details[open] > summary > .tree-chevron { transform: rotate(90deg); }
 
-.file.is-selected {
-  background: color-mix(in srgb, var(--muted), transparent 90%);
-}
 
 .tree-file-dot {
   width: 7px;
@@ -294,4 +305,37 @@ input {
     width: 260px;
     min-width: 220px;
   }
+}
+
+/* ======// Notifications //==================================================================// */
+.toast-notification {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--accent);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(150%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.monaco-custom-link {
+  cursor: pointer;
+}
+
+.monaco-custom-link:hover {
+  text-decoration: underline;
 }

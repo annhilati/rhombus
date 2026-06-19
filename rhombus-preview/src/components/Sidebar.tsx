@@ -5,6 +5,8 @@ interface SidebarProps {
   tree: FileTreeNode[]
   selectedKey: string | null
   onSelectFile: (file: ContextFile) => void
+  endpoint: string
+  onChangeEndpoint: (endpoint: string) => void
   width?: number
 }
 
@@ -63,12 +65,23 @@ function renderNode(node: FileTreeNode, selectedKey: string | null, onSelectFile
   )
 }
 
-export default function Sidebar({ tree, selectedKey, onSelectFile, width }: SidebarProps) {
+export default function Sidebar({ tree, selectedKey, onSelectFile, endpoint, onChangeEndpoint, width }: SidebarProps) {
   return (
     <aside className="sidebar" style={{ width: width ? `${width}px` : undefined, flex: width ? 'none' : undefined }}>
       <div className="sidebar-header">
         <div className="sidebar-title">Rhombus Preview</div>
         <div className="sidebar-subtitle">Context files</div>
+        <div style={{ marginTop: '8px' }}>
+          <input
+            type="password"
+            className="endpoint-input"
+            value={endpoint}
+            onChange={(e) => onChangeEndpoint(e.target.value)}
+            onFocus={(e) => e.target.type = 'text'}
+            onBlur={(e) => e.target.type = 'password'}
+            title="Backend Endpoint URL"
+          />
+        </div>
       </div>
       <div className="sidebar-content">
         {tree.length === 0 ? <div className="sidebar-empty">No files loaded.</div> : tree.map((node) => renderNode(node, selectedKey, onSelectFile))}

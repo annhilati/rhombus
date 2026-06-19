@@ -16,8 +16,10 @@ function drawCanvas(
   asColor: (n: number) => [number, number, number],
   zoom: number,
   panX: number,
+  panY: number,
   panZ: number,
-  yLevel: number,
+  sliceLevel: number,
+  viewMode: 'top' | 'side',
   onError: (msg: string | null) => void
 ) {
   const pixelSize = 2
@@ -36,14 +38,25 @@ function drawCanvas(
   for (let py = 0; py < height; py += 1) {
     for (let px = 0; px < width; px += 1) {
       const worldX = panX + (px * pixelSize - rect.width / 2) / zoom
-      const worldZ = panZ + (py * pixelSize - rect.height / 2) / zoom
       
       try {
-        const blockX = Math.floor(worldX)
-        const blockZ = Math.floor(worldZ)
-        const sample = sampler(blockX, yLevel, blockZ)
+        let blockX = Math.floor(worldX)
+        let blockY = 0
+        let blockZ = 0
+        
+        if (viewMode === 'top') {
+          const worldZ = panZ + (py * pixelSize - rect.height / 2) / zoom
+          blockY = sliceLevel
+          blockZ = Math.floor(worldZ)
+        } else {
+          const worldY = panY - (py * pixelSize - rect.height / 2) / zoom
+          blockY = Math.floor(worldY)
+          blockZ = sliceLevel
+        }
+        
+        const sample = sampler(blockX, blockY, blockZ)
         if (Number.isNaN(sample)) {
-          throw new Error(`Density function evaluated to NaN at X=${worldX.toFixed(1)} Z=${worldZ.toFixed(1)}`)
+          throw new Error(`Density function evaluated to NaN at X=${worldX.toFixed(1)} ${viewMode === 'top' ? `Z=${blockZ}` : `Y=${blockY}`}`)
         }
         const color = asColor(sample)
         
@@ -68,11 +81,15 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [zoom, setZoom] = useState(2)
   const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(64)
   const [panZ, setPanZ] = useState(0)
   const [yLevel, setYLevel] = useState(64)
+  const [zLevel, setZLevel] = useState(0)
+  const [viewMode, setViewMode] = useState<'top' | 'side'>('top')
   const [runtimeReady, setRuntimeReady] = useState(false)
-  const dragRef = useRef<{ active: boolean; x: number; z: number } | null>(null)
-  const [hoverData, setHoverData] = useState<{ x: number, z: number, val: number } | null>(null)
+  const [registryVersion, setRegistryVersion] = useState(0)
+  const dragRef = useRef<{ active: boolean; x: number; y: number } | null>(null)
+  const [hoverData, setHoverData] = useState<{ x: number, y?: number, z?: number, val: number } | null>(null)
   const [renderTimeMs, setRenderTimeMs] = useState<number | null>(null)
   const [seedStr, setSeedStr] = useState('12345')
   const seed = useMemo(() => {
@@ -106,7 +123,10 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
     let cancelled = false
     const runtime = loadDeepslateRuntime()
     runtime.registerAllFiles(allFiles)
-    if (!cancelled) setRuntimeReady(true)
+    if (!cancelled) {
+      setRuntimeReady(true)
+      setRegistryVersion(v => v + 1)
+    }
     return () => {
       cancelled = true
     }
@@ -151,7 +171,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
       parseError = err instanceof Error ? err.message : String(err)
     }
     return { sampler: samplerFn, asColor: asColorFn, parseError }
-  }, [file, runtimeReady, kind, seed])
+  }, [file, runtimeReady, registryVersion, kind, seed])
 
   const [runtimeError, setRuntimeError] = useState<string | null>(null)
 
@@ -166,7 +186,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
 
     const update = () => {
       const t0 = performance.now()
-      drawCanvas(canvas, sampler, asColor, zoom, panX, panZ, yLevel, setRuntimeError)
+      drawCanvas(canvas, sampler, asColor, zoom, panX, panY, panZ, viewMode === 'top' ? yLevel : zLevel, viewMode, setRuntimeError)
       const t1 = performance.now()
       setRenderTimeMs(t1 - t0)
     }
@@ -176,7 +196,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
     if (wrapperRef.current) observer.observe(wrapperRef.current)
 
     return () => observer.disconnect()
-  }, [sampler, asColor, runtimeReady, zoom, panX, panZ, yLevel, kind])
+  }, [sampler, asColor, runtimeReady, zoom, panX, panY, panZ, yLevel, zLevel, viewMode, kind])
 
   if (kind === null) return null
 
@@ -189,6 +209,15 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
         </div>
       </div>
       <div className="visualizer-toolbar">
+        <label>View
+          <button 
+            type="button" 
+            onClick={() => setViewMode(v => v === 'top' ? 'side' : 'top')}
+            style={{ fontWeight: 600, width: '56px' }}
+          >
+            {viewMode === 'top' ? 'Top' : 'Side'}
+          </button>
+        </label>
         <label>Zoom
           <input
             type="range"
@@ -199,16 +228,29 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
             onChange={(event) => setZoom(Number(event.target.value))}
           />
         </label>
-        <label>Y
-          <input
-            type="range"
-            min="-64"
-            max="320"
-            step="1"
-            value={yLevel}
-            onChange={(event) => setYLevel(Number(event.target.value))}
-          />
-        </label>
+        {viewMode === 'top' ? (
+          <label>Y
+            <input
+              type="range"
+              min="-64"
+              max="320"
+              step="1"
+              value={yLevel}
+              onChange={(event) => setYLevel(Number(event.target.value))}
+            />
+          </label>
+        ) : (
+          <label>Z
+            <input
+              type="range"
+              min="-1000"
+              max="1000"
+              step="1"
+              value={zLevel}
+              onChange={(event) => setZLevel(Number(event.target.value))}
+            />
+          </label>
+        )}
         <label>Seed
           <div style={{ display: 'flex', gap: '4px' }}>
             <input
@@ -225,7 +267,7 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
             >🎲</button>
           </div>
         </label>
-        <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanZ(0); setYLevel(64); setSeedStr('12345') }}>
+        <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('12345'); setViewMode('top') }}>
           Reset
         </button>
       </div>
@@ -234,27 +276,37 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
         className="pane-body visualizer-canvas-wrap"
         onPointerLeave={() => setHoverData(null)}
         onPointerDown={(event) => {
-          dragRef.current = { active: true, x: event.clientX, z: event.clientY }
+          dragRef.current = { active: true, x: event.clientX, y: event.clientY }
           ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
         }}
         onPointerMove={(event) => {
           const drag = dragRef.current
           if (drag?.active) {
             const dx = event.clientX - drag.x
-            const dz = event.clientY - drag.z
-            dragRef.current = { active: true, x: event.clientX, z: event.clientY }
+            const dy = event.clientY - drag.y
+            dragRef.current = { active: true, x: event.clientX, y: event.clientY }
             setPanX((value) => value - dx / zoom)
-            setPanZ((value) => value - dz / zoom)
+            if (viewMode === 'top') {
+              setPanZ((value) => value - dy / zoom)
+            } else {
+              setPanY((value) => value + dy / zoom)
+            }
           }
           
           const rect = event.currentTarget.getBoundingClientRect()
           const px = event.clientX - rect.left
           const py = event.clientY - rect.top
           const worldX = panX + (px - rect.width / 2) / zoom
-          const worldZ = panZ + (py - rect.height / 2) / zoom
           try {
-            const val = sampler(worldX, yLevel, worldZ)
-            setHoverData({ x: Math.floor(worldX), z: Math.floor(worldZ), val })
+            if (viewMode === 'top') {
+              const worldZ = panZ + (py - rect.height / 2) / zoom
+              const val = sampler(worldX, yLevel, worldZ)
+              setHoverData({ x: Math.floor(worldX), z: Math.floor(worldZ), val })
+            } else {
+              const worldY = panY - (py - rect.height / 2) / zoom
+              const val = sampler(worldX, worldY, zLevel)
+              setHoverData({ x: Math.floor(worldX), y: Math.floor(worldY), val })
+            }
           } catch {
             setHoverData(null)
           }
@@ -271,12 +323,12 @@ export default function VisualizerPane({ file, allFiles }: VisualizerPaneProps) 
       >
         <div style={{ position: 'absolute', top: 12, left: 12, padding: '8px 10px', background: 'rgba(0,0,0,0.6)', borderRadius: 6, fontSize: 12, pointerEvents: 'none', color: '#fff' }}>
           <div>Zoom: {zoom.toFixed(2)}x</div>
-          <div>y: {yLevel.toFixed(0)}</div>
+          <div>{viewMode === 'top' ? `y: ${yLevel.toFixed(0)}` : `z: ${zLevel.toFixed(0)}`}</div>
           {hoverData && !Number.isNaN(hoverData.val) && (
             <div style={{ marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.2)', color: 'var(--accent2)' }}>
-              x: {hoverData.x} z: {hoverData.z}
+              x: {hoverData.x} {viewMode === 'top' ? `z: ${hoverData.z}` : `y: ${hoverData.y}`}
               <br/>
-              𝝆: {hoverData.val.toFixed(3)}
+              𝝆: {hoverData.val.toFixed(5)}
             </div>
           )}
         </div>

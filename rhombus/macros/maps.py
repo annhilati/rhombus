@@ -7,7 +7,7 @@ from rhombus.std import Density, AnyDensity, macro
 from rhombus.macros import coords
 
 @macro
-def extrude_heightmap(heightmap: AnyDensity, map_anchors: tuple[float, float], height_anchors: tuple[float, float]) -> Density:
+def extrude_heightmap(heightmap: AnyDensity, value_anchors: tuple[float, float], height_anchors: tuple[float, float]) -> Density:
     """Evaluates a 3D density field by extruding a 2D heightmap along the Y-axis.
 
     This macro performs a linear remapping of the heightmap values from an
@@ -22,6 +22,6 @@ def extrude_heightmap(heightmap: AnyDensity, map_anchors: tuple[float, float], h
         map_anchors (tuple[float, float]): Two different values of the heightmap.
         height_anchors (tuple[float, float]): Heights the two `map_anchors` will be mapped to.
     """
-    if map_anchors[0] == map_anchors[1] or height_anchors[0] == height_anchors[1]:
+    if value_anchors[0] == value_anchors[1] or height_anchors[0] == height_anchors[1]:
         raise ValueError("Anchors must be distinct")
-    return (height_anchors[0] + (heightmap - map_anchors[0]) * ((height_anchors[1] - height_anchors[0]) / (map_anchors[1] - map_anchors[0]))) - coords.y()
+    return (height_anchors[0] + (heightmap - value_anchors[0]) * ((height_anchors[1] - height_anchors[0]) / (value_anchors[1] - value_anchors[0]))) - coords.y()
