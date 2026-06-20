@@ -64,22 +64,31 @@ export default function App() {
     fetchFiles()
 
     // Setup SSE for live updates
-    const eventsUrl = getEventsEndpoint(endpoint)
-    const eventSource = new EventSource(eventsUrl)
-    
-    eventSource.onmessage = (event) => {
-      if (event.data === 'update') {
-        fetchFiles()
+    let eventSource: EventSource | null = null
+    try {
+      const eventsUrl = getEventsEndpoint(endpoint)
+      eventSource = new EventSource(eventsUrl)
+      
+      eventSource.onmessage = (event) => {
+        if (event.data === 'update') {
+          fetchFiles()
+        }
       }
-    }
 
-    eventSource.onerror = () => {
-      // Reconnect silently handled by EventSource itself.
+      eventSource.onerror = () => {
+        // Reconnect silently handled by EventSource itself.
+      }
+    } catch (err) {
+      console.warn("Failed to create EventSource:", err)
+      setStatus('error')
+      setError(err instanceof Error ? err.message : 'Invalid Endpoint URL')
     }
 
     return () => {
       cancelled = true
-      eventSource.close()
+      if (eventSource) {
+        eventSource.close()
+      }
     }
   }, [endpoint])
 

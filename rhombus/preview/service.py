@@ -3,20 +3,20 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 from dataclasses import dataclass, field
+from importlib.resources import files
 import threading, time, sys, os
 
 from rich import print
 from watchdog.observers import Observer
 from watchdog.observers.api import BaseObserver
 from watchdog.events import FileSystemEventHandler
-import fastapi, uvicorn
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
+from fastapi.staticfiles import StaticFiles
+import fastapi, uvicorn, asyncio
 
 from rhombus import Density
 from rhombus.core import BeetFile, RhombusASTNode
-from rhombus.core.utils import uuid_hash
 
 service = fastapi.FastAPI()
 
@@ -60,7 +60,7 @@ class Handler(FileSystemEventHandler):
             return
         self.last_events[key] = now
 
-        print(f"[#553bd9]RHOMBUS[reset]:  {action} {path} - Building anew")
+        print(f"[#35aaf3]WATCHER[reset]:  {action} {Path(path).relative_to(ctx.watch_path)}")
         if ctx is not None:
             ctx.changed_files.add(path)
             ctx.last_change = time.time()
@@ -168,6 +168,8 @@ def start_watcher(path: str | Path):
 def startup():
     start_watcher(ctx.watch_path)
     print(f"[#553bd9]RHOMBUS[reset]:  Preview service is now watching {ctx.watch_path}")
+    sys.stdout.write("\033]0;Rhombus Preview Service\007")
+    sys.stdout.flush()
 
     thread = threading.Thread(target=rebuild_worker, daemon=True)
     thread.start()
@@ -212,7 +214,7 @@ async def get_events(request: fastapi.Request):
         yield "retry: 500\n"
         yield "data: update\n\n"
         last_sent = ctx.last_change
-        while True:
+        while not ctx.shutdown_event.is_set():
             if await request.is_disconnected():
                 break
             if ctx.last_change != last_sent:
@@ -229,6 +231,11 @@ async def get_events(request: fastapi.Request):
             "X-Accel-Buffering": "no"
         }
     )
+
+
+# Set the frontend endpoint just here, so it doesn't overtake the other endpoints
+dist_dir = files("rhombus.preview").joinpath("dist")
+service.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
 
 
 def start_service(path: str | Path, *items: Density | RhombusASTNode):
