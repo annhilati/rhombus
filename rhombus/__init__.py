@@ -10,7 +10,8 @@ from rhombus.macros import *
 from rhombus import (
     config,
     splines,
-    support
+    support,
+    preview
 )
 from rhombus.core.density_function import register
 

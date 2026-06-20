@@ -1,5 +1,4 @@
-"""Preliminary functions for evaluating and improving the performance
-of density functions.
+"""Macros for evaluating and improving the performance of density functions.
 
 This is primarily the `autocache` macro, which extracts recurring parts of
 the AST of the entered density function and wrapps them in `cache_once`. 

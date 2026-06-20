@@ -42,6 +42,9 @@ Growing collection of macros for common patterns and complex operations, reducin
 ## Features
 ## Features
 - Live file-watched Density Preview
+  - Visualizer
+  - File Explorer & Viewer
+  - Spline Visualization
 - Macro Library
   - Math
     - Infinity, NaN

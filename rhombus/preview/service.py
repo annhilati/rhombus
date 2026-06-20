@@ -15,7 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import fastapi, uvicorn, asyncio
 
-from rhombus import Density
+import beet
+import beet.contrib.worldgen as beet_worldgen
+
+from rhombus import Density, t
 from rhombus.core import BeetFile, RhombusASTNode
 
 service = fastapi.FastAPI()
@@ -49,18 +52,27 @@ class AppContext:
 ctx: AppContext | None = None
 
 class Handler(FileSystemEventHandler):
-    def __init__(self):
+    def __init__(self, watch_file: str | None = None):
         super().__init__()
         self.last_events: dict[tuple[str, str], float] = {}
+        self.watch_file = watch_file
 
     def _trigger(self, action: str, path: str):
+        if self.watch_file and Path(path).name != self.watch_file:
+            return
+
         now = time.time()
         key = (action, path)
         if key in self.last_events and (now - self.last_events[key]) < 0.2:
             return
         self.last_events[key] = now
 
-        print(f"[#35aaf3]WATCHER[reset]:  {action} {Path(path).relative_to(ctx.watch_path)}")
+        try:
+            rel_path = Path(path).relative_to(ctx.watch_path)
+        except ValueError:
+            rel_path = Path(path).name
+
+        print(f"[#35aaf3]WATCHER[reset]:  {action} {rel_path}")
         if ctx is not None:
             ctx.changed_files.add(path)
             ctx.last_change = time.time()
@@ -157,8 +169,12 @@ def rebuild_worker():
 
 
 def start_watcher(path: str | Path):
+    p = Path(path)
     observer = Observer()
-    observer.schedule(Handler(), str(path), recursive=True)
+    if p.is_file():
+        observer.schedule(Handler(watch_file=p.name), str(p.parent), recursive=False)
+    else:
+        observer.schedule(Handler(), str(p), recursive=True)
     observer.start()
     ctx.observer = observer
     return observer
@@ -250,3 +266,22 @@ def start_service(path: str | Path, *items: Density | RhombusASTNode):
     ctx = AppContext(watch_path=str(path), density_items=actual_items)
 
     uvicorn.run(service, host="127.0.0.1", port=8000)
+
+
+def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
+    """Gathers all density functions from a datapack as `Density` objects.
+    Use this function in the `items` parameter of `start_service` to preview
+    an already compiled datapack.
+    """
+    dfs = []
+    for id in dp[beet_worldgen.WorldgenDensityFunction]:
+        dfs.append((id, Density.from_datapack(dp, id)))
+    for id in dp[beet_worldgen.WorldgenNoiseSettings]:
+        for noise_router in [
+            "barrier", "continents", "depth", "erosion", "final_density", "fluid_level_floodedness", "fluid_level_spread",
+            "lava", "preliminary_surface_level", "ridges", "temperature", "vegetation", "vein_gap", "vein_ridged", "vein_toggle"
+        ]:
+            df = Density.from_datapack_noise_router(dp, id, noise_router)
+            if not isinstance(df.AST, (t.constant, t.Reference)):
+                dfs.append((id + "/" + noise_router, df))
+    return dfs

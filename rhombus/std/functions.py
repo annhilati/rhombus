@@ -205,6 +205,12 @@ def spline(coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
 
     For values beyond the outermost spline points, the value of the nearest spline point is returned.
 
+    **NOTE** If multiple spline points have the same location, for inputs less than the
+    location, values aproaching the first defined value will be returned. For
+    inputs equal to or greather than the location, values leaving the second
+    defined values will be returned. ("first" and "second" refer to the order
+    of definition in `points`).
+
     **NOTE** Approximations for various functions done by splines can be found in `rhombus.macros.smath`.
 
     ---

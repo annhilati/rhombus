@@ -1,4 +1,4 @@
-"""Macros for generating 3D terrain from 2D heightmap data."""
+"""Macros for working with 2-dimensional density functions."""
 
 __all__ = ["extrude_heightmap"]
 
