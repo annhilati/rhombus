@@ -4,10 +4,9 @@ module use approximation methods that have high performance costs.
 Either they require a large number of calculations, or they multiply
 the abstract syntax tree of the input.
 
-These methods typically include infinite series, such as Taylor series, or iterative methods, such as Newton's method.
+These methods typically include infinite series, such as Taylor series, or
+iterative methods, such as Newton's method.
 """
-
-__all__ = []
 
 from typing import Callable
 import math as py_math
@@ -16,7 +15,6 @@ from rhombus.std.density import Density, AnyDensity
 from rhombus.std import functions, macro, types
 from rhombus.macros.math import pi, sum as msum
 from rhombus.macros import conditional as cond, performance as perf
-
 
 
 #======// Rounding //============================================================================//
@@ -131,12 +129,10 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
 
     ⚙️ This implementation uses the [Taylor series of the exponential function](https://en.wikipedia.org/wiki/Taylor_series#Exponential_function).
     """
-    from math import factorial
-
     if terms <= 0:
         return functions.constant(1)
 
-    terms_list = [functions.constant(1)] + [ (argument ** k) / factorial(k) for k in range(1, terms + 1) ]
+    terms_list = [functions.constant(1)] + [ (argument ** k) / py_math.factorial(k) for k in range(1, terms + 1) ]
     return msum(*terms_list)
 
 @macro
@@ -162,9 +158,7 @@ def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚙️ This implementation uses the [Taylor series of sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
     ⚠️ Bigger inputs need more terms before converging.
     """
-    from math import factorial
-
-    terms_list = [argument] + [((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / factorial(2 * k + 1)) for k in range(1, terms + 1)]
+    terms_list = [argument] + [((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / py_math.factorial(2 * k + 1)) for k in range(1, terms + 1)]
     return msum(*terms_list)
 
 @macro
@@ -174,9 +168,7 @@ def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚙️ This implementation uses the [Taylor series of cosine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
     ⚠️ Bigger inputs need more terms before converging.
     """
-    from math import factorial
-
-    terms_list = [functions.constant(1)] + [((-1 if (k % 2) else 1) * (argument ** (2 * k)) / factorial(2 * k)) for k in range(1, terms + 1)]
+    terms_list = [functions.constant(1)] + [((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k)) for k in range(1, terms + 1)]
     return msum(*terms_list)
 
 @macro
@@ -187,7 +179,6 @@ def tan(argument: AnyDensity, terms: int = 3) -> Density[types.mul]:
     ⚙️ This implementation uses the [Taylor series of sine and cosine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
     ⚠️ Bigger inputs need more terms before converging.
     """
-
     return sin(argument, terms) / cos(argument, terms)
 
 @macro
@@ -197,12 +188,10 @@ def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
     ⚙️ This implementation uses the [Taylor series of arc sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
     """
-    from math import factorial
-
     if terms <= 0:
         return functions.constant(0)
 
-    terms_list = [(factorial(2*k) / (4**k * factorial(k)**2 * (2*k + 1))) * (argument ** (2*k + 1)) for k in range(terms)]
+    terms_list = [(py_math.factorial(2*k) / (4**k * py_math.factorial(k)**2 * (2*k + 1))) * (argument ** (2*k + 1)) for k in range(terms)]
     return msum(*terms_list)
 
 @macro
@@ -234,12 +223,10 @@ def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚙️ This implementation uses the [Taylor series of hyperbolic sine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
     ⚠️ Bigger inputs need more terms before converging.
     """
-    from math import factorial
-
     if terms <= 0:
         return functions.constant(0)
 
-    terms_list = [ (argument ** (2*k + 1)) / factorial(2*k + 1) for k in range(terms) ]
+    terms_list = [ (argument ** (2*k + 1)) / py_math.factorial(2*k + 1) for k in range(terms) ]
     return msum(*terms_list)
 
 @macro
@@ -249,7 +236,5 @@ def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚙️ This implementation uses the [Taylor series of hyperbolic cosine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
     ⚠️ Bigger inputs need more terms before converging.
     """
-    from math import factorial
-
-    terms_list = [functions.constant(1)] + [ (argument ** (2*k)) / factorial(2*k) for k in range(1, terms + 1) ]
+    terms_list = [functions.constant(1)] + [ (argument ** (2*k)) / py_math.factorial(2*k) for k in range(1, terms + 1) ]
     return msum(*terms_list)

@@ -115,7 +115,7 @@ def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
-    return perf.autocache(dividend - divisor * fastFloor(dividend / divisor))
+    return perf.cachespecific(dividend - divisor * fastFloor(dividend / divisor), dividend, divisor)
 
 #======// Step Functions //======================================================================//
 
@@ -140,30 +140,36 @@ def ramp(argument: AnyDensity) -> Density[types.max]:
     return f.max(argument, 0)
 
 @macro
-def fastRound(argument: AnyDensity) -> Density[types.add]:
-    """Rounds the input to the nearest integer.
+def fastRound(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
+    """Rounds the input to the nearest integer or given decimal.
     
     **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
+    if decimals:
+        return ((argument * 10**decimals) + f.constant(1.5) * f.constant(2**52) - f.constant(1.5) * f.constant(2**52)) / 10**decimals
     return argument + f.constant(1.5) * f.constant(2**52) - f.constant(1.5) * f.constant(2**52)
 
 @macro
-def fastFloor(argument: AnyDensity) -> Density[types.add]:
-    """Rounds the input down to the nearest integer.
+def fastFloor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
+    """Rounds the input down to the nearest integer or given decimal.
     
     **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
+    if decimals:
+        return fastRound((argument - 0.5) * 10**decimals) / 10**decimals
     return fastRound(argument - 0.5)
 
 @macro
-def fastCeil(argument: AnyDensity) -> Density[types.add]:
-    """Rounds the input up to the nearest integer.
+def fastCeil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
+    """Rounds the input up to the nearest integer or given decimal.
     
     **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
+    if decimals:
+        return fastRound((argument + 0.5) * 10**decimals) / 10**decimals
     return fastRound(argument + 0.5)
 
 

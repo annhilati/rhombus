@@ -14,13 +14,13 @@ def extrude_heightmap(heightmap: AnyDensity, value_anchors: tuple[float, float],
     input range to an output altitude range, then subtracts the current
     Y-coordinate to create a half-space gradient.
     
-    **WARNING** This only works if the `heightmap` is truly only
-    2-dimensional and returns equal values for all heights.
+    **NOTE** This only works if `heightmap` is truly 2-dimensional and
+    returns equal values for all heights.
 
     Parameters:
         heightmap (density function): 2-dimensional density function representing abstract terrain height.
-        map_anchors (tuple[float, float]): Two different values of the heightmap.
-        height_anchors (tuple[float, float]): Heights the two `map_anchors` will be mapped to.
+        value_anchors (tuple[float, float]): Two different values of the heightmap.
+        height_anchors (tuple[float, float]): Heights the two `value_anchors` will be mapped to.
     """
     if value_anchors[0] == value_anchors[1] or height_anchors[0] == height_anchors[1]:
         raise ValueError("Anchors must be distinct")

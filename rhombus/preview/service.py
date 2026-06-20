@@ -96,12 +96,7 @@ class Handler(FileSystemEventHandler):
 
 
 def rebuild_all() -> dict[str, Any]:
-    """
-    Ruft bei jeder Density compile(string) auf.
-    Die Ergebnisse werden in Reihenfolge gemerged.
-    Spätere Dicts überschreiben frühere.
-    """
-    merged: dict[str, Any] = {}
+    merged: dict[str, BeetFile] = {}
     per_density: list[dict[str, Any]] = []
 
     for (id, item) in ctx.density_items:
@@ -134,9 +129,9 @@ def rebuild_all() -> dict[str, Any]:
 
 def rebuild_worker():
     """
-    Wartet auf Änderungen und führt dann die Berechnung aus.
-    Kleine Debounce-Phase, damit nicht jede einzelne Dateioperation sofort
-    einen kompletten Rebuild auslöst.
+    Wait for changes and then perform the calculation.
+    A short debounce phase to prevent every single file operation from immediately
+    triggering a full rebuild.
     """
     while not ctx.shutdown_event.is_set():
         ctx.rebuild_event.wait()
@@ -146,7 +141,6 @@ def rebuild_worker():
 
         ctx.rebuild_event.clear()
 
-        # kurze Sammelphase für Dateispeicher-Events
         time.sleep(0.15)
         while ctx.rebuild_event.is_set():
             ctx.rebuild_event.clear()
@@ -254,18 +248,30 @@ dist_dir = files("rhombus.preview").joinpath("dist")
 service.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
 
 
-def start_service(path: str | Path, *items: Density | RhombusASTNode):
+def start(
+        watch_path: str | Path,
+        /,
+        *items: tuple[str, Density | RhombusASTNode],
+        **uvicorn_args
+    ) -> None:
+    """Starts the Rhombus Preview service ASGI application.
+    
+    This includes the frontend and a file-watching backend. One can be used
+    without the other.
+    """
     actual_items = []
     for item in items:
-        if isinstance(item, list):
-            actual_items.extend(item)
-        else:
-            actual_items.append(item)
+        actual_items.append(item)
 
     global ctx
-    ctx = AppContext(watch_path=str(path), density_items=actual_items)
+    ctx = AppContext(watch_path=str(watch_path), density_items=actual_items)
 
-    uvicorn.run(service, host="127.0.0.1", port=8000)
+    default_args = dict(
+        host="127.0.0.1",
+        port=8000
+    )
+
+    uvicorn.run(service, **uvicorn_args | default_args)
 
 
 def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
@@ -273,6 +279,7 @@ def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
     Use this function in the `items` parameter of `start_service` to preview
     an already compiled datapack.
     """
+    # TODO: add option to include other resource types
     dfs = []
     for id in dp[beet_worldgen.WorldgenDensityFunction]:
         dfs.append((id, Density.from_datapack(dp, id)))
