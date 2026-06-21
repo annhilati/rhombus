@@ -55,13 +55,13 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     __dataclass_params__: ClassVar[Any]
     __match_args__:       ClassVar[tuple[str, ...]]
 
-    fileclass: ClassVar[type[BeetFile]]
+    fileclass: ClassVar[type[BeetFile] | None]
 
     def __init__(self, *args, **kwargs):
-        raise NotImplementedError("Base class RhombusASTNode cannot be instantiated directly. Please use a subclass with defined fields.")
+        raise NotImplementedError("Only subclasses of 'RhombusASTNode' can be instantiated directly, not 'RhombusASTNode' itself")
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if getattr(self, "_rhombus_frozen", False):
+        if getattr(self, "_rhombus_frozen", False) and name != "reference":
             raise dataclasses.FrozenInstanceError(f"cannot assign to field '{name}'")
         object.__setattr__(self, name, value)
 
@@ -81,7 +81,6 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         return value
                
     def __repr__(self) -> str:
-        # The __repr__ function should generate a string that is a valid Rhombus expression, with which the data can be reconstructed 
         return self.__class__.__name__ + "(" + ", ".join([
             param + "=" + value.__repr__()
             for param, value
@@ -107,26 +106,11 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         }
         return self.__class__(**new_fields)
 
-        
-    #======// Standard Implementations //========================================================//
-    
     @property
     def fields(self) -> dict[str, Any]:
         "Standard implemenation for getting all parameters of the Node paired with their values"
         return fields(self)
-    
-    @property
-    def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
-        "Recursive search for all inscribed nodes, that will require a file when compiling"
-        nodes = set()
-        for value in self.fields.values():
-            nodes |= self._collect_inscribed_toplevel_nodes(value)
-        return nodes
-    
-    @property
-    def reference(self) -> str:
-        return f"rhombus/generated/{uuid_hash(self.serialize_toplevel())}"
-
+       
     @classmethod
     def _collect_inscribed_toplevel_nodes(cls, value: Any) -> set["RhombusASTNode"]:
         nodes = set()
@@ -143,6 +127,30 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         
         
     #======// Serialization //===================================================================//
+    
+    @property
+    def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
+        """Recursive search for all inscribed nodes, that will require a file
+        when compiling. Includes the node itself if it neccesarily does to.
+        """
+        nodes = set()
+        for value in self.fields.values():
+            nodes |= self._collect_inscribed_toplevel_nodes(value)
+        return nodes
+    
+    @property
+    def reference(self) -> str:
+        """Property declaring the namespaced resource identifier of the node.
+        
+        `RhombusASTNode` implements a default hash-based method.
+        """
+        if hasattr(self, "_reference_override"):
+            return self._reference_override
+        return f"rhombus:generated/{uuid_hash(self.serialize_toplevel())}"
+    
+    @reference.setter
+    def reference(self, value: str):
+        object.__setattr__(self, "_reference_override", value)
     
     def serialize_toplevel(self) -> JSONValue:
         """Returns a JSON value containing the data serialized into the target

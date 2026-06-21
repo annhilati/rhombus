@@ -12,12 +12,7 @@ dependencies = [
   "beet==0.111.0", # -> pyyaml
   "typer==0.25.1",
   "rich==15.0.0",
-  "deepdiff==9.1.0",
   "numpy==2.3.3",
-]
-
-[project.optional-dependencies]
-preview = [
   "uvicorn==0.49.0",
   "watchdog==6.0.0",
   "fastapi==0.137.1",

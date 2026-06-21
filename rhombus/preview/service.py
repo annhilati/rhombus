@@ -278,12 +278,29 @@ def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
     """Gathers all density functions from a datapack as `Density` objects.
     Use this function in the `items` parameter of `start_service` to preview
     an already compiled datapack.
+
+    **NOTE** If you are manually instanciating a `DataPack` from a directory,
+    make sure to explicitely also load worldgen files, since they are are not
+    loaded by Beet by default:
+    ```
+    import beet
+    from beet.contrib.worldgen import WorldgenDensityFunction, WorldgenNoise
+    from rhombus.support.lithostitched.fast_noise_config import LithostitchedFastNoiseConfig
+
+    dp = beet.DataPack(
+        path=path,
+        extend_namespace=[
+            WorldgenDensityFunction, WorldgenNoise,
+            LithostitchedFastNoiseConfig
+        ]
+    )
+    ```
     """
     # TODO: add option to include other resource types
     dfs = []
-    for id in dp[beet_worldgen.WorldgenDensityFunction]:
+    for id in list(dp[beet_worldgen.WorldgenDensityFunction]):
         dfs.append((id, Density.from_datapack(dp, id)))
-    for id in dp[beet_worldgen.WorldgenNoiseSettings]:
+    for id in list(dp[beet_worldgen.WorldgenNoiseSettings]):
         for noise_router in [
             "barrier", "continents", "depth", "erosion", "final_density", "fluid_level_floodedness", "fluid_level_spread",
             "lava", "preliminary_surface_level", "ridges", "temperature", "vegetation", "vein_gap", "vein_ridged", "vein_toggle"

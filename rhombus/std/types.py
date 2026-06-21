@@ -46,10 +46,12 @@ in the `argument` field of the `minecraft:constant` density function type
 
 class autoCachedMappedFunctionBase(MappedFunctionBase):
     
-    @classmethod
-    def deserialize_toplevel(cls, data: JSONDict) -> Reference:
-        definition = cls(DensityFunction.deserialize_inline(data["argument"]))
-        return Reference("rhombus:partitioned/" + uuid_hash(definition.serialize_toplevel()), definition)
+    # We leave this for now.
+    # @classmethod
+    # def deserialize_toplevel(cls, data: JSONDict) -> Reference:
+    #     definition = cls(DensityFunction.deserialize_inline(data["argument"]))
+    #     return Reference("rhombus:partitioned/" + uuid_hash(definition.serialize_toplevel()), definition)
+    ...
 
 
 class abs(MappedFunctionBase):

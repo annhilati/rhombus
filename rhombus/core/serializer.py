@@ -8,15 +8,19 @@ __all__ = ["serialize_any_toplevel", "serialize_any_inline", "deserialize_any_to
 
 
 def serialize_any_toplevel[T](o: T) -> JSONValue:
-    "Main serialization function"
+    """Main serialization function for top-level values."""
 
     if isinstance(o, RhombusASTNode):
         return o.serialize_toplevel()
     
     # Correct me if I'm wrong but there aren't any other valid cases?
-    raise NotImplementedError("unexpected demand. please check whether this is right")
+    raise NotImplementedError(
+        "serialize_any_toplevel() was called with a value of a type that is not 'RhombusASTNode' "
+        "This is unexpected and unknown how to handle."
+    )
 
 def serialize_any_inline[T](o: T) -> JSONValue:
+    """Main serialization function for nested/inline values."""
     
     if isinstance(o, RhombusASTNode):
         return o.serialize_inline()

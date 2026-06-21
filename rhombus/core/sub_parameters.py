@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Self, ClassVar
 
 from rhombus.core.utils import JSONDict, annotated_fields
 from rhombus.core.node import RhombusASTNode
@@ -11,6 +11,8 @@ class SubParameters(RhombusASTNode):
     
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)
     """
+
+    fileclass: ClassVar[None] = None
       
     #======// Serialization //===================================================================//
       

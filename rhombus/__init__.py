@@ -1,7 +1,6 @@
-"""The Python embedded DSL for writing Density Functions for Minecraft Datapacks
+"""The Python-embedded Domain specific Language for Minecraft Terrain Generation.
 
-[Documentation](https://annhilati.github.io/rhombus)
-
+[Documentation](https://annhilati.github.io/rhombus) •
 [GitHub](https://github.com/annhilati/rhombus)
 """
 
