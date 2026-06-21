@@ -49,7 +49,7 @@ Growing collection of macros for common patterns and complex operations, reducin
   - Math
     - Infinity, NaN
     - sum, prod
-    - fastRound, fastFloor, fastCeil
+    - fastRound, fastFloor, fastCeil (with settable decimal precision)
   - Spline approximations
     - Sampler for any Python function
     - sin, cos, tan, atan, coth
