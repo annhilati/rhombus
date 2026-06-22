@@ -7,6 +7,9 @@ interface ResizerProps {
   max?: number
 }
 
+/**
+ * A draggable vertical handle component that allows users to resize adjacent layout panes.
+ */
 export default function Resizer({ value, onChange, min = 0, max = Infinity }: ResizerProps) {
   const dragStart = useRef<{ x: number; width: number } | null>(null)
 

@@ -2,6 +2,9 @@ import { clamp } from 'deepslate'
 
 export type Color = [number, number, number]
 
+/**
+ * Generates a color mapping function from an array of RGB colors by linearly interpolating between them.
+ */
 function createColormap(colors: Color[]) {
 	const n = colors.length - 2
 	const w = 1 / n

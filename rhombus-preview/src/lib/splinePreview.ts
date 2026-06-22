@@ -13,6 +13,10 @@ export interface SplineData {
   spline?: SplineData;
 }
 
+/**
+ * Recursively extracts all possible numerical values from a spline definition.
+ * Used to determine the minimum and maximum y-bounds for the preview SVG.
+ */
 function getPossibleValues(val: SplineValue): number[] {
   if (typeof val === 'number') return [val];
   if (typeof val === 'string') throw new Error('REFERENCE');
@@ -33,6 +37,10 @@ function getPossibleValues(val: SplineValue): number[] {
   return [];
 }
 
+/**
+ * Rounds a number to a "nice" human-readable number (like 1, 2, 5, or 10) times a power of 10.
+ * Used internally to calculate spacing for graph axis ticks.
+ */
 function niceNum(range: number, round: boolean): number {
   if (range === 0) return 0;
   const exponent = Math.floor(Math.log10(range));
@@ -52,6 +60,9 @@ function niceNum(range: number, round: boolean): number {
   return niceFraction * Math.pow(10, exponent);
 }
 
+/**
+ * Computes an appropriate set of graph axis ticks and nice boundaries for a given minimum and maximum value.
+ */
 function getNiceTicks(min: number, max: number, maxTicks = 5) {
   if (min === max) {
     return { ticks: [min], niceMin: min - 1, niceMax: min + 1 };
@@ -68,6 +79,10 @@ function getNiceTicks(min: number, max: number, maxTicks = 5) {
   return { ticks, niceMin, niceMax };
 }
 
+/**
+ * Generates an SVG image (as a base64 data URI) illustrating a Minecraft spline object.
+ * Shows the graph of the spline using points and bezier curves.
+ */
 export function renderSplineSVG(spline: SplineData): { type: 'success', svg: string } | { type: 'error', message: string } | null {
   if (!spline?.points || !Array.isArray(spline.points)) return null;
   

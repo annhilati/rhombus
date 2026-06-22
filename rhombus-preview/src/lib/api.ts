@@ -1,10 +1,17 @@
-import type { ContextFile } from '../types'
+import type { RhombusContextFile } from '../types'
 
+/**
+ * Formats the given base endpoint URL into the events endpoint URL for Server-Sent Events.
+ */
 export function getEventsEndpoint(endpoint: string): string {
   return `${endpoint.replace(/\/+$/, '')}/events`
 }
 
-export async function loadContextFiles(endpoint: string): Promise<ContextFile[]> {
+/**
+ * Fetches the latest JSON context files from the given backend endpoint.
+ * Throws an error if the request fails or the payload is malformed.
+ */
+export async function loadContextFiles(endpoint: string): Promise<RhombusContextFile[]> {
   const url = `${endpoint.replace(/\/+$/, '')}/data?t=${Date.now()}`
   const response = await fetch(url, {
     cache: 'no-store',

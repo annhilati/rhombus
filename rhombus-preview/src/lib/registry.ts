@@ -1,18 +1,10 @@
-import type { ContextFile, RegistrySection, VisualizationKind } from '../types'
+import type { RhombusContextFile, RegistrySection } from '../types'
 
+/**
+ * Normalizes a registry name so it does not include a namespace. Example: `"worldgen/density_function"`
+ */
 export function normalizeRegistryName(raw: string): string {
   const lower = raw.trim().toLowerCase()
-  if (lower === 'worldgen/noise' || lower === 'minecraft:noise' || lower === 'noise') {
-    return 'noise'
-  }
-  if (
-    lower === 'worldgen/density_function' ||
-    lower === 'minecraft:density_function' ||
-    lower === 'density_function' ||
-    lower === 'density-function'
-  ) {
-    return 'density_function'
-  }
   
   const colonIndex = lower.indexOf(':')
   if (colonIndex >= 0) {
@@ -21,22 +13,24 @@ export function normalizeRegistryName(raw: string): string {
   return lower
 }
 
+/**
+ * Converts a raw registry name into a human-readable title (e.g., "density_function" becomes "DENSITY FUNCTION").
+ */
 export function prettyRegistryTitle(raw: string): string {
   const normalized = normalizeRegistryName(raw)
-  return normalized.replace(/[_-]/g, ' ').toUpperCase()
+  return normalized.replace(/[_/-]/g, ' ').toUpperCase()
 }
 
-export function getVisualizationKind(registry: string): VisualizationKind {
-  const normalized = normalizeRegistryName(registry)
-  if (normalized === 'noise') return 'noise'
-  if (normalized === 'density_function') return 'density_function'
-  return null
-}
-
-export function fileKey(file: ContextFile): string {
+/**
+ * Generates a unique key for a file based on its normalized registry name and ID.
+ */
+export function fileKey(file: RhombusContextFile): string {
   return `${normalizeRegistryName(file.registry)}::${file.id}`
 }
 
+/**
+ * Parses a standard Minecraft file ID (like `"minecraft:my/path/file"`) into its structural components.
+ */
 export function parseFileId(id: string): { namespace: string; path: string; pathParts: string[]; displayName: string } {
   const trimmed = id.trim()
   const colonIndex = trimmed.indexOf(':')
@@ -48,8 +42,11 @@ export function parseFileId(id: string): { namespace: string; path: string; path
   return { namespace, path: cleaned, pathParts, displayName }
 }
 
-export function groupByRegistry(files: ContextFile[]): RegistrySection[] {
-  const map = new Map<string, ContextFile[]>()
+/**
+ * Groups a flat array of Rhombus context files into sections categorized and sorted by their registry names.
+ */
+export function groupByRegistry(files: RhombusContextFile[]): RegistrySection[] {
+  const map = new Map<string, RhombusContextFile[]>()
 
   for (const file of files) {
     const key = normalizeRegistryName(file.registry)

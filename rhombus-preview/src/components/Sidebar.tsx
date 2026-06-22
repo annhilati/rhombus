@@ -1,20 +1,23 @@
-import type { ContextFile, FileTreeNode } from '../types'
+import type { RhombusContextFile, FileTreeNode } from '../types'
 import { fileKey } from '../lib/registry'
 
 interface SidebarProps {
   tree: FileTreeNode[]
   selectedKey: string | null
-  onSelectFile: (file: ContextFile) => void
+  onSelectFile: (file: RhombusContextFile) => void
   endpoint: string
   onChangeEndpoint: (endpoint: string) => void
   width?: number
 }
 
+/**
+ * A selectable button representing a single file in the file tree.
+ */
 function FileButton({ file, label, selectedKey, onSelectFile, }: {
-  file: ContextFile
+  file: RhombusContextFile
   label: string
   selectedKey: string | null
-  onSelectFile: (file: ContextFile) => void
+  onSelectFile: (file: RhombusContextFile) => void
 }) {
   const key = fileKey(file)
   const selected = key === selectedKey
@@ -32,6 +35,9 @@ function FileButton({ file, label, selectedKey, onSelectFile, }: {
   )
 }
 
+/**
+ * Renders an SVG chevron icon used for collapsible tree nodes.
+ */
 function Chevron() {
   return (
     <svg className="tree-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +46,10 @@ function Chevron() {
   )
 }
 
-function renderNode(node: FileTreeNode, selectedKey: string | null, onSelectFile: (file: ContextFile) => void) {
+/**
+ * Recursively renders a node in the file tree (either a collapsible directory/registry or a file button).
+ */
+function renderNode(node: FileTreeNode, selectedKey: string | null, onSelectFile: (file: RhombusContextFile) => void) {
   if (node.kind === 'file' && node.file) {
     return <FileButton key={node.key} file={node.file} label={node.label} selectedKey={selectedKey} onSelectFile={onSelectFile} />
   }
@@ -65,6 +74,9 @@ function renderNode(node: FileTreeNode, selectedKey: string | null, onSelectFile
   )
 }
 
+/**
+ * Renders the sidebar containing the file tree navigation and backend endpoint configuration.
+ */
 export default function Sidebar({ tree, selectedKey, onSelectFile, endpoint, onChangeEndpoint, width }: SidebarProps) {
   return (
     <aside className="sidebar" style={{ width: width ? `${width}px` : undefined, flex: width ? 'none' : undefined }}>

@@ -1,16 +1,20 @@
 import { useRef, useEffect } from 'react'
 import Editor, { Monaco, OnMount } from '@monaco-editor/react'
 import type { editor, languages, Position } from 'monaco-editor'
-import type { ContextFile } from '../types'
+import type { RhombusContextFile } from '../types'
 import { prettyRegistryTitle } from '../lib/registry'
 import { renderSplineSVG } from '../lib/splinePreview'
 interface JsonPaneProps {
-  file: ContextFile
-  allFiles: ContextFile[]
-  onSelectFile: (file: ContextFile) => void
+  file: RhombusContextFile
+  allFiles: RhombusContextFile[]
+  onSelectFile: (file: RhombusContextFile) => void
   width?: number
 }
 
+/**
+ * Finds and extracts a string literal within a line of JSON based on the given column index.
+ * Useful for resolving clicked file references in the editor.
+ */
 function findStringAtCol(line: string, col: number): string | null {
   const regex = /"([^"\\]*(?:\\.[^"\\]*)*)"/g
   let match
@@ -25,6 +29,10 @@ function findStringAtCol(line: string, col: number): string | null {
 }
 
 
+/**
+ * Renders a Monaco Editor pane displaying the JSON content of the selected file.
+ * Automatically adds interactive links to other files and hover previews for spline data.
+ */
 export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPaneProps) {
   const value = JSON.stringify(file.content ?? null, null, 2) ?? 'null'
 

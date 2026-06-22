@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 
 import Sidebar from './components/Sidebar'
 import JsonPane from './components/JsonPane'
@@ -10,32 +10,49 @@ import { fileKey, normalizeRegistryName } from './lib/registry'
 import { buildTree } from './lib/tree'
 import { useLocalStorage } from './lib/storage'
 import { fetchVanillaData } from './lib/deepslate'
-import type { ContextFile } from './types'
+import type { RhombusContextFile } from './types'
 
+/**
+ * The main application component that manages state for loaded files, selected files,
+ * UI layout configurations (like resizer widths), and handles live-reloading via SSE.
+ */
 export default function App() {
-  const [endpoint, setEndpoint]       = useLocalStorage<string>('rhombus.endpoint', 'http://127.0.0.1:8000')
-  const [files, setFiles]             = useState<ContextFile[]>([])
-  const [selectedKey, setSelectedKey] = useLocalStorage<string | null>('rhombus.selectedKey', null)
-  const [status, setStatus]           = useState<'loading' | 'ready' | 'error'>('loading')
-  const [error, setError]             = useState<string | null>(null)
+  const [endpoint, setEndpoint]               = useLocalStorage<string>('rhombus.endpoint', 'http://127.0.0.1:8000')
+  const [selectedFileKey, setSelectedFileKey] = useLocalStorage<string | null>('rhombus.selectedKey', null)
+  const [files, setFiles]                     = useState<RhombusContextFile[]>([])
+  const [status, setStatus]                   = useState<'loading' | 'ready' | 'error'>('loading')
+  const [error, setError]                     = useState<string | null>(null)
 
   const [sidebarWidth, setSidebarWidth]   = useLocalStorage('rhombus.sidebarWidth', 320)
   const [jsonPaneWidth, setJsonPaneWidth] = useLocalStorage('rhombus.jsonPaneWidth', 400)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const noticeTimeout = useRef<number | null>(null)
+  const [toastMessage, setToastMessage]   = useState<string | null>(null)
+  const toastTimeout = useRef<number | null>(null)
+
+  /** Displays a toast for a duration of given milliseconds. */
+  const showToast = useCallback((message: string, duration = 3000) => {
+    setToastMessage(message)
+
+    if (toastTimeout.current) {
+      window.clearTimeout(toastTimeout.current)
+    }
+
+    toastTimeout.current = window.setTimeout(() => {
+      setToastMessage(null)
+      toastTimeout.current = null
+    }, duration)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
 
-    async function fetchFiles() {
+    /** Loads the files from endpoint and vanilla resources */
+    async function loadFiles() {
       try {
         const [loadedFiles] = await Promise.all([
           loadContextFiles(endpoint),
           fetchVanillaData().catch(e => {
             console.warn('Failed to fetch vanilla data', e)
-            setToastMessage('Fehler beim Laden der Vanilla-Ressourcen (Misode).')
-            if (noticeTimeout.current) window.clearTimeout(noticeTimeout.current)
-            noticeTimeout.current = window.setTimeout(() => setToastMessage(null), 5000)
+            showToast('Failed fetching vanilla resources from Misode.')
           })
         ])
         
@@ -43,14 +60,12 @@ export default function App() {
         
         setFiles((prev) => {
           if (prev.length > 0) {
-            setToastMessage('✨ Files were changed')
-            if (noticeTimeout.current) window.clearTimeout(noticeTimeout.current)
-            noticeTimeout.current = window.setTimeout(() => setToastMessage(null), 3000)
+            showToast('✨ Files were changed')
           }
           return loadedFiles
         })
         
-        setSelectedKey((current) => current ?? (loadedFiles[0] ? fileKey(loadedFiles[0]) : null))
+        setSelectedFileKey((current) => current ?? null)
         setStatus('ready')
         setError(null)
       } catch (cause) {
@@ -60,8 +75,8 @@ export default function App() {
       }
     }
 
-    // Initial fetch
-    fetchFiles()
+    // Initial load
+    loadFiles()
 
     // Setup SSE for live updates
     let eventSource: EventSource | null = null
@@ -71,7 +86,7 @@ export default function App() {
       
       eventSource.onmessage = (event) => {
         if (event.data === 'update') {
-          fetchFiles()
+          loadFiles()
         }
       }
 
@@ -94,7 +109,7 @@ export default function App() {
 
   const fileTree = useMemo(() => buildTree(files), [files])
 
-  const selectedFile = useMemo(() => files.find((file) => fileKey(file) === selectedKey) ?? files[0] ?? null, [files, selectedKey])
+  const selectedFile = useMemo(() => files.find((file) => fileKey(file) === selectedFileKey) ?? files[0] ?? null, [files, selectedFileKey])
   const registryLabel = selectedFile ? normalizeRegistryName(selectedFile.registry) : null
 
 
@@ -102,23 +117,23 @@ export default function App() {
     <div className="app">
       <Sidebar 
         tree={fileTree} 
-        selectedKey={selectedKey} 
-        onSelectFile={(file) => setSelectedKey(fileKey(file))} 
+        selectedKey={selectedFileKey} 
+        onSelectFile={(file) => setSelectedFileKey(fileKey(file))} 
         endpoint={endpoint}
         onChangeEndpoint={setEndpoint}
         width={sidebarWidth} 
       />
       <Resizer value={sidebarWidth} onChange={setSidebarWidth} min={200} max={850} />
       <main className="main-area">
-        {status === 'loading' &&                  <div className="status-banner">Loading context files from {endpoint}...</div>}
+        {status === 'loading' &&                  <div className="status-banner">Loading files from {endpoint}...</div>}
         {status === 'error'   &&                  <div className="status-banner status-error">Could not load files: {error}</div>}
         {status === 'ready'   && !selectedFile && <div className="status-banner">No file selected.</div>}
         
         {selectedFile && (
           <div className={`workspace ${registryLabel ? 'has-visualizer' : 'json-only'}`}>
-            <JsonPane file={selectedFile} allFiles={files} onSelectFile={(f) => setSelectedKey(fileKey(f))} width={registryLabel ? jsonPaneWidth : undefined} />
+            <JsonPane file={selectedFile} allFiles={files} onSelectFile={(f) => setSelectedFileKey(fileKey(f))} width={registryLabel ? jsonPaneWidth : undefined} />
             {registryLabel && <Resizer value={jsonPaneWidth} onChange={setJsonPaneWidth} min={200} max={1200} />}
-            <VisualizerPane file={selectedFile} allFiles={files} />
+            <VisualizerPane file={selectedFile} contextFiles={files} />
           </div>
         )}
       </main>

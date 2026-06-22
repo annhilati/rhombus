@@ -1,8 +1,12 @@
 import { Identifier, Registry } from 'deepslate'
-import type { ContextFile } from '../types'
+import type { RhombusContextFile } from '../types'
 
 let vanillaCache: Record<string, Record<string, any>> | null = null
 
+/**
+ * Fetches vanilla noise and density function data from the Misode repository and caches it in memory.
+ * This ensures that built-in Minecraft resources are available when previewing files.
+ */
 export async function fetchVanillaData(): Promise<void> {
   if (vanillaCache) return
 
@@ -27,12 +31,17 @@ export async function fetchVanillaData(): Promise<void> {
 }
 
 export interface DeepslateRuntime {
-  registerAllFiles: (files: ContextFile[]) => void
+  registerAllFiles: (files: RhombusContextFile[]) => void
 }
 
+/**
+ * Initializes and returns a Deepslate runtime object.
+ * The runtime provides a method to register custom JSON files alongside the cached vanilla data,
+ * allowing Deepslate to sample blocks using those rules.
+ */
 export function loadDeepslateRuntime(): DeepslateRuntime {
   return {
-    registerAllFiles(files: ContextFile[]) {
+    registerAllFiles(files: RhombusContextFile[]) {
       // Group files by registry
       const filesByRegistry = new Map<string, Record<string, string>>()
       for (const file of files) {

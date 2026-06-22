@@ -1,6 +1,10 @@
-import type { ContextFile, FileTreeNode } from '../types'
+import type { RhombusContextFile, FileTreeNode } from '../types'
 import { normalizeRegistryName, parseFileId, prettyRegistryTitle } from './registry'
 
+/**
+ * Compares two FileTreeNodes for sorting purposes.
+ * Orders nodes hierarchically: Registries -> Namespaces -> Folders -> Files, and falls back to alphabetical order.
+ */
 function compareNodes(a: FileTreeNode, b: FileTreeNode): number {
   const rank = { registry: 0, namespace: 1, folder: 2, file: 3 } as const
   const delta = rank[a.kind] - rank[b.kind]
@@ -8,7 +12,11 @@ function compareNodes(a: FileTreeNode, b: FileTreeNode): number {
   return a.label.localeCompare(b.label)
 }
 
-function insertPath(children: FileTreeNode[], parts: string[], file: ContextFile, keyPrefix: string): void {
+/**
+ * Recursively inserts a file into the nested tree structure based on its parsed path segments.
+ * Mutates the provided children array.
+ */
+function insertPath(children: FileTreeNode[], parts: string[], file: RhombusContextFile, keyPrefix: string): void {
   if (parts.length === 0) {
     const existing = children.find((entry) => entry.kind === 'file' && entry.file && entry.file.id === file.id)
     if (!existing) {
@@ -60,7 +68,11 @@ function insertPath(children: FileTreeNode[], parts: string[], file: ContextFile
   insertPath(node.children, tail, file, keyPrefix)
 }
 
-export function buildTree(files: ContextFile[]): FileTreeNode[] {
+/**
+ * Takes a flat list of RhombusContextFiles and constructs a fully nested hierarchical tree suitable for the Sidebar UI.
+ * The tree is structured by Registry -> Namespace -> Folders... -> File.
+ */
+export function buildTree(files: RhombusContextFile[]): FileTreeNode[] {
   const registries = new Map<string, FileTreeNode>()
 
   for (const file of files) {

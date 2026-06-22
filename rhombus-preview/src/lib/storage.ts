@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 
+/**
+ * A custom React hook that manages state synchronized with the browser's localStorage.
+ * It also listens to the 'storage' event to keep state in sync across multiple browser tabs.
+ */
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === 'undefined') {

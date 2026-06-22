@@ -1,19 +1,18 @@
-export interface ContextFile {
+/** Interface for the file objects how they are provided by the Rhombus service endpoint. */
+export interface RhombusContextFile {
   registry: string
   id: string
   content: unknown
 }
 
-export type VisualizationKind = 'noise' | 'density_function' | null
-
 export interface RegistrySection {
   registry: string
   title: string
-  files: ContextFile[]
+  files: RhombusContextFile[]
 }
 
 export interface SidebarFileEntry {
-  file: ContextFile
+  file: RhombusContextFile
   key: string
   namespace: string
   pathParts: string[]
@@ -24,6 +23,6 @@ export interface FileTreeNode {
   key: string
   label: string
   kind: 'registry' | 'namespace' | 'folder' | 'file'
-  file?: ContextFile
+  file?: RhombusContextFile
   children?: FileTreeNode[]
 }
