@@ -100,11 +100,19 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
     const [renderTimeMs, setRenderTimeMs] = useState<number | null>(null)
     const [seedStr, setSeedStr] = useState('0')
     const seed = useMemo(() => {
-        try {
-            return BigInt(seedStr)
-        } catch {
-            return 0n
+        if (/^-?\d+$/.test(seedStr)) {
+            try {
+                return BigInt(seedStr)
+            } catch {
+                // fallback if BigInt fails for some reason
+            }
         }
+        
+        let hash = 0
+        for (let i = 0; i < seedStr.length; i++) {
+            hash = (Math.imul(31, hash) + seedStr.charCodeAt(i)) | 0
+        }
+        return BigInt(hash)
     }, [seedStr])
 
     const scale = useMemo(() => {
@@ -268,16 +276,16 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
             >
                 <div className="visualizer-settings-panel" onPointerDown={(e) => e.stopPropagation()} onPointerMove={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
                     <div className="visualizer-toolbar">
-                        <label>View
+                        <label>
                             <button 
                                 type="button" 
                                 onClick={() => setViewMode(v => v === 'top' ? 'side' : 'top')}
-                                style={{ fontWeight: 600, width: '56px' }}
+                                style={{ width: '90px' }}
                             >
-                                {viewMode === 'top' ? 'Top' : 'Side'}
+                                {viewMode === 'top' ? 'Top View' : 'Side View'}
                             </button>
                         </label>
-                        <label>Zoom
+                        <label>Zoom: {zoom}x
                             <input
                                 type="range"
                                 min="0.1"
@@ -288,7 +296,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                             />
                         </label>
                         {viewMode === 'top' ? (
-                            <label>Y
+                            <label>Y: {yLevel}
                                 <input
                                     type="range"
                                     min="-64"
@@ -299,7 +307,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                                 />
                             </label>
                         ) : (
-                            <label>Z
+                            <label>Z: {zLevel}
                                 <input
                                     type="range"
                                     min="-200"
@@ -316,7 +324,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                                     type="text"
                                     value={seedStr}
                                     onChange={(event) => setSeedStr(event.target.value)}
-                                    style={{ width: '80px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', color: 'inherit', padding: '4px 8px', borderRadius: '6px' }}
+                                    style={{ width: '85px' }}
                                 />
                                 <button
                                     type="button"
@@ -326,9 +334,14 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                                 >🎲</button>
                             </div>
                         </label>
-                        <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('0'); setViewMode('top') }}>
-                            Reset
-                        </button>
+                        <label>
+                            <button
+                                type="button"
+                                onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('0'); setViewMode('top') }}
+                                style={{  }}>
+                                Reset
+                            </button>
+                        </label>
                     </div>
                     <div className="visualizer-settings-handle">
                         <span>Hover to open settings</span>

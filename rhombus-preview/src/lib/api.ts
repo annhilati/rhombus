@@ -11,7 +11,7 @@ export function getEventsEndpoint(endpoint: string): string {
  * Fetches the latest JSON context files from the given backend endpoint.
  * Throws an error if the request fails or the payload is malformed.
  */
-export async function loadContextFiles(endpoint: string): Promise<RhombusContextFile[]> {
+export async function fetchFilesFromService(endpoint: string): Promise<RhombusContextFile[]> {
   const url = `${endpoint.replace(/\/+$/, '')}/data?t=${Date.now()}`
   const response = await fetch(url, {
     cache: 'no-store',
@@ -40,15 +40,26 @@ export async function loadContextFiles(endpoint: string): Promise<RhombusContext
     const registry = file.registry
     const id = file.id
     const content = file.content
+    const language = file.language
 
-    if (typeof registry !== 'string' || typeof id !== 'string') {
+    let parsedContent = content
+    if (typeof content === 'string' && (language === 'json' || !language)) {
+      try {
+        parsedContent = JSON.parse(content)
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (typeof registry !== 'string' || typeof id !== 'string' || typeof language !== 'string') {
       throw new Error(`File entry at index ${index} must contain string fields registry and id.`)
     }
 
     return {
       registry,
       id,
-      content,
+      content: parsedContent,
+      language,
     }
   })
 }

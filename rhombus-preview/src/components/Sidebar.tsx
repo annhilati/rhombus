@@ -83,7 +83,7 @@ export default function Sidebar({ tree, selectedKey, onSelectFile, endpoint, onC
       <div className="sidebar-header">
         <div className="sidebar-title">Rhombus Preview</div>
         <div className="sidebar-subtitle">Context files</div>
-        <div style={{ marginTop: '8px' }}>
+        <label style={{ marginTop: '8px' }}>
           <input
             type="password"
             className="endpoint-input"
@@ -93,7 +93,7 @@ export default function Sidebar({ tree, selectedKey, onSelectFile, endpoint, onC
             onBlur={(e) => e.target.type = 'password'}
             title="Backend Endpoint URL"
           />
-        </div>
+        </label>
       </div>
       <div className="sidebar-content">
         {tree.length === 0 ? <div className="sidebar-empty">No files loaded.</div> : tree.map((node) => renderNode(node, selectedKey, onSelectFile))}

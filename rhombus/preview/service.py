@@ -211,7 +211,8 @@ def get_data():
             {
                 "registry": "/".join(getattr(file, "scope", getattr(file.__class__, "scope", ("worldgen", "density_function")))),
                 "id": id,
-                "content": file.data
+                "content": file.encoder(file.data) if hasattr(file, "encoder") and hasattr(file, "data") else getattr(file, "text", str(file)),
+                "language": getattr(file, "extension", ".json").lstrip("."),
             }
             for id, file in ctx.latest_data.items()
         ],

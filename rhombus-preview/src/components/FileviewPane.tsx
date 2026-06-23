@@ -1,12 +1,15 @@
 import { useRef, useEffect } from 'react'
+
 import Editor, { Monaco, OnMount } from '@monaco-editor/react'
 import type { editor, languages, Position } from 'monaco-editor'
+
 import type { RhombusContextFile } from '../types'
 import { prettyRegistryTitle } from '../lib/registry'
 import { renderSplineSVG } from '../lib/splinePreview'
-interface JsonPaneProps {
+
+interface FileviewPaneProps {
   file: RhombusContextFile
-  allFiles: RhombusContextFile[]
+  contextFiles: RhombusContextFile[]
   onSelectFile: (file: RhombusContextFile) => void
   width?: number
 }
@@ -33,10 +36,10 @@ function findStringAtCol(line: string, col: number): string | null {
  * Renders a Monaco Editor pane displaying the JSON content of the selected file.
  * Automatically adds interactive links to other files and hover previews for spline data.
  */
-export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPaneProps) {
-  const value = JSON.stringify(file.content ?? null, null, 2) ?? 'null'
+export default function FileviewPane({ file, contextFiles, onSelectFile, width }: FileviewPaneProps) {
+  const value = typeof file.content === 'string' ? file.content : (JSON.stringify(file.content ?? null, null, 2) ?? 'null')
 
-  const allFilesRef = useRef(allFiles)
+  const allFilesRef = useRef(contextFiles)
   const onSelectFileRef = useRef(onSelectFile)
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
@@ -57,7 +60,7 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
       let match
       while ((match = regex.exec(line)) !== null) {
         const str = match[1]
-        const target = allFiles.find((f) => f.id === str || f.id === str + '.json')
+        const target = contextFiles.find((f) => f.id === str || f.id === str + '.json')
         if (target) {
           links.push({
             range: new monacoInstance.Range(i + 1, match.index + 2, i + 1, match.index + 2 + str.length),
@@ -76,10 +79,10 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
   }
 
   useEffect(() => {
-    allFilesRef.current = allFiles
+    allFilesRef.current = contextFiles
     onSelectFileRef.current = onSelectFile
     updateDecorations()
-  }, [allFiles, onSelectFile, value])
+  }, [contextFiles, onSelectFile, value])
 
   const handleEditorMount: OnMount = (editorInstance, monacoInstance) => {
     editorRef.current = editorInstance
@@ -109,6 +112,7 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
 
     const providers: { dispose: () => void }[] = [];
     
+    // Spline Preview CodeLens Information
     providers.push(
       monacoInstance.languages.registerCodeLensProvider('json', {
         provideCodeLenses: (model: editor.ITextModel) => {
@@ -130,6 +134,7 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
       })
     );
 
+    // Spline Preview Hover
     providers.push(
       monacoInstance.languages.registerHoverProvider('json', {
         provideHover: (model: editor.ITextModel, position: Position) => {
@@ -212,11 +217,11 @@ export default function JsonPane({ file, allFiles, onSelectFile, width }: JsonPa
     <section className="pane pane-json" style={{ width: width ? `${width}px` : undefined, flex: width ? 'none' : undefined }}>
       <div className="pane-header">
         <div className="pane-title">{prettyRegistryTitle(file.registry)}</div>
-        <div className="pane-meta">{file.id}</div>
+        <div className="pane-meta">{file.id} ({file.language})</div>
       </div>
       <div className="pane-body">
         <Editor
-          language="json"
+          language={file.language ? file.language : "json"}
           value={value}
           onMount={handleEditorMount}
           options={{

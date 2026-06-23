@@ -22,6 +22,37 @@ body {
   background: var(--background2)
 }
 
+/* ======// IO //=============================================================================// */
+label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+label button {
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+label:has(input[type="range"]) {
+  flex-direction: column;
+}
+
+input[type="text"], input[type="password"] {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  padding: 7px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
 /* ======// Sidebar //========================================================================// */
 .endpoint-input {
     width: 100%;
@@ -296,25 +327,8 @@ input {
   background: var(--border);
 }
 
-.visualizer-toolbar label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 .visualizer-toolbar input[type='range'] {
   width: 140px;
-}
-
-.visualizer-toolbar button {
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.05);
-  color: inherit;
-  border-radius: 8px;
-  padding: 7px 10px;
-  cursor: pointer;
 }
 
 .visualizer-toolbar button:hover {

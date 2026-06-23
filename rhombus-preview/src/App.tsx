@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 
 import Sidebar from './components/Sidebar'
-import JsonPane from './components/JsonPane'
+import FileviewPane from './components/FileviewPane'
 import VisualizerPane from './components/VisualizerPane'
 import Resizer from './components/Resizer'
 
-import { getEventsEndpoint, loadContextFiles } from './lib/api'
+import { getEventsEndpoint, fetchFilesFromService } from './lib/api'
 import { fileKey, normalizeRegistryName } from './lib/registry'
 import { buildTree } from './lib/tree'
 import { useLocalStorage } from './lib/storage'
@@ -49,7 +49,7 @@ export default function App() {
     async function loadFiles() {
       try {
         const [loadedFiles] = await Promise.all([
-          loadContextFiles(endpoint),
+          fetchFilesFromService(endpoint),
           fetchVanillaData().catch(e => {
             console.warn('Failed to fetch vanilla data', e)
             showToast('Failed fetching vanilla resources from Misode.')
@@ -131,7 +131,7 @@ export default function App() {
         
         {selectedFile && (
           <div className={`workspace ${registryLabel ? 'has-visualizer' : 'json-only'}`}>
-            <JsonPane file={selectedFile} allFiles={files} onSelectFile={(f) => setSelectedFileKey(fileKey(f))} width={registryLabel ? jsonPaneWidth : undefined} />
+            <FileviewPane file={selectedFile} contextFiles={files} onSelectFile={(f) => setSelectedFileKey(fileKey(f))} width={registryLabel ? jsonPaneWidth : undefined} />
             {registryLabel && <Resizer value={jsonPaneWidth} onChange={setJsonPaneWidth} min={200} max={1200} />}
             <VisualizerPane file={selectedFile} contextFiles={files} />
           </div>

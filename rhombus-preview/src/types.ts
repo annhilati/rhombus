@@ -3,6 +3,7 @@ export interface RhombusContextFile {
   registry: string
   id: string
   content: unknown
+  language: string
 }
 
 export interface RegistrySection {
