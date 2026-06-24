@@ -112,6 +112,8 @@ def rebuild_all() -> dict[str, Any]:
         elif isinstance(item, RhombusASTNode):
             result = {}
             for node in item.inscribed_toplevel_nodes:
+                if node == item:
+                    continue # prevent having the node twice
                 result[node.reference] = node.fileclass(node.serialize_toplevel())
             result[id] = item.fileclass(item.serialize_toplevel())
             per_density.append({

@@ -13,7 +13,7 @@ import math as py_math
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std import functions, macro, types
-from rhombus.macros.math import pi, sum as msum
+from rhombus.macros.math import pi, sum
 from rhombus.macros import conditional as cond, performance as perf
 
 
@@ -133,7 +133,7 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
         return functions.constant(1)
 
     terms_list = [functions.constant(1)] + [ (argument ** k) / py_math.factorial(k) for k in range(1, terms + 1) ]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 @macro
 def ln(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
@@ -147,7 +147,7 @@ def ln(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
         return functions.constant(0)
 
     terms_list = [((-1 if (k % 2 == 0) else 1) * (y ** k) / k) for k in range(1, terms + 1)]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 #======// Trigonometry //========================================================================//
 
@@ -159,7 +159,7 @@ def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚠️ Bigger inputs need more terms before converging.
     """
     terms_list = [argument] + [((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / py_math.factorial(2 * k + 1)) for k in range(1, terms + 1)]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 @macro
 def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -169,7 +169,7 @@ def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚠️ Bigger inputs need more terms before converging.
     """
     terms_list = [functions.constant(1)] + [((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k)) for k in range(1, terms + 1)]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 @macro
 def tan(argument: AnyDensity, terms: int = 3) -> Density[types.mul]:
@@ -192,7 +192,7 @@ def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
         return functions.constant(0)
 
     terms_list = [(py_math.factorial(2*k) / (4**k * py_math.factorial(k)**2 * (2*k + 1))) * (argument ** (2*k + 1)) for k in range(terms)]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 @macro
 def acos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -214,7 +214,7 @@ def atan(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
         return functions.constant(0)
 
     terms_list = [((-1 if (k % 2) else 1) * (argument ** (2*k + 1)) / (2*k + 1)) for k in range(terms)]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 @macro
 def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -227,7 +227,7 @@ def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
         return functions.constant(0)
 
     terms_list = [ (argument ** (2*k + 1)) / py_math.factorial(2*k + 1) for k in range(terms) ]
-    return msum(*terms_list)
+    return sum(*terms_list)
 
 @macro
 def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -237,4 +237,4 @@ def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     ⚠️ Bigger inputs need more terms before converging.
     """
     terms_list = [functions.constant(1)] + [ (argument ** (2*k)) / py_math.factorial(2*k) for k in range(1, terms + 1) ]
-    return msum(*terms_list)
+    return sum(*terms_list)

@@ -15,6 +15,7 @@ from rhombus import (
 from rhombus.core.density_function import register
 
 register(t)
+config.ctx.caching_function_types.set(frozenset([t.cache_2d, t.flat_cache, t.cache_all_in_cell, t.cache_once]))
 
 # Convenience when importing *
 from rich import print

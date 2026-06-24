@@ -187,6 +187,10 @@ class AndCondition(Condition):
     left: Condition
     right: Condition
 
+    @property
+    def _default_input(self):
+        return self.left._default_input or self.right._default_input
+
     def _compile(self, when_true: DensityFunction, when_false: DensityFunction) -> DensityFunction:
         return self.left._compile(self.right._compile(when_true, when_false), when_false)
 
@@ -196,12 +200,20 @@ class OrCondition(Condition):
     left: Condition
     right: Condition
 
+    @property
+    def _default_input(self):
+        return self.left._default_input or self.right._default_input
+
     def _compile(self, when_true: DensityFunction, when_false: DensityFunction) -> DensityFunction:
         return self.left._compile(when_true, self.right._compile(when_true, when_false))
 
 @dataclass(frozen=True)
 class NotCondition(Condition):
     inner: Condition
+
+    @property
+    def _default_input(self):
+        return self.inner._default_input
 
     def _compile(self, when_true: DensityFunction, when_false: DensityFunction) -> DensityFunction:
         return self.inner._compile(when_true=when_false, when_false=when_true)
@@ -288,7 +300,7 @@ class Causality:
             if subject is it:
                 if self._chain._default_input is None:
                     raise TypeError(
-                        "elsewhen(it) is undefined because the initial condition was not composed of multiple conditions"
+                        "elsewhen(it) is undefined because the initial condition was not composed of a condition with input"
                     )
                 subject = self._chain._default_input
 

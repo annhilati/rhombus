@@ -251,14 +251,19 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                     const py = event.clientY - rect.top
                     const worldX = panX + (px - rect.width / 2) / zoom
                     try {
+                        const blockX = Math.floor(worldX)
                         if (viewMode === 'top') {
                             const worldZ = panZ + (py - rect.height / 2) / zoom
-                            const val = sampler(worldX, yLevel, worldZ)
-                            setHoverData({ x: Math.floor(worldX), y: Math.floor(yLevel), z: Math.floor(worldZ), val })
+                            const blockZ = Math.floor(worldZ)
+                            const blockY = Math.floor(yLevel)
+                            const val = sampler(blockX, blockY, blockZ)
+                            setHoverData({ x: blockX, y: blockY, z: blockZ, val })
                         } else {
                             const worldY = panY - (py - rect.height / 2) / zoom
-                            const val = sampler(worldX, worldY, zLevel)
-                            setHoverData({ x: Math.floor(worldX), y: Math.floor(worldY), z: Math.floor(zLevel), val })
+                            const blockY = Math.floor(worldY)
+                            const blockZ = Math.floor(zLevel)
+                            const val = sampler(blockX, blockY, blockZ)
+                            setHoverData({ x: blockX, y: blockY, z: blockZ, val })
                         }
                     } catch {
                         setHoverData(null)

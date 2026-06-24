@@ -52,7 +52,7 @@ from rhombus.std import functions as f
 
 __all__ = ["x", "z", "y"]
 
-_coord_stripe_noise = Noise(87, [1])
+_coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
 _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-52, y_scale=0, shift_x=1.01, shift_y=0, shift_z=1.01)))
 
@@ -63,8 +63,6 @@ _coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_n
 #   Why are the 5 outermost powers of two calculated by a density function and not given literal?
 #       Minecraft doesn’t allow literals over 1 million
 
-
-# Differences between the x and z: shift_x and shift_z are swapped in every shifted_noise-sampler
 
 def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_shift_z: float):
     innermost = f.range_choice(
@@ -105,7 +103,7 @@ def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_s
     return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
 def x():
-    """Returns the X-coordinate of the current block.
+    """Returns the exact X-coordinate of the current block.
 
     **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -120,7 +118,7 @@ def x():
     )
 
 def z():
-    """Returns the Z-coordinate of the current block.
+    """Returns the exact Z-coordinate of the current block.
 
     **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -135,6 +133,6 @@ def z():
     )
 
 def y():
-    """Returns the Y-coordinate of the current block.
+    """Returns the exact Y-coordinate of the current block.
     """
     return f.cache_once(f.y_clamped_gradient(-4062, 4062, -4062, 4062))

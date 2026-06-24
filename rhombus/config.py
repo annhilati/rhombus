@@ -7,8 +7,9 @@ class ctx:
 
     datapack: ContextVar[beet.DataPack | None] = ContextVar("datapack", default=None)
     deserialize_reference_with_content: ContextVar[bool] = ContextVar("deserialize_reference_with_content", default=False)
+    caching_function_types: ContextVar[frozenset] = ContextVar("caching_function_types", default=frozenset())
 
-    
+# TODO: Implement an addon system that manages all kinds of registries 
 
 def warn(message, category, filename, lineno, file=None, line=None):
     print(

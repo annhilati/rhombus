@@ -23,9 +23,10 @@ Infinity = Density.constant(1) / 0
 NaN = Density.constant(0) / 0
 """Density equivalent to Java's `Double.NaN`
 
-**NOTE** `NaN` will be casted to `0.0` thus it will be interpreted as air.
+**NOTE** All arithmetic operations with `NaN` will result in `NaN`. Before
+chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
+as air.
 """
-# TODO research whether this casting happens on occurance or just at the end
 
 pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
 "The constant `π` to 16 decimals."
@@ -99,45 +100,8 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
 
     return result
 
-@macro
-def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
-    """Returns the floor division of two inputs (`argument1 // argument2`).
-    
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return fastFloor(dividend / divisor)
 
-@macro
-def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
-    """Returns the modulo of two inputs (`argument1 % argument2`).
-    
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return perf.cachespecific(dividend - divisor * fastFloor(dividend / divisor), dividend, divisor)
-
-#======// Step Functions //======================================================================//
-
-@macro
-def sgn(argument: AnyDensity) -> Density[types.range_choice]:
-    """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
-    return cond.when(argument).equals(0.0).then(0.0).elsewhen(cond.it).less(0.0).then(-1.0).otherwise(1.0)
-
-@macro
-def heaviside(argument: AnyDensity, *, at_zero: AnyDensity = 0.5) -> Density[types.range_choice]:
-    "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
-    return cond.when(argument).equals(0.0).then(at_zero).elsewhen(cond.it).less(0.0).then(0.0).otherwise(1.0)
-
-@macro
-def monus(argument1: AnyDensity, argument2: AnyDensity):
-    """Returns `argument1 - argument2`, but when that's negative, returns `0.0` instead."""
-    return f.max(argument1 - argument2, 0.0)
-
-@macro
-def ramp(argument: AnyDensity) -> Density[types.max]:
-    """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
-    return f.max(argument, 0)
+#======// Rounding //============================================================================//
 
 @macro
 def fastRound(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
@@ -171,6 +135,47 @@ def fastCeil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     if decimals:
         return fastRound((argument + 0.5) * 10**decimals) / 10**decimals
     return fastRound(argument + 0.5)
+
+@macro
+def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
+    """Returns the floor division of two inputs (`argument1 // argument2`).
+    
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use.
+    """
+    return fastFloor(dividend / divisor)
+
+@macro
+def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
+    """Returns the modulo of two inputs (`argument1 % argument2`).
+    
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use.
+    """
+    return perf.cachespecific(dividend - divisor * fastFloor(dividend / divisor), dividend, divisor)
+
+
+#======// Step Functions //======================================================================//
+
+@macro
+def sgn(argument: AnyDensity) -> Density[types.range_choice]:
+    """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
+    return cond.when(argument).equals(0.0).then(0.0).elsewhen(cond.it).less(0.0).then(-1.0).otherwise(1.0)
+
+@macro
+def heaviside(argument: AnyDensity, *, at_zero: AnyDensity = 0.5) -> Density[types.range_choice]:
+    "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
+    return cond.when(argument).equals(0.0).then(at_zero).elsewhen(cond.it).less(0.0).then(0.0).otherwise(1.0)
+
+@macro
+def monus(argument1: AnyDensity, argument2: AnyDensity):
+    """Returns `argument1 - argument2`, but when that's negative, returns `0.0` instead."""
+    return f.max(argument1 - argument2, 0.0)
+
+@macro
+def ramp(argument: AnyDensity) -> Density[types.max]:
+    """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
+    return f.max(argument, 0)
 
 
 #======// Approximations //======================================================================//
