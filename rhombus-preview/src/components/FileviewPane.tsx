@@ -215,10 +215,10 @@ export default function FileviewPane({ file, contextFiles, onSelectFile, width }
 
   return (
     <section className="pane pane-json" style={{ width: width ? `${width}px` : undefined, flex: width ? 'none' : undefined }}>
-      <div className="pane-header">
+      {/* <div className="pane-header">
         <div className="pane-title">{prettyRegistryTitle(file.registry)}</div>
         <div className="pane-meta">{file.id} ({file.language})</div>
-      </div>
+      </div> */}
       <div className="pane-body">
         <Editor
           language={file.language ? file.language : "json"}

@@ -218,12 +218,12 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
 
     return (
         <section className="pane pane-visualizer">
-            <div className="pane-header">
+            {/* <div className="pane-header">
                 <div className="pane-title">Visualization</div>
                 <div className="pane-meta">
                     {prettyRegistryTitle(file.registry)} · {runtimeReady ? `deepslate ready${renderTimeMs !== null ? ` (${Math.round(renderTimeMs)}ms)` : ''}` : 'deepslate loading'}
                 </div>
-            </div>
+            </div> */}
             <div
                 ref={wrapperRef}
                 className="pane-body visualizer-canvas-wrap"
@@ -357,12 +357,12 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 </div>
                 {hoverData && (
                     <div style={{ position: 'absolute', top: 12, left: 12, padding: '8px 10px', background: 'rgba(0,0,0,0.6)', borderRadius: 6, fontSize: 12, pointerEvents: 'none', color: 'var(--accent2)' }}>
-                        <div>Zoom: {zoom.toFixed(2)}x</div>
-                        <div>
-                            x: {hoverData.x} y: {hoverData.y} z: {hoverData.z}
-                            <br/> 
-                            𝝆: {Number.isNaN(hoverData.val) ? 'NaN' : hoverData.val.toFixed(5)}
-                        </div>
+                        {/* <div>Zoom: {zoom.toFixed(2)}x</div> */}
+                        {runtimeReady ? `Deepslate ready:${renderTimeMs !== null ? ` ${Math.round(renderTimeMs)}ms` : ''}` : 'Deepslate loading'}
+                        <br/> 
+                        x: {hoverData.x} y: {hoverData.y} z: {hoverData.z}
+                        <br/> 
+                        𝝆: {Number.isNaN(hoverData.val) ? 'NaN' : hoverData.val.toFixed(5)}
                     </div>
                 )}
                 <div style={{ position: 'absolute', bottom: 16, right: 16, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>

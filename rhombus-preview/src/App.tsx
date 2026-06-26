@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 
 import Sidebar from './components/Sidebar'
-import FileviewPane from './components/FileviewPane'
-import VisualizerPane from './components/VisualizerPane'
 import Resizer from './components/Resizer'
+import Workspace, { WorkspaceRef } from './components/Workspace'
 
 import { getEventsEndpoint, fetchFilesFromService } from './lib/api'
 import { fileKey, normalizeRegistryName } from './lib/registry'
@@ -24,9 +23,9 @@ export default function App() {
   const [error, setError]                     = useState<string | null>(null)
 
   const [sidebarWidth, setSidebarWidth]   = useLocalStorage('rhombus.sidebarWidth', 320)
-  const [jsonPaneWidth, setJsonPaneWidth] = useLocalStorage('rhombus.jsonPaneWidth', 400)
   const [toastMessage, setToastMessage]   = useState<string | null>(null)
   const toastTimeout = useRef<number | null>(null)
+  const workspaceRef = useRef<WorkspaceRef>(null)
 
   /** Displays a toast for a duration of given milliseconds. */
   const showToast = useCallback((message: string, duration = 3000) => {
@@ -118,7 +117,10 @@ export default function App() {
       <Sidebar 
         tree={fileTree} 
         selectedKey={selectedFileKey} 
-        onSelectFile={(file) => setSelectedFileKey(fileKey(file))} 
+        onSelectFile={(file, newTab = false) => {
+          setSelectedFileKey(fileKey(file))
+          workspaceRef.current?.openFile(file, newTab)
+        }} 
         endpoint={endpoint}
         onChangeEndpoint={setEndpoint}
         width={sidebarWidth} 
@@ -129,12 +131,11 @@ export default function App() {
         {status === 'error'   &&                  <div className="status-banner status-error">Could not load files: {error}</div>}
         {status === 'ready'   && !selectedFile && <div className="status-banner">No file selected.</div>}
         
-        {selectedFile && (
-          <div className={`workspace ${registryLabel ? 'has-visualizer' : 'json-only'}`}>
-            <FileviewPane file={selectedFile} contextFiles={files} onSelectFile={(f) => setSelectedFileKey(fileKey(f))} width={registryLabel ? jsonPaneWidth : undefined} />
-            {registryLabel && <Resizer value={jsonPaneWidth} onChange={setJsonPaneWidth} min={200} max={1200} />}
-            <VisualizerPane file={selectedFile} contextFiles={files} />
-          </div>
+        {status === 'ready' && (
+          <Workspace ref={workspaceRef} files={files} selectedFile={selectedFile} onSelectFile={(f) => {
+            setSelectedFileKey(fileKey(f))
+            workspaceRef.current?.openFile(f, false)
+          }} />
         )}
       </main>
 

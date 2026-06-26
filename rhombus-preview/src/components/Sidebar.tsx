@@ -1,74 +1,119 @@
+import { useState } from 'react'
 import type { RhombusContextFile, FileTreeNode } from '../types'
 import { fileKey } from '../lib/registry'
 
 interface SidebarProps {
   tree: FileTreeNode[]
   selectedKey: string | null
-  onSelectFile: (file: RhombusContextFile) => void
+  onSelectFile: (file: RhombusContextFile, newTab: boolean) => void
   endpoint: string
   onChangeEndpoint: (endpoint: string) => void
   width?: number
 }
 
+function getFileIconPath(file: RhombusContextFile): string {
+  // Rangliste an Regex-Ausdrücken für Datei-Icons
+  const rules = [
+    { pattern: /density/i, icon: 'object' },
+    { pattern: /noise/i, icon: 'object' },
+    // Default fallback
+    { pattern: /.*/, icon: 'object' }
+  ];
+
+  for (const rule of rules) {
+    if (rule.pattern.test(file.id)) {
+      return `/icons/${rule.icon}.svg`;
+    }
+  }
+  return '/icons/object.svg';
+}
+
 /**
  * A selectable button representing a single file in the file tree.
  */
-function FileButton({ file, label, selectedKey, onSelectFile, }: {
+function FileButton({ file, label, selectedKey, onSelectFile, depth }: {
   file: RhombusContextFile
   label: string
   selectedKey: string | null
-  onSelectFile: (file: RhombusContextFile) => void
+  onSelectFile: (file: RhombusContextFile, newTab: boolean) => void
+  depth: number
 }) {
   const key = fileKey(file)
   const selected = key === selectedKey
 
   return (
     <button
+      style={{ paddingLeft: `${depth * 16}px` }}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'copy';
+        (window as any).__draggedRhombusFile = file;
+      }}
+      onDragEnd={() => {
+        (window as any).__draggedRhombusFile = null;
+      }}
       className={`tree-node file ${selected ? 'is-selected' : ''}`}
       title={`${file.registry} · ${file.id}`}
       type="button"
-      onClick={() => onSelectFile(file)}
+      onClick={(e) => onSelectFile(file, e.ctrlKey || e.metaKey)}
     >
-      <span className="tree-file-dot" />
+      <img src={getFileIconPath(file)} className="tree-file-icon" alt="file" />
       <span className="tree-node-label">{label.replace(/\.json$/i, '')}</span>
     </button>
   )
 }
 
 /**
- * Renders an SVG chevron icon used for collapsible tree nodes.
+ * Renders the correct folder or namespace icon with open/closed state.
  */
-function Chevron() {
+function NodeIcon({ kind }: { kind: 'namespace' | 'folder' }) {
   return (
-    <svg className="tree-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
+    <div className="tree-icon-wrapper">
+      <img src={`/icons/${kind}.svg`} className="tree-icon-closed" alt={kind} />
+      <img src={`/icons/${kind}_open.svg`} className="tree-icon-open" alt={`${kind} open`} />
+    </div>
   )
 }
 
 /**
  * Recursively renders a node in the file tree (either a collapsible directory/registry or a file button).
  */
-function renderNode(node: FileTreeNode, selectedKey: string | null, onSelectFile: (file: RhombusContextFile) => void) {
+function TreeNode({ node, selectedKey, onSelectFile, depth = 0 }: {
+  node: FileTreeNode
+  selectedKey: string | null
+  onSelectFile: (file: RhombusContextFile, newTab: boolean) => void
+  depth?: number
+}) {
+  const [isOpen, setIsOpen] = useState(true)
+
   if (node.kind === 'file' && node.file) {
-    return <FileButton key={node.key} file={node.file} label={node.label} selectedKey={selectedKey} onSelectFile={onSelectFile} />
+    return <FileButton file={node.file} label={node.label} selectedKey={selectedKey} onSelectFile={onSelectFile} depth={depth} />
   }
 
   const isRegistry = node.kind === 'registry'
   const isCollapsable = !isRegistry
-  const classes = `tree-node ${isCollapsable ? 'collapsable' : ''}`.trim()
+  const classes = `tree-node ${isCollapsable ? 'collapsable' : ''} ${isRegistry ? 'registry' : ''}`.trim()
 
   return (
-    <details key={node.key} className={classes} open>
+    <details 
+      className={classes} 
+      open={isRegistry ? true : isOpen}
+      onToggle={isRegistry ? undefined : (e) => setIsOpen(e.currentTarget.open)}
+    >
       <summary 
         onClick={isRegistry ? (e) => e.preventDefault() : undefined}
-        style={isRegistry ? { cursor: 'default' } : undefined}
+        style={{
+          cursor: isRegistry ? 'default' : undefined,
+          paddingLeft: isRegistry ? '7px' : `${depth * 16}px`
+        }}
       >
-        {isCollapsable && <Chevron />}
+        {isCollapsable && <NodeIcon kind={node.kind as 'namespace' | 'folder'} />}
         {node.label}
       </summary>
-      <div className="tree-children">
-        {node.children?.map((child) => renderNode(child, selectedKey, onSelectFile))}
+      <div className="tree-node-children">
+        {node.children?.map((child) => (
+          <TreeNode key={child.key} node={child} selectedKey={selectedKey} onSelectFile={onSelectFile} depth={depth + 1} />
+        ))}
       </div>
     </details>
   )
@@ -96,7 +141,10 @@ export default function Sidebar({ tree, selectedKey, onSelectFile, endpoint, onC
         </label>
       </div>
       <div className="sidebar-content">
-        {tree.length === 0 ? <div className="sidebar-empty">No files loaded.</div> : tree.map((node) => renderNode(node, selectedKey, onSelectFile))}
+        {tree.length === 0 ?
+          <div className="sidebar-empty">No files loaded.</div>
+        :
+          <div className="filetree">{tree.map((node) => <TreeNode key={node.key} node={node} selectedKey={selectedKey} onSelectFile={onSelectFile} depth={0} />)}</div>}
       </div>
     </aside>
   )
