@@ -11,16 +11,20 @@ Behind the scenes, Rhombus builds an Abstract Syntax Tree (AST) that is then ser
 
 ## The `Density` Object
 
-The core of the Rhombus DSL is the `Density` class. Almost every worldgen expression you write or function you call in Rhombus returns a `Density` object. This object acts as a symbolic representation of a density function tree.
+The core of the Rhombus DSL is the `Density` class. All worldgen expressions resembling density functions return a `Density` object. This object acts as a symbolic representation of a density function tree.
 
-### Automatic Type Conversion (`AnyDensity`)
+## Macros
 
-To make writing expressions natural, Rhombus automatically converts common Python types into their corresponding density functions when interacting with a `Density` object:
+Functions that return `Density` objects we call macros. They can either instaciate the object manually or call other macros. Macros are especially usefull for abstracting away complex, unreadable or unintuitive functions while using other macros. But every implementd density function type has a *builtin*-macro too that directly instanciates the `Density` object and its content which will be a `DensityFunction` subclass instance.
 
-*   **Numbers (`int` or `float`):** Automatically converted to `minecraft:constant` density functions. Large numbers are automatically split into valid multiplications if they exceed Minecraft's internal constant limits.
-*   **Strings (`str`):** Automatically treated as references (`minecraft:reference`) to other density functions, either vanilla or defined elsewhere in your datapack.
+### Automatic Type Conversion & Shorthands
 
-For example, writing `Density.refer("minecraft:y") * 2.5` perfectly translates into a `minecraft:mul` function multiplying the `y` reference by a `2.5` constant.
+The Macro infrastructure brings the `@macro` decorator and the `AnyDensity` AliasType. To make writing expressions natural, function decorated with `@macro` automatically resolve certain shorthands to `Density` instances:
+
+*   **Numbers (`int` or `float`):** Automatically converted to density functions of type `minecraft:constant`. Large numbers are automatically split into valid multiplications if they exceed Minecraft's internal constant limits.
+*   **Strings (`str`):** Automatically treated as references a density function pseudo type. The information yielded by these objects is limited, but they interact seaminglessly with other density functions.
+
+Shorthands will also be converted when using arithmetic operators. 
 
 ---
 
@@ -50,10 +54,6 @@ In standard Python, `min()` and `max()` evaluate eagerly. Since Rhombus needs to
 *   **`&` (Max):** `a & b` creates a `minecraft:max` function.
 *   **`|` (Min):** `a | b` creates a `minecraft:min` function. (Often used for "cutting" or carving shapes).
 
-```python
-# Create a hopper shape and carve out noise from it using the OR operator (Min)
-out = hopper | noise(n, xz_scale=1, y_scale=1)
-```
 
 ### Comparisons and Conditionals
 
@@ -61,7 +61,7 @@ Because `Density` objects are symbolic, you **cannot** use standard comparison o
 
 Attempting to do so (e.g., `if density > 5:`) will raise a `NotImplementedError`.
 
-Instead, Minecraft provides specific functions for conditional logic. In Rhombus, you should use macros or standard types like `range_choice` to handle conditionality:
+Instead, Minecraft provides specific functions for conditional logic. In Rhombus, you should use macros or standard types like `range_choice` to handle conditionality. Rhombus also provides higher-level conditional macros in `rhombus.macros.conditional` to make this even easier.
 
 ```python
 # WRONG:
@@ -72,8 +72,6 @@ from rhombus.std.types import range_choice
 
 out = range_choice(input=y_level, min_inclusive=64, max_exclusive=10000, when_in_range=a, when_out_of_range=b)
 ```
-
-*(Note: Rhombus also provides higher-level conditional macros in `rhombus.macros` to make this even easier).*
 
 ---
 

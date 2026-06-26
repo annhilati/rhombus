@@ -49,6 +49,7 @@ density functions.
 """
 from rhombus.std import Noise
 from rhombus.std import functions as f
+from rhombus.macros.math import fastFloordiv, fastMod
 
 __all__ = ["x", "z", "y"]
 
@@ -136,3 +137,51 @@ def y():
     """Returns the exact Y-coordinate of the current block.
     """
     return f.cache_once(f.y_clamped_gradient(-4062, 4062, -4062, 4062))
+
+def chunk_x():
+    """Returns the exact X-coordinate of the current chunk.
+
+    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
+    """
+    return fastFloordiv(x(), 16)
+
+def chunk_y():
+    """Returns the exact Y-coordinate of the current chunk."""
+    return fastFloordiv(y(), 16)
+
+def chunk_z():
+    """Returns the exact Z-coordinate of the current chunk.
+
+    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
+    """
+    return fastFloordiv(z(), 16)
+
+def chunk_relative_x():
+    """Returns the exact X-coordinate inside of the current chunk.
+
+    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
+    """
+    return fastMod(x(), 16)
+
+def chunk_relative_y():
+    """Returns the exact Y-coordinate inside of the current chunk."""
+    return fastMod(y(), 16)
+
+def chunk_relative_z():
+    """Returns the exact Z-coordinate inside of the current chunk.
+
+    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+
+    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    that it will not work, when other number types are in use. 
+    """
+    return fastMod(z(), 16)

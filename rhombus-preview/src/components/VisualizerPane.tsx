@@ -276,7 +276,10 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 onWheel={(event) => {
                     event.preventDefault()
                     const factor = event.deltaY > 0 ? 0.92 : 1.08
-                    setZoom((value) => Math.min(20, Math.max(0.1, value * factor)))
+                    setZoom((value) => {
+                        const next = Math.min(20, Math.max(0.1, value * factor))
+                        return Math.round(next * 100) / 100
+                    })
                 }}
             >
                 <div className="visualizer-settings-panel" onPointerDown={(e) => e.stopPropagation()} onPointerMove={(e) => e.stopPropagation()} onPointerUp={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
@@ -290,7 +293,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                                 {viewMode === 'top' ? 'Top View' : 'Side View'}
                             </button>
                         </label>
-                        <label>Zoom: {zoom}x
+                        <label>Zoom: {Math.round(zoom * 100) / 100}x
                             <input
                                 type="range"
                                 min="0.1"

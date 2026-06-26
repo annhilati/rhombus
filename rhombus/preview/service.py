@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 from dataclasses import dataclass, field
 from importlib.resources import files
-import threading, time, sys, os
+import threading, time, sys, os, subprocess, traceback
 
 from rich import print
 from watchdog.observers import Observer
@@ -98,34 +98,41 @@ class Handler(FileSystemEventHandler):
 def rebuild_all() -> dict[str, Any]:
     merged: dict[str, BeetFile] = {}
     per_density: list[dict[str, Any]] = []
+    errors: list[str] = []
 
     for (id, item) in ctx.density_items:
-        if isinstance(item, Density):
-            result = item.compile(id)
-            per_density.append({
-                "source": id,
-                "density": item.__class__.__name__,
-                "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
-            })
-            merged.update(result)
-            
-        elif isinstance(item, RhombusASTNode):
-            result = {}
-            for node in item.inscribed_toplevel_nodes:
-                if node == item:
-                    continue # prevent having the node twice
-                result[node.reference] = node.fileclass(node.serialize_toplevel())
-            result[id] = item.fileclass(item.serialize_toplevel())
-            per_density.append({
-                "source": id,
-                "density": item.__class__.__name__,
-                "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
-            })
-            merged.update(result)
+        try:
+            if isinstance(item, Density):
+                result = item.compile(id)
+                per_density.append({
+                    "source": id,
+                    "density": item.__class__.__name__,
+                    "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
+                })
+                merged.update(result)
+                
+            elif isinstance(item, RhombusASTNode):
+                result = {}
+                for node in item.inscribed_toplevel_nodes:
+                    if node == item:
+                        continue # prevent having the node twice
+                    result[node.reference] = node.fileclass(node.serialize_toplevel())
+                result[id] = item.fileclass(item.serialize_toplevel())
+                per_density.append({
+                    "source": id,
+                    "density": item.__class__.__name__,
+                    "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
+                })
+                merged.update(result)
+        except Exception as exc:
+            print(f"[red]Error compiling '{id}': {exc}[/red]")
+            traceback.print_exc()
+            errors.append(f"'{id}': {exc}")
 
     ctx.last_change = time.time()
     ctx.latest_results = per_density
     ctx.latest_data = merged
+    ctx.last_error = "\n".join(errors) if errors else None
     return merged
 
 
@@ -152,10 +159,23 @@ def rebuild_worker():
         ctx.changed_files.clear()
 
         if any(f.endswith('.py') for f in changed):
+            print("[#553bd9]RHOMBUS[reset]:  Checking for errors before reloading modules...")
+            env = os.environ.copy()
+            env["RHOMBUS_CHECK_ONLY"] = "1"
+            
+            # Check if the script runs without errors up to the start() call
+            result = subprocess.run([sys.executable] + sys.argv, env=env, capture_output=True, text=True)
+            if result.returncode != 0:
+                err_msg = result.stderr.strip() or result.stdout.strip()
+                print(f"[red]RHOMBUS:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n")
+                ctx.last_error = f"Failed to reload Python modules:\n{err_msg}"
+                ctx.last_change = time.time()
+                continue
+
             print("[#553bd9]RHOMBUS[reset]:  Restarting process to reload modules...")
             if ctx.observer is not None:
                 ctx.observer.stop()
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            os._exit(42)
 
         with ctx.compile_lock:
             try:
@@ -260,8 +280,26 @@ def start(
     """Starts the Rhombus Preview service ASGI application.
     
     This includes the frontend and a file-watching backend. One can be used
-    without the other.
+    without the other or with other instance of the other.
     """
+    if os.environ.get("RHOMBUS_CHECK_ONLY") == "1":
+        return
+
+    if not os.environ.get("RHOMBUS_SUPERVISOR_MODE"):
+        import subprocess
+        env = os.environ.copy()
+        env["RHOMBUS_SUPERVISOR_MODE"] = "1"
+        while True:
+            proc = subprocess.Popen([sys.executable] + sys.argv, env=env)
+            try:
+                proc.wait()
+            except KeyboardInterrupt:
+                proc.wait()
+                sys.exit(0)
+            if proc.returncode == 42:
+                continue
+            sys.exit(proc.returncode)
+
     actual_items = []
     for item in items:
         actual_items.append(item)

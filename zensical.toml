@@ -7,12 +7,14 @@ nav = [
     {"Worldgen Developers" = [
         "index.md",
         "usage/walkthrough.md",
-        # "usage/workflow.md",
         {"Get Started" = [
             "syntax.md",
             # "cli.md",
             "datapack_development.md",
             "mod_development.md",
+        ]},
+        {"Examples" = [
+            "examples/conditionality.md"
         ]}
     ]},
     {"Rhombus Developers" = [
