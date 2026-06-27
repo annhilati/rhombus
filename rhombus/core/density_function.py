@@ -1,5 +1,4 @@
-from typing import ClassVar, Self, Any, Iterable
-from types import ModuleType
+from typing import ClassVar, Self
 import warnings
 
 from beet.contrib.worldgen import WorldgenDensityFunction
@@ -7,70 +6,14 @@ from beet.contrib.worldgen import WorldgenDensityFunction
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
-from rhombus import config
+from rhombus.config import env
 
 __all__ = [
     "DensityFunction",
     "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase",
-    "Reference", "constant", "Unknown",
-    "register"
+    "Reference", "constant", "Unknown"
 ]
 
-
-def register(*add: type["DensityFunction"] | ModuleType | Any, rm: Iterable[str | type["DensityFunction"]] = []) -> dict[str, tuple[str, type["DensityFunction"]]]:
-    """Registers or removes `DensityFunction` type subclasses from the deserialization register.
-    
-    Parameters:
-        *add (type[DensityFunction] | module | Any): Objects to register density function types from.
-            If it is not a `DensityFunction` subclass, its attributes will be searched for
-            such. If it is a module, the serach is recursive.
-        rm (str | type[DensityFunction]): Density function types to remove from the deserialization register.
-
-    Returns:
-        The deserialization register after registration. Maps density function
-            type identifiers to tuples of the selected `DensityFunction` classes'
-            module paths and type objects.
-    """
-    registrations = {}
-    visited = set()
-
-    def try_register(o: Any):
-        if id(o) in visited:
-            return
-        visited.add(id(o))
-        
-        if isinstance(o, type) and issubclass(o, DensityFunction):
-            if hasattr(o, "id") and isinstance(o.id, str):
-                registrations[o.id] = o
-        else:
-            if hasattr(o, "__dict__"):
-                for attribute in o.__dict__.values():
-                    try_register(attribute)
-
-    for o in add:
-        if isinstance(o, type) and issubclass(o, DensityFunction):
-            if not hasattr(o, "id") or not isinstance(o.id, str):
-                raise ValueError(f"Cannot register density function type '{o.__name__}' without class variable 'id' defined")
-            
-        try_register(o)
-
-    DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES |= registrations
-
-    for rem in rm:
-        if isinstance(rem, str):
-            keys_to_remove = [k for k in DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES if k == rem or (":" not in rem and k == f"minecraft:{rem}")]
-            for k in keys_to_remove:
-                DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.pop(k, None)
-        elif isinstance(rem, type):
-            keys_to_remove = [k for k, v in DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.items() if v is rem]
-            for k in keys_to_remove:
-                DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.pop(k, None)
-
-    if add and not registrations:
-        warnings.warn("No DensityFunction subclasses were found to register from the given objects", UserWarning)
-
-    return {id: (f"{typ.__module__}.{typ.__qualname__}", typ) for id, typ in sorted(DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.items())}
-        
 
 #======// DensityFunction Base Class //==========================================================//
 
@@ -88,10 +31,7 @@ class DensityFunction(RhombusASTNode):
     """
     fileclass: ClassVar[type[BeetFile]] = WorldgenDensityFunction
     id: ClassVar[str]
-    
-    REGISTERED_DENSITY_FUNCTION_TYPES: ClassVar[dict[str, type["DensityFunction"]]] = {}
-    "Dict of all defined classes inheriting from `DensityFunction` with their ids as the keys."
-              
+                  
     
     #======// Serialization //===================================================================//
     
@@ -119,7 +59,7 @@ class DensityFunction(RhombusASTNode):
                 if ":" not in type_field:
                     type_field = "minecraft:" + type_field
                 
-                target_class = DensityFunction.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
+                target_class = env.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
                 if target_class is None:
                     warnings.warn(
                         f"Could not deserialize density function with type '{type_field}' from dictionary "
@@ -207,9 +147,9 @@ class Reference(DensityFunction):
     def deserialize_inline(cls, data: str):
         data = "minecraft:" + data if ":" not in data else data
        
-        dp = config.ctx.datapack.get()
+        dp = env.datapack
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-            if config.ctx.deserialize_reference_with_content.get():
+            if env.deserialize_reference_with_content:
                 return DensityFunction.deserialize_toplevel(f.data)
             return Reference(data, DensityFunction.deserialize_toplevel(f.data))
             
@@ -239,8 +179,7 @@ class Reference(DensityFunction):
         if self.definition is None:
             return '"' + self.reference + '"'
         elif "partitioned" in self.reference: # TODO: this should not be hardcoded
-            # types_with_implicit_partitioning = (types.cache_2d, types.cache_once, types.flat_cache, types.cache_all_in_cell) # TODO: this should not be hardcoded
-            # if isinstance(self.definition, types_with_implicit_partitioning):
+            # if isinstance(self.definition, tuple(env.chaching_types)):
             #     return self.definition.__repr__()
             return "Density.partitioned(" + self.definition.__repr__() + ")" 
         else:

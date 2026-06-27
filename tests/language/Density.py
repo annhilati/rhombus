@@ -12,15 +12,15 @@ def test_partitioning():
     
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
         
-        token = config.ctx.datapack.set(dp)
+        old_dp = config.ctx.datapack
+        config.ctx.datapack = dp
         
         dp.clear()
         
         Density.configured("a:config", 3.14).inject(dp, "main:function")
-        
         assert dp[worldgen.WorldgenDensityFunction]["a:config"] == worldgen.WorldgenDensityFunction(3.14)
        
-        config.ctx.datapack.reset(token)
+        config.ctx.datapack = old_dp
         
 
 def test_unify_values():

@@ -31,6 +31,7 @@ from rhombus.std.density import Density, AnyDensity
 from rhombus.std.noise import Noise
 from rhombus.std.macros import macro
 from rhombus.std import types
+from rhombus.config import env
 
 # TODO: return type is not correct for caching functions
 
@@ -58,7 +59,7 @@ def add(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.add]:
 def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.mul]:
     """Multiplies two inputs.
     
-    **NOTE** that `Infinity * 0` is `NaN`.
+    **NOTE:** `Infinity * 0` is `NaN`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#mul)
@@ -69,7 +70,7 @@ def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.mul]:
 def invert(argument: AnyDensity) -> Density[types.invert]:
     """Calculates `1/x`.
     
-    **NOTE** That `invert(0)` is `Infinity`.
+    **NOTE:** `invert(0)` is `Infinity`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#invert)
@@ -128,7 +129,7 @@ def squeeze(argument: AnyDensity) -> Density[types.squeeze]:
 def clamp(input: AnyDensity, min: float, max: float) -> Density[types.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
 
-    **NOTE** [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
+    **NOTE:** [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#clamp)
@@ -180,7 +181,7 @@ def interval_select(input: AnyDensity, thresholds: list[float], functions: list[
 def range_choice(input: AnyDensity, min_inclusive: float, max_exclusive: float, when_in_range: AnyDensity, when_out_of_range: AnyDensity) -> Density[types.range_choice]:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
 
-    **NOTE** To create logic or conditional expressions, use `rhombus.macros.conditional`.
+    **NOTE:** To create logic or conditional expressions, use `rhombus.macros.conditional`.
 
     ```
     if input >= min_inclucive:
@@ -205,13 +206,13 @@ def spline(coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
 
     For values beyond the outermost spline points, the value of the nearest spline point is returned.
 
-    **NOTE** If multiple spline points have the same location, for inputs less than the
+    **NOTE:** If multiple spline points have the same location, for inputs less than the
     location, values aproaching the first defined value will be returned. For
     inputs equal to or greather than the location, values leaving the second
     defined values will be returned. ("first" and "second" refer to the order
     of definition in `points`).
 
-    **NOTE** Approximations for various functions done by splines can be found in `rhombus.macros.smath`.
+    **NOTE:** Approximations for various functions done by splines can be found in `rhombus.macros.smath`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
@@ -352,9 +353,8 @@ def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.c
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
-    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, tuple(env.caching_function_types)):
             argument = Density(argument.AST.definition)
         return Density.partitioned(types.cache_2d(argument.AST))
     return Density(types.cache_2d(argument.AST))
@@ -370,9 +370,8 @@ def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[t
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
-    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, tuple(env.caching_function_types)):
             argument = Density(argument.AST.definition)
         return Density.partitioned(types.cache_all_in_cell(argument.AST))
     return Density(types.cache_all_in_cell(argument.AST))
@@ -386,9 +385,8 @@ def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
-    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, tuple(env.caching_function_types)):
             argument = Density(argument.AST.definition)
         return Density.partitioned(types.cache_once(argument.AST))
     return Density(types.cache_once(argument.AST))
@@ -400,9 +398,8 @@ def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, caching_types):
+        if isinstance(argument.AST, types.Reference) and isinstance(argument.AST.definition, tuple(env.caching_function_types)):
             argument = Density(argument.AST.definition)
         return Density.partitioned(types.flat_cache(argument.AST))
     return Density(types.flat_cache(argument.AST))

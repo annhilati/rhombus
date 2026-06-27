@@ -34,7 +34,7 @@ from rhombus.std.types import range_choice, literal_number_limit
 from rhombus.std.density import Density, AnyDensity
 from rhombus import config
 
-EPSILON = config.infinitesimal
+EPSILON = config.env.infinitesimal
 OMEGA = literal_number_limit # TODO: Check whether this is bound to the range_choice arguments or the general limit
 
 

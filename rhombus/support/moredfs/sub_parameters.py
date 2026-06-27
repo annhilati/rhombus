@@ -13,7 +13,7 @@ from rhombus.std import Density, AnyDensity
 class RandomSampler(SubParameters):
     """Describes a sampler for random values.
 
-    **NOTE** Use these factories for instanciating:
+    **NOTE:** Use these factories for instanciating:
     - `~.Beta()` 
     - `~.Binomial()` 
     - `~.Exponential()` 
@@ -100,7 +100,7 @@ class RandomSampler(SubParameters):
 class DistanceMetric(SubParameters):
     """Describes a procedure to determine distances between n-dimensional points.
 
-    **NOTE** Use these factories for instanciating:
+    **NOTE:** Use these factories for instanciating:
     - `~.Chebyshev()` 
     - `~.Euclidean()` 
     - `~.Manhattan()` 

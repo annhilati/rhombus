@@ -17,6 +17,7 @@ if sys.getrecursionlimit() < 10000:
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std import types, AnyDensity, Density, macro
+from rhombus.config import env
 
 class DensityFunctionSizeInfo(NamedTuple):
     toplevel_nodes: int
@@ -160,7 +161,7 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                     count_total_unknown_references += 1
                 return
 
-            if isinstance(value, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)): # TODO This should not be hardcoded
+            if isinstance(value, tuple(env.caching_function_types)):
                 we_are_in_cached = True
             for node in value.fields.values():
                 visit(node, we_are_in_cached=we_are_in_cached)
@@ -201,7 +202,7 @@ def _cache_nodes(
         # Check if the current value is a DensityFunction node. 
         if isinstance(value, DensityFunction):
 
-            is_already_cached_ref = isinstance(value, Reference) and isinstance(value.definition, (types.cache_2d, types.cache_all_in_cell, types.cache_once, types.flat_cache)) # TODO: this shouldn't be hardcoded
+            is_already_cached_ref = isinstance(value, Reference) and isinstance(value.definition, tuple(env.caching_function_types)) 
 
             # If the node has NOT already been manually wrapped in a cache wrapper,
             # AND the specified condition is met (e.g., because it occurs frequently or is the target of `cacheall`),

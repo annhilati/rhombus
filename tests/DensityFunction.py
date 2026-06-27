@@ -21,7 +21,8 @@ def test_deserialize_literals():
     # References with available context
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
         
-        token = config.ctx.datapack.set(dp)
+        old_dp = config.ctx.datapack
+        config.ctx.datapack = dp
         
         dp.clear()
         
@@ -29,7 +30,7 @@ def test_deserialize_literals():
         
         assert DensityFunction.deserialize_inline("some:function") == Reference("some:function", constant(3.14))
        
-        config.ctx.datapack.reset(token)
+        config.ctx.datapack = old_dp
         
         
 def test_serialize_literals():

@@ -3,7 +3,6 @@ from dataclasses import field
 import copy
 
 import beet
-import beet.contrib.worldgen as worldgen
 
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, annotated_fields, contextfunction
 from rhombus.core.node import RhombusASTNode
@@ -101,7 +100,7 @@ class DatapackResource(RhombusASTNode):
     @classmethod
     def deserialize_inline(cls, data: str):
         id = "minecraft:" + data if not ":" in data else data
-        dp = config.ctx.datapack.get()
+        dp = config.ctx.datapack
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
         return cls.refer(id)
@@ -113,17 +112,19 @@ class DatapackResource(RhombusASTNode):
         return cls.deserialize_toplevel(data)
 
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
+    @contextfunction(dp="datapack")
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
-        "Extracts a resource from a Beet datapack."
+        """Extracts a resource from a Beet datapack."""
         
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
 
-        file = dp[worldgen.WorldgenDensityFunction][identifier]
+        file = dp[cls.fileclass][identifier]
         if file is None:
             return None
         
-        return cls.from_dict(file.data)
+        instance = cls.from_dict(file.data)
+        instance.reference = identifier
+        return instance
 
     @classmethod
     def refer(cls, identifier: str, /) -> Self:

@@ -15,9 +15,9 @@ from rhombus.core.utils import BeetFile
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
-    **NOTE** To reference an existing noise, use `~.refer()`.
+    **NOTE:** To reference an existing noise, use `~.refer()`.
 
-    **NOTE** The id of a noise affects the seed for calculation. To ensure that
+    **NOTE:** The id of a noise affects the seed for calculation. To ensure that
     the seed does not change when modifying the values of the noise, use the
     following idiom:
     ```

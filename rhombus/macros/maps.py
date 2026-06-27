@@ -14,7 +14,7 @@ def extrude_heightmap(heightmap: AnyDensity, value_anchors: tuple[float, float],
     input range to an output altitude range, then subtracts the current
     Y-coordinate to create a half-space gradient.
     
-    **NOTE** This only works if `heightmap` is truly 2-dimensional and
+    **NOTE:** This only works if `heightmap` is truly 2-dimensional and
     returns equal values for all heights.
 
     Parameters:

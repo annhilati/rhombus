@@ -106,9 +106,9 @@ def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_s
 def x():
     """Returns the exact X-coordinate of the current block.
 
-    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return _coord_component(
@@ -121,9 +121,9 @@ def x():
 def z():
     """Returns the exact Z-coordinate of the current block.
 
-    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return _coord_component(
@@ -141,9 +141,9 @@ def y():
 def chunk_x():
     """Returns the exact X-coordinate of the current chunk.
 
-    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return fastFloordiv(x(), 16)
@@ -155,9 +155,9 @@ def chunk_y():
 def chunk_z():
     """Returns the exact Z-coordinate of the current chunk.
 
-    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return fastFloordiv(z(), 16)
@@ -165,9 +165,9 @@ def chunk_z():
 def chunk_relative_x():
     """Returns the exact X-coordinate inside of the current chunk.
 
-    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return fastMod(x(), 16)
@@ -179,9 +179,9 @@ def chunk_relative_y():
 def chunk_relative_z():
     """Returns the exact Z-coordinate inside of the current chunk.
 
-    **NOTE** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
+    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     return fastMod(z(), 16)

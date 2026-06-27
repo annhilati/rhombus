@@ -1,4 +1,4 @@
-from typing import Callable, Final, Any, get_type_hints
+from typing import Callable, Final, Any, get_type_hints, runtime_checkable
 import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
 
 import beet, beet.library.base
@@ -38,7 +38,7 @@ def uuid_hash(data: JSONDict) -> str:
 FROM_CONTEXT: Final = object()
 "Typing sentinel to denote that a value will be taken from a context variable."
 
-def contextfunction[**P, R](**ctxparams: contextvars.ContextVar) -> Decorator[P, R]:
+def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
     """Decorator for automatic context handling for parameters.
     """
 
@@ -49,29 +49,40 @@ def contextfunction[**P, R](**ctxparams: contextvars.ContextVar) -> Decorator[P,
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             bound = sig.bind_partial(*args, **kwargs)
             bound.apply_defaults()
+            
+            # Import here to avoid circular imports if any
+            from rhombus import config
+            import copy
 
-            tokens: dict[contextvars.ContextVar, list[contextvars.Token]] = {}
+            needs_new_context = False
+            overrides = {}
 
-            for param, ctxvar in ctxparams.items():
+            for param, env_attr in envparams.items():
                 value = bound.arguments.get(param)
 
                 if value is FROM_CONTEXT:
-                    current = ctxvar.get(None)
-                    bound.arguments[param] = current
+                    bound.arguments[param] = getattr(config.env, env_attr)
                 else:
-                    tokens.setdefault(ctxvar, []).append(ctxvar.set(value))
+                    needs_new_context = True
+                    overrides[env_attr] = value
 
-            try:
-                # Type-Checker wissen manchmal nicht, dass bind_partial die exakten Args wiederherstellt, 
-                # ein # type: ignore kann bei strenger Typisierung hier für mypy nötig sein,
-                # aber die Signatur nach außen bleibt erhalten.
+            if needs_new_context:
+                # Get the actual environment object (the proxy exposes it via _current)
+                # and create a shallow copy so we can override attributes safely
+                current_env_obj = config.env._current
+                new_env = copy.copy(current_env_obj)
+                
+                for attr, val in overrides.items():
+                    setattr(new_env, attr, val)
+                    
+                token = config._current_env.set(new_env)
+                try:
+                    return func(*bound.args, **bound.kwargs)  # type: ignore
+                finally:
+                    config._current_env.reset(token)
+            else:
                 return func(*bound.args, **bound.kwargs)  # type: ignore
-            finally:
-                for ctxvar, token_list in tokens.items():
-                    for token in reversed(token_list):
-                        ctxvar.reset(token)
 
-        # Für die Laufzeit-Introspektion (z.B. pydantic oder FastAPI)
         wrapper.__signature__ = sig # type: ignore
         return wrapper
         

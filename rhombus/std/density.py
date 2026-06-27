@@ -8,11 +8,11 @@ from typing import Self, Literal, overload
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus import config
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import types
+from rhombus.config import env
 
 
 #======// Density Type //========================================================================//
@@ -64,10 +64,9 @@ class Density[Function: DensityFunction = DensityFunction]:
     @classmethod
     def configured(cls, name: str, default: AnyDensity) -> Density[Reference]:
         """Creates a new `Density` object which value that can be easily altered or referenced in the compiled datapack later."""
-        caching_types = (types.cache_2d, types.flat_cache, types.cache_all_in_cell, types.cache_once) # TODO: This should not be hardcoded
         name = "minecraft:" + name if not ":" in name else name
         default = Density.constant(default).AST
-        if isinstance(default, types.Reference) and isinstance(default.definition, caching_types):
+        if isinstance(default, types.Reference) and isinstance(default.definition, tuple(env.caching_function_types)):
             default = default.definition
         return Density(Reference(name, default))
     
@@ -81,7 +80,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Toolchain //=======================================================================//
 
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
+    @contextfunction(dp="datapack")
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
         "Creates a `Density` object from a density function in a Beet datapack."
 
@@ -94,7 +93,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density.from_dict(file.data, dp=dp)
     
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
+    @contextfunction(dp="datapack")
     def from_datapack_noise_router(cls,
         dp: beet.DataPack,
         noise_settings: str,
@@ -117,7 +116,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
     
     @classmethod
-    @contextfunction(dp=config.ctx.datapack)
+    @contextfunction(dp="datapack")
     def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
         """Creates a `Density` object from a dictionary.
         
@@ -129,15 +128,13 @@ class Density[Function: DensityFunction = DensityFunction]:
         "Compiles the Density into Beet file class instances."
         files: dict[str, BeetFile] = {}
 
-        for node in self.AST.inscribed_toplevel_nodes:
-            if node is self.AST:
-                continue
-            
-            id = node.reference
-
-            files[id] = node.fileclass(node.serialize_toplevel())
-
         if ":" not in identifier: identifier = "minecraft:" + identifier
+
+        for node in self.AST.inscribed_toplevel_nodes:
+            id = node.reference
+            if id != identifier:
+                files[id] = node.fileclass(node.serialize_toplevel())
+
         files[identifier] = beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel())
 
         return files

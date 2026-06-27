@@ -34,7 +34,7 @@ service.add_middleware(
 @dataclass
 class AppContext:
     watch_path: str
-    density_items: list[tuple[str, Density | RhombusASTNode]]
+    items: list[tuple[str, Density | RhombusASTNode | BeetFile]]
 
     latest_results: list[dict[str, Any]] = field(default_factory=list)
     latest_data:    dict[str, BeetFile]  = field(default_factory=dict)
@@ -97,14 +97,14 @@ class Handler(FileSystemEventHandler):
 
 def rebuild_all() -> dict[str, Any]:
     merged: dict[str, BeetFile] = {}
-    per_density: list[dict[str, Any]] = []
+    per_item: list[dict[str, Any]] = []
     errors: list[str] = []
 
-    for (id, item) in ctx.density_items:
+    for (id, item) in ctx.items:
         try:
             if isinstance(item, Density):
                 result = item.compile(id)
-                per_density.append({
+                per_item.append({
                     "source": id,
                     "density": item.__class__.__name__,
                     "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
@@ -118,19 +118,29 @@ def rebuild_all() -> dict[str, Any]:
                         continue # prevent having the node twice
                     result[node.reference] = node.fileclass(node.serialize_toplevel())
                 result[id] = item.fileclass(item.serialize_toplevel())
-                per_density.append({
+                per_item.append({
                     "source": id,
                     "density": item.__class__.__name__,
                     "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
                 })
                 merged.update(result)
+
+            elif isinstance(item, BeetFile): # TODO Check whether this works
+                print("f")
+                per_item.append({
+                    "source": id,
+                    "density": item.__class__.__name__,
+                    "result": {id: getattr(item, "data", getattr(item, "text", str(item)))},
+                })
+                merged[id] = item
+
         except Exception as exc:
             print(f"[red]Error compiling '{id}': {exc}[/red]")
             traceback.print_exc()
             errors.append(f"'{id}': {exc}")
 
     ctx.last_change = time.time()
-    ctx.latest_results = per_density
+    ctx.latest_results = per_item
     ctx.latest_data = merged
     ctx.last_error = "\n".join(errors) if errors else None
     return merged
@@ -274,7 +284,7 @@ service.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
 def start(
         watch_path: str | Path,
         /,
-        *items: tuple[str, Density | RhombusASTNode],
+        *items: tuple[str, Density | RhombusASTNode | BeetFile],
         **uvicorn_args
     ) -> None:
     """Starts the Rhombus Preview service ASGI application.
@@ -305,7 +315,7 @@ def start(
         actual_items.append(item)
 
     global ctx
-    ctx = AppContext(watch_path=str(watch_path), density_items=actual_items)
+    ctx = AppContext(watch_path=str(watch_path), items=actual_items)
 
     default_args = dict(
         host="127.0.0.1",
@@ -320,7 +330,7 @@ def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
     Use this function in the `items` parameter of `start_service` to preview
     an already compiled datapack.
 
-    **NOTE** If you are manually instanciating a `DataPack` from a directory,
+    **NOTE:** If you are manually instanciating a `DataPack` from a directory,
     make sure to explicitely also load worldgen files, since they are are not
     loaded by Beet by default:
     ```

@@ -23,7 +23,7 @@ Infinity = Density.constant(1) / 0
 NaN = Density.constant(0) / 0
 """Density equivalent to Java's `Double.NaN`
 
-**NOTE** All arithmetic operations with `NaN` will result in `NaN`. Before
+**NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
 chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
 as air.
 """
@@ -107,7 +107,7 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
 def fastRound(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input to the nearest integer or given decimal.
     
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     if decimals:
@@ -118,7 +118,7 @@ def fastRound(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
 def fastFloor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input down to the nearest integer or given decimal.
     
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
     if decimals:
@@ -129,7 +129,7 @@ def fastFloor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
 def fastCeil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input up to the nearest integer or given decimal.
     
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     if decimals:
@@ -140,7 +140,7 @@ def fastCeil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
 def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
     """Returns the floor division of two inputs (`argument1 // argument2`).
     
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
     return fastFloor(dividend / divisor)
@@ -149,7 +149,7 @@ def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.ran
 def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`).
     
-    **NOTE** This implementation exploits the IEEE 754 Java Double implementation, which means
+    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
     return perf.cachespecific(dividend - divisor * fastFloor(dividend / divisor), dividend, divisor)

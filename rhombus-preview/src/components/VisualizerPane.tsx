@@ -337,18 +337,12 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                                 <button
                                     type="button"
                                     onClick={() => setSeedStr(Math.floor(Math.random() * 2147483647).toString())}
-                                    style={{ padding: '4px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     title="Randomize Seed"
                                 >🎲</button>
                             </div>
                         </label>
                         <label>
-                            <button
-                                type="button"
-                                onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('0'); setViewMode('top') }}
-                                style={{  }}>
-                                Reset
-                            </button>
+                            <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('0'); setViewMode('top') }}>Reset</button>
                         </label>
                     </div>
                     <div className="visualizer-settings-handle">
@@ -356,7 +350,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                     </div>
                 </div>
                 {hoverData && (
-                    <div style={{ position: 'absolute', top: 12, left: 12, padding: '8px 10px', background: 'rgba(0,0,0,0.6)', borderRadius: 6, fontSize: 12, pointerEvents: 'none', color: 'var(--accent2)' }}>
+                    <div className="visualizer-tooltip">
                         {/* <div>Zoom: {zoom.toFixed(2)}x</div> */}
                         {runtimeReady ? `Deepslate ready:${renderTimeMs !== null ? ` ${Math.round(renderTimeMs)}ms` : ''}` : 'Deepslate loading'}
                         <br/> 
@@ -365,33 +359,13 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                         𝝆: {Number.isNaN(hoverData.val) ? 'NaN' : hoverData.val.toFixed(5)}
                     </div>
                 )}
-                <div style={{ position: 'absolute', bottom: 16, right: 16, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))' }}>
-                    <div style={{
-                        width: scale.pixels,
-                        height: 6,
-                        borderLeft: '2px solid #fff',
-                        borderRight: '2px solid #fff',
-                        borderBottom: '2px solid #fff',
-                        marginBottom: 4
-                    }} />
-                    <div style={{ color: '#fff', fontSize: 11, fontWeight: 500, }}>{scale.blocks} blocks</div>
+                <div className="scale">
+                    <div className="scale-shape" style={{ width: scale.pixels }} />
+                    <div className="scale-text">{scale.blocks} blocks</div>
                 </div>
                 <canvas ref={canvasRef} className="visualizer-canvas" />
                 {(parseError || runtimeError) && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: 12,
-                        left: 12,
-                        right: 12,
-                        background: 'var(--danger)',
-                        color: '#fff',
-                        padding: '10px 14px',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                        zIndex: 20,
-                        pointerEvents: 'none'
-                    }}>
+                    <div className="error-banner">
                         <strong>Deepslate Error:</strong> {parseError || runtimeError}
                     </div>
                 )}
