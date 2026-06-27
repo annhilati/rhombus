@@ -3,7 +3,6 @@ import { Layout, Model, TabNode, Actions, IJsonModel, DockLocation } from 'flexl
 import 'flexlayout-react/style/dark.css';
 
 import FileviewPane from './FileviewPane';
-import VisualizerPane from './VisualizerPane';
 import { fileKey, normalizeRegistryName, prettyRegistryTitle } from '../lib/registry';
 import type { RhombusContextFile } from '../types';
 
@@ -52,6 +51,9 @@ const TabContentWrapper = ({ node, files, onSelectFile }: { node: TabNode, files
   if (!file) return <div className="workspace-empty">File not found</div>;
 
   const registryLabel = normalizeRegistryName(file.registry);
+  const VisualizerComponent = window.rhombus.visualizers.get(file.registry) || window.rhombus.visualizers.get(registryLabel || '');
+  const hasVisualizer = !!VisualizerComponent;
+  const effectiveViewMode = hasVisualizer ? viewMode : 'file';
 
   return (
     <div>
@@ -59,36 +61,34 @@ const TabContentWrapper = ({ node, files, onSelectFile }: { node: TabNode, files
       <div className="pane-title">{prettyRegistryTitle(file.registry)}</div>
       <div className="pane-meta">{file.id} ({file.language})</div>
     </div> */}
-    <div className={`workspace-tab-content mode-${viewMode}`}>
-      {(viewMode === 'combined' || viewMode === 'file') && (
+    <div className={`workspace-tab-content mode-${effectiveViewMode}`}>
+      {(effectiveViewMode === 'combined' || effectiveViewMode === 'file') && (
         <div className="pane-container file-pane">
           <FileviewPane file={file} contextFiles={files} onSelectFile={onSelectFile} />
         </div>
       )}
       
-      {(viewMode === 'combined' || viewMode === 'visualizer') && (
-        registryLabel ? (
-          <div className="pane-container visualizer-pane">
-            <VisualizerPane file={file} contextFiles={files} />
-          </div>
-        ) : (
-          viewMode === 'visualizer' && <div className="pane-container empty-pane">No visualizer available for this file type.</div>
-        )
+      {(effectiveViewMode === 'combined' || effectiveViewMode === 'visualizer') && VisualizerComponent && (
+        <div className="pane-container visualizer-pane">
+          <VisualizerComponent file={file} contextFiles={files} />
+        </div>
       )}
 
-      <div className="floating-mode-selector">
-        <div className="mode-sphere">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-             <path d="M2 12C2 12 5 5 12 5C19 5 22 12 22 12C22 12 19 19 12 19C5 19 2 12 2 12Z"></path>
-             <circle cx="12" cy="12" r="3"></circle>
-          </svg>
+      {hasVisualizer && (
+        <div className="floating-mode-selector">
+          <div className="mode-sphere">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+               <path d="M2 12C2 12 5 5 12 5C19 5 22 12 22 12C22 12 19 19 12 19C5 19 2 12 2 12Z"></path>
+               <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </div>
+          <div className="mode-selector-menu">
+             <button className={viewMode === 'combined' ? 'active' : ''} onClick={() => updateMode('combined')}>File & Visualizer</button>
+             <button className={viewMode === 'file' ? 'active' : ''} onClick={() => updateMode('file')}>File Only</button>
+             <button className={viewMode === 'visualizer' ? 'active' : ''} onClick={() => updateMode('visualizer')}>Visualizer</button>
+          </div>
         </div>
-        <div className="mode-selector-menu">
-           <button className={viewMode === 'combined' ? 'active' : ''} onClick={() => updateMode('combined')}>File & Visualizer</button>
-           <button className={viewMode === 'file' ? 'active' : ''} onClick={() => updateMode('file')}>File Only</button>
-           <button className={viewMode === 'visualizer' ? 'active' : ''} onClick={() => updateMode('visualizer')}>Visualizer</button>
-        </div>
-      </div>
+      )}
     </div>
     </div>
   );

@@ -19,7 +19,7 @@ import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus import Density, t
-from rhombus.core import BeetFile, RhombusASTNode
+from rhombus.core import BeetFile, RhombusASTNode, DatapackResource
 
 service = fastapi.FastAPI()
 
@@ -36,12 +36,11 @@ class AppContext:
     watch_path: str
     items: list[tuple[str, Density | RhombusASTNode | BeetFile]]
 
-    latest_results: list[dict[str, Any]] = field(default_factory=list)
-    latest_data:    dict[str, BeetFile]  = field(default_factory=dict)
+    latest_results: dict[str, BeetFile]  = field(default_factory=dict)
     changed_files:  set[str]             = field(default_factory=set)
 
-    last_change: float | None = None
-    last_error: str | None = None
+    last_change_timestamp: float | None = None
+    last_error_message: str | None = None
 
     rebuild_event:  threading.Event = field(default_factory=threading.Event)
     shutdown_event: threading.Event = field(default_factory=threading.Event)
@@ -75,7 +74,7 @@ class Handler(FileSystemEventHandler):
         print(f"[#35aaf3]WATCHER[reset]:  {action} {rel_path}")
         if ctx is not None:
             ctx.changed_files.add(path)
-            ctx.last_change = time.time()
+            ctx.last_change_timestamp = time.time()
             ctx.rebuild_event.set()
 
     def on_created(self, event):
@@ -96,54 +95,37 @@ class Handler(FileSystemEventHandler):
 
 
 def rebuild_all() -> dict[str, Any]:
-    merged: dict[str, BeetFile] = {}
-    per_item: list[dict[str, Any]] = []
+    files: dict[str, BeetFile] = {}
     errors: list[str] = []
 
     for (id, item) in ctx.items:
         try:
             if isinstance(item, Density):
                 result = item.compile(id)
-                per_item.append({
-                    "source": id,
-                    "density": item.__class__.__name__,
-                    "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
-                })
-                merged.update(result)
+                files.update(result)
                 
             elif isinstance(item, RhombusASTNode):
                 result = {}
                 for node in item.inscribed_toplevel_nodes:
                     if node == item:
-                        continue # prevent having the node twice
+                        continue # prevent collecting the node twice (because they will get random names by default)
                     result[node.reference] = node.fileclass(node.serialize_toplevel())
                 result[id] = item.fileclass(item.serialize_toplevel())
-                per_item.append({
-                    "source": id,
-                    "density": item.__class__.__name__,
-                    "result": {k: getattr(v, "data", getattr(v, "text", str(v))) for k, v in result.items()},
-                })
-                merged.update(result)
+                files.update(result)
 
             elif isinstance(item, BeetFile): # TODO Check whether this works
-                print("f")
-                per_item.append({
-                    "source": id,
-                    "density": item.__class__.__name__,
-                    "result": {id: getattr(item, "data", getattr(item, "text", str(item)))},
-                })
-                merged[id] = item
+                print("f") # DEBUG
+                files[id] = item
 
         except Exception as exc:
             print(f"[red]Error compiling '{id}': {exc}[/red]")
             traceback.print_exc()
             errors.append(f"'{id}': {exc}")
 
-    ctx.last_change = time.time()
-    ctx.latest_results = per_item
-    ctx.latest_data = merged
-    ctx.last_error = "\n".join(errors) if errors else None
-    return merged
+    ctx.last_change_timestamp = time.time()
+    ctx.last_error_message = "\n".join(errors) if errors else None
+    ctx.latest_results = files
+    return files
 
 
 def rebuild_worker():
@@ -178,8 +160,8 @@ def rebuild_worker():
             if result.returncode != 0:
                 err_msg = result.stderr.strip() or result.stdout.strip()
                 print(f"[red]RHOMBUS:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n")
-                ctx.last_error = f"Failed to reload Python modules:\n{err_msg}"
-                ctx.last_change = time.time()
+                ctx.last_error_message = f"Failed to reload Python modules:\n{err_msg}"
+                ctx.last_change_timestamp = time.time()
                 continue
 
             print("[#553bd9]RHOMBUS[reset]:  Restarting process to reload modules...")
@@ -191,7 +173,7 @@ def rebuild_worker():
             try:
                 rebuild_all()
             except Exception as exc:
-                ctx.last_error = repr(exc)
+                ctx.last_error_message = repr(exc)
 
 
 def start_watcher(path: str | Path):
@@ -216,7 +198,6 @@ def startup():
     thread = threading.Thread(target=rebuild_worker, daemon=True)
     thread.start()
 
-    # Initiale Berechnung direkt beim Start
     with ctx.compile_lock:
         rebuild_all()
 
@@ -237,8 +218,8 @@ def shutdown():
 @service.get("/data")
 def get_data():
     return {
-        "last_change": ctx.last_change,
-        "latest_results": ctx.latest_results,
+        "last_change": ctx.last_change_timestamp,
+        "latest_results": ctx.latest_results_per_item,
         "latest_data": [
             {
                 "registry": "/".join(getattr(file, "scope", getattr(file.__class__, "scope", ("worldgen", "density_function")))),
@@ -246,9 +227,9 @@ def get_data():
                 "content": file.encoder(file.data) if hasattr(file, "encoder") and hasattr(file, "data") else getattr(file, "text", str(file)),
                 "language": getattr(file, "extension", ".json").lstrip("."),
             }
-            for id, file in ctx.latest_data.items()
+            for id, file in ctx.latest_results.items()
         ],
-        "last_error": ctx.last_error,
+        "last_error": ctx.last_error_message,
     }
 
 @service.get("/events")
@@ -256,12 +237,12 @@ async def get_events(request: fastapi.Request):
     async def event_generator():
         yield "retry: 500\n"
         yield "data: update\n\n"
-        last_sent = ctx.last_change
+        last_sent = ctx.last_change_timestamp
         while not ctx.shutdown_event.is_set():
             if await request.is_disconnected():
                 break
-            if ctx.last_change != last_sent:
-                last_sent = ctx.last_change
+            if ctx.last_change_timestamp != last_sent:
+                last_sent = ctx.last_change_timestamp
                 yield "data: update\n\n"
             await asyncio.sleep(0.2)
     
@@ -274,6 +255,25 @@ async def get_events(request: fastapi.Request):
             "X-Accel-Buffering": "no"
         }
     )
+
+@service.get("/addons/scripts")
+def get_scripts():
+    from rhombus.config import env
+    from pathlib import Path
+    return [{"name": Path(p).name, "url": f"/addons/scripts/{i}"} for i, p in enumerate(env.preview_scripts)]
+
+@service.get("/addons/scripts/{index}")
+def get_script_file(index: int):
+    from rhombus.config import env
+    from pathlib import Path
+    try:
+        p = Path(env.preview_scripts[index])
+        if not p.is_file():
+            return fastapi.responses.Response(status_code=404)
+        mtype = "text/typescript" if p.suffix == ".ts" else "application/javascript"
+        return fastapi.responses.FileResponse(p, media_type=mtype)
+    except IndexError:
+        return fastapi.responses.Response(status_code=404)
 
 
 # Set the frontend endpoint just here, so it doesn't overtake the other endpoints
@@ -325,8 +325,9 @@ def start(
     uvicorn.run(service, **uvicorn_args | default_args)
 
 
-def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
-    """Gathers all density functions from a datapack as `Density` objects.
+def resources_from_datapack(dp: beet.DataPack, *, types: list[DatapackResource]) -> list[tuple[str, Density | DatapackResource]]:
+    """Gathers all density functions from a datapack as `Density` objects as
+    well as datapack resources of given `DatapackResource` types.
     Use this function in the `items` parameter of `start_service` to preview
     an already compiled datapack.
 
@@ -347,8 +348,10 @@ def densities_from_datapack(dp: beet.DataPack) -> list[tuple[str, Density]]:
     )
     ```
     """
-    # TODO: add option to include other resource types
     dfs = []
+    for typ in types:
+        for id in list(dp[typ.fileclass]):
+            dfs.append((id, typ.from_datapack(dp, id)))
     for id in list(dp[beet_worldgen.WorldgenDensityFunction]):
         dfs.append((id, Density.from_datapack(dp, id)))
     for id in list(dp[beet_worldgen.WorldgenNoiseSettings]):

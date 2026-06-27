@@ -9,13 +9,12 @@ from rhombus.macros import *
 from rhombus import (
     splines,
     support,
-    preview
+    preview,
+    std
 )
 from rhombus.config import env
-from rhombus.config import register
 
-register(t)
-env.caching_function_types.update({t.cache_2d, t.flat_cache, t.cache_all_in_cell, t.cache_once})
+env.load(std)
 
 # Convenience when importing *
 from rich import print

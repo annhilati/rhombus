@@ -6,5 +6,5 @@ and other worldgen-related resources.
 To start the preview webserver and file-watching backend use `~.start()`.
 """
 
-from rhombus.preview.service import start, densities_from_datapack
+from rhombus.preview.service import start, resources_from_datapack
 

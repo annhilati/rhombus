@@ -149,7 +149,7 @@ class Reference(DensityFunction):
        
         dp = env.datapack
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-            if env.deserialize_reference_with_content:
+            if env.deserialize_references_directly:
                 return DensityFunction.deserialize_toplevel(f.data)
             return Reference(data, DensityFunction.deserialize_toplevel(f.data))
             

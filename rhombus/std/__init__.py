@@ -22,3 +22,17 @@ from rhombus.std.density import *
 from rhombus.std.functions import *
 from rhombus.std import functions as f
 from rhombus.std import types as t
+
+def _register_rhombus_addon() -> None:
+    from importlib.resources import files
+    
+    from rhombus.config import env
+    from rhombus.core.density_function import DensityFunction
+    
+    from . import types
+   
+    env.REGISTERED_DENSITY_FUNCTION_TYPES.update({
+        cls.id: cls for name, cls in types.__dict__.items()
+        if name in types.__all__ and isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
+    })
+    env.caching_function_types.update({t.cache_2d, t.flat_cache, t.cache_all_in_cell, t.cache_once})

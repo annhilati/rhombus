@@ -55,6 +55,31 @@ export default function App() {
           })
         ])
         
+        try {
+          const scriptsRes = await fetch(`${endpoint}/addons/scripts`)
+          if (scriptsRes.ok) {
+            const scripts = await scriptsRes.json()
+            const { transform } = await import('sucrase')
+            for (const script of scripts) {
+              try {
+                if (script.name.endsWith('.ts')) {
+                  const tsCode = await fetch(`${endpoint}${script.url}`).then(r => r.text())
+                  const jsCode = transform(tsCode, { transforms: ['typescript'] }).code
+                  const blob = new Blob([jsCode], { type: 'application/javascript' })
+                  const url = URL.createObjectURL(blob)
+                  await import(/* @vite-ignore */ url)
+                } else {
+                  await import(/* @vite-ignore */ `${endpoint}${script.url}?t=${Date.now()}`)
+                }
+              } catch (e) {
+                console.error(`Failed to load addon script: ${script.url}`, e)
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to fetch addons from service', e)
+        }
+
         if (cancelled) return
         
         setFiles((prev) => {

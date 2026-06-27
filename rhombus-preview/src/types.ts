@@ -27,3 +27,16 @@ export interface FileTreeNode {
   file?: RhombusContextFile
   children?: FileTreeNode[]
 }
+
+export interface RhombusExtensionAPI {
+  React: any;
+  deepslate: any;
+  densityFunctions: Map<string, (obj: any, inputParser: any) => any>;
+  visualizers: Map<string, React.FC<any>>;
+}
+
+declare global {
+  interface Window {
+    rhombus: RhombusExtensionAPI;
+  }
+}

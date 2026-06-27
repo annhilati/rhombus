@@ -12,3 +12,18 @@ __version__ = "1.6.0"
 
 from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostichedFastNoiseConfig
+
+def _register_rhombus_addon() -> None:
+    from importlib.resources import files
+    
+    from rhombus.config import env
+    from rhombus.core.density_function import DensityFunction
+    
+    from . import types
+
+    env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("frontend.ts"))
+    
+    env.REGISTERED_DENSITY_FUNCTION_TYPES.update({
+        cls.id: cls for name, cls in types.__dict__.items()
+        if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
+    })
