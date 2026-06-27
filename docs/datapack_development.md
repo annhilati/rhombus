@@ -2,8 +2,7 @@
 title: Datapack Development
 icon: lucide/package
 ---
-# Datapack Development
-
+# Datapack Developmen
 
 When using Rhombus with datapacks, your project should use the [Beet](https://github.com/mcbeet/beet) pipeline.
 

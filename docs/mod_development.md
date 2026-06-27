@@ -113,7 +113,7 @@ pipeline:
 output: ../src/main/resources
 ```
 
-The further development of the density function follows the same principles and recommendations as with [Datapack Development](datapack_development.md)
+The further development of the density function follows the same principles as described in the rest of the documentation.
 
 ## Running the Pipeline
 

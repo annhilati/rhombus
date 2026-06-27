@@ -10,7 +10,7 @@ from rhombus.config import env
 
 __all__ = [
     "DensityFunction",
-    "SimpleFunctionBase", "MappedFunctionBase", "DoubleArgumentFunctionBase",
+    "SimpleDensityFunction", "MappedDensityFunction", "DoubleArgumentDensityFunction",
     "Reference", "constant", "Unknown"
 ]
 
@@ -101,7 +101,7 @@ class DensityFunction(RhombusASTNode):
 
 #======// Utility Base Classes //================================================================//
 
-class SimpleFunctionBase(DensityFunction):
+class SimpleDensityFunction(DensityFunction):
     "Base class for density function types with no arguments."
 
     @classmethod
@@ -111,14 +111,14 @@ class SimpleFunctionBase(DensityFunction):
     def serialize_toplevel(self) -> JSONDict:
         return {"type": self.id}
     
-class MappedFunctionBase(DensityFunction):
+class MappedDensityFunction(DensityFunction):
     "Base class for density function types that map an argument `argument` to a value."
     argument: DensityFunction
     
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
 
-class DoubleArgumentFunctionBase(DensityFunction):
+class DoubleArgumentDensityFunction(DensityFunction):
     "Base class for density function types with two arguments `argument1` and `argument2`."
     argument1: DensityFunction
     argument2: DensityFunction

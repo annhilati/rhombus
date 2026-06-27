@@ -2,6 +2,11 @@
     --md-primary-fg-color: #734DFF;
     --md-accent-fg-color: #8366ea;
     --md-typeset-color: hsla(223, 14%, 90%, 0.954);
+    --md-code-bg-color: hsl(225, 19%, 12%);
+}
+
+code {
+    color: hsla(51, 62%, 83%, 0.954);
 }
 
 html {
@@ -33,10 +38,10 @@ html {
 }
 
 .md-grid {
-    max-width: 1500px;
+    max-width: 1400px;
 }
 
-.grid.cards>ul>li:hover {
+.grid.cards > ul > li:hover {
     border: .05rem solid var(--md-default-fg-color--lightest) !important;
     box-shadow: none;
 }

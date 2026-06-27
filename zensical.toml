@@ -9,8 +9,9 @@ nav = [
         "usage/walkthrough.md",
         {"Get Started" = [
             "syntax.md",
+            "abstraction.md",
             # "cli.md",
-            "datapack_development.md",
+            # "datapack_development.md",
             "mod_development.md",
         ]},
         {"Examples" = [

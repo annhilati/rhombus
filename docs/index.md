@@ -12,8 +12,7 @@ In addition, the difficulty of density functions goes beyond mere development kn
 *Rhombus* [ˈʁɔmbʊs] is a tool that facilitates some of these aspects, primarily designed to speed up the work process when you already know what you are doing.
 
 !!! info "Beet Interoperability"
-    If you already worked with development environments for datapacks, you might be pleased to hear that Rhombus is working hand in hand with the [Beet](https://github.com/mcbeet/beet) pipeline.
-    Rhombus can be used without it, but the features that provide a real speed advantage are based on it.
+    Rhombus is built on the Python-based datapack toolkit [Beet](https://github.com/mcbeet/beet). File handling and the integrated developing tools use it, but you are not required to use the Beet pipeline itself for your projects.
 
 <h2>So ... What are the keywords?</h2>
 

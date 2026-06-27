@@ -29,9 +29,9 @@ from typing import ClassVar, Literal
 from rhombus.core import (
     RhombusASTNode,
     DensityFunction,
-    SimpleFunctionBase,
-    MappedFunctionBase,
-    DoubleArgumentFunctionBase,
+    SimpleDensityFunction,
+    MappedDensityFunction,
+    DoubleArgumentDensityFunction,
     Reference,
     constant,
     JSONDict,
@@ -44,7 +44,7 @@ literal_number_limit: Literal[1000000] = 1000000.0
 in the `argument` field of the `minecraft:constant` density function type
 """
 
-class autoCachedMappedFunctionBase(MappedFunctionBase):
+class autoCachedMappedFunctionBase(MappedDensityFunction):
     
     # We leave this for now.
     # @classmethod
@@ -54,25 +54,25 @@ class autoCachedMappedFunctionBase(MappedFunctionBase):
     ...
 
 
-class abs(MappedFunctionBase):
+class abs(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:abs" 
 
-class add(DoubleArgumentFunctionBase): 
+class add(DoubleArgumentDensityFunction): 
     id: ClassVar[str] = "minecraft:add"
     
     def __repr__(self) -> str:
         return "(" + self.argument1.__repr__() + " + " + self.argument2.__repr__() + ")"
 
-class beardifier(SimpleFunctionBase):
+class beardifier(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:beardifier"
 
-class blend_alpha(SimpleFunctionBase):
+class blend_alpha(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:blend_alpha"
 
-class blend_density(MappedFunctionBase):
+class blend_density(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:blend_density"
 
-class blend_offset(SimpleFunctionBase):
+class blend_offset(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:blend_offset"
 
 class cache_2d(autoCachedMappedFunctionBase):
@@ -90,10 +90,10 @@ class clamp(DensityFunction):
     min: float
     max:float
 
-class cube(MappedFunctionBase):
+class cube(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cube"
 
-class end_islands(SimpleFunctionBase):
+class end_islands(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:end_islands"
 
 class find_top_surface(DensityFunction):
@@ -106,10 +106,10 @@ class find_top_surface(DensityFunction):
 class flat_cache(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:flat_cache"
 
-class half_negative(MappedFunctionBase):
+class half_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:half_negative"
 
-class interpolated(MappedFunctionBase):
+class interpolated(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:interpolated"
 
 class interval_select(DensityFunction):
@@ -118,16 +118,16 @@ class interval_select(DensityFunction):
     thresholds: list[float] # non-empty
     functions: list[DensityFunction] # one Element more than thresholds
 
-class invert(MappedFunctionBase):
+class invert(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:invert"
 
-class max(DoubleArgumentFunctionBase):
+class max(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:max"
 
-class min(DoubleArgumentFunctionBase):
+class min(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:min"
 
-class mul(DoubleArgumentFunctionBase):
+class mul(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:mul"
     
     def __repr__(self) -> str:
@@ -147,7 +147,7 @@ class old_blended_noise(DensityFunction):
     y_factor: float
     smear_scale_multiplier: float
 
-class quarter_negative(MappedFunctionBase):
+class quarter_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:quarter_negative"
 
 class range_choice(DensityFunction):
@@ -232,10 +232,10 @@ class spline(DensityFunction):
             raise ValueError("Can only show splines with numeric values")
         show_spline([(p[0], p[1].argument, p[2]) for p in self.points])
     
-class square(MappedFunctionBase):
+class square(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:square"
 
-class squeeze(MappedFunctionBase):
+class squeeze(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:squeeze"
 
 class y_clamped_gradient(DensityFunction):

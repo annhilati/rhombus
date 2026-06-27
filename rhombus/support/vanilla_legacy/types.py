@@ -9,12 +9,12 @@ from typing import ClassVar, Literal
 
 from rhombus.core import (
     DensityFunction,
-    MappedFunctionBase,
+    MappedDensityFunction,
     JSONDict
 )
 from rhombus.std import Noise
 
-class slide(MappedFunctionBase):
+class slide(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:slide"
 
 class spline(DensityFunction):

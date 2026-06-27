@@ -1,6 +1,6 @@
 from typing import ClassVar, Self, Literal, Optional
 
-from rhombus.core.density_function import DensityFunction, MappedFunctionBase, SimpleFunctionBase, DoubleArgumentFunctionBase
+from rhombus.core.density_function import DensityFunction, MappedDensityFunction, SimpleDensityFunction, DoubleArgumentDensityFunction
 
 from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
 
@@ -25,19 +25,19 @@ class DivisionFunctionBase(DensityFunction):
 
 #======// Function Type Classes //===============================================================//
 
-class acos(MappedFunctionBase):
+class acos(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:acos"
     
-class asin(MappedFunctionBase):
+class asin(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:asin"
 
-class atan(MappedFunctionBase):
+class atan(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:atan"
 
-class cbrt(MappedFunctionBase):
+class cbrt(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cbrt"
 
-class ceil(MappedFunctionBase):
+class ceil(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:ceil"
 
 class clamp(DensityFunction):
@@ -46,10 +46,10 @@ class clamp(DensityFunction):
     min: float
     max:float
 
-class cos(MappedFunctionBase):
+class cos(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cos"
 
-class cosh(MappedFunctionBase):
+class cosh(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cosh"
 
 class derivative():
@@ -77,7 +77,7 @@ class dot_product(DensityFunction):
     step_y: int = None
     step_z: int = None
 
-class floor(MappedFunctionBase):
+class floor(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:floor"
 
 class floor_div(DivisionFunctionBase):
@@ -109,19 +109,19 @@ class log(DensityFunction):
     argument: DensityFunction
     base: DensityFunction
 
-class log2(MappedFunctionBase):
+class log2(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:log2"
 
-class log2_floor(MappedFunctionBase):
+class log2_floor(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:log2_floor"
 
 class mod(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:mod"
 
-class ln(MappedFunctionBase):
+class ln(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:ln"
 
-class negate(MappedFunctionBase):
+class negate(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:negate"
 
 class or_else(DensityFunction):
@@ -129,7 +129,7 @@ class or_else(DensityFunction):
     argument: DensityFunction
     fallback: DensityFunction
 
-class polar_coords(SimpleFunctionBase):
+class polar_coords(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:polar_coords"
 
 class power(DensityFunction):
@@ -143,10 +143,10 @@ class profiler(DensityFunction):
     warm_up: int
     iterations: int
 
-class radius(SimpleFunctionBase):
+class radius(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:radius"
 
-class radius_3d(SimpleFunctionBase):
+class radius_3d(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:radius_3d"
 
 class reciprocal(DensityFunction):
@@ -156,10 +156,10 @@ class reciprocal(DensityFunction):
 class remainder(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:remainder"
 
-class resolver(MappedFunctionBase):
+class resolver(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:resolver"
 
-class round(MappedFunctionBase):
+class round(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:round"
 
 class shift():
@@ -169,16 +169,16 @@ class shift():
     shift_y: DensityFunction
     shift_z: DensityFunction
 
-class sigmoid(MappedFunctionBase):
+class sigmoid(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sigmoid"
 
-class signum(MappedFunctionBase):
+class signum(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:signum"
 
-class sin(MappedFunctionBase):
+class sin(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sin"
 
-class sinh(MappedFunctionBase):
+class sinh(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sinh"
 
 class single_channel_image_tessellation(DensityFunction):
@@ -187,16 +187,16 @@ class single_channel_image_tessellation(DensityFunction):
     z_size: int
     deflated_frame_data: str
 
-class sqrt(MappedFunctionBase):
+class sqrt(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sqrt"
 
-class subtract(DoubleArgumentFunctionBase):
+class subtract(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "moredfs:subtract"
 
-class tan(MappedFunctionBase):
+class tan(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:tan"
 
-class tanh(MappedFunctionBase):
+class tanh(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:tanh"
 
 class value_noise(DensityFunction):
@@ -209,10 +209,10 @@ class value_noise(DensityFunction):
     salt: Optional[int] = None
     extra_octaves: Optional[ExtraOctaves] = None
 
-class vector_angle(DoubleArgumentFunctionBase):
+class vector_angle(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "moredfs:vector_angle"
 
-class x(SimpleFunctionBase):
+class x(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:x"
 
 class x_clamped_gradient(DensityFunction):
@@ -222,10 +222,10 @@ class x_clamped_gradient(DensityFunction):
     from_value: float
     to_value: float
 
-class y(SimpleFunctionBase):
+class y(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:y"
 
-class z(SimpleFunctionBase):
+class z(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:z"
 
 class z_clamped_gradient(DensityFunction):

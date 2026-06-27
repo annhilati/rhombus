@@ -1,9 +1,9 @@
 from typing import ClassVar
 
-from rhombus.core.density_function import MappedFunctionBase, DensityFunction
+from rhombus.core.density_function import MappedDensityFunction, DensityFunction
 from rhombus.std.noise import Noise
 
-class invert(MappedFunctionBase):
+class invert(MappedDensityFunction):
     id: ClassVar[str] = "tectonic:invert"
 
 class config_constant(DensityFunction):
