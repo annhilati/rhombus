@@ -21,7 +21,7 @@ def _register_rhombus_addon() -> None:
     
     from . import types
 
-    env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("frontend.ts"))
+    env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("deepslate.ts"))
     
     env.REGISTERED_DENSITY_FUNCTION_TYPES.update({
         cls.id: cls for name, cls in types.__dict__.items()

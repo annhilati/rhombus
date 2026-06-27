@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol, TYPE_CHECKING
 from pathlib import Path
 from contextvars import ContextVar
 import beet, warnings, threading
@@ -52,7 +52,11 @@ class RhombusEnvironment:
     def load(*addons: RhombusAddon) -> None:
         """Loads addons for Rhombus and calls their individual registration procedures.
         
+        Addon registration typically includes adding custom density function types to the
+        decoding register or providing visualization patches for the preview.
+
         `RhombusAddon` is a protocoll requiring the `_register_rhombus_addon` method.
+        This can be a module or a class and principially also any other object.
         """
         for addon in addons:
             if not hasattr(addon, "_register_rhombus_addon"):
@@ -84,7 +88,9 @@ class _EnvProxy:
 
 if TYPE_CHECKING:
     ctx = RhombusEnvironment()
+    "Default Rhombus environment"
     env = RhombusEnvironment()
+    "Default Rhombus environment"
 else:
     ctx = _EnvProxy()
     env = _EnvProxy()

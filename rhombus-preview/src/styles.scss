@@ -458,20 +458,109 @@ input {
 
 
 /* ======// FlexLayout Workspace //===========================================================// */
-.flexlayout__tabset_tabbar_outer {
-    background: var(--background)
+.flexlayout__layout {
+    .flexlayout__splitter {
+        background-color: transparent;
+        position: relative;
+        z-index: 10;
+        transition: background 0.15s;
+        touch-action: none;
+        user-select: none;
+        border-radius: 999px;
+        
+        &::before {
+            --splitter-active-size: 6px;
+            border-radius: 999px;
+        }
+
+        &_vert {
+            cursor: row-resize !important;
+            height: 6px;
+            margin: -3px 0;
+        }
+        
+        &_horz {
+            cursor: col-resize !important;
+            width: 6px;
+            margin: 0 -3px;
+        }
+
+        &:hover, &:active {
+            background: var(--accent);
+        }        
+    }
 }
 
-/* Tabbar Tab */
-.flexlayout__tab_button    {
-    background: var(--background);
-    font-size: 16px;
-    padding: 10px 8px 10px 20px;
-    align-items: center;
-    display: flex;
-} .flexlayout__tab_button:hover, .flexlayout__tab_button--selected {
-    background: var(--background2);
+.flexlayout__tabset {
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+    .flexlayout__tabset_content {
+        background: var(--background2);
+        position: relative;
+        overflow: hidden;
+    
+        &::before {
+            content: '';
+            opacity: 40%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background-image: url("/public/icons/object.svg");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+        }
+    }
 }
+
+
+
+.flexlayout__tabset_tabbar_outer {
+    background: var(--background);
+    padding: 0;
+
+    &:has(.flexlayout__tabset_tabbar_inner_tab_container:empty) {
+        display: none;
+    }
+
+    .flexlayout__tabset_tabbar_inner_tab_container {
+        padding: 0;
+        border: none;
+
+        .flexlayout__tabset_tab_spacer {
+            display: none;
+        } 
+    } 
+
+    // Tabs
+    .flexlayout__tab_button    {
+        background: var(--background);
+        font-size: 16px;
+        padding: 10px 10px 12px 15px;
+        gap: 9px;
+        align-items: center;
+        display: flex;
+        outline: 1px solid #2b2b2b;
+
+        &:hover {
+            background: var(--background2);
+        }
+
+        &--selected {
+            background: #1e1e1e;
+            border-top: 1px solid var(--accent);
+            color: white;
+        }
+
+        .flexlayout__tab_button_trailing {
+            transform: scale(1.2);
+        }
+    }
+}
+
 
 .workspace-container {
     flex: 1;
@@ -487,6 +576,7 @@ input {
     left: 0;
     right: 0;
     bottom: 0;
+    overflow: hidden;
 }
 
 .pane-container {
@@ -495,6 +585,7 @@ input {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .pane-container.file-pane {
@@ -511,34 +602,6 @@ input {
     background: var(--background2);
 }
 
-.tab-view-modes {
-    display: flex;
-    gap: 4px;
-    margin-left: 8px;
-    align-items: center;
-}
-
-.tab-view-modes .mode-dropdown {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 4px;
-    padding: 2px 4px;
-    font-size: 11px;
-    cursor: pointer;
-    outline: none;
-}
-
-.tab-view-modes .mode-dropdown:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
-
-.tab-view-modes .mode-dropdown option {
-    background: var(--background2);
-    color: #e8ebf0;
-}
-
 /* Override flexlayout styles for dark theme */
 .flexlayout__layout {
     --color-text: var(--muted);
@@ -553,10 +616,11 @@ input {
 
 .floating-mode-selector {
     position: absolute;
-    bottom: 24px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--background2);
+    opacity: 40%;
     border: 1px solid var(--border);
     border-radius: 24px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.5);
@@ -640,4 +704,3 @@ input {
         }
     }
 }
-

@@ -22,7 +22,7 @@ export function prettyRegistryTitle(raw: string): string {
 }
 
 /**
- * Generates a unique key for a file based on its normalized registry name and ID.
+ * Generates a unique key for a file based on its registry name and ID.
  */
 export function fileKey(file: RhombusContextFile): string {
   return `${normalizeRegistryName(file.registry)}::${file.id}`

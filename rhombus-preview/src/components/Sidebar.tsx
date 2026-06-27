@@ -47,10 +47,13 @@ function FileButton({ file, label, selectedKey, onSelectFile, depth }: {
       draggable
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', key);
         (window as any).__draggedRhombusFile = file;
+        (window as any).__draggedRhombusTabId = key + '-' + Date.now();
       }}
       onDragEnd={() => {
         (window as any).__draggedRhombusFile = null;
+        (window as any).__draggedRhombusTabId = null;
       }}
       className={`tree-node file ${selected ? 'is-selected' : ''}`}
       title={`${file.registry} · ${file.id}`}

@@ -219,10 +219,9 @@ def shutdown():
 def get_data():
     return {
         "last_change": ctx.last_change_timestamp,
-        "latest_results": ctx.latest_results_per_item,
         "latest_data": [
             {
-                "registry": "/".join(getattr(file, "scope", getattr(file.__class__, "scope", ("worldgen", "density_function")))),
+                "registry": "/".join(file.scope),
                 "id": id,
                 "content": file.encoder(file.data) if hasattr(file, "encoder") and hasattr(file, "data") else getattr(file, "text", str(file)),
                 "language": getattr(file, "extension", ".json").lstrip("."),
