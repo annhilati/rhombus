@@ -66,7 +66,7 @@ export default function App() {
                         for (const script of scripts) {
                             try {
                                 if (script.name.endsWith('.ts')) {
-                                    const tsCode = await fetch(`${endpoint}${script.url}`).then(r => r.text())
+                                    const tsCode = await fetch(`${endpoint}${script.url}?t=${Date.now()}`).then(r => r.text())
                                     const jsCode = transform(tsCode, { transforms: ['typescript'] }).code
                                     const blob = new Blob([jsCode], { type: 'application/javascript' })
                                     const url = URL.createObjectURL(blob)

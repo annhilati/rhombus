@@ -17,6 +17,7 @@ dependencies = [
   "watchdog==6.0.0",
   "fastapi==0.137.1",
   "matplotlib==3.11.0",
+  "pillow==12.2.0"
 ]
 
 [project.urls]

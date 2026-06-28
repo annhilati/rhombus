@@ -1,5 +1,6 @@
-import { Identifier, Registry } from 'deepslate'
+import { Identifier, Registry, DensityFunction } from 'deepslate'
 import type { RhombusContextFile } from '../types'
+import { patchState } from './deepslate-patch'
 
 let vanillaCache: Record<string, Record<string, any>> | null = null
 
@@ -31,6 +32,7 @@ export async function fetchVanillaData(): Promise<void> {
 }
 
 export interface DeepslateRuntime {
+  parseErrors: {fileId: string, error: string}[]
   registerAllFiles: (files: RhombusContextFile[]) => void
 }
 
@@ -41,7 +43,11 @@ export interface DeepslateRuntime {
  */
 export function loadDeepslateRuntime(): DeepslateRuntime {
   return {
+    parseErrors: [],
     registerAllFiles(files: RhombusContextFile[]) {
+      this.parseErrors = [];
+      patchState.errors = [];
+      
       // Group files by registry
       const filesByRegistry = new Map<string, Record<string, string>>()
       for (const file of files) {
@@ -54,7 +60,8 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
       // Populate deepslate registries
       Registry.REGISTRY.forEach((key, registry) => {
         registry.clear()
-        const userData = filesByRegistry.get(key.path) ?? {}
+        const lookupKey = key.namespace === 'minecraft' ? key.path : `${key.namespace}/${key.path}`;
+        const userData = filesByRegistry.get(lookupKey) ?? {}
         
         const userOverrides = new Set<string>()
         Object.keys(userData).forEach(k => {
@@ -81,12 +88,52 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
         // 2. Register user data
         Object.entries(userData).forEach(([type, value]) => {
           try {
+            patchState.currentFile = type;
             registry.register(Identifier.parse(type), registry.parse(JSON.parse(value)))
           } catch (e) {
             console.warn(`Failed to parse ${key.path} ${type}`, e)
+            this.parseErrors.push({ fileId: type, error: e instanceof Error ? e.message : String(e) })
+          } finally {
+            patchState.currentFile = null;
           }
         })
       })
+
+      // Add non-aborting parse errors (like unknown types) from the monkey-patch
+      this.parseErrors.push(...patchState.errors);
     },
   }
+}
+
+/**
+ * Generically crawls a parsed object (like a DensityFunction tree) to find unresolved Holders.
+ * Calling obj.value() on an unresolved deepslate Holder throws a "Missing key in..." error,
+ * which this function catches and collects. This completely avoids hardcoding registry names.
+ */
+export function validateReferences(obj: any, visited = new Set<any>()): string[] {
+    if (!obj || typeof obj !== 'object') return [];
+    if (visited.has(obj)) return [];
+    visited.add(obj);
+
+    const errors: string[] = [];
+
+    // Identify deepslate Holders by their shape, and force them to resolve
+    if (typeof obj.value === 'function' && typeof obj.key === 'function') {
+        try {
+            obj.value();
+        } catch (e: any) {
+            if (e instanceof Error && e.message.startsWith('Missing key in')) {
+                errors.push(e.message);
+            }
+        }
+    }
+
+    // Traverse recursively
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            errors.push(...validateReferences(obj[key], visited));
+        }
+    }
+    
+    return errors;
 }

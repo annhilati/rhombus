@@ -12,8 +12,10 @@ __all__ = [
 
 # TODO Give more detailed information about some parameters and link the wiki.
 
-from typing import Literal
+import base64
+from typing import Literal, Union
 
+from PIL import Image
 from rhombus.std import Density, AnyDensity, macro
 from rhombus.core import DensityFunction
 from . import types
@@ -307,6 +309,10 @@ def gapped_grid_square_spiral(x_size: int, z_size: int, spacing: int, grid_cell_
     return Density(types.gapped_grid_square_spiral(x_size, z_size, spacing, args, out_of_bounds_argument.AST))
 
 @macro
-def single_channel_image_tessellation(x_size: int, z_size: int, deflated_frame_data: str):
+def single_channel_image_tessellation(x_size: int, z_size: int, image: str | Image.Image):
     "Tiles a single-channel image across the world."
-    return Density(types.single_channel_image_tessellation(x_size, z_size, deflated_frame_data))
+    if isinstance(image, Image.Image):
+        import zlib
+        image = image.convert('L')
+        image = base64.b64encode(zlib.compress(image.tobytes())).decode('utf-8')
+    return Density(types.single_channel_image_tessellation(x_size, z_size, image))

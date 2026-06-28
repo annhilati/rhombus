@@ -26,8 +26,8 @@ class RhombusEnvironment:
         self.infinitesimal: float = 1e-16
 
         # Registries
-        self.REGISTERED_DENSITY_FUNCTION_TYPES: dict[str, type["DensityFunction"]] = {}
-        "Mapping of all defined classes inheriting from `DensityFunction` with their ids as the keys."
+        self.density_function_type_deserialization_register: dict[str, type["DensityFunction"]] = {}
+        "Mapping of all `DensityFunction` subclasses that are used for deserialization, with their ids as the keys."
         self.caching_function_types: set[type["DensityFunction"]] = set()
         "Set of `DensityFunction` subclasses that apply structuring logic for enabling caching"
         self.preview_file_icons: dict[str, str] = {}

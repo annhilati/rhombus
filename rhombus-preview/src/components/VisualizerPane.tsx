@@ -4,7 +4,8 @@ import { DensityFunction, NoiseGeneratorSettings, NoiseParameters, NoiseRouter, 
 
 import type { RhombusContextFile } from '../types'
 import { normalizeRegistryName, prettyRegistryTitle } from '../lib/registry'
-import { loadDeepslateRuntime } from '../lib/deepslate'
+import { loadDeepslateRuntime, validateReferences } from '../lib/deepslate'
+import { patchState } from '../lib/deepslate-patch'
 import { viridis } from '../lib/colormap'
 
 interface VisualizerPaneProps {
@@ -95,6 +96,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
     const [viewMode, setViewMode] = useState<'top' | 'side'>('top')
     const [runtimeReady, setRuntimeReady] = useState(false)
     const [registryVersion, setRegistryVersion] = useState(0)
+    const [deepslateErrors, setDeepslateErrors] = useState<{fileId: string, error: string}[]>([])
     const dragRef = useRef<{ active: boolean; x: number; y: number } | null>(null)
     const [hoverData, setHoverData] = useState<{ x: number, y: number, z: number, val: number } | null>(null)
     const [renderTimeMs, setRenderTimeMs] = useState<number | null>(null)
@@ -134,11 +136,35 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
         }
     }, [zoom])
 
+    const fileDependencies = useMemo(() => {
+        const deps = new Set<string>();
+        const filesMap = new Map<string, any>();
+        for (const f of contextFiles) filesMap.set(f.id, f.content);
+
+        function crawl(id: string) {
+            if (deps.has(id)) return;
+            deps.add(id);
+            const content = filesMap.get(id);
+            if (!content) return;
+            
+            const str = JSON.stringify(content);
+            const matches = str.matchAll(/"([a-z0-9_-]+:[a-z0-9_/-]+)"/g);
+            for (const match of matches) {
+                if (filesMap.has(match[1])) {
+                    crawl(match[1]);
+                }
+            }
+        }
+        crawl(file.id);
+        return deps;
+    }, [file.id, contextFiles]);
+
     useEffect(() => {
         let cancelled = false
         const runtime = loadDeepslateRuntime()
         runtime.registerAllFiles(contextFiles)
         if (!cancelled) {
+            setDeepslateErrors(runtime.parseErrors)
             setRuntimeReady(true)
             setRegistryVersion(v => v + 1)
         }
@@ -147,12 +173,13 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
         }
     }, [contextFiles])
 
-    const { sampler, asColor, parseError } = useMemo(() => {
-        let samplerFn: (x: number, y: number, z: number) => number = () => 0
-        let asColorFn: (n: number) => [number, number, number] = () => [0, 0, 0]
+    const { sampler, asColor, parseError, localErrors } = useMemo(() => {
+        let samplerFn: ((x: number, y: number, z: number) => number) | null = null
+        let asColorFn: ((n: number) => [number, number, number]) | null = null
         let parseError: string | null = null
+        let localErrors: string[] = []
 
-        if (!runtimeReady || registry === null) return { sampler: samplerFn, asColor: asColorFn, parseError: null }
+        if (!runtimeReady || registry === null) return { sampler: samplerFn, asColor: asColorFn, parseError: null, localErrors: [] }
 
         //======// Visulization Kinds //=============================================================//
 
@@ -166,6 +193,15 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 })
                 const state = new RandomState(settings, seed)
                 const df = state.router.finalDensity
+                
+                const typeErrs = deepslateErrors.filter(e => fileDependencies.has(e.fileId)).map(e => `${e.fileId}: ${e.error}`);
+                const missingRefs = validateReferences(df);
+                localErrors = [...typeErrs, ...missingRefs];
+                
+                if (localErrors.length > 0) {
+                    throw new Error(localErrors[0]);
+                }
+
                 samplerFn = (x, y, z) => df.compute({ x, y, z })
                 asColorFn = (n) => {
                     const clamped = clampedMap(n, -1, 1, 1, 0)
@@ -176,6 +212,15 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 const random = XoroshiroRandom.create(seed)
                 const params = NoiseParameters.fromJson(file.content)
                 const noise = new NormalNoise(random, params)
+                
+                const typeErrs = deepslateErrors.filter(e => fileDependencies.has(e.fileId)).map(e => `${e.fileId}: ${e.error}`);
+                const missingRefs = validateReferences(noise);
+                localErrors = [...typeErrs, ...missingRefs];
+
+                if (localErrors.length > 0) {
+                    throw new Error(localErrors[0]);
+                }
+
                 samplerFn = (x, y, z) => noise.sample(x, y, z)
                 asColorFn = (n) => {
                     const col = viridis(clampedMap(n, -1, 1, 0, 1))
@@ -186,14 +231,14 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
             console.error('Error creating deepslate sampler:', err)
             parseError = err instanceof Error ? err.message : String(err)
         }
-        return { sampler: samplerFn, asColor: asColorFn, parseError }
-    }, [file, runtimeReady, registryVersion, registry, seed])
+        return { sampler: samplerFn, asColor: asColorFn, parseError, localErrors }
+    }, [file, runtimeReady, registryVersion, registry, seed, deepslateErrors, fileDependencies])
 
     const [runtimeError, setRuntimeError] = useState<string | null>(null)
 
     useEffect(() => {
         const canvas = canvasRef.current
-        if (!canvas || registry === null || !runtimeReady) return
+        if (!canvas || registry === null || !runtimeReady || !sampler || !asColor) return
 
         if (parseError) {
             setRuntimeError(null)
@@ -252,6 +297,10 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                     const worldX = panX + (px - rect.width / 2) / zoom
                     try {
                         const blockX = Math.floor(worldX)
+                        if (!sampler) {
+                            setHoverData(null)
+                            return
+                        }
                         if (viewMode === 'top') {
                             const worldZ = panZ + (py - rect.height / 2) / zoom
                             const blockZ = Math.floor(worldZ)
@@ -367,6 +416,16 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 {(parseError || runtimeError) && (
                     <div className="error-banner">
                         <strong>Deepslate Error:</strong> {parseError || runtimeError}
+                    </div>
+                )}
+                {localErrors.length > 0 && (
+                    <div className="error-banner" style={{ marginTop: '10px' }}>
+                        <strong>Registry Parse Errors:</strong>
+                        <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
+                            {localErrors.map((err, i) => (
+                                <li key={i}>{err}</li>
+                            ))}
+                        </ul>
                     </div>
                 )}
             </div>

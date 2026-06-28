@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@types/pako": "^2.0.4",
     "deepslate": "^0.26.0",
     "flexlayout-react": "^0.9.1",
+    "pako": "^3.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sucrase": "^3.35.1"

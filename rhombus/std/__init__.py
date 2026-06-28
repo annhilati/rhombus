@@ -31,7 +31,7 @@ def _register_rhombus_addon() -> None:
     
     from . import types
    
-    env.REGISTERED_DENSITY_FUNCTION_TYPES.update({
+    env.density_function_type_deserialization_register.update({
         cls.id: cls for name, cls in types.__dict__.items()
         if name in types.__all__ and isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
     })

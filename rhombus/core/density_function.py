@@ -59,7 +59,7 @@ class DensityFunction(RhombusASTNode):
                 if ":" not in type_field:
                     type_field = "minecraft:" + type_field
                 
-                target_class = env.REGISTERED_DENSITY_FUNCTION_TYPES.get(type_field)
+                target_class = env.density_function_type_deserialization_register.get(type_field)
                 if target_class is None:
                     warnings.warn(
                         f"Could not deserialize density function with type '{type_field}' from dictionary "

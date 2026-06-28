@@ -66,7 +66,7 @@ export default function FileviewPane({ file, contextFiles, onSelectFile, width }
             range: new monacoInstance.Range(i + 1, match.index + 2, i + 1, match.index + 2 + str.length),
             options: {
               inlineClassName: 'monaco-custom-link',
-              hoverMessage: { value: `Ctrl+Click to open **${target.id}**` }
+              hoverMessage: { value: `View definition of **${target.id}** (Ctrl + Click)` }
             }
           })
         }

@@ -1,5 +1,5 @@
 import { useEffect, useState, forwardRef, useImperativeHandle, useRef } from 'react';
-import { Layout, Model, TabNode, Actions, IJsonModel, DockLocation } from 'flexlayout-react';
+import { Layout, Model, TabNode, Node, Actions, IJsonModel, DockLocation } from 'flexlayout-react';
 import 'flexlayout-react/style/dark.css';
 
 import FileviewPane from './FileviewPane';
@@ -233,12 +233,25 @@ const Workspace = forwardRef<WorkspaceRef, WorkspaceProps>(({ files, selectedFil
         return undefined;
     };
 
+    const onAuxMouseClick = (node: Node, event: React.MouseEvent<HTMLElement>) => {
+        if (node.getType() === 'tab' && event.button === 1) {
+            model.doAction(Actions.deleteTab(node.getId()));
+        }
+    };
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (e.button === 1) {
+            e.preventDefault(); // Prevent native middle-click autoscroll
+        }
+    };
+
     return (
-        <div className="workspace-container">
+        <div className="workspace-container" onMouseDownCapture={handleMouseDown}>
             <Layout 
                 model={model} 
                 factory={factory} 
                 onExternalDrag={onExternalDrag}
+                onAuxMouseClick={onAuxMouseClick}
                 realtimeResize={true}
                 onModelChange={(model: Model) => {localStorage.setItem('rhombus.workspace', JSON.stringify(model.toJson()))}}
             />

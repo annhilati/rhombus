@@ -5,6 +5,14 @@
 /* ======// Layout //=========================================================================// */
 body {
     background: var(--background);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.selectable {
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text;
 }
 
 .main-area {
@@ -515,7 +523,7 @@ input {
             transform: translate(-50%, -50%);
             width: 100px;
             height: 100px;
-            background-image: url("/public/icons/object.svg");
+            background-image: url("/icons/object.svg");
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
@@ -707,6 +715,7 @@ input {
 
     &:hover, &:focus-within {
         max-width: 400px;
+        opacity: 100%;
         
         .mode-sphere {
             background: transparent;

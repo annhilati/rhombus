@@ -4,11 +4,13 @@ import App from './App'
 import './styles.scss'
 import './lib/deepslate-patch'
 import * as deepslate from 'deepslate'
+import * as pako from 'pako'
 import VisualizerPane from './components/VisualizerPane'
 
 window.rhombus = {
   React,
   deepslate,
+  pako,
   densityFunctions: new Map(),
   visualizers: new Map([
     ['worldgen/density_function', VisualizerPane],

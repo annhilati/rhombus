@@ -281,9 +281,8 @@ service.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
 
 
 def start(
-        watch_path: str | Path,
-        /,
         *items: tuple[str, Density | RhombusASTNode | BeetFile],
+        watch_path: str | Path = Path.cwd(),
         **uvicorn_args
     ) -> None:
     """Starts the Rhombus Preview service ASGI application.

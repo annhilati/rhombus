@@ -33,6 +33,7 @@ export interface RhombusExtensionAPI {
   deepslate: any;
   densityFunctions: Map<string, (obj: any, inputParser: any) => any>;
   visualizers: Map<string, React.FC<any>>;
+  pako: any;
 }
 
 declare global {

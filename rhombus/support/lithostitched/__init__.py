@@ -1,4 +1,4 @@
-"""### [Lithostiched](https://modrinth.com/mod/lithostitched) by Apollo
+"""### [Lithostitched](https://modrinth.com/mod/lithostitched) by Apollo
 
 Offers a comprehensive suite of extended density functions and utilities for advanced world generation.
 This module enables finer control over terrain shaping and noise manipulation within the datapack ecosystem.
@@ -21,9 +21,10 @@ def _register_rhombus_addon() -> None:
     
     from . import types
 
+    env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"))
     env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("deepslate.ts"))
     
-    env.REGISTERED_DENSITY_FUNCTION_TYPES.update({
+    env.density_function_type_deserialization_register.update({
         cls.id: cls for name, cls in types.__dict__.items()
         if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
     })

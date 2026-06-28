@@ -11,3 +11,18 @@ __version__ = "2.2.1"
 
 from .functions import *
 from .sub_parameters import DerivativeComponent, DistanceMetric, ExtraOctaves, RandomSampler
+
+def _register_rhombus_addon() -> None:
+    from importlib.resources import files
+    
+    from rhombus.config import env
+    from rhombus.core.density_function import DensityFunction
+    
+    from . import types
+
+    env.preview_scripts.append(files("rhombus.support.moredfs").joinpath("deepslate.ts"))
+    
+    env.density_function_type_deserialization_register.update({
+        cls.id: cls for name, cls in types.__dict__.items()
+        if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
+    })
