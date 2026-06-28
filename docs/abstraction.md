@@ -3,6 +3,10 @@ title: Abstraction
 ---
 <h6>Updated: 27.06.2026</h6>
 
+!!! abstract
+    This article contains useful information when wanting to extend the functionality of Rhombus,
+    for example to support features from mods.
+
 # Introduction to Abstraction in Rhombus
 
 Rhombus uses abstract syntax trees (AST for short) to represent density functions. That is natural
@@ -53,6 +57,8 @@ This class defines the common interface for alle nodes. This includes these:
 
 The base class already implements some methods needed for traversal, but they should be
 reimplemented when subclassing.
+
+---
 
 Rhombus provides various base classes for nodes with common usecases.
 

@@ -1,4 +1,4 @@
-export type SplineValue = number | string | SplineData;
+export type SplineValue = number | string | SplineDF;
 
 export interface SplinePoint {
   location?: number;
@@ -6,11 +6,11 @@ export interface SplinePoint {
   derivative?: number;
 }
 
-export interface SplineData {
+export interface SplineDF {
   type?: string;
   coordinate?: string;
   points?: SplinePoint[];
-  spline?: SplineData;
+  spline?: SplineDF;
 }
 
 /**
@@ -21,9 +21,9 @@ function getPossibleValues(val: SplineValue): number[] {
   if (typeof val === 'number') return [val];
   if (typeof val === 'string') throw new Error('REFERENCE');
   
-  const splineData = Array.isArray((val as SplineData)?.points) 
-    ? (val as SplineData) 
-    : (Array.isArray((val as SplineData)?.spline?.points) ? (val as SplineData).spline : null);
+  const splineData = Array.isArray((val as SplineDF)?.points) 
+    ? (val as SplineDF) 
+    : (Array.isArray((val as SplineDF)?.spline?.points) ? (val as SplineDF).spline : null);
     
   if (splineData && splineData.points) {
     let vals: number[] = [];
@@ -83,7 +83,7 @@ function getNiceTicks(min: number, max: number, maxTicks = 5) {
  * Generates an SVG image (as a base64 data URI) illustrating a Minecraft spline object.
  * Shows the graph of the spline using points and bezier curves.
  */
-export function renderSplineSVG(spline: SplineData): { type: 'success', svg: string } | { type: 'error', message: string } | null {
+export function renderSplineSVG(spline: SplineDF): { type: 'success', svg: string } | { type: 'error', message: string } | null {
   if (!spline?.points || !Array.isArray(spline.points)) return null;
   
   const points: { x: number, yList: number[], d: number }[] = [];

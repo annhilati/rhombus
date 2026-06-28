@@ -117,8 +117,8 @@ const Workspace = forwardRef<WorkspaceRef, WorkspaceProps>(({ files, selectedFil
     });
     const hasLoadedInitial = useRef(false);
 
-    // Collect tabs that have no file anymore
     useEffect(() => {
+        // Collect tabs that have no file anymore
         const nodesToRemove: string[] = [];
         model.visitNodes((node) => {
             if (node.getType() === 'tab') {
@@ -131,12 +131,12 @@ const Workspace = forwardRef<WorkspaceRef, WorkspaceProps>(({ files, selectedFil
             }
         });
 
+        // Remove tabs that have no file anymore
         nodesToRemove.forEach(id => {
             model.doAction(Actions.deleteTab(id));
         });
     }, [files, model]);
 
-    // Remove tabs that have no file anymore
     useImperativeHandle(ref, () => ({
         openFile: (file: RhombusContextFile, newTab: boolean) => {
             const key = fileKey(file);

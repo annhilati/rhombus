@@ -279,6 +279,7 @@ input {
     color: var(--muted);
 }
 
+// Visualizer Settings
 .visualizer-settings-panel {
     position: absolute;
     top: 0;
@@ -466,28 +467,34 @@ input {
         transition: background 0.15s;
         touch-action: none;
         user-select: none;
-        border-radius: 999px;
+        border-radius: 0;
         
         &::before {
             --splitter-active-size: 6px;
-            border-radius: 999px;
+            border-radius: 0;
         }
 
         &_vert {
             cursor: row-resize !important;
+            --splitter-size: 6px;
             height: 6px;
-            margin: -3px 0;
+            margin: -3px 0;   
         }
         
         &_horz {
             cursor: col-resize !important;
+            --splitter-size: 6px;
             width: 6px;
             margin: 0 -3px;
         }
 
         &:hover, &:active {
             background: var(--accent);
-        }        
+        }
+
+        &_drag {
+            background: transparent !important;
+        }
     }
 }
 
@@ -501,7 +508,7 @@ input {
     
         &::before {
             content: '';
-            opacity: 40%;
+            opacity: 20%;
             position: absolute;
             top: 50%;
             left: 50%;
@@ -516,7 +523,14 @@ input {
     }
 }
 
-
+.flexlayout__drag_rect {
+    background-color: var(--background2) !important;
+    opacity: 50%;
+    outline: 1px solid #2b2b2b;
+    border: none;
+    border-radius: 0;
+    padding: 10px 12px 12px 12px;
+}
 
 .flexlayout__tabset_tabbar_outer {
     background: var(--background);
@@ -534,6 +548,11 @@ input {
             display: none;
         } 
     } 
+
+    .flexlayout__tab_toolbar_button {
+        transform: scale(1.2);
+        cursor: pointer;
+    }
 
     // Tabs
     .flexlayout__tab_button    {
