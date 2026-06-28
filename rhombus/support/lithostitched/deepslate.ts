@@ -10,15 +10,19 @@
  * however, a future revision is still desired.
  *==========================================================================*/ 
 
-interface Window {
-    rhombus: {
-        deepslate: any;
-        densityFunctions: Map<string, (obj: any, inputParser: any) => any>;
-        visualizers: Map<string, any>;
-        React: any;
-        FastNoiseLite: any;
-        pako: any;
-    };
+export {};
+
+declare global {
+    interface Window {
+        rhombus: {
+            deepslate: any;
+            densityFunctions: Map<string, (obj: any, inputParser: any) => any>;
+            visualizers: Map<string, any>;
+            React: any;
+            FastNoiseLite: any;
+            pako: any;
+        };
+    }
 }
 
 const { deepslate, densityFunctions, FastNoiseLite } = window.rhombus;

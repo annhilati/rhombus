@@ -136,6 +136,10 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
         }
     }, [zoom])
 
+    /**
+     * Recursively crawls the file contents to build a Set of all file dependencies for the current file.
+     * This is used to filter parse errors to only those relevant to the current viewing context.
+     */
     const fileDependencies = useMemo(() => {
         const deps = new Set<string>();
         const filesMap = new Map<string, any>();
@@ -162,7 +166,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
     useEffect(() => {
         let cancelled = false
         const runtime = loadDeepslateRuntime()
-        runtime.registerAllFiles(contextFiles)
+        runtime.registerFiles(contextFiles)
         if (!cancelled) {
             setDeepslateErrors(runtime.parseErrors)
             setRuntimeReady(true)
@@ -177,9 +181,14 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
         let samplerFn: ((x: number, y: number, z: number) => number) | null = null
         let asColorFn: ((n: number) => [number, number, number]) | null = null
         let parseError: string | null = null
-        let localErrors: string[] = []
 
         if (!runtimeReady || registry === null) return { sampler: samplerFn, asColor: asColorFn, parseError: null, localErrors: [] }
+
+        const localErrors = deepslateErrors.filter(e => fileDependencies.has(e.fileId));
+        if (localErrors.length > 0) {
+            // Return early so Deepslate doesn't crash on invalid references
+            return { sampler: null, asColor: null, parseError: null, localErrors };
+        }
 
         //======// Visulization Kinds //=============================================================//
 
@@ -193,14 +202,6 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 })
                 const state = new RandomState(settings, seed)
                 const df = state.router.finalDensity
-                
-                const typeErrs = deepslateErrors.filter(e => fileDependencies.has(e.fileId)).map(e => `${e.fileId}: ${e.error}`);
-                const missingRefs = validateReferences(df);
-                localErrors = [...typeErrs, ...missingRefs];
-                
-                if (localErrors.length > 0) {
-                    throw new Error(localErrors[0]);
-                }
 
                 samplerFn = (x, y, z) => df.compute({ x, y, z })
                 asColorFn = (n) => {
@@ -212,14 +213,6 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 const random = XoroshiroRandom.create(seed)
                 const params = NoiseParameters.fromJson(file.content)
                 const noise = new NormalNoise(random, params)
-                
-                const typeErrs = deepslateErrors.filter(e => fileDependencies.has(e.fileId)).map(e => `${e.fileId}: ${e.error}`);
-                const missingRefs = validateReferences(noise);
-                localErrors = [...typeErrs, ...missingRefs];
-
-                if (localErrors.length > 0) {
-                    throw new Error(localErrors[0]);
-                }
 
                 samplerFn = (x, y, z) => noise.sample(x, y, z)
                 asColorFn = (n) => {
@@ -420,10 +413,10 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 )}
                 {localErrors.length > 0 && (
                     <div className="error-banner" style={{ marginTop: '10px' }}>
-                        <strong>Registry Parse Errors:</strong>
+                        <strong>Deepslate Errors:</strong>
                         <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
                             {localErrors.map((err, i) => (
-                                <li key={i}>{err}</li>
+                                <li key={i}><strong>[{err.fileId}]</strong> {err.error}</li>
                             ))}
                         </ul>
                     </div>

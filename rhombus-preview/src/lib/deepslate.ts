@@ -31,9 +31,15 @@ export async function fetchVanillaData(): Promise<void> {
   vanillaCache = cache
 }
 
+/**
+ * Interface representing the Deepslate runtime environment.
+ * It holds any parse errors and provides a method to register new files into registries.
+ */
 export interface DeepslateRuntime {
+  /** A list of errors encountered during parsing or validation, tagged by the file ID */
   parseErrors: {fileId: string, error: string}[]
-  registerAllFiles: (files: RhombusContextFile[]) => void
+  /** Clears the registries and registers the given files, logging any parse errors. */
+  registerFiles: (files: RhombusContextFile[]) => void
 }
 
 /**
@@ -44,7 +50,7 @@ export interface DeepslateRuntime {
 export function loadDeepslateRuntime(): DeepslateRuntime {
   return {
     parseErrors: [],
-    registerAllFiles(files: RhombusContextFile[]) {
+    registerFiles(files: RhombusContextFile[]) {
       this.parseErrors = [];
       patchState.errors = [];
       
@@ -97,6 +103,22 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
             patchState.currentFile = null;
           }
         })
+
+        // 3. Validate references for user data (catches missing dependencies)
+        Object.keys(userData).forEach(type => {
+          try {
+            const parsedId = Identifier.parse(type);
+            const obj = registry.get(parsedId);
+            if (obj) {
+              const refsErrors = validateReferences(obj);
+              refsErrors.forEach(err => {
+                this.parseErrors.push({ fileId: type, error: err });
+              });
+            }
+          } catch (e) {
+            console.warn(`Failed to validate references for ${key.path} ${type}`, e)
+          }
+        });
       })
 
       // Add non-aborting parse errors (like unknown types) from the monkey-patch
