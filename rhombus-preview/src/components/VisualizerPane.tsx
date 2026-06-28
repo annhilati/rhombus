@@ -413,7 +413,7 @@ export default function VisualizerPane({ file, contextFiles }: VisualizerPanePro
                 )}
                 {localErrors.length > 0 && (
                     <div className="error-banner" style={{ marginTop: '10px' }}>
-                        <strong>Deepslate Errors:</strong>
+                        <strong>Cannot visualize due to {localErrors.length} error{localErrors.length > 1 ? 's' : ''}</strong>
                         <ul style={{ margin: '5px 0 0 20px', padding: 0 }}>
                             {localErrors.map((err, i) => (
                                 <li key={i}><strong>[{err.fileId}]</strong> {err.error}</li>
