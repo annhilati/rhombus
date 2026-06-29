@@ -1,4 +1,4 @@
-import { DensityFunction } from 'deepslate'
+import { DensityFunction, NoiseChunk, BlockState, SurfaceSystem, ChunkPos, SurfaceContext, BlockPos } from 'deepslate'
 
 
 /**
@@ -7,7 +7,9 @@ import { DensityFunction } from 'deepslate'
  */
 export const patchState = {
   errors: [] as { fileId: string, error: string }[],
-  currentFile: null as string | null
+  currentFile: null as string | null,
+  targetY: undefined as number | undefined,
+  targetZ: undefined as number | undefined
 };
 
 //======// Patch of DensityFunction.fromJson to globally validate unknown types //===============//
@@ -65,4 +67,74 @@ DensityFunction.Ap2.prototype.compute = function (context) {
   }
 
   return originalAp2Compute.call(this, context)
+}
+
+//======// Patch of NoiseChunk.getFinalState to optimize chunk generation //=================//
+const originalGetFinalState = NoiseChunk.prototype.getFinalState;
+
+NoiseChunk.prototype.getFinalState = function (x: number, y: number, z: number) {
+  if (patchState.targetY !== undefined && y !== patchState.targetY) return BlockState.AIR;
+  if (patchState.targetZ !== undefined && (z & 0xF) !== patchState.targetZ) return BlockState.AIR;
+  return originalGetFinalState.call(this, x, y, z);
+}
+
+//======// Patch of SurfaceSystem.buildSurface to fix 3D artifacts //========================//
+// Deepslate 0.26.0 hardcodes `for (let z = 0; z < 1; z += 1)` in buildSurface!
+// This was an optimization for 2D visualizers, but it completely breaks 3D terrain by
+// only applying surface rules to a single slice per chunk, causing sharp edges and floating islands.
+SurfaceSystem.prototype.buildSurface = function (chunk: any, noiseChunk: any, worldgenContext: any, getBiome: any) {
+  const minX = ChunkPos.minBlockX(chunk.pos);
+  const minZ = ChunkPos.minBlockZ(chunk.pos);
+  const surfaceContext = new SurfaceContext(this, chunk, noiseChunk, worldgenContext, getBiome);
+  const ruleWithContext = (this as any).rule(surfaceContext);
+
+  for (let x = 0; x < 16; x += 1) {
+      const worldX = minX + x;
+      // FIX: Loop up to 16 instead of 1!
+      for (let z = 0; z < 16; z += 1) {
+          if (patchState.targetZ !== undefined && z !== patchState.targetZ) continue;
+          
+          const worldZ = minZ + z;
+          surfaceContext.updateXZ(worldX, worldZ);
+          let stoneDepthAbove = 0;
+          let waterHeight = Number.MIN_SAFE_INTEGER;
+          let stoneDepthOffset = Number.MAX_SAFE_INTEGER;
+          
+          for (let y = chunk.maxY; y >= chunk.minY; y -= 1) {
+              const worldPos = BlockPos.create(worldX, y, worldZ);
+              const oldState = chunk.getBlockState(worldPos);
+              if (oldState.equals(BlockState.AIR)) {
+                  stoneDepthAbove = 0;
+                  waterHeight = Number.MIN_SAFE_INTEGER;
+                  continue;
+              }
+              if (oldState.isFluid()) {
+                  if (waterHeight === Number.MIN_SAFE_INTEGER) {
+                      waterHeight = y + 1;
+                  }
+                  continue;
+              }
+              if (stoneDepthOffset >= y) {
+                  stoneDepthOffset = Number.MIN_SAFE_INTEGER;
+                  for (let i = y - 1; i >= chunk.minY; i -= 1) {
+                      const state = chunk.getBlockState(BlockPos.create(worldX, i, worldZ));
+                      if (state.equals(BlockState.AIR) || state.isFluid()) {
+                          stoneDepthOffset = i + 1;
+                          break;
+                      }
+                  }
+              }
+              stoneDepthAbove += 1;
+              const stoneDepthBelow = y - stoneDepthOffset + 1;
+              if (!oldState.equals((this as any).defaultBlock)) {
+                  continue;
+              }
+              surfaceContext.updateY(stoneDepthAbove, stoneDepthBelow, waterHeight, y);
+              const newState = ruleWithContext(worldX, y, worldZ);
+              if (newState) {
+                  chunk.setBlockState(worldPos, newState);
+              }
+          }
+      }
+  }
 }

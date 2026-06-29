@@ -25,12 +25,14 @@ export async function fetchVanillaData(): Promise<void> {
 
   const urls = {
     'worldgen/noise': 'https://raw.githubusercontent.com/misode/mcmeta/summary/data/worldgen/noise/data.min.json',
-    'worldgen/density_function': 'https://raw.githubusercontent.com/misode/mcmeta/summary/data/worldgen/density_function/data.min.json'
+    'worldgen/density_function': 'https://raw.githubusercontent.com/misode/mcmeta/summary/data/worldgen/density_function/data.min.json',
+    'worldgen/biome': 'https://raw.githubusercontent.com/misode/mcmeta/summary/data/worldgen/biome/data.min.json'
   }
 
   const cache: Record<string, Record<string, any>> = {
     'worldgen/noise': {},
-    'worldgen/density_function': {}
+    'worldgen/density_function': {},
+    'worldgen/biome': {}
   }
 
   await Promise.all(Object.entries(urls).map(async ([registry, url]) => {

@@ -5,7 +5,8 @@ import './styles.scss'
 import './lib/deepslate-patch'
 import * as deepslate from 'deepslate'
 import * as pako from 'pako'
-import VisualizerPane from './components/VisualizerPane'
+import DensityVisualizer from './components/DensityVisualizer'
+import TerrainVisualizer from './components/TerrainVisualizer'
 
 window.rhombus = {
   React,
@@ -13,8 +14,9 @@ window.rhombus = {
   pako,
   densityFunctions: new Map(),
   visualizers: new Map([
-    ['worldgen/density_function', VisualizerPane],
-    ['worldgen/noise', VisualizerPane]
+    ['worldgen/density_function', DensityVisualizer],
+    ['worldgen/noise', DensityVisualizer],
+    ['worldgen/noise_settings', TerrainVisualizer]
   ]),
 }
 

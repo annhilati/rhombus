@@ -732,3 +732,52 @@ input {
         }
     }
 }
+
+
+
+
+::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+
+    &-track {
+        background: var(--background);
+        border-radius: 0;
+        border-left: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    }
+
+    &-thumb {
+        background: #424242;
+        border-radius: 0;
+        background-clip: content-box;
+        transition: background 1s;
+
+        &:hover {
+            background: #4f4f4f;
+        }
+
+        &:active {
+            background: #4f4f4f;
+        }
+    }
+
+    &-corner {
+        background: #222;
+    }
+
+    &-button {
+        display: none;
+    }
+
+    &-resizer {
+        background: #444;
+    }
+
+    &:horizontal {
+        height: 14px;
+    }
+
+    &:vertical {
+        width: 14px;
+    }
+}
