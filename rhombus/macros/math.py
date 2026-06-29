@@ -9,7 +9,7 @@ __all__ = [
     "pi", "e",
     "sum", "prod",
     "min", "max",
-    "fastRound", "fastFloor", "fastCeil",
+    "round", "floor", "ceil",
     "round", "floor", "ceil",
     "mod", "floordiv",
     "heaviside", "ramp", "sgn", "monus",
@@ -104,7 +104,7 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
 #======// Rounding //============================================================================//
 
 @macro
-def fastRound(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
+def round(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input to the nearest integer or given decimal.
     
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
@@ -115,44 +115,44 @@ def fastRound(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     return argument + f.constant(1.5) * f.constant(2**52) - f.constant(1.5) * f.constant(2**52)
 
 @macro
-def fastFloor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
+def floor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input down to the nearest integer or given decimal.
     
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
     if decimals:
-        return fastRound((argument - 0.5) * 10**decimals) / 10**decimals
-    return fastRound(argument - 0.5)
+        return round((argument - 0.5) * 10**decimals) / 10**decimals
+    return round(argument - 0.5)
 
 @macro
-def fastCeil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
+def ceil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input up to the nearest integer or given decimal.
     
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
     if decimals:
-        return fastRound((argument + 0.5) * 10**decimals) / 10**decimals
-    return fastRound(argument + 0.5)
+        return round((argument + 0.5) * 10**decimals) / 10**decimals
+    return round(argument + 0.5)
 
 @macro
-def fastFloordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
+def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
     """Returns the floor division of two inputs (`argument1 // argument2`).
     
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
-    return fastFloor(dividend / divisor)
+    return floor(dividend / divisor)
 
 @macro
-def fastMod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
+def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`).
     
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
-    return perf.cachespecific(dividend - divisor * fastFloor(dividend / divisor), dividend, divisor)
+    return perf.cachespecific(dividend - divisor * floor(dividend / divisor), dividend, divisor)
 
 
 #======// Step Functions //======================================================================//

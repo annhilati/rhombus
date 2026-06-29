@@ -239,20 +239,20 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density(types.mul(other, types.invert(self)))
 
     def __floordiv__(self, other):
-        from rhombus.macros.math import fastFloordiv
-        return fastFloordiv(self, other)
+        from rhombus.macros.math import floordiv
+        return floordiv(self, other)
     
     def __rfloordiv__(self, other):
-        from rhombus.macros.math import fastFloordiv
-        return fastFloordiv(self, other)
+        from rhombus.macros.math import floordiv
+        return floordiv(self, other)
         
     def __mod__(self, other):
-        from rhombus.macros.math import fastMod
-        return fastMod(self, other)
+        from rhombus.macros.math import mod
+        return mod(self, other)
 
     def __rmod__(self, other):
-        from rhombus.macros.math import fastMod
-        return fastMod(self, other)
+        from rhombus.macros.math import mod
+        return mod(self, other)
     
     @overload
     def __pow__(self, other: Literal[2]) -> Density[types.square]: ...

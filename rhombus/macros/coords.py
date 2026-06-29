@@ -49,7 +49,7 @@ density functions.
 """
 from rhombus.std import Noise
 from rhombus.std import functions as f
-from rhombus.macros.math import fastFloordiv, fastMod
+from rhombus.macros.math import floordiv, mod
 
 __all__ = ["x", "z", "y"]
 
@@ -146,11 +146,11 @@ def chunk_x():
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
-    return fastFloordiv(x(), 16)
+    return floordiv(x(), 16)
 
 def chunk_y():
     """Returns the exact Y-coordinate of the current chunk."""
-    return fastFloordiv(y(), 16)
+    return floordiv(y(), 16)
 
 def chunk_z():
     """Returns the exact Z-coordinate of the current chunk.
@@ -160,7 +160,7 @@ def chunk_z():
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
-    return fastFloordiv(z(), 16)
+    return floordiv(z(), 16)
 
 def chunk_relative_x():
     """Returns the exact X-coordinate inside of the current chunk.
@@ -170,11 +170,11 @@ def chunk_relative_x():
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
-    return fastMod(x(), 16)
+    return mod(x(), 16)
 
 def chunk_relative_y():
     """Returns the exact Y-coordinate inside of the current chunk."""
-    return fastMod(y(), 16)
+    return mod(y(), 16)
 
 def chunk_relative_z():
     """Returns the exact Z-coordinate inside of the current chunk.
@@ -184,4 +184,4 @@ def chunk_relative_z():
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use. 
     """
-    return fastMod(z(), 16)
+    return mod(z(), 16)

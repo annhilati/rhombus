@@ -17,7 +17,7 @@
 </p>
 
 
-**Minecraft terrain generation currently relies on large, deeply nested JSON structures that quickly become difficult to read and maintain. Rhombus introduces powerful abstractions and a comprehensive Python API, making world generation code cleaner, more modular, and significantly faster to develop.**
+<p align=right><strong>Terrain development in Minecraft relies on large, deeply nested JSON structures that quickly become difficult to read and maintain. Rhombus introduces powerful abstractions and a comprehensive Python API, making world generation code cleaner, more modular, and significantly faster to develop.</strong></p>
 
 Rhombus is an eDSL delivered as a Python package that allows worldgen developers to comfortably write expressions resembling the abstract syntax trees of density functions for Minecraft while benefiting from Python's forgiving syntax.
 
@@ -35,42 +35,50 @@ Since Python code is in use, comments work naturally without any custom syntax.
 - 📖 **Integrated Documentation**<br>
 Functions and classes provide docstrings describing behavior, parameters, and usage.
 - ⚡ **Performance Optimization**<br>
-Recurring expressions and resource intense operations are automatically cached.
+Recurring expressions and resource intense operations can be cached automatically.
 - 🗄️ **Macro Library**<br>
 Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
 
-## Features
-## Features
-- Live file-watched Density Preview
-  - Visualizer
-  - File Explorer & Viewer
+<details>
+<summary><h2>Feature List</h2></summary>
+
+*This list only includes features that are principially not neccessary, but make up the real strengths of Rhombus.*
+
+- **Rhombus Preview**  
+    A lightweight local frontend with file-watching for previewing density functions
+  - Visualizer (built on deepslate)
+    - Supports all major worldgen mods (see *Mod Support*)
+  - File Explorer & Viewer (built on monaco)
   - Spline Visualization
-- Macro Library
+- **Macro Library**
   - Math
-    - Infinity, NaN
     - sum, prod
-    - fastRound, fastFloor, fastCeil (with settable decimal precision)
+    - Infinity, NaN
+    - round, floor, ceil, mod
+    - sgn, heaviside, monus, ramp
   - Spline approximations
     - Sampler for any Python function
-    - sin, cos, tan, atan, coth
-    - exp
-    - smoothstep, normPDF, normCDF, erf
-  - Performance
-    - automatically cache specific sub functions inside of a function
-    - automatically cache all recurring sub functions inside of a function
+    - sin, cos, tan, atan, tanh, coth
+    - exp (with arbitrary base)
+    - smoothstep, normalPDF, normalCDF, erf, logistic
+  - Performance optimization
+    - evaluate the number of unique nodes of a function
+    - automatically cache specific sub functions of a function
+    - automatically cache all recurring sub functions of a function
   - Expensive iterative Methods:
     - sqrt
-    - exp, ln
-    - round, ceil, floor
-  - Maps
+    - sin, cos, tan, exp, ln
+    - round, ceil, floor, mod
+  - Working with Maps
     - extrude_heightmap
   - Fluent Interface for conditionality
   - Coordinate reconstruction
-- Mod Support
-  - Lithostitched
+- **Mod Support**
   - More Density Functions
+  - Lithostitched
   - Tectonic
   - En-sityFunctions
+</details>
 
 ## Impressions
 ```sh
