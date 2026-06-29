@@ -7,15 +7,18 @@ import beet
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, annotated_fields, contextfunction
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus import config
+from rhombus import env
 
 __all__ = ["DatapackResource"]
 
 
 class DatapackResource(RhombusASTNode):
-    """Base class for resources that are provided by a datapack outside of a density function.
+    """The **`DatapackResource`** base class implements functionality for nodes
+    in the abstract syntax tree of Rhombus that resemble files that are provided
+    by a datapack and cannot be defined inside of a density function, but must be
+    referenced.
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/datapack_resources/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
     """
 
     fileclass: ClassVar[type[BeetFile]]
@@ -69,7 +72,6 @@ class DatapackResource(RhombusASTNode):
     
     @property
     def reference(self):
-        "The identifier of the datapack resource including the namespace."
         if self._identifier is not None:
             return self._identifier if ":" in self._identifier else "minecraft:" + self._identifier
         return f"rhombus:generated/" + uuid_hash(self.serialize_toplevel())
@@ -100,7 +102,7 @@ class DatapackResource(RhombusASTNode):
     @classmethod
     def deserialize_inline(cls, data: str):
         id = "minecraft:" + data if not ":" in data else data
-        dp = config.ctx.datapack
+        dp = env.datapack
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
         return cls.refer(id)
@@ -109,12 +111,13 @@ class DatapackResource(RhombusASTNode):
 
     @classmethod
     def from_dict(cls, data: JSONDict) -> Self:
+        """Creates an instance of this datapack resource node class from a dictionary."""
         return cls.deserialize_toplevel(data)
 
     @classmethod
     @contextfunction(dp="datapack")
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
-        """Extracts a resource from a Beet datapack."""
+        """Extracts an instance of this datapack resource node class from a Beet datapack."""
         
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
 
@@ -128,7 +131,9 @@ class DatapackResource(RhombusASTNode):
 
     @classmethod
     def refer(cls, identifier: str, /) -> Self:
-        "Creates a reference to an externally provided resource."
+        """Creates an instance of this datapack resource node class that
+        references an externally provided resource.
+        """
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
         instance = cls(**{param: None for param in annotated_fields(cls)})
         object.__setattr__(instance, "_identifier", identifier)

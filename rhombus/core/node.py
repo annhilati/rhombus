@@ -49,7 +49,12 @@ class NodeDataclassTransformer(type):
         return cls
 
 class RhombusASTNode(metaclass=NodeDataclassTransformer):
-    "Base class for all nodes in a Rhombus AST"
+    """The **`RhombusASTNode`** class defines the common behaviour for all nodes
+    in the abstract syntax tree of Rhombus. It thus can be called the base class
+    for all nodes.
+    
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
+    """
   
     __dataclass_fields__: ClassVar[dict[str, dataclasses.Field[Any]]]
     __dataclass_params__: ClassVar[Any]
@@ -108,84 +113,70 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
 
     @property
     def fields(self) -> dict[str, Any]:
-        "Standard implemenation for getting all parameters of the Node paired with their values"
+        "The fields of this node as a dictionary."
         return fields(self)
-       
-    @classmethod
-    def _collect_inscribed_toplevel_nodes(cls, value: Any) -> set["RhombusASTNode"]:
-        nodes = set()
-        if isinstance(value, RhombusASTNode):
-            nodes |= value.inscribed_toplevel_nodes
-        elif isinstance(value, dict):
-            for key, item in value.items():
-                nodes |= cls._collect_inscribed_toplevel_nodes(key)
-                nodes |= cls._collect_inscribed_toplevel_nodes(item)
-        elif isinstance(value, (list, tuple, set, frozenset)):
-            for item in value:
-                nodes |= cls._collect_inscribed_toplevel_nodes(item)
-        return nodes
-        
+      
         
     #======// Serialization //===================================================================//
     
     @property
     def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
-        """Recursive search for all inscribed nodes, that will require a file
-        when compiling. Includes the node itself if it neccesarily does to.
+        """All nodes defined inside the abstract syntax tree of this node, that will
+        require a separate file when compiling. This will include this node itself,
+        if it always requires a separate file.
         """
+        def _collect_inscribed_toplevel_nodes(value: Any) -> set["RhombusASTNode"]:
+            nodes = set()
+            if isinstance(value, RhombusASTNode):
+                nodes |= value.inscribed_toplevel_nodes
+            elif isinstance(value, dict):
+                for key, item in value.items():
+                    nodes |= _collect_inscribed_toplevel_nodes(key)
+                    nodes |= _collect_inscribed_toplevel_nodes(item)
+            elif isinstance(value, (list, tuple, set, frozenset)):
+                for item in value:
+                    nodes |= _collect_inscribed_toplevel_nodes(item)
+            return nodes
+        
         nodes = set()
         for value in self.fields.values():
-            nodes |= self._collect_inscribed_toplevel_nodes(value)
+            nodes |= _collect_inscribed_toplevel_nodes(value)
         return nodes
     
     @property
     def reference(self) -> str:
-        """Property declaring the namespaced resource identifier of the node.
-        
-        `RhombusASTNode` implements a default hash-based method.
+        """The namespaced resource identifier of this node. This can be a fixed
+        string or one generated from the nodes data.
         """
-        if hasattr(self, "_reference_override"):
-            return self._reference_override
         return f"rhombus:generated/{uuid_hash(self.serialize_toplevel())}"
     
-    @reference.setter
-    def reference(self, value: str):
-        object.__setattr__(self, "_reference_override", value)
-    
     def serialize_toplevel(self) -> JSONValue:
-        """Returns a JSON value containing the data serialized into the target
-        format (usually a dict), like it would be used at the top of a file
-        structure.
-
-        For most node types, this will be the same as `~.serialize_toplevel`,
-        but for nodes, that cannot be defined inline a reference is returned.
-        Any default values for latter nodes are lost. To retrieve the data
-        associated with the references, use `~.additional_described_files()`.
+        """Serializes the nodes data into the target format (usually a JSON
+        dictionary), like it would be used at the top of a file structure.
         """
         raise NotImplementedError(f"Class {self.__class__.__name__} is missing implementation of serialize_toplevel()")
     
     def serialize_inline(self):
-        """Returns a JSON value containing the data serialized into the target
-        format (usually a dict), like it would be used within a nested file
-        structure.
+        """Serializes the nodes data into the target format (usually a JSON
+        dictionary), like it would be used within a nested file structure.
 
-        For most node types, this will be the same as `~.serialize_toplevel`,
+        For most node types, this will be the same as `~.serialize_toplevel()`,
         but for nodes, that cannot be defined inline a reference is returned.
         Any default values for latter nodes are lost. To retrieve the data
-        associated with the references, use `~.additional_described_files()`.
+        associated with the reference, use `~.inscribed_toplevel_nodes`.
         """
         return self.serialize_toplevel()
     
     @classmethod
     def deserialize_toplevel(cls, data: JSONValue) -> Self:
-        """Creates an instance of the class from data like it would be found at
-        the top of a file structure. 
+        """Creates an instance of this node class from data (usually a JSON
+        dictionary) like it would be found at the top of a file structure. 
         """
         raise NotImplementedError(f"Class {cls.__name__} is missing implementation of deserialize_toplevel()")
     
     @classmethod
     def deserialize_inline(cls, data: JSONValue):
-        """Creates an instance of the class from data like it would be found
-        within a nested file structure.
+        """Creates an instance of this node class from data (usually a JSON
+        dictionary) like it would be found within a nested file structure.
         """
         return cls.deserialize_toplevel(data)

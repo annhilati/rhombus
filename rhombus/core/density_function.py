@@ -18,16 +18,11 @@ __all__ = [
 #======// DensityFunction Base Class //==========================================================//
 
 class DensityFunction(RhombusASTNode):
-    """Base class for density function types with any number of arguments of primitive types.
-
-    When inheriting from this class, add fields with the same names as keys required in the
-    density function JSON definition.
-
-    If types are needed in the fields that are not of type `DensityFunction`, of a subclass
-    of `DatapackResource` or otherwise JSON-compatible (like literals and `SubParameter`
-    subclasses), implement the serialization methods manually.
+    """The **`DensityFunction`** base class implements functionality for nodes
+    in the abstract syntax tree of Rhombus that also resemble operations in the
+    abstract syntax tree of a density function (density function types).
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/density_functions/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
     """
     fileclass: ClassVar[type[BeetFile]] = WorldgenDensityFunction
     id: ClassVar[str]
@@ -73,7 +68,6 @@ class DensityFunction(RhombusASTNode):
             # Literal constant
             elif isinstance(data, (int, float)):
                 return constant(float(data))
-
             else:
                 raise TypeError(f"Cannot deserialize density function from type '{data.__class__.__name__}' at top level")
             
@@ -102,7 +96,9 @@ class DensityFunction(RhombusASTNode):
 #======// Utility Base Classes //================================================================//
 
 class SimpleDensityFunction(DensityFunction):
-    "Base class for density function types with no arguments."
+    """The **`SimpleDensityFunction`** base class implements functionality for
+    density function types with no arguments.
+    """
 
     @classmethod
     def deserialize_toplevel(cls, data: dict = {}) -> Self:
@@ -112,14 +108,18 @@ class SimpleDensityFunction(DensityFunction):
         return {"type": self.id}
     
 class MappedDensityFunction(DensityFunction):
-    "Base class for density function types that map an argument `argument` to a value."
+    """The **`MappedDensityFunction`** base class implements functionality for
+    density function types that map an argument `argument` to a value.
+    """
     argument: DensityFunction
     
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
 
 class DoubleArgumentDensityFunction(DensityFunction):
-    "Base class for density function types with two arguments `argument1` and `argument2`."
+    """The **`DoubleArgumentDensityFunction`** base class implements functionality for
+    density function types that take two arguments `argument1` and `argument2`.
+    """
     argument1: DensityFunction
     argument2: DensityFunction
     
@@ -175,12 +175,9 @@ class Reference(DensityFunction):
         return nodes
     
     def __repr__(self) -> str:
-        from rhombus.std import types
         if self.definition is None:
             return '"' + self.reference + '"'
         elif "partitioned" in self.reference: # TODO: this should not be hardcoded
-            # if isinstance(self.definition, tuple(env.chaching_types)):
-            #     return self.definition.__repr__()
             return "Density.partitioned(" + self.definition.__repr__() + ")" 
         else:
             return "Density.configured(\"" + self.reference + f"\", {self.definition.__repr__()}" + ")"
@@ -199,14 +196,14 @@ class constant(DensityFunction):
     def serialize_toplevel(self) -> float | JSONDict:
         from rhombus.std import types
         
-        def float_to_mul(value: float) -> JSONValue:
+        def ensure_not_exceeding_limit(value: float) -> JSONValue:
 
-            if abs(value) < types.literal_number_limit * 16:
+            if abs(value) < types.literal_number_limit:
                 return value
 
-            return types.mul(float_to_mul(value / types.literal_number_limit), types.literal_number_limit,).serialize_inline()
+            return types.mul(ensure_not_exceeding_limit(value / types.literal_number_limit), types.literal_number_limit,).serialize_inline()
         
-        return float_to_mul(self.argument)
+        return ensure_not_exceeding_limit(self.argument)
 
     def __repr__(self) -> str:
         return str(self.argument)

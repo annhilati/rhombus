@@ -8,17 +8,11 @@ from rhombus.std.density import Density, AnyDensity
 
 
 def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
-    """Decorator to help with building macros.
-
-    Macros are functions that return a `Density` object.
-
-    When the macro is called, any parameters annotated with `AnyDensity` will be
-    resolved to `Density` objects. Nested containers like list, set, tuple, dict
-    and unions are handled recursively.
-
-    Builtin factories that use this decorator should always pass the `~.AST`
-    attribute of the resolved arguments, because `Density` itself is not a
-    valid node type.
+    """The **`macro`** decorator allows functions to use the `AnyDensity` type
+    for annotation of its arguments to automatically resolve passed values to
+    `Density` objects. This is usefull to allow shorthands such as literal
+    numbers or reference strings without encountering type errors or having
+    to deal with type unification.
     """
 
     def decorator[**P, R](func: Callable[P, R]) -> Callable[P, R]:

@@ -86,7 +86,7 @@ class floor_div(DivisionFunctionBase):
 class floor_mod(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:floor_mod"
 
-class gapped_grid_square_spiral():
+class gapped_grid_square_spiral(DensityFunction):
     id: ClassVar[str] = "moredfs:gapped_grid_square_spiral"
     x_size: int # > 0
     z_size: int # > 0

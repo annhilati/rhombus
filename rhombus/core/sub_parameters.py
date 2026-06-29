@@ -7,9 +7,11 @@ from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 __all__ = ["SubParameters"]
 
 class SubParameters(RhombusASTNode):
-    """Base class for parameter groups that are used inline in fields of density function types or another.
+    """The **`SubParameters`** base class implements functionality for nodes
+    in the abstract syntax tree of Rhombus that simply represent a grouping
+    of parameters. This is a concept very similar to Pythons `TypedDict` class.
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/extending/mod_support/sub_parameters/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
     """
 
     fileclass: ClassVar[None] = None

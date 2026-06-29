@@ -42,7 +42,7 @@ class RhombusEnvironment:
         ```
         """
         
-        # Just because why not, we document what addons were loaded in which order
+        # Just because why not, we log what addons were loaded in which order
         self._addons: list[RhombusAddon] = []
 
         self._reg_lock = threading.RLock()
@@ -87,8 +87,6 @@ class _EnvProxy:
         setattr(self._current, name, value)
 
 if TYPE_CHECKING:
-    ctx = RhombusEnvironment()
-    "Default Rhombus environment"
     env = RhombusEnvironment()
     "Default Rhombus environment"
 else:

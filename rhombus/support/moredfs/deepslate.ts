@@ -284,7 +284,7 @@ class MoredfsOrElse extends deepslate.DensityFunction {
     constructor(argument: any, fallback: any) { super(); this.argument = argument; this.fallback = fallback; }
     compute(context: any): number {
         const val = this.argument.compute(context);
-        return isNaN(val) ? this.fallback.compute(context) : val; // JS doesn't have an exact equivalent to java Optional here, but typically NaNs or throwing.
+        return (isNaN(val) || !isFinite(val)) ? this.fallback.compute(context) : val; // JS doesn't have an exact equivalent to java Optional here, but typically NaNs or throwing.
     }
     minValue(): number { return Math.min(this.argument.minValue(), this.fallback.minValue()); }
     maxValue(): number { return Math.max(this.argument.maxValue(), this.fallback.maxValue()); }
@@ -421,10 +421,15 @@ class MoredfsGappedSpiral extends deepslate.DensityFunction {
         
         let index = 1 + 4 * ring * (ring - 1);
         // Determine edge (right, top, left, bottom)
-        if (nx === ring && nz !== ring) index += (ring - nz); // right edge (moving down)
-        else if (nz === -ring) index += (2 * ring) + (ring - nx); // top edge (moving left)
-        else if (nx === -ring) index += (4 * ring) + (nz + ring); // left edge (moving up)
-        else index += (6 * ring) + (nx + ring); // bottom edge (moving right)
+        if (nx === ring && nz !== ring) {
+            index += (ring - 1 - nz); // right edge (moving up/North in world coords)
+        } else if (nz === -ring) {
+            index += (2 * ring) + (ring - 1 - nx); // top edge (moving left/West)
+        } else if (nx === -ring) {
+            index += (4 * ring) + (nz + ring - 1); // left edge (moving down/South)
+        } else {
+            index += (6 * ring) + (nx + ring - 1); // bottom edge (moving right/East)
+        }
         
         if (index >= 0 && index < this.gridCellArgs.length) return this.gridCellArgs[index].compute(context);
         return this.oobArg.compute(context);
@@ -454,4 +459,3 @@ class MoredfsClampedGradient extends deepslate.DensityFunction {
 }
 densityFunctions.set('moredfs:x_clamped_gradient', (obj: any, parser: any) => new MoredfsClampedGradient('x', obj.from_x, obj.to_x, obj.from_value, obj.to_value));
 densityFunctions.set('moredfs:z_clamped_gradient', (obj: any, parser: any) => new MoredfsClampedGradient('z', obj.from_z, obj.to_z, obj.from_value, obj.to_value));
-

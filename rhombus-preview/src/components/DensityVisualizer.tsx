@@ -52,9 +52,9 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
         } catch (err) {
             return { error: err instanceof Error ? err.message : String(err) }
         }
-    }, [file.content, registry])
+    }, [file.content, registry, contextFiles])
 
-    const samplerCache = useRef<{ seed: bigint; sampler: (x: number, y: number, z: number) => number } | null>(null)
+    const samplerCache = useRef<{ seed: bigint; factory: any; sampler: (x: number, y: number, z: number) => number } | null>(null)
 
     const onDraw = (image: ImageData, viewState: ViewState, onError: (msg: string | null) => void) => {
         if ('error' in parseResult) {
@@ -62,9 +62,13 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
             return
         }
 
-        if (samplerCache.current?.seed !== viewState.seed) {
+        if (
+            samplerCache.current?.seed !== viewState.seed ||
+            samplerCache.current?.factory !== parseResult.factory
+        ) {
             samplerCache.current = {
                 seed: viewState.seed,
+                factory: parseResult.factory,
                 sampler: parseResult.factory(viewState.seed)
             }
         }
@@ -113,9 +117,13 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
     const renderTooltip = (viewState: ViewState, worldX: number, worldY: number, worldZ: number) => {
         if ('error' in parseResult) return null
         
-        if (samplerCache.current?.seed !== viewState.seed) {
+        if (
+            samplerCache.current?.seed !== viewState.seed ||
+            samplerCache.current?.factory !== parseResult.factory
+        ) {
             samplerCache.current = {
                 seed: viewState.seed,
+                factory: parseResult.factory,
                 sampler: parseResult.factory(viewState.seed)
             }
         }

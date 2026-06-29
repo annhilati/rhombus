@@ -6,7 +6,8 @@ suited for this purpose.
 
 Typically, when developing terrain generation, you will want to import
 everything from this module. Note that some builtin symbols from Python
-might be overwritten. To get them back, you can import from `builtins`.
+might be overwritten. To get them back, you can import from `builtins`
+like with this idiom:
 
 ```
 from rhombus import *

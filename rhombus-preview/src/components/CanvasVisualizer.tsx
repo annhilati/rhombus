@@ -45,6 +45,7 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
     const [runtimeReady, setRuntimeReady] = useState(false)
     const [deepslateErrors, setDeepslateErrors] = useState<{fileId: string, error: string}[]>([])
     const dragRef = useRef<{ active: boolean; x: number; y: number } | null>(null)
+    const [isDragging, setIsDragging] = useState(false)
     const [hoverCoords, setHoverCoords] = useState<{ x: number, y: number, z: number, worldX: number, worldY: number, worldZ: number } | null>(null)
     const [renderTimeMs, setRenderTimeMs] = useState<number | null>(null)
     const [runtimeError, setRuntimeError] = useState<string | null>(null)
@@ -163,9 +164,15 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
             <div
                 ref={wrapperRef}
                 className="pane-body visualizer-canvas-wrap"
-                onPointerLeave={() => setHoverCoords(null)}
+                style={{ cursor: isDragging ? 'move' : 'default' }}
+                onPointerLeave={() => {
+                    setHoverCoords(null)
+                    setIsDragging(false)
+                    dragRef.current = null
+                }}
                 onPointerDown={(event) => {
                     dragRef.current = { active: true, x: event.clientX, y: event.clientY }
+                    setIsDragging(true)
                     ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
                 }}
                 onPointerMove={(event) => {
@@ -203,6 +210,7 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
                 }}
                 onPointerUp={(event) => {
                     dragRef.current = null
+                    setIsDragging(false)
                     ;(event.currentTarget as HTMLElement).releasePointerCapture(event.pointerId)
                 }}
                 onWheel={(event) => {

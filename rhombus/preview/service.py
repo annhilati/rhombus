@@ -18,8 +18,8 @@ import fastapi, uvicorn, asyncio
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus import Density, t
-from rhombus.core import BeetFile, RhombusASTNode, DatapackResource
+from rhombus import Density
+from rhombus.core import BeetFile, RhombusASTNode
 
 class RhombusFilewatcher(FileSystemEventHandler):
     def __init__(self, service: RhombusPreviewService, watch_file: str | None = None):
@@ -308,11 +308,7 @@ def start(
                 continue
             sys.exit(proc.returncode)
 
-    actual_items = []
-    for item in items:
-        actual_items.append(item)
-
-    preview_service = RhombusPreviewService(watch_path=str(watch_path), items=actual_items)
+    preview_service = RhombusPreviewService(watch_path=str(watch_path), items=[item for item in items])
 
     default_args = dict(
         host="127.0.0.1",

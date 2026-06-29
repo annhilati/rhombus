@@ -1,5 +1,5 @@
-from typing import Callable, Final, Any, get_type_hints, runtime_checkable
-import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
+from typing import Callable, Final, Any, get_type_hints
+import hashlib, uuid, json, functools, inspect, dataclasses
 
 import beet, beet.library.base
 
@@ -9,6 +9,10 @@ import beet, beet.library.base
 type JSONValue = dict[str, JSONValue] | list[JSONValue] | tuple[JSONValue] | str | int | float | bool | None
 type JSONDict = dict[str, JSONValue]
 class BeetFile(beet.library.base.NamespaceFile):
+    """The **`BeetFile`** protocol is an extension of Beets `NamespaceFile`
+    protocol to include attributes and methods that are important for encoding.
+    Note that both are not runtime checkable.
+    """
     data: JSONDict
     encoder: Callable[[JSONDict], str]
     decoder: Callable[[str], JSONDict]
@@ -22,7 +26,7 @@ type DataclassInstance = object
 #======// Data //================================================================================//
 
 def uuid_hash(data: JSONDict) -> str:
-    """Creates a UUID string (without `-`) based of a JSON dictionary."""
+    """Creates a UUID string without dashes based of a JSON dictionary."""
     encoded_str = json.dumps(
         data, 
         sort_keys=True, 
@@ -36,7 +40,7 @@ def uuid_hash(data: JSONDict) -> str:
 #======// Context //=============================================================================//
 
 FROM_CONTEXT: Final = object()
-"Typing sentinel to denote that a value will be taken from a context variable."
+"Typing sentinel to denote that a value will be adopted from the environment."
 
 def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
     """Decorator for automatic context handling for parameters.

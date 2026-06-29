@@ -14,5 +14,5 @@ register(support.lithostitched)
 
 from rhombus.support import (
     tectonic, lithostitched, moredfs, ensity, 
-    dptoolkit, vanilla_legacy
+    vanilla_legacy
 )

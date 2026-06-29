@@ -57,7 +57,7 @@ def radius_3d():
     return Density(types.radius_3d())
 
 @macro
-def distance(distance_metric: DistanceMetric, point1: list[AnyDensity] | None = None, point2: list[AnyDensity] | None = None):
+def distance(distance_metric: DistanceMetric, point1: tuple[AnyDensity], point2: tuple[AnyDensity]):
     "Computes distance between two n-dimensional points using a specific metric."
     p1 = [d.AST for d in point1] if point1 is not None else None
     p2 = [d.AST for d in point2] if point2 is not None else None
@@ -303,16 +303,25 @@ def profiler(argument: AnyDensity, warm_up: int, iterations: int):
     return Density(types.profiler(argument.AST, warm_up, iterations))
 
 @macro
-def gapped_grid_square_spiral(x_size: int, z_size: int, spacing: int, grid_cell_args: list[AnyDensity], out_of_bounds_argument: AnyDensity):
-    "Creates a spiral pattern of grid cells."
+def gapped_grid_square_spiral(tile_size: tuple[int, int], spacing: int, grid_cell_args: list[AnyDensity], when_out_of_bound: AnyDensity):
+    """Creates a grid filled with density functions arranged in a spiral.
+    
+    The grid spans the XZ-plane (value is equal for all Y-coordinates).
+    The first tile is oriented south-east of (0, 0), goes east first,
+    then continues counter-clockwise. 
+    """
     args = [d.AST for d in grid_cell_args]
-    return Density(types.gapped_grid_square_spiral(x_size, z_size, spacing, args, out_of_bounds_argument.AST))
+    return Density(types.gapped_grid_square_spiral(tile_size[0], tile_size[1], spacing, args, when_out_of_bound.AST))
 
 @macro
-def single_channel_image_tessellation(x_size: int, z_size: int, image: str | Image.Image):
-    "Tiles a single-channel image across the world."
+def single_channel_image_tessellation(image: str | Image.Image, size: tuple[int, int]):
+    """Tiles a single-channel image across the world.
+    
+    `image` can be a base64-encoded string or a PIL image. In the latter case,
+    it will be reduced to black-and-white before encoding.
+    """
     if isinstance(image, Image.Image):
         import zlib
         image = image.convert('L')
         image = base64.b64encode(zlib.compress(image.tobytes())).decode('utf-8')
-    return Density(types.single_channel_image_tessellation(x_size, z_size, image))
+    return Density(types.single_channel_image_tessellation(size[0], size[1], image))
