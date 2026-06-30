@@ -6,7 +6,7 @@ from beet.contrib.worldgen import WorldgenDensityFunction
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
-from rhombus.config import env
+from rhombus.core.config import env
 
 __all__ = [
     "DensityFunction",

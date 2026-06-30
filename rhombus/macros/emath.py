@@ -13,8 +13,7 @@ import math as py_math
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std import functions, macro, types
-from rhombus.macros.math import pi, sum
-from rhombus.macros import conditional as cond, performance as perf
+from rhombus.macros import math, conditional as cond, performance as perf
 
 
 #======// Rounding //============================================================================//
@@ -29,11 +28,11 @@ def round(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[
     if start_int > end_int:
         raise ValueError("'range' requires a lower and upper bound")
         
-    expr = cond.when(argument).between(start_int - 0.5, start_int + 0.5).then(float(start_int))
+    expr = cond.when(argument).inside(start_int - 0.5, start_int + 0.5).then(float(start_int))
     
     i = start_int + 1
     while i <= end_int:
-        expr = expr.elsewhen(cond.it).between(i - 0.5, i + 0.5).then(float(i))
+        expr = expr.elsewhen(cond.it).inside(i - 0.5, i + 0.5).then(float(i))
         i += 1
         
     return expr.otherwise(cond.it)
@@ -42,8 +41,8 @@ def round(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[
 def floor(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
     """Rounds the input down to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
-    from rhombus import config
-    EPS = config.infinitesimal
+    from rhombus.core import config
+    EPS = config.env.infinitesimal
     
     start_int = py_math.floor(range[0])
     end_int = py_math.floor(range[1])
@@ -51,11 +50,11 @@ def floor(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[
     if start_int > end_int:
         raise ValueError("'range' requires a lower and upper bound")
         
-    expr = cond.when(argument).between(start_int, start_int + 1.0 - EPS).then(float(start_int))
+    expr = cond.when(argument).inside(start_int, start_int + 1.0 - EPS).then(float(start_int))
     
     i = start_int + 1
     while i <= end_int:
-        expr = expr.elsewhen(cond.it).between(i, i + 1.0 - EPS).then(float(i))
+        expr = expr.elsewhen(cond.it).inside(i, i + 1.0 - EPS).then(float(i))
         i += 1
         
     return expr.otherwise(cond.it)
@@ -64,8 +63,8 @@ def floor(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[
 def ceil(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.range_choice]:
     """Rounds the input up to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
-    from rhombus import config
-    EPS = config.infinitesimal
+    from rhombus.core import config
+    EPS = config.env.infinitesimal
     
     start_int = py_math.ceil(range[0])
     end_int = py_math.ceil(range[1])
@@ -73,11 +72,11 @@ def ceil(argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[t
     if start_int > end_int:
         raise ValueError("'range' requires a lower and upper bound")
         
-    expr = cond.when(argument).between(start_int - 1.0 + EPS, start_int).then(float(start_int))
+    expr = cond.when(argument).inside(start_int - 1.0 + EPS, start_int).then(float(start_int))
     
     i = start_int + 1
     while i <= end_int:
-        expr = expr.elsewhen(cond.it).between(i - 1.0 + EPS, i).then(float(i))
+        expr = expr.elsewhen(cond.it).inside(i - 1.0 + EPS, i).then(float(i))
         i += 1
         
     return expr.otherwise(cond.it)
@@ -98,36 +97,19 @@ def mod(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (
     return perf.autocache(dividend - divisor * floor(dividend / divisor, range=range))
 
 @macro
-def sqrt(argument: AnyDensity, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.mul]:
-    """Returns the square root of the input.<br>
-    ❗`sqrt(x)` is nonesense, if `x < 0`
-
-    ⚙️ This implementation uses [Heron's method](https://en.wikipedia.org/wiki/Square_root_algorithms#Heron's_method).<br>
-    ⚠️ Bigger inputs need more iterations before converging.
-    
-    #### Precision for reasonable small inputs`
-    ```
-    Iterations │ Decimals  │ Calculations
-    ═══════════╪═══════════╪══════════════════════════════
-    1          │ 1 – 2     │
-    2          │ 2 – 4     │      2ⁱ × c(guess)
-    3          │ 4 – 8     │            +
-    4          │ 8 – 16    │ (2ⁱ - 1) × (c(argument) + 3)
-    i          │ 2ⁱ⁻¹ – 2ⁱ │
-    ```
+def sqrt(argument: AnyDensity, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.range_choice]:
+    """Returns the square root of the input.
     """
     x = guess(argument)
 
     for _ in range(iterations):
         x = 0.5 * (x + (argument / x))
 
-    return x
+    return cond.when(argument).atleast(0).then(x).otherwise(math.NaN)
 
 @macro
 def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
-    """Returns the exponential function value of the input, so `e` exponentiated to the input.<br>
-
-    ⚙️ This implementation uses the [Taylor series of the exponential function](https://en.wikipedia.org/wiki/Taylor_series#Exponential_function).
+    """Returns the exponential function value of the input, so `e` exponentiated to the input.
     """
     if terms <= 0:
         return functions.constant(1)
@@ -136,105 +118,67 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
     return sum(*terms_list)
 
 @macro
-def ln(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
+def ln(argument: AnyDensity, terms: int = 4) -> Density[types.range_choice]:
     """Returns the natual logarithm value of the input.<br>
-
-    ⚙️ This implementation uses the [Taylor series of the natural logarithm](https://en.wikipedia.org/wiki/Taylor_series#Natural_logarithm).
     """
     y = argument - functions.constant(1)
 
-    if terms <= 0:
-        return functions.constant(0)
-
     terms_list = [((-1 if (k % 2 == 0) else 1) * (y ** k) / k) for k in range(1, terms + 1)]
-    return sum(*terms_list)
+    return cond.when(argument).greater(0).then(sum(*terms_list)).otherwise(math.NaN)
+
 
 #======// Trigonometry //========================================================================//
 
 @macro
 def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
-    """Returns the sine value of the input in radians.<br>
-
-    ⚙️ This implementation uses the [Taylor series of sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
-    ⚠️ Bigger inputs need more terms before converging.
+    """Returns the sine value of the input in radians.
     """
     terms_list = [argument] + [((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / py_math.factorial(2 * k + 1)) for k in range(1, terms + 1)]
     return sum(*terms_list)
 
 @macro
 def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
-    """Returns the cosine value of the input in radians.<br>
-
-    ⚙️ This implementation uses the [Taylor series of cosine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
-    ⚠️ Bigger inputs need more terms before converging.
+    """Returns the cosine value of the input in radians.
     """
     terms_list = [functions.constant(1)] + [((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k)) for k in range(1, terms + 1)]
     return sum(*terms_list)
 
 @macro
 def tan(argument: AnyDensity, terms: int = 3) -> Density[types.mul]:
-    """Returns the tangent value of the input in radians.<br>
-    ❗`tan((2n - 1) * x) = NaN` where `x` is near π/2.
-
-    ⚙️ This implementation uses the [Taylor series of sine and cosine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
-    ⚠️ Bigger inputs need more terms before converging.
+    """Returns the tangent value of the input in radians.
     """
     return sin(argument, terms) / cos(argument, terms)
 
 @macro
 def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
-    """Returns the arc sine value of the input in radians.<br>
-    ❗`asin(x) = NaN`, if `x < -1` or `x > 1`
-
-    ⚙️ This implementation uses the [Taylor series of arc sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
+    """Returns the arc sine value of the input in radians.
     """
-    if terms <= 0:
-        return functions.constant(0)
-
     terms_list = [(py_math.factorial(2*k) / (4**k * py_math.factorial(k)**2 * (2*k + 1))) * (argument ** (2*k + 1)) for k in range(terms)]
-    return sum(*terms_list)
+    return cond.when(argument).inside(-1, 1).then(sum(*terms_list)).otherwise(math.NaN)
 
 @macro
 def acos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
-    """Returns the arc cosine value of the input in radians.<br>
-    ❗`acos(x) = NaN`, if `x < -1` or `x > 1`
-
-    ⚙️ This implementation uses the shifted [Taylor series of arc sine](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
+    """Returns the arc cosine value of the input in radians.
     """
-    return (pi / 2) - asin(argument, terms)
+    return cond.when(argument).inside(-1, 1).then((math.pi / 2) - asin(argument, terms)).otherwise(math.NaN)
 
 @macro
 def atan(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
-    """Returns the arc tangent value of the input in radians.<br>
-
-    ⚙️ This implementation uses the [Taylor series of arc tangent](https://en.wikipedia.org/wiki/Taylor_series#Trigonometric_functions).<br>
-    ⚠️ Bigger inputs need more terms before converging.
+    """Returns the arc tangent value of the input in radians.
     """
-    if terms <= 0:
-        return functions.constant(0)
-
     terms_list = [((-1 if (k % 2) else 1) * (argument ** (2*k + 1)) / (2*k + 1)) for k in range(terms)]
     return sum(*terms_list)
 
 @macro
 def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
-
-    ⚙️ This implementation uses the [Taylor series of hyperbolic sine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
-    ⚠️ Bigger inputs need more terms before converging.
     """
-    if terms <= 0:
-        return functions.constant(0)
-
     terms_list = [ (argument ** (2*k + 1)) / py_math.factorial(2*k + 1) for k in range(terms) ]
     return sum(*terms_list)
 
 @macro
 def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
-
-    ⚙️ This implementation uses the [Taylor series of hyperbolic cosine](https://en.wikipedia.org/wiki/Taylor_series#Hyperbolic_functions).<br>
-    ⚠️ Bigger inputs need more terms before converging.
     """
     terms_list = [functions.constant(1)] + [ (argument ** (2*k)) / py_math.factorial(2*k) for k in range(1, terms + 1) ]
     return sum(*terms_list)

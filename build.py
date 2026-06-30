@@ -9,7 +9,7 @@ class CustomBuildHook(BuildHookInterface):
         This ensures that the latest compiled frontend assets are available.
         """
         
-        frontend = Path(__file__).parent
+        frontend = Path(__file__).parent / "rhombus-preview"
         
         subprocess.run(
             ["cmd", "/c", "npm", "install"],

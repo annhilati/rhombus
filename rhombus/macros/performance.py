@@ -1,7 +1,4 @@
 """Macros for evaluating and improving the performance of density functions.
-
-This is primarily the `autocache` macro, which extracts recurring parts of
-the AST of the entered density function and wrapps them in `cache_once`. 
 """
 
 __all__ = ["autocache", "cachespecific", "get_size"]
@@ -17,7 +14,7 @@ if sys.getrecursionlimit() < 10000:
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std import types, AnyDensity, Density, macro
-from rhombus.config import env
+from rhombus.core.config import env
 
 class DensityFunctionSizeInfo(NamedTuple):
     toplevel_nodes: int

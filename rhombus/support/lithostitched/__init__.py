@@ -5,7 +5,7 @@ This module enables finer control over terrain shaping and noise manipulation wi
 
 ---
 [Wiki](https://github.com/Apollounknowndev/lithostitched/wiki)
-([Density Function Types](https://github.com/Apollounknowndev/lithostitched/wiki/Density-Function-Types))
+([Density Function Types](https://github.com/Apollounknowndev/lithostitched/wiki/Density-Function-Types), [Fast Noise Configs](https://github.com/Apollounknowndev/lithostitched/wiki/Fast-Noise-Configs))
 """
 
 __version__ = "1.6.0"
@@ -16,7 +16,7 @@ from .fast_noise_config import FastNoiseConfig, LithostichedFastNoiseConfig
 def _register_rhombus_addon() -> None:
     from importlib.resources import files
     
-    from rhombus.config import env
+    from rhombus.core.config import env
     from rhombus.core.density_function import DensityFunction
     
     from . import types

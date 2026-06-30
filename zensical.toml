@@ -8,8 +8,7 @@ nav = [
         "index.md",
         "usage/walkthrough.md",
         {"Get Started" = [
-            "syntax.md",
-            "abstraction.md",
+            "get-started/density.md",          
             # "cli.md",
             # "datapack_development.md",
             "mod_development.md",
@@ -23,11 +22,8 @@ nav = [
         "devs/brand.md",
         "devs/macros.md",
         {"Adding Mod Support" = [
-            "devs/mod_support/index.md",
-            {"🏗️ in Rework" = "devs/mod_support/index.md"}
-            # "devs/mod_support/density_functions.md",
-            # "devs/mod_support/datapack_resources.md",
-            # "devs/mod_support/sub_parameters.md"
+            "devs/abstraction.md",
+            {"🏗️ in Rework" = "null"}
         ]},
     ]}
 ]
@@ -38,7 +34,8 @@ logo = "logo.png"
 favicon = "logo.png"
 features = [
     "navigation.sections",
-    "navigation.tabs"
+    "navigation.tabs",
+    "content.code.annotate"
 ]
 
 [project.theme.icon]

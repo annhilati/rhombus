@@ -12,7 +12,7 @@ from .functions import floating_islands, lonely_island
 def _register_rhombus_addon() -> None:
     from importlib.resources import files
     
-    from rhombus.config import env
+    from rhombus.core.config import env
     from rhombus.core.density_function import DensityFunction
     
     from . import types

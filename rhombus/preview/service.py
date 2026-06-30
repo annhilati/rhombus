@@ -261,12 +261,12 @@ class RhombusPreviewService:
         )
 
     def get_scripts(self):
-        from rhombus.config import env
+        from rhombus.core.config import env
         from pathlib import Path
         return [{"name": Path(p).name, "url": f"/addons/scripts/{i}"} for i, p in enumerate(env.preview_scripts)]
 
     def get_script_file(self, index: int):
-        from rhombus.config import env
+        from rhombus.core.config import env
         from pathlib import Path
         try:
             p = Path(env.preview_scripts[index])
@@ -278,7 +278,7 @@ class RhombusPreviewService:
             return fastapi.responses.Response(status_code=404)
 
 
-def start(
+def serve(
         *items: tuple[str, Density | RhombusASTNode | BeetFile],
         watch_path: str | Path = Path.cwd(),
         **uvicorn_args: Any

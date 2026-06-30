@@ -32,7 +32,7 @@ from enum import Enum
 from rhombus.core.density_function import DensityFunction
 from rhombus.std.types import range_choice, literal_number_limit
 from rhombus.std.density import Density, AnyDensity
-from rhombus import config
+from rhombus.core import config
 
 EPSILON = config.env.infinitesimal
 OMEGA = literal_number_limit # TODO: Check whether this is bound to the range_choice arguments or the general limit
@@ -58,7 +58,7 @@ class Relation(str, Enum):
     GREATER_THAN = ">"
     LESS_OR_EQUAL = "<="
     GREATER_OR_EQUAL = ">="
-    BETWEEN = "between"
+    INSIDE = "inside"
     OUTSIDE = "outside"
     ABOVE_BUT_UNDER = "above_under"
 
@@ -146,7 +146,7 @@ class ComparisonCondition(Condition):
             )
 
         # Other
-        if relation == Relation.BETWEEN:
+        if relation == Relation.INSIDE:
             low, high = ensure_pair(self.value)
             return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON))._compile(when_true, when_false)
 
@@ -278,7 +278,7 @@ class Causality:
                 `self >= other`
             **`~.atmost(float)`**  
                 `self <= other`
-            **`~.between(float, float)`**  
+            **`~.inside(float, float)`**  
                 `low <= self <= high`
             **`~.outside(float, float)`**  
                 `self < low` or `self > high`
@@ -323,8 +323,8 @@ class Causality:
             return OtherPendingCondition(self._chain, when(self._subject).atleast(value))
         def atmost(self, value: float) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).atmost(value))
-        def between(self, low: float, high: float, /) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).between(low, high))
+        def inside(self, low: float, high: float, /) -> Condition:
+            return OtherPendingCondition(self._chain, when(self._subject).inside(low, high))
         def atleast_but_less(self, low: float, high: float, /) -> Condition:
             return OtherPendingCondition(self._chain, when(self._subject).atleast_but_less(low, high))
         def outside(self, low: float, high: float, /) -> Condition:
@@ -391,7 +391,7 @@ class when:
             `self >= other`
         **`~.atmost(float)`**  
             `self <= other`
-        **`~.between(float, float)`**  
+        **`~.inside(float, float)`**  
             `low <= self <= high`
         **`~.outside(float, float)`**  
             `self < low` or `self > high`
@@ -416,8 +416,8 @@ class when:
         return ComparisonCondition(input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value)
     def atmost(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value)
-    def between(self, low: float, high: float, /) -> Condition:
-        return ComparisonCondition(input=self._subject, relation=Relation.BETWEEN, value=(low, high))
+    def inside(self, low: float, high: float, /) -> Condition:
+        return ComparisonCondition(input=self._subject, relation=Relation.INSIDE, value=(low, high))
     def atleast_but_less(self, low: float, high: float, /) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.ABOVE_BUT_UNDER, value=(low, high))
     def outside(self, low: float, high: float, /) -> Condition:

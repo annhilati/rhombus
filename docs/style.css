@@ -1,13 +1,39 @@
 :root  > * {
     --md-primary-fg-color: #734DFF;
     --md-accent-fg-color: #8366ea;
-    --md-typeset-color: hsla(223, 14%, 90%, 0.954);
-    --md-code-bg-color: hsl(225, 19%, 12%);
+    --md-typeset-color: hsl(60, 0%, 86%);
+    --md-code-bg-color: hsl(228, 17%, 6%);
+    --md-default-bg-color: hsl(225, 15%, 5%);
 }
 
-code {
-    color: hsla(51, 62%, 83%, 0.954);
+.md-content {
+    background: hsl(225, 15%, 9%);
+    border-radius: 25px;
 }
+
+.md-footer-meta {
+    background: var(--md-default-bg-color)
+}
+
+.md-main__inner {
+    margin-bottom: 1.5rem;
+}
+
+.md-typeset h1 { font-size: 2.2em }
+
+p > code, td > code {
+    --md-code-fg-color: hsla(274, 72%, 69%, 0.954);
+}
+
+td, th {
+    padding: 0.46em 0.6em !important; 
+}
+
+h6:first-of-type {
+    margin-top: 0;
+}
+
+
 
 html {
     scrollbar-gutter: stable; /* Patch for scrollbars shifting the layout */
@@ -38,7 +64,7 @@ html {
 }
 
 .md-grid {
-    max-width: 1500px;
+    max-width: 1550px;
 }
 
 .grid.cards > ul > li:hover {

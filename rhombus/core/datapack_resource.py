@@ -7,7 +7,7 @@ import beet
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, annotated_fields, contextfunction
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus import env
+from rhombus.core.config import env
 
 __all__ = ["DatapackResource"]
 

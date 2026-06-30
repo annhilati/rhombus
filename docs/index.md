@@ -38,10 +38,14 @@ As long as the format of the density function definition remains unchanged in ne
 
 <h2>Installation</h2>
 
-Rhombus is currently not available on the Python Package Index. Until that changes, install it via `git`:
+Rhombus is available on the Python Package Index. Alternatively, you can install it via `git`:
 
 === ":simple-python: pip"
 
+    ```sh
+    pip install rhombus
+    ```
+    or
     ```sh
     pip install git+https://github.com/annhilati/rhombus.git
     ```
@@ -49,8 +53,9 @@ Rhombus is currently not available on the Python Package Index. Until that chang
 === ":simple-uv: uv"
 
     ```sh
+    uv pip install rhombus
+    ```
+    or
+    ```sh
     uv pip install git+https://github.com/annhilati/rhombus.git
     ```
-
-!!! warning
-    Please note that with this method, each installation could result in a new version with breaking changes.

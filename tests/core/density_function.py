@@ -1,9 +1,11 @@
+import pytest
+
 import beet
 import beet.contrib.worldgen as worldgen
 
 from rhombus.core import DensityFunction, constant, Reference, Unknown
 # only core Modules
-from rhombus import config
+from rhombus import env
 
 def test_deserialize_dicts_with_type_key():
     
@@ -21,8 +23,8 @@ def test_deserialize_literals():
     # References with available context
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
         
-        old_dp = config.ctx.datapack
-        config.ctx.datapack = dp
+        old_dp = env.datapack
+        env.datapack = dp
         
         dp.clear()
         
@@ -30,7 +32,7 @@ def test_deserialize_literals():
         
         assert DensityFunction.deserialize_inline("some:function") == Reference("some:function", constant(3.14))
        
-        config.ctx.datapack = old_dp
+        env.datapack = old_dp
         
         
 def test_serialize_literals():
@@ -45,6 +47,7 @@ def test_serialize_literals():
     assert Reference("some:reference").serialize_toplevel() == {"type": "minecraft:add", "argument1": "some:reference", "argument2": 0.0}
         # Be aware of the order of arguments
         
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_Unknown_type():
     
     assert DensityFunction.deserialize_toplevel({"type": "this:does_not_exist", "arg1": 1, "arg2": 2}) == Unknown("this:does_not_exist", {"arg1": 1, "arg2": 2})

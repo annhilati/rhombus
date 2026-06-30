@@ -5,7 +5,7 @@ This module significantly expands the flexibility of terrain generation by addin
 
 ---
 [Wiki](https://github.com/klinbee/More-Density-Functions/wiki)
-[Modrinth](https://modrinth.com/mod/more-density-functions)"""
+"""
 
 __version__ = "2.2.1"
 
@@ -15,7 +15,7 @@ from .sub_parameters import DerivativeComponent, DistanceMetric, ExtraOctaves, R
 def _register_rhombus_addon() -> None:
     from importlib.resources import files
     
-    from rhombus.config import env
+    from rhombus.core.config import env
     from rhombus.core.density_function import DensityFunction
     
     from . import types

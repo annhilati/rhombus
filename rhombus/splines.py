@@ -1,9 +1,9 @@
 """
 Utility module for working with cubic Hermite splines.
 
-The term "spline point" always refers to an object of type `tuple[float, float, float]`  
-that describes a point on a Hermite spline function. Here, the first value is the  
-x-position, the second is the y-value and the third is the slope at that point.
+The term "spline point" always refers to an object of type `tuple[float, float, float]`
+that describes a point on a Hermite spline function. Here, the first value is the
+x-position, the second is the y-value and the third is the slope at that points.
 
 [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
 """

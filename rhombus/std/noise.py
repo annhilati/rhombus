@@ -1,5 +1,5 @@
 """
-For more information on the use and parameters, see `.Noise`.
+For more information on the use and parameters, see `~.Noise`.
 """
 
 __all__ = ["Noise"]

@@ -82,7 +82,7 @@ Growing collection of macros for common patterns and complex operations, reducin
 
 ## Impressions
 ```sh
-pip install git+https://github.com/annhilati/rhombus.git
+pip install rhombus
 ```
 
 ```py

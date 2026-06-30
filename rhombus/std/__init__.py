@@ -1,18 +1,8 @@
 """
 # The Rhombus standard library
 This module contains all the symbols needed to develop vanilla terrain
-generation for datapacks, as well as some tools that are generally well-
+generation for datapacks, as well as some tools that are generally well
 suited for this purpose.
-
-Typically, when developing terrain generation, you will want to import
-everything from this module. Note that some builtin symbols from Python
-might be overwritten. To get them back, you can import from `builtins`
-like with this idiom:
-
-```
-from rhombus import *
-from builtins import abs as python_abs
-```
 """
 
 __version__ = "26.2"
@@ -27,7 +17,7 @@ from rhombus.std import types as t
 def _register_rhombus_addon() -> None:
     from importlib.resources import files
     
-    from rhombus.config import env
+    from rhombus.core.config import env
     from rhombus.core.density_function import DensityFunction
     
     from . import types

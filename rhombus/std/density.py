@@ -12,7 +12,7 @@ from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
 from rhombus.std import types
-from rhombus.config import env
+from rhombus.core.config import env
 
 
 #======// Density Type //========================================================================//

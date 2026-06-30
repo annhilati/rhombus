@@ -3,12 +3,12 @@
 This package serves as a central hub for third-party mod support, 
 exposing their custom density functions and node types for native use within Rhombus.
 
-When decoding density functions from datapacks while they are using density functions from
-mods or such from old Minecraft versions, make sure to register the respective modules in
-the deserialization register:
+When decoding density functions from datapacks while they are using function types from
+mods or such from old Minecraft versions, make sure to load the respective modules in
+the environment like in this idiom:
 ```
 from rhombus import *
-register(support.lithostitched)
+env.load(support.lithostitched)
 ```
 """
 

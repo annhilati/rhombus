@@ -1,8 +1,9 @@
 from rhombus import *
+from rhombus.std import types
 from rhombus.core.density_function import Reference
 from rhombus.core.utils import uuid_hash
 when = conditional.when
-EPS = config.env.infinitesimal
+EPS = env.infinitesimal
 
 def test_logic():
     

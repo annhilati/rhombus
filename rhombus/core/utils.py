@@ -55,7 +55,7 @@ def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
             bound.apply_defaults()
             
             # Import here to avoid circular imports if any
-            from rhombus import config
+            from rhombus.core import config
             import copy
 
             needs_new_context = False
