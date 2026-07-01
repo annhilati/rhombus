@@ -10,14 +10,14 @@ authors = [
 ]
 dependencies = [
   "beet==0.111.0", # -> pyyaml
-  # "typer==0.25.1",
-  "rich==15.0.0",
   "numpy==2.3.3",
+  "matplotlib==3.11.0",
+  "pillow==12.2.0",
+  "typer==0.25.1",
+  "rich==15.0.0",
   "uvicorn==0.49.0",
   "watchdog==6.0.0",
   "fastapi==0.137.1",
-  "matplotlib==3.11.0",
-  "pillow==12.2.0"
 ]
 
 [project.urls]
@@ -27,8 +27,8 @@ documentation = "https://annhilati.github.io/rhombus"
 repository = "https://github.com/annhilati/rhombus"
 issues = "https://github.com/annhilati/rhombus/issues"
 
-# [project.scripts]
-# rhombus = "rhombus.cli:main"
+[project.scripts]
+rhombus = "rhombus.cli:main"
 
 [build-system]
 requires = ["hatchling"]

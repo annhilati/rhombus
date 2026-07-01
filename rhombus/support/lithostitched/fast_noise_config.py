@@ -6,14 +6,14 @@ from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict
 
 
-class LithostichedFastNoiseConfig(JsonFile):
-    """Class representing a Lithostiched noise configuration file."""
+class LithostitchedFastNoiseConfig(JsonFile):
+    """Class representing a Lithostitched noise configuration file."""
 
     scope: ClassVar[NamespaceFileScope] = ("lithostitched", "fast_noise_config")
     extension: ClassVar[str] = ".json"
 
 class FastNoiseConfig(DatapackResource):
-    """Defines a Lithostiched noise.
+    """Defines a Lithostitched noise.
     
     **NOTE:** Because Lithostitched noises have a lot of interdependent fields, use
     these fabrics for instanciating:
@@ -22,8 +22,9 @@ class FastNoiseConfig(DatapackResource):
     - `.PerlinNoise()`
     - `.refer()`
     
+    [Lithostitched Wiki Reference](https://github.com/Apollounknowndev/lithostitched/wiki/Fast-Noise-Configs)
     """
-    fileclass: ClassVar = LithostichedFastNoiseConfig
+    fileclass: ClassVar = LithostitchedFastNoiseConfig
 
     type: Literal["lithostitched:cellular", "lithostitched:perlin", "lithostitched:simplex"]
     frequency: float

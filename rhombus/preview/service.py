@@ -21,6 +21,12 @@ import beet.contrib.worldgen as beet_worldgen
 from rhombus import Density
 from rhombus.core import BeetFile, RhombusASTNode
 
+def _get_relaunch_cmd():
+    cmd = [sys.executable] + sys.argv
+    if os.name == 'nt' and not sys.argv[0].endswith(('.py', '.exe')) and os.path.exists(sys.argv[0] + '.exe'):
+        cmd = [sys.argv[0] + '.exe'] + sys.argv[1:]
+    return cmd
+
 class RhombusFilewatcher(FileSystemEventHandler):
     def __init__(self, service: RhombusPreviewService, watch_file: str | None = None):
         super().__init__()
@@ -66,7 +72,7 @@ class RhombusFilewatcher(FileSystemEventHandler):
 
 
 class RhombusPreviewService:
-    def __init__(self, watch_path: str, items: list[tuple[str, Density | RhombusASTNode | BeetFile]]):
+    def __init__(self, watch_path: Path | None, items: list[tuple[str, Density | RhombusASTNode | BeetFile]]):
         self.watch_path = watch_path
         self.items = items
         
@@ -170,7 +176,7 @@ class RhombusPreviewService:
                 env["RHOMBUS_CHECK_ONLY"] = "1"
                 
                 # Check if the script runs without errors up to the start() call
-                result = subprocess.run([sys.executable] + sys.argv, env=env, capture_output=True, text=True)
+                result = subprocess.run(_get_relaunch_cmd(), env=env, capture_output=True, text=True)
                 if result.returncode != 0:
                     err_msg = result.stderr.strip() or result.stdout.strip()
                     print(f"[red]RHOMBUS:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n")
@@ -189,20 +195,22 @@ class RhombusPreviewService:
                 except Exception as exc:
                     self.last_error_message = repr(exc)
 
-    def start_watcher(self, path: str | Path):
-        p = Path(path)
+    def start_watcher(self, path: Path):
         observer = Observer()
-        if p.is_file():
-            observer.schedule(RhombusFilewatcher(self, watch_file=p.name), str(p.parent), recursive=False)
+        if path.is_file():
+            observer.schedule(RhombusFilewatcher(self, watch_file=path.name), str(path.parent), recursive=False)
         else:
-            observer.schedule(RhombusFilewatcher(self), str(p), recursive=True)
+            observer.schedule(RhombusFilewatcher(self), str(path), recursive=True)
         observer.start()
         self.observer = observer
         return observer
 
     def startup(self):
-        self.start_watcher(self.watch_path)
-        print(f"[#553bd9]RHOMBUS[reset]:  Preview service is now watching {self.watch_path}")
+        if self.watch_path is not None:
+            self.start_watcher(self.watch_path)
+            print(f"[#553bd9]RHOMBUS[reset]:  Preview service is now watching {self.watch_path}")
+        else:
+            print(f"[#553bd9]RHOMBUS[reset]:  Preview service started (no file watching)")
         sys.stdout.write("\033]0;Rhombus Preview Service\007")
         sys.stdout.flush()
 
@@ -280,7 +288,7 @@ class RhombusPreviewService:
 
 def serve(
         *items: tuple[str, Density | RhombusASTNode | BeetFile],
-        watch_path: str | Path = Path.cwd(),
+        watch_path: str | Path | None = Path.cwd(),
         **uvicorn_args: Any
     ) -> None:
     """Starts the Rhombus Preview service ASGI application.
@@ -296,7 +304,7 @@ def serve(
         env = os.environ.copy()
         env["RHOMBUS_SUPERVISOR_MODE"] = "1"
         while True:
-            proc = subprocess.Popen([sys.executable] + sys.argv, env=env)
+            proc = subprocess.Popen(_get_relaunch_cmd(), env=env)
             try:
                 while proc.poll() is None:
                     time.sleep(0.1)
@@ -308,7 +316,7 @@ def serve(
                 continue
             sys.exit(proc.returncode)
 
-    preview_service = RhombusPreviewService(watch_path=str(watch_path), items=[item for item in items])
+    preview_service = RhombusPreviewService(watch_path=Path(watch_path) if watch_path is not None else None, items=[item for item in items])
 
     default_args = dict(
         host="127.0.0.1",

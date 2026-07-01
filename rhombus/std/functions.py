@@ -27,13 +27,13 @@ __all__ = [
     "y_clamped_gradient"
 ]
 
+from typing import overload
+
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.noise import Noise
 from rhombus.std.macros import macro
 from rhombus.std import types
 from rhombus.core.config import env
-
-# TODO: return type is not correct for caching functions
 
 #======// Basic Arithmetic //====================================================================//
 
@@ -346,8 +346,12 @@ def shifted_noise(noise: Noise, xz_scale: float, y_scale: float, shift_x: AnyDen
 
 #======// Caching & Interpolation //=============================================================//
 
+@overload
+def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.Reference]: ...
+@overload
+def cache_2d(argument: AnyDensity, *, partition: bool = False) -> Density[types.cache_2d]: ...
 @macro
-def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.cache_2d]:
+def cache_2d(argument: AnyDensity, *, partition: bool = True):
     """Only computes the input density once per horizontal position.
 
     ---
@@ -359,8 +363,12 @@ def cache_2d(argument: AnyDensity, *, partition: bool = True) -> Density[types.c
         return Density.partitioned(types.cache_2d(argument.AST))
     return Density(types.cache_2d(argument.AST))
 
+@overload
+def cache_all_in_cell(argument: AnyDensity, *, partition: bool = True) -> Density[types.Reference]: ...
+@overload
+def cache_all_in_cell(argument: AnyDensity, *, partition: bool = False) -> Density[types.cache_all_in_cell]: ...
 @macro
-def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[types.cache_all_in_cell]:
+def cache_all_in_cell(argument: AnyDensity, partition: bool = True):
     """🚨 Should not be used in datapacks.
 
     ---
@@ -376,8 +384,12 @@ def cache_all_in_cell(argument: AnyDensity, partition: bool = True) -> Density[t
         return Density.partitioned(types.cache_all_in_cell(argument.AST))
     return Density(types.cache_all_in_cell(argument.AST))
 
+@overload
+def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types.Reference]: ...
+@overload
+def cache_once(argument: AnyDensity, *, partition: bool = False) -> Density[types.cache_once]: ...
 @macro
-def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types.cache_once]:
+def cache_once(argument: AnyDensity, *, partition: bool = True):
     """If this density function is referenced twice, it is only computed once per block position.
 
     Does not affect the density value.
@@ -391,8 +403,12 @@ def cache_once(argument: AnyDensity, *, partition: bool = True) -> Density[types
         return Density.partitioned(types.cache_once(argument.AST))
     return Density(types.cache_once(argument.AST))
 
+@overload
+def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types.Reference]: ...
+@overload
+def flat_cache(argument: AnyDensity, *, partition: bool = False) -> Density[types.flat_cache]: ...
 @macro
-def flat_cache(argument: AnyDensity, *, partition: bool = True) -> Density[types.flat_cache]:
+def flat_cache(argument: AnyDensity, *, partition: bool = True):
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
 
     ---

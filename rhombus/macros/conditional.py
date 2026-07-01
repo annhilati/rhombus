@@ -35,7 +35,7 @@ from rhombus.std.density import Density, AnyDensity
 from rhombus.core import config
 
 EPSILON = config.env.infinitesimal
-OMEGA = literal_number_limit # TODO: Check whether this is bound to the range_choice arguments or the general limit
+OMEGA = literal_number_limit
 
 
 class Itself:

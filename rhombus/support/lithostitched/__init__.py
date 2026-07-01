@@ -11,7 +11,7 @@ This module enables finer control over terrain shaping and noise manipulation wi
 __version__ = "1.6.0"
 
 from .functions import *
-from .fast_noise_config import FastNoiseConfig, LithostichedFastNoiseConfig
+from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 
 def _register_rhombus_addon() -> None:
     from importlib.resources import files

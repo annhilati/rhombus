@@ -9,7 +9,7 @@ nav = [
         "usage/walkthrough.md",
         {"Get Started" = [
             "get-started/density.md",          
-            # "cli.md",
+            "get-started/cli.md",
             # "datapack_development.md",
             "mod_development.md",
         ]},
