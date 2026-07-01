@@ -50,6 +50,7 @@ def erf(argument: AnyDensity, xRange: tuple[float, float] = (-3, 3)) -> Density[
 def exp(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1), base: float = py_math.e) -> Density[types.spline]:
     """Evaluates the value of the input on an exponential function."""
     func = lambda x: base**x
+    # TODO: Optimize spline point number
     return functions.spline(argument, splines.sample_spline_points(func, xRange))
 
 @macro

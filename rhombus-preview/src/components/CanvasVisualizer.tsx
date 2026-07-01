@@ -147,7 +147,12 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
             const image = ctx2d.createImageData(width, height)
             
             const t0 = performance.now()
-            onDraw(image, viewState, setRuntimeError)
+            try {
+                onDraw(image, viewState, setRuntimeError)
+            } catch (e) {
+                setRuntimeError(e instanceof Error ? e.message : String(e))
+                return
+            }
             ctx2d.putImageData(image, 0, 0)
             const t1 = performance.now()
             setRenderTimeMs(t1 - t0)
@@ -259,7 +264,13 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
                     <div className="visualizer-tooltip">
                         {runtimeReady ? `Deepslate ready:${renderTimeMs !== null ? ` ${Math.round(renderTimeMs)}ms` : ''}` : 'Deepslate loading'}
                         <br/> 
-                        {renderTooltip(viewState, hoverCoords.worldX, hoverCoords.worldY, hoverCoords.worldZ)}
+                        {(() => {
+                            try {
+                                return renderTooltip(viewState, hoverCoords.worldX, hoverCoords.worldY, hoverCoords.worldZ)
+                            } catch (e) {
+                                return <span style={{ color: '#ff6b6b' }}>Error evaluating value at this position.</span>
+                            }
+                        })()}
                     </div>
                 )}
                 <div className="scale">

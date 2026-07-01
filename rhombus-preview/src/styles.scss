@@ -782,3 +782,115 @@ input {
         width: 14px;
     }
 }
+
+// Density Graph Visualizer Modal
+.density-graph-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+
+    &-content {
+        background: #252526;
+        border: 1px solid #444;
+        border-radius: 8px;
+        width: 860px;
+        max-width: 95vw;
+        max-height: 95vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .density-graph-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #333;
+        
+        h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #eee;
+        }
+
+        .close-button {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            transition: color 0.2s;
+
+            &:hover {
+                color: #fff;
+            }
+        }
+    }
+
+    .density-graph-controls {
+        display: flex;
+        gap: 20px;
+        padding: 16px 20px;
+        background: #1e1e1e;
+        border-bottom: 1px solid #333;
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            label {
+                font-size: 0.85rem;
+                color: #ccc;
+            }
+
+            select, input {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                color: #fff;
+                padding: 6px 10px;
+                border-radius: 4px;
+                font-family: inherit;
+                outline: none;
+
+                &:focus {
+                    border-color: #35aaf3;
+                }
+            }
+
+            select {
+                min-width: 250px;
+            }
+
+            input[type="number"] {
+                width: 100px;
+            }
+        }
+    }
+
+    .density-graph-canvas {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 440px;
+
+        .no-data {
+            color: #888;
+            font-style: italic;
+        }
+    }
+}

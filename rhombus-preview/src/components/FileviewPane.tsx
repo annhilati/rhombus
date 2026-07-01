@@ -88,7 +88,15 @@ export default function FileviewPane({ file, contextFiles, onSelectFile, width }
     editorRef.current = editorInstance
     monacoRef.current = monacoInstance
     decorationsCollectionRef.current = editorInstance.createDecorationsCollection()
-    
+    editorInstance.onDidDispose(() => {
+      monacoRef.current = null;
+    });
+
+    // Delegate Ctrl+G to the global window listener so the Density Graph Visualizer can open
+    editorInstance.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyG, () => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', ctrlKey: true }));
+    });
+
     updateDecorations()
 
     editorInstance.onMouseDown((e: editor.IEditorMouseEvent) => {

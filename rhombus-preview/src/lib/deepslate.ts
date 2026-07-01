@@ -93,16 +93,20 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
         // 1. Register Vanilla data
         if (vanillaCache && vanillaCache[key.path]) {
           const vData = vanillaCache[key.path]
-          Object.entries(vData).forEach(([type, value]) => {
-            try {
-              const parsedId = Identifier.parse(type)
-              if (!userOverrides.has(parsedId.toString())) {
-                registry.register(parsedId, registry.parse(value))
+          // Deepslate doesn't provide parsers for all registries (e.g. worldgen/biome).
+          // We can skip parsing if the registry has no parser.
+          if ((registry as any).parser) {
+            Object.entries(vData).forEach(([type, value]) => {
+              try {
+                const parsedId = Identifier.parse(type)
+                if (!userOverrides.has(parsedId.toString())) {
+                  registry.register(parsedId, registry.parse(value))
+                }
+              } catch (e) {
+                console.warn(`Failed to parse vanilla ${key.path} ${type}`, e)
               }
-            } catch (e) {
-              console.warn(`Failed to parse vanilla ${key.path} ${type}`, e)
-            }
-          })
+            })
+          }
         }
 
         // 2. Register user data
@@ -125,7 +129,7 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
             const obj = registry.get(parsedId);
             if (obj) {
               const refsErrors = validateReferences(obj);
-              refsErrors.forEach(err => {
+              Array.from(new Set(refsErrors)).forEach(err => {
                 this.parseErrors.push({ fileId: type, error: err });
               });
             }

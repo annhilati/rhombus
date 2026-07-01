@@ -17,6 +17,14 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
         try {
             if (registry === 'worldgen/density_function') {
                 const df = DensityFunction.fromJson(file.content)
+                
+                // Dry run to catch missing references
+                const testSettings = NoiseGeneratorSettings.create({
+                    noise: { minY: 0, height: 256, xzSize: 1, ySize: 1 },
+                    noiseRouter: NoiseRouter.create({ finalDensity: df }),
+                })
+                new RandomState(testSettings, 0n)
+
                 return {
                     type: 'density',
                     factory: (seed: bigint) => {
@@ -35,6 +43,10 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
                 }
             } else if (registry === 'worldgen/noise') {
                 const params = NoiseParameters.fromJson(file.content)
+
+                // Dry run to catch errors
+                new NormalNoise(XoroshiroRandom.create(0n), params)
+
                 return {
                     type: 'noise',
                     factory: (seed: bigint) => {

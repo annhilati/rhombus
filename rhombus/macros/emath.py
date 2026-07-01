@@ -115,7 +115,7 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
         return functions.constant(1)
 
     terms_list = [functions.constant(1)] + [ (argument ** k) / py_math.factorial(k) for k in range(1, terms + 1) ]
-    return sum(*terms_list)
+    return math.sum(*terms_list)
 
 @macro
 def ln(argument: AnyDensity, terms: int = 4) -> Density[types.range_choice]:
@@ -124,7 +124,7 @@ def ln(argument: AnyDensity, terms: int = 4) -> Density[types.range_choice]:
     y = argument - functions.constant(1)
 
     terms_list = [((-1 if (k % 2 == 0) else 1) * (y ** k) / k) for k in range(1, terms + 1)]
-    return cond.when(argument).greater(0).then(sum(*terms_list)).otherwise(math.NaN)
+    return cond.when(argument).greater(0).then(math.sum(*terms_list)).otherwise(math.NaN)
 
 
 #======// Trigonometry //========================================================================//
@@ -134,14 +134,14 @@ def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the sine value of the input in radians.
     """
     terms_list = [argument] + [((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / py_math.factorial(2 * k + 1)) for k in range(1, terms + 1)]
-    return sum(*terms_list)
+    return math.sum(*terms_list)
 
 @macro
 def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the cosine value of the input in radians.
     """
     terms_list = [functions.constant(1)] + [((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k)) for k in range(1, terms + 1)]
-    return sum(*terms_list)
+    return math.sum(*terms_list)
 
 @macro
 def tan(argument: AnyDensity, terms: int = 3) -> Density[types.mul]:
@@ -154,7 +154,7 @@ def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the arc sine value of the input in radians.
     """
     terms_list = [(py_math.factorial(2*k) / (4**k * py_math.factorial(k)**2 * (2*k + 1))) * (argument ** (2*k + 1)) for k in range(terms)]
-    return cond.when(argument).inside(-1, 1).then(sum(*terms_list)).otherwise(math.NaN)
+    return cond.when(argument).inside(-1, 1).then(math.sum(*terms_list)).otherwise(math.NaN)
 
 @macro
 def acos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
@@ -167,18 +167,18 @@ def atan(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the arc tangent value of the input in radians.
     """
     terms_list = [((-1 if (k % 2) else 1) * (argument ** (2*k + 1)) / (2*k + 1)) for k in range(terms)]
-    return sum(*terms_list)
+    return math.sum(*terms_list)
 
 @macro
 def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>
     """
     terms_list = [ (argument ** (2*k + 1)) / py_math.factorial(2*k + 1) for k in range(terms) ]
-    return sum(*terms_list)
+    return math.sum(*terms_list)
 
 @macro
 def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>
     """
     terms_list = [functions.constant(1)] + [ (argument ** (2*k)) / py_math.factorial(2*k) for k in range(1, terms + 1) ]
-    return sum(*terms_list)
+    return math.sum(*terms_list)

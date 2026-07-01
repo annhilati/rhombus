@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import Sidebar from './components/Sidebar'
 import Resizer from './components/Resizer'
 import Workspace, { WorkspaceRef } from './components/Workspace'
+import DensityGraphVisualizer from './components/DensityGraphVisualizer'
 
 import { getEventsEndpoint, fetchFilesFromService } from './lib/api'
 import { fileKey } from './lib/registry'
@@ -21,6 +22,8 @@ export default function App() {
     const [files, setFiles]                     = useState<RhombusContextFile[]>([])
     const [status, setStatus]                   = useState<'loading' | 'ready' | 'error'>('loading')
     const [error, setError]                     = useState<string | null>(null)
+
+    const [showGraphVisualizer, setShowGraphVisualizer] = useState(false)
 
     const [sidebarWidth, setSidebarWidth] = useLocalStorage('rhombus.sidebarWidth', 320)
     const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -130,6 +133,17 @@ export default function App() {
         }
     }, [endpoint])
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey && e.key === 'g') {
+                e.preventDefault()
+                setShowGraphVisualizer(prev => !prev)
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [])
+
     const fileTree = useMemo(() => buildTree(files), [files])
 
     const selectedFile = useMemo(() => files.find((file) => fileKey(file) === selectedFileKey) ?? files[0] ?? null, [files, selectedFileKey])
@@ -164,6 +178,14 @@ export default function App() {
                 <div className="toast-notification">
                     {toastMessage}
                 </div>
+            )}
+
+            {showGraphVisualizer && selectedFile && selectedFile.registry.endsWith('density_function') && (
+                <DensityGraphVisualizer
+                    file={selectedFile}
+                    contextFiles={files}
+                    onClose={() => setShowGraphVisualizer(false)}
+                />
             )}
         </div>
     )
