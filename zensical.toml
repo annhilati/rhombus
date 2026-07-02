@@ -22,6 +22,7 @@ nav = [
         "devs/development.md",
         "devs/brand.md",
         "devs/macros.md",
+        "devs/preview_endpoints.md",
         {"Adding Mod Support" = [
             "devs/abstraction.md",
         ]},

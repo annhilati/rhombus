@@ -422,7 +422,10 @@ def flat_cache(argument: AnyDensity, *, partition: bool = True):
 
 @macro
 def interpolated(argument: AnyDensity) -> Density[types.interpolated]:
-    """Interpolates at each block in one cell based on the input density function value of some cells around. The size of each cell is 4 by 4. Used often in combination with `flat_cache`.
+    """Interpolates at each block in one cell based on the input density function
+    value of some cells around. The size of each cell is 4 by 4.
+    
+    It is used in combination with `flat_cache` to compensate for its 4x4 averaging.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
