@@ -131,7 +131,7 @@ dp = DataPack(path="pack")
 
 df = Density.constant(10) / 2
 
-df.inject(dp, "main")
+df.implement(dp, "main")
 ```
 
 Or analogue in a Beet plugin:
@@ -143,5 +143,5 @@ from beet import Context
 df = Density.constant(10) / 2
 
 def beet_default(ctx: Context):
-    df.inject(ctx.data, "main")
+    df.implement(ctx.data, "main")
 ```

@@ -11,7 +11,7 @@ class SubParameters(RhombusASTNode):
     in the abstract syntax tree of Rhombus that simply represent a grouping
     of parameters. This is a concept very similar to Pythons `TypedDict` class.
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """
 
     fileclass: ClassVar[None] = None

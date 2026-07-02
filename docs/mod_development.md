@@ -1,6 +1,6 @@
 ---
 title: Mod Development
-icon: lucide/package
+icon: lucide/coffee
 ---
 
 # Mod Development
@@ -117,6 +117,6 @@ The further development of the density function follows the same principles as d
 
 ## Running the Pipeline
 
-In this setup, your Python script (`plugin.py`) acts as a standard Beet plugin. When evaluated by Beet, the script should use Rhombus to define your density functions, noise settings, or macros, and inject them directly into the active Beet datapack context.
+In this setup, your Python script (`plugin.py`) acts as a standard Beet plugin. When evaluated by Beet, the script should use Rhombus to define your density functions, noise settings, or macros, and implement them directly into the active Beet datapack context.
 
 Whenever you build your mod (e.g., using `./gradlew build`) or run your client (`./gradlew runClient`), Gradle will automatically execute the `generateWorldgen` task. Beet will run your Python code, collect the generated JSON files, and place them directly into `src/main/resources/data/` where your mod can access them.

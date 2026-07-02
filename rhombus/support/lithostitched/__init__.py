@@ -23,6 +23,7 @@ def _register_rhombus_addon() -> None:
 
     env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"))
     env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("deepslate.ts"))
+    env.preview_beet_file_extensions.add(LithostitchedFastNoiseConfig)
     
     env.density_function_type_deserialization_register.update({
         cls.id: cls for name, cls in types.__dict__.items()

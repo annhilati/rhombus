@@ -124,27 +124,29 @@ class Density[Function: DensityFunction = DensityFunction]:
         """
         return Density(DensityFunction.deserialize_toplevel(d))
     
-    def compile(self, identifier: str = "main", /) -> dict[str, BeetFile]:
+    def compile(self, identifier: str = "main", /) -> set[tuple[str, BeetFile]]:
         "Compiles the Density into Beet file class instances."
-        files: dict[str, BeetFile] = {}
+        files: set[tuple[str, BeetFile]] = set()
 
         if ":" not in identifier: identifier = "minecraft:" + identifier
 
         for node in self.AST.inscribed_toplevel_nodes:
             id = node.reference
             if id != identifier:
-                files[id] = node.fileclass(node.serialize_toplevel())
+                if node.fileclass is None:
+                    raise TypeError(f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'")
+                files.add((id, node.fileclass(node.serialize_toplevel())))
 
-        files[identifier] = beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel())
+        files.add((identifier, beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel())))
 
         return files
 
-    def inject(self, dp: beet.DataPack, identifier: str) -> None:
+    def implement(self, dp: beet.DataPack, identifier: str) -> None:
         """Implements the Density and all additionally required files in a datapack.
         """
 
         files = self.compile(identifier)
-        for id, file in files.items():
+        for id, file in files:
             dp[id] = file
         
     
@@ -154,39 +156,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>
         The dictionary will not be fully inline. References that require separate files will be references."""
         return self.AST.serialize_toplevel()
-
-    def show_in_dir(self, identifier: str = "test"):
-        "Only for debugging.<br>Opens a temporary directory with all the compiled files. The directory will be deleted when pressing Enter in the console."
-        import sys, os, subprocess, tempfile, pathlib
-        
-        files = self.compile(identifier)
-        
-        def open_folder(path: pathlib.Path) -> None:
-            if sys.platform == "win32":
-                os.startfile(path)
-            elif sys.platform == "darwin":
-                subprocess.run(["open", path])
-            else:
-                subprocess.run(["xdg-open", path])
-
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp = pathlib.Path(tmp)
-
-            for id, file in files.items():
-                namespace = id.split(":")[0]
-                name = id.split(":")[-1].replace("/", ".")
-                path = tmp / (namespace + "." + file.scope[-1] + "." + name + file.extension)
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(file.encoder(file.data))
-
-            open_folder(tmp)
-            input("Press enter to let go temporary directory ... ")
-            
-    def __len__(self) -> int:
-        from rhombus.macros import performance
-        info = performance.get_size(self)
-        return info.toplevel_nodes + info.unique_cached_nodes
-                
+                   
 
     #======// Arithmetic Magic //================================================================//
     

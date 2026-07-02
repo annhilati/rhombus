@@ -41,14 +41,14 @@ An object representing a density function we call *Density*.
 
 To implement a Density into a datapack, [Beet](https://github.com/mcbeet/beet) is highly recommended.
 
-Using Beet we can easily inject a density function into a DataPack object, either in a Beet plugin:
+Using Beet we can easily implement a density function into a DataPack object, either in a Beet plugin:
 
 ```py
 from beet import Context
 
 def plugin(ctx: Context):
 
-    final_destiny.inject(ctx.data, "minecraft:final_destiny")
+    final_destiny.implement(ctx.data, "minecraft:final_destiny")
 ```
 
 or in a datapack context:
@@ -58,10 +58,10 @@ from beet import DataPack
 
 with DataPack(...) as dp:
 
-    final_destiny.inject(dp, "minecraft:final_destiny")
+    final_destiny.implement(dp, "minecraft:final_destiny")
 ```
 
-When injecting into a datapack (or compiling in any other way) we have to address a name or resource location to the density function by which it will be accessible.
+When implementing into a datapack (or compiling in any other way) we have to address a name or resource location to the density function by which it will be accessible.
 
 ## Note on Performance and Caching
 

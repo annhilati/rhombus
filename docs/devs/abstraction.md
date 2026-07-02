@@ -4,12 +4,12 @@ icon: lucide/hexagon
 ---
 <h6>Updated: 27.06.2026</h6>
 
+# Introduction to Abstraction in Rhombus
+
 !!! abstract
     This article explains the levels of abstraction that Rhombus uses for the abstract syntax tree.
     It is especially helpful to read if you plan to significantly extend its functionality, for example,
     by adding support for mods.
-
-# Introduction to Abstraction in Rhombus
 
 Rhombus uses abstract syntax trees (AST for short) to represent density functions. That is natural
 because the data-driven definition format for density functions is tree-like too and so are the

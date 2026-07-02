@@ -35,7 +35,7 @@ Density.refer
 Density.from_datapack
 Density.AST
 Density.compile
-Density.inject
+Density.implement
 Density.as_dict
 Density.show_in_dir
 

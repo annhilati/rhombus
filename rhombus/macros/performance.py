@@ -12,6 +12,8 @@ import dataclasses, json, sys
 if sys.getrecursionlimit() < 10000:
     sys.setrecursionlimit(10000)
 
+from beet.contrib import worldgen as beet_worldgen
+
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std import types, AnyDensity, Density, macro
 from rhombus.core.config import env
@@ -115,7 +117,7 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
     count_total_unknown_references: int = 0
     collect_unique_unknown_references: set[str] = set()
 
-    files = Density(node).compile("rhombus:main")
+    files = {f[0]: f[1] for f in Density(node).compile("rhombus:main") if isinstance(f[1], beet_worldgen.WorldgenDensityFunction)}
     reference_definitions: dict[str, DensityFunction] = {
         ref.reference: ref.definition
         for ref in node.inscribed_toplevel_nodes

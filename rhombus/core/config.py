@@ -5,6 +5,7 @@ import beet, warnings, threading
 
 if TYPE_CHECKING:
     from rhombus.core import DensityFunction
+    from rhombus.core.utils import BeetFile
 
 
 class RhombusAddon(Protocol):
@@ -30,6 +31,8 @@ class RhombusEnvironment:
         "Mapping of all `DensityFunction` subclasses that are used for deserialization, with their ids as the keys."
         self.caching_function_types: set[type["DensityFunction"]] = set()
         "Set of `DensityFunction` subclasses that apply structuring logic for enabling caching"
+        self.preview_beet_file_extensions: set[type["BeetFile"]] = set()
+        "Set of `BeetFile` representing datapack files to include when previewing a datapack." # This was introduces for the CLI, so addons can be stated
         self.preview_file_icons: dict[str, str] = {}
         "Mapping of svg file icons and corresponding Regex expressions that are tested on the registry ids (without namespace)"
         self.preview_scripts: list[str | Path] = []

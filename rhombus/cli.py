@@ -7,7 +7,7 @@ from rich import print
 import typer
 
 
-app = typer.Typer(
+cli = typer.Typer(
     help="The Rhombus CLI",
     add_completion=False,
 )
@@ -33,7 +33,7 @@ def resolve_object_path(path: str) -> Any:
                 raise
             continue
             
-    raise ImportError(f"Could not resolve object '{path}'")
+    raise ImportError(f"Could not resolve object path '{path}'")
 
 def resolve_path_to_module(p: Path) -> ModuleType | None:
     from importlib.util import spec_from_file_location, module_from_spec
@@ -53,57 +53,56 @@ def resolve_path_to_module(p: Path) -> ModuleType | None:
 
     return module
 
-@app.command()
+@cli.command()
 def help():
     pass    
 
 
-@app.command("preview")
+@cli.command("preview")
 def preview(
-    path: Path = typer.Argument(
-        ...,
-        exists=True,
-        file_okay=True,
-        dir_okay=True,
-        readable=True,
-        resolve_path=True,
-        help="Path to the python file containing the density function.",
-    ),
-    no_update: bool = typer.Option(
-        False,
-        "--no-update",
-        "-n",
-        help="Don't update the preview client.",
-    ),
-    ext: list[str] = typer.Option(
-        [],
-        "--extension",
-        "-e",
-        help="Include custom registries.",
-    ),
-    
-):
+        path: Path = typer.Argument(
+            ...,
+            exists=True,
+            file_okay=True,
+            dir_okay=True,
+            readable=True,
+            resolve_path=True,
+            help="Path to the datapack.",
+        ),
+        addons: list[str] = typer.Option(
+            [],
+            "--addon",
+            "-a",
+            help="Rhombus addon to load with the preview service. (Use multiple times to load multiple plugins)",
+        ),
+        no_watch: bool = typer.Option(
+            False,
+            "--no-watch",
+            "-n",
+            help="Deactivates file watching.",
+        )
+    ):
     """Start the Rhombus preview service."""
 
-    from rhombus import preview
+    from rhombus import preview, env
     
     try:
-        classes = [resolve_object_path(e) for e in ext]
+        addons = [resolve_object_path(e) for e in addons]
+        env.load(*addons)
     except Exception as e:
         raise typer.BadParameter(e)
     
     preview.serve(
         *preview.resources_from_datapack(
             path,
-            additional_registries=classes),
-        watch_path=path if not no_update else None
+            additional_registries=env.preview_beet_file_extensions),
+        watch_path=path if not no_watch else None
     )
-
 
 
 def main() -> None:
     try:
-        app()
+        cli()
     # except RhombusCLIProblem as e:
     #     print(f"\n  [#62a8f0]Error[/#62a8f0]")
     #     print(f"  [#62a8f0]╰─×[/#62a8f0] {str(e)}")

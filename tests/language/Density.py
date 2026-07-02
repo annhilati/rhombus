@@ -17,7 +17,7 @@ def test_partitioning():
         
         dp.clear()
         
-        Density.configured("a:config", 3.14).inject(dp, "main:function")
+        Density.configured("a:config", 3.14).implement(dp, "main:function")
         assert dp[worldgen.WorldgenDensityFunction]["a:config"] == worldgen.WorldgenDensityFunction(3.14)
        
         config.ctx.datapack = old_dp

@@ -18,7 +18,7 @@ class DatapackResource(RhombusASTNode):
     by a datapack and cannot be defined inside of a density function, but must be
     referenced.
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """
 
     fileclass: ClassVar[type[BeetFile]]

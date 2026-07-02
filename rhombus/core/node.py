@@ -53,7 +53,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     in the abstract syntax tree of Rhombus. It thus can be called the base class
     for all nodes.
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """
   
     __dataclass_fields__: ClassVar[dict[str, dataclasses.Field[Any]]]

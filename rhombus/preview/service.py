@@ -76,7 +76,7 @@ class RhombusPreviewService:
         self.watch_path = watch_path
         self.items = items
         
-        self.latest_results: dict[str, BeetFile] = {}
+        self.latest_results: set[tuple[str, BeetFile]] = set()
         self.changed_files: set[str] = set()
 
         self.last_change_timestamp: float | None = None
@@ -116,7 +116,7 @@ class RhombusPreviewService:
         self.app.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
 
     def rebuild_all(self) -> dict[str, Any]:
-        files: dict[str, BeetFile] = {}
+        files: set[tuple[str, BeetFile]] = set()
         errors: list[str] = []
 
         for (id, item) in self.items:
@@ -136,7 +136,7 @@ class RhombusPreviewService:
 
                 else:
                     # BeetFiles
-                    files[id] = item
+                    files.add((id, item))
 
             except Exception as exc:
                 print(f"[red]Error compiling '{id}': {exc}[/red]")
@@ -240,7 +240,7 @@ class RhombusPreviewService:
                     "content": file.encoder(file.data) if hasattr(file, "encoder") and hasattr(file, "data") else getattr(file, "text", str(file)),
                     "language": getattr(file, "extension", ".json").lstrip("."),
                 }
-                for id, file in self.latest_results.items()
+                for id, file in self.latest_results
             ],
             "last_error": self.last_error_message,
         }

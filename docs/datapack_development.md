@@ -16,7 +16,7 @@ def compile_densities(ctx: Context):
 
     from .terrain import final_destiny
 
-    final_destiny.inject(ctx.data, "minecraft:overworld/final_destiny")
+    final_destiny.implement(ctx.data, "minecraft:overworld/final_destiny")
 ```
 ``` yaml title="beet.yml"
 load:

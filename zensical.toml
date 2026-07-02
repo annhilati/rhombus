@@ -10,6 +10,7 @@ nav = [
         {"Get Started" = [
             "get-started/density.md",          
             "get-started/cli.md",
+            "get-started/addons.md",
             # "datapack_development.md",
             "mod_development.md",
         ]},
@@ -23,7 +24,6 @@ nav = [
         "devs/macros.md",
         {"Adding Mod Support" = [
             "devs/abstraction.md",
-            {"🏗️ in Rework" = "null"}
         ]},
     ]}
 ]

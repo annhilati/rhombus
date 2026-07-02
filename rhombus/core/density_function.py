@@ -20,9 +20,9 @@ __all__ = [
 class DensityFunction(RhombusASTNode):
     """The **`DensityFunction`** base class implements functionality for nodes
     in the abstract syntax tree of Rhombus that also resemble operations in the
-    abstract syntax tree of a density function (density function types).
+    abstract syntax tree of a density function (so called density function types).
     
-    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/abstraction/)
+    [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """
     fileclass: ClassVar[type[BeetFile]] = WorldgenDensityFunction
     id: ClassVar[str]
