@@ -12,13 +12,15 @@ class CustomBuildHook(BuildHookInterface):
         frontend = Path(__file__).parent / "rhombus-preview"
         
         subprocess.run(
-            ["cmd", "/c", "npm", "install"],
+            "npm install",
             cwd=frontend,
+            shell=True,
             check=True
         )
 
         subprocess.run(
-            ["cmd", "/c", "npm", "run", "build"],
+            "npm run build",
             cwd=frontend,
+            shell=True,
             check=True
         )
