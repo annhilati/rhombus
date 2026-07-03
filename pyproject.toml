@@ -39,4 +39,4 @@ packages = ["rhombus"]
 artifacts = ["rhombus/preview/dist"]
 
 [tool.hatch.build.hooks.custom]
-path = "build.py"
+path = "hatch_build.py"
