@@ -21,6 +21,7 @@ site/
 
 # Distribution & Packaging
 build/
+node_modules/
 **.egg-info
 **/__pycache__/
 rhombus/preview/dist/
