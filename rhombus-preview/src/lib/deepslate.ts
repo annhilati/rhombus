@@ -77,7 +77,7 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
         filesByRegistry.get(file.registry)![file.id] = JSON.stringify(file.content)
       }
 
-      // Populate deepslate registries
+      // Phase 1: Populate all deepslate registries
       Registry.REGISTRY.forEach((key, registry) => {
         registry.clear()
         const lookupKey = key.namespace === 'minecraft' ? key.path : `${key.namespace}/${key.path}`;
@@ -93,8 +93,6 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
         // 1. Register Vanilla data
         if (vanillaCache && vanillaCache[key.path]) {
           const vData = vanillaCache[key.path]
-          // Deepslate doesn't provide parsers for all registries (e.g. worldgen/biome).
-          // We can skip parsing if the registry has no parser.
           if ((registry as any).parser) {
             Object.entries(vData).forEach(([type, value]) => {
               try {
@@ -113,16 +111,22 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
         Object.entries(userData).forEach(([type, value]) => {
           try {
             patchState.currentFile = type;
-            registry.register(Identifier.parse(type), registry.parse(JSON.parse(value)))
+            const parsed = registry.parse(JSON.parse(value));
+            registry.register(Identifier.parse(type), parsed);
           } catch (e) {
-            console.warn(`Failed to parse ${key.path} ${type}`, e)
+            console.error(`[Phase 1] Error parsing ${key.path} ${type}:`, e);
             this.parseErrors.push({ fileId: type, error: e instanceof Error ? e.message : String(e) })
           } finally {
             patchState.currentFile = null;
           }
         })
+      })
 
-        // 3. Validate references for user data (catches missing dependencies)
+      // Phase 2: Validate references for user data (catches missing dependencies)
+      Registry.REGISTRY.forEach((key, registry) => {
+        const lookupKey = key.namespace === 'minecraft' ? key.path : `${key.namespace}/${key.path}`;
+        const userData = filesByRegistry.get(lookupKey) ?? {}
+
         Object.keys(userData).forEach(type => {
           try {
             const parsedId = Identifier.parse(type);
@@ -134,7 +138,7 @@ export function loadDeepslateRuntime(): DeepslateRuntime {
               });
             }
           } catch (e) {
-            console.warn(`Failed to validate references for ${key.path} ${type}`, e)
+            console.warn(`[Phase 2] Failed to validate references for ${key.path} ${type}`, e)
           }
         });
       })

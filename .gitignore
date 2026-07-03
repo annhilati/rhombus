@@ -2,13 +2,13 @@
 .vscode/
 .venv/
 .env
-test*
-.test*
-_test*
 
 # Indev Testing
 beet.*
 .beet_cache/
+test*
+.test*
+_test*
 
 # pytest
 !tests/

@@ -1,4 +1,4 @@
-<a href="#"><img width="2000" alt="Header" src="https://github.com/user-attachments/assets/6eff3c71-1ea6-4c03-88a9-736d4a5da2df" /></a>
+<a href="#"><img width="2000" alt="Header" src="docs/images/header.svg" /></a>
 
 <h1 align="center">
     <a href="https://annhilati.github.io/rhombus"><img alt="Static Badge" height="38" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact-minimal/documentation/ghpages_vector.svg"></a>
@@ -6,7 +6,7 @@
     <a href="https://pypi.org/project/rhombus/"><img alt="Static Badge" height="38" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact-minimal/available/pypi_vector.svg"></a>
 </h1>
 
-<!-- <h1 align="center"><sub><img src="docs/logo.png" height="35"></sub> Rhombus <sub><img src="docs/logo.png" height="35"></sub></h1>
+<!-- <h1 align="center"><sub><img src="docs/images/logo.svg" height="35"></sub> Rhombus <sub><img src="docs/images/logo.svg" height="35"></sub></h1>
 <p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p> -->
 <p align="center">
     <!-- <a href="#"><img alt="Static Badge" src="https://img.shields.io/pypi/v/rhombus?style=for-the-badge&logo=pypi&logoColor=white&labelColor=4c75a9&label=Version&color=161926"></a> -->
@@ -109,25 +109,4 @@ height_map = spline(erosion, [
 FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 ```
 
-Don't want to handwrite a 500+ node float manipulation function to get the current coordinate?
-```py
-from rhombus import *
-
-def radius() -> Density:
-    x = coords.x()
-    z = coords.z()
-
-    return emath.sqrt(x**2 + z**2, iterations=1)
-```
-
-Using a mod?
-```py
-from rhombus import *
-from rhombus.support import moredfs # Or your mod of choice
-
-def radius() -> Density:
-    x = moredfs.x()
-    y = moredfs.y()
-
-    return moredfs.sqrt(x**2 + y**2)
-```
+![Preview](docs/images/preview.png)

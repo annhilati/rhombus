@@ -18,6 +18,7 @@ export interface ViewState {
 export interface CanvasVisualizerProps {
     file: RhombusContextFile
     contextFiles: RhombusContextFile[]
+    initialViewMode?: 'top' | 'side'
     parseError?: string | null
     onDraw: (
         image: ImageData,
@@ -32,7 +33,7 @@ export interface CanvasVisualizerProps {
     ) => ReactNode
 }
 
-export default function CanvasVisualizer({ file, contextFiles, parseError, onDraw, renderTooltip }: CanvasVisualizerProps) {
+export default function CanvasVisualizer({ file, contextFiles, initialViewMode, parseError, onDraw, renderTooltip }: CanvasVisualizerProps) {
     const wrapperRef = useRef<HTMLDivElement | null>(null)
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
     const [zoom, setZoom] = useState(1)
@@ -41,7 +42,7 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
     const [panZ, setPanZ] = useState(0)
     const [yLevel, setYLevel] = useState(64)
     const [zLevel, setZLevel] = useState(0)
-    const [viewMode, setViewMode] = useState<'top' | 'side'>('top')
+    const [viewMode, setViewMode] = useState<'top' | 'side'>(initialViewMode ?? 'top')
     const [runtimeReady, setRuntimeReady] = useState(false)
     const [deepslateErrors, setDeepslateErrors] = useState<{fileId: string, error: string}[]>([])
     const dragRef = useRef<{ active: boolean; x: number; y: number } | null>(null)
@@ -253,7 +254,7 @@ export default function CanvasVisualizer({ file, contextFiles, parseError, onDra
                             </div>
                         </label>
                         <label>
-                            <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('0'); setViewMode('top') }}>Reset</button>
+                            <button type="button" onClick={() => { setZoom(2); setPanX(0); setPanY(64); setPanZ(0); setYLevel(64); setZLevel(0); setSeedStr('0'); setViewMode(initialViewMode ?? 'top') }}>Reset</button>
                         </label>
                     </div>
                     <div className="visualizer-settings-handle">

@@ -2,7 +2,7 @@ import pytest
 import dataclasses
 from rhombus.core.node import RhombusASTNode
 
-def test_node_frozen():
+def test_immutability():
     class DummyNode(RhombusASTNode):
         a: int
         b: str = "test"
@@ -15,7 +15,7 @@ def test_node_frozen():
     with pytest.raises(dataclasses.FrozenInstanceError):
         node.a = 10
         
-def test_node_fields():
+def test_fields():
     class DummyNode(RhombusASTNode):
         a: int
         b: str = "test"
@@ -23,7 +23,7 @@ def test_node_fields():
     node = DummyNode(a=5)
     assert node.fields == {"a": 5, "b": "test"}
     
-def test_node_equality():
+def test_equality():
     class DummyNode(RhombusASTNode):
         a: int
         

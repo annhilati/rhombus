@@ -262,6 +262,7 @@ export default function TerrainVisualizer({ file, contextFiles }: TerrainVisuali
             parseError={'error' in parseResult ? (parseResult.error ?? null) : null}
             onDraw={onDraw}
             renderTooltip={renderTooltip}
+            initialViewMode="side"
         />
     )
 }

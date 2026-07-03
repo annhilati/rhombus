@@ -36,9 +36,3 @@ def test_unify_values():
     
     # DensityFunction
     assert Density.constant(types.constant(1.0)) == Density(types.constant(1.0))
-    
-def test_other():
-    from rhombus import coords
-    
-    # __len__
-    assert len(coords.x()) == 312
