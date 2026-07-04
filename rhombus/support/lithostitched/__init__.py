@@ -13,19 +13,20 @@ __version__ = "1.6.0"
 from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 
-def _register_rhombus_addon() -> None:
-    from importlib.resources import files
-    
-    from rhombus.core.config import env
-    from rhombus.core.density_function import DensityFunction
-    
-    from . import types
+from importlib.resources import files as _files
+from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.density_function import DensityFunction as _DensityFunction
+from . import types as _types
 
-    env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"))
-    env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("deepslate.ts"))
-    env.preview_beet_file_extensions.add(LithostitchedFastNoiseConfig)
-    
-    env.density_function_type_deserialization_register.update({
-        cls.id: cls for name, cls in types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
-    })
+__addon__ = _RhombusAddon(
+    name="Lithostitched",
+    preview_scripts=[
+        _files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
+        _files("rhombus.support.lithostitched").joinpath("deepslate.ts")
+    ],
+    preview_beet_file_extensions={LithostitchedFastNoiseConfig},
+    density_functions={
+        cls.id: cls for name, cls in _types.__dict__.items()
+        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
+    }
+)

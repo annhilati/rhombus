@@ -7,13 +7,13 @@ When importing from this module, ensure it is done after importing standard symb
 from .functions import *
 from . import types
 
-def _register_rhombus_addon() -> None:  
-    from rhombus.core.config import env
-    from rhombus.core.density_function import DensityFunction
-    
-    from . import types
-    
-    env.density_function_type_deserialization_register.update({
+from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.density_function import DensityFunction as _DensityFunction
+
+__addon__ = _RhombusAddon(
+    name="VanillaLegacy",
+    density_functions={
         cls.id: cls for name, cls in types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
-    })
+        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
+    }
+)

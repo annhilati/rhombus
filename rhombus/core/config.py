@@ -1,4 +1,6 @@
-from typing import Protocol, TYPE_CHECKING
+from typing import Protocol, TYPE_CHECKING, Callable, Any
+from types import ModuleType
+from dataclasses import dataclass, field
 from pathlib import Path
 from contextvars import ContextVar
 import beet, warnings, threading
@@ -8,9 +10,28 @@ if TYPE_CHECKING:
     from rhombus.core.utils import BeetFile
 
 
-class RhombusAddon(Protocol):
-    def _register_rhombus_addon() -> None:
-        pass
+#======// Addon //===============================================================================//
+
+@dataclass
+class RhombusAddon:
+    """The **`RhombusAddon`** class declares an addon for the Rhombus runtime
+    environment. It is used to extend the context of Rhombus.
+    """
+    name: str
+    density_functions: dict[str, "DensityFunction"] = field(default_factory=dict)
+    caching_functions: set["DensityFunction"]       = field(default_factory=set)
+    preview_scripts: list                           = field(default_factory=list)
+    preview_beet_file_extensions: set["BeetFile"]   = field(default_factory=set)
+    on_apply: Callable[["RhombusEnvironment"], None] | None = None
+
+    def apply_to_rhombus_env(self, env: "RhombusEnvironment") -> None:
+        if self.on_apply:
+            self.on_apply(env)
+            
+        env.density_function_type_deserialization_register.update(self.density_functions)
+        env.caching_function_types.update(self.caching_functions)
+        env.preview_scripts.extend(self.preview_scripts)
+        env.preview_beet_file_extensions.update(self.preview_beet_file_extensions)
 
 
 #======// Environment //=========================================================================//
@@ -45,30 +66,38 @@ class RhombusEnvironment:
         ```
         """
         
-        # Just because why not, we log what addons were loaded in which order
         self._addons: list[RhombusAddon] = []
 
         self._reg_lock = threading.RLock()
 
 
-    @staticmethod
-    def load(*addons: RhombusAddon) -> None:
+    def load_addons(self, *addons: ModuleType | RhombusAddon) -> None:
         """Loads addons for Rhombus and calls their individual registration procedures.
         
         Addon registration typically includes adding custom density function types to the
         decoding register or providing visualization patches for the preview.
 
-        `RhombusAddon` is a protocoll requiring the `_register_rhombus_addon` method.
+        `RhombusAddon` is a protocoll requiring the `apply_to_rhombus_env` method.
         This can be a module or a class and principially also any other object.
         """
-        for addon in addons:
-            if not hasattr(addon, "_register_rhombus_addon"):
+        for addon_target in addons:
+            if isinstance(addon_target, ModuleType):
+                if not hasattr(addon_target, "__addon__"):
+                    raise ValueError(f"Module {addon_target.__name__} does not contain an '__addon__' attribute.")
+                addon_obj = addon_target.__addon__
+            elif isinstance(addon_target, RhombusAddon):
+                addon_obj = addon_target
+            else:
+                raise ValueError(f"Addon target {addon_target!r} is neither a module nor a RhombusAddon instance.")
+                
+            if not hasattr(addon_obj, "apply_to_rhombus_env"):
                 raise ValueError(
-                    f"Object {addon!r} is not a valid Rhombus Addon. "
-                    "It is missing a '_register_rhombus_addon' method"
+                    f"Object {addon_obj!r} is not a valid Rhombus Addon. "
+                    "It is missing an 'apply_to_rhombus_env' method"
                 )
-            addon._register_rhombus_addon()
-            env._addons.append(addon)
+                
+            addon_obj.apply_to_rhombus_env(self)
+            self._addons.append(addon_obj)
         
 
 _current_env: ContextVar[RhombusEnvironment] = ContextVar("current_env")

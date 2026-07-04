@@ -12,17 +12,16 @@ __version__ = "2.2.1"
 from .functions import *
 from .sub_parameters import DerivativeComponent, DistanceMetric, ExtraOctaves, RandomSampler
 
-def _register_rhombus_addon() -> None:
-    from importlib.resources import files
-    
-    from rhombus.core.config import env
-    from rhombus.core.density_function import DensityFunction
-    
-    from . import types
+from importlib.resources import files as _files
+from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.density_function import DensityFunction as _DensityFunction
+from . import types as _types
 
-    env.preview_scripts.append(files("rhombus.support.moredfs").joinpath("deepslate.ts"))
-    
-    env.density_function_type_deserialization_register.update({
-        cls.id: cls for name, cls in types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
-    })
+__addon__ = _RhombusAddon(
+    name="MoreDfsAddon",
+    preview_scripts=[_files("rhombus.support.moredfs").joinpath("deepslate.ts")],
+    density_functions={
+        cls.id: cls for name, cls in _types.__dict__.items()
+        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
+    }
+)

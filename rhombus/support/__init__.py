@@ -8,7 +8,7 @@ mods or such from old Minecraft versions, make sure to load the respective modul
 the environment like in this idiom:
 ```
 from rhombus import *
-env.load(support.lithostitched)
+env.load_addons(support.lithostitched)
 ```
 """
 

@@ -75,6 +75,12 @@ def preview(
             "-a",
             help="Rhombus addon to load with the preview service. (Use multiple times to load multiple plugins)",
         ),
+        overlays: list[str] = typer.Option(
+            [],
+            "--overlay",
+            "-o",
+            help="Datapack overlay to load. (Use multiple times to load multiple overlays)",
+        ),
         no_watch: bool = typer.Option(
             False,
             "--no-watch",
@@ -88,14 +94,15 @@ def preview(
     
     try:
         addons = [resolve_object_path(e) for e in addons]
-        env.load(*addons)
+        env.load_addons(*addons)
     except Exception as e:
         raise typer.BadParameter(e)
     
     preview.serve(
         *preview.resources_from_datapack(
             path,
-            additional_registries=env.preview_beet_file_extensions),
+            additional_registries=env.preview_beet_file_extensions,
+            overlays=overlays),
         watch_path=path if not no_watch else None
     )
 

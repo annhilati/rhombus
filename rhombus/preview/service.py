@@ -327,7 +327,11 @@ def serve(
     uvicorn.run(preview_service.app, **default_args | uvicorn_args)
 
 
-def resources_from_datapack(dp: beet.DataPack | Path | str, *, additional_registries: Iterable[type[BeetFile]] = ()) -> list[tuple[str, BeetFile]]:
+def resources_from_datapack(
+        dp: beet.DataPack | Path | str, *,
+        overlays: list[str] | None = None,
+        additional_registries: Iterable[type[BeetFile]] = ()
+    ) -> list[tuple[str, BeetFile]]:
     """Gathers worldgen related resources from a datapack.
     Use this function in the `items` parameter of `service.start()` to preview
     an already compiled datapack.
@@ -341,10 +345,20 @@ def resources_from_datapack(dp: beet.DataPack | Path | str, *, additional_regist
     if isinstance(dp, (str, Path)):
         dp = beet.DataPack(path=dp, extend_namespace=additional_registries)
     
-    files: set[tuple[str, BeetFile]] = set()
+    files_dict: dict[tuple[type[BeetFile], str], BeetFile] = {}
     
     for typ in additional_registries:
         for id in list(dp[typ]):
-            files.add((id, dp[typ][id]))
+            files_dict[(typ, id)] = dp[typ][id]
+            
+    if overlays:
+        for overlay_name in overlays:
+            overlay_dp = dp.overlays.get(overlay_name)
+            if overlay_dp:
+                for typ in additional_registries:
+                    for id in list(overlay_dp[typ]):
+                        files_dict[(typ, id)] = overlay_dp[typ][id]
+            else:
+                raise KeyError(f"Overlay '{overlay_name}' not found in datapack.")
     
-    return files
+    return [(id, file) for (typ, id), file in files_dict.items()]

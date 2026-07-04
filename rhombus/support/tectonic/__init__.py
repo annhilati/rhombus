@@ -8,17 +8,16 @@ from .functions import invert, config_noise, config_constant
 
 __version__ = "3.0.19"
 
-def _register_rhombus_addon() -> None:
-    from importlib.resources import files
-    
-    from rhombus.core.config import env
-    from rhombus.core.density_function import DensityFunction
-    
-    from . import types
+from importlib.resources import files as _files
+from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.density_function import DensityFunction as _DensityFunction
+from . import types as _types
 
-    env.preview_scripts.append(files("rhombus.support.tectonic").joinpath("deepslate.ts"))
-    
-    env.density_function_type_deserialization_register.update({
-        cls.id: cls for name, cls in types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, DensityFunction) and hasattr(cls, "id")
-    })
+__addon__ = _RhombusAddon(
+    name="Tectonic",
+    preview_scripts=[_files("rhombus.support.tectonic").joinpath("deepslate.ts")],
+    density_functions={
+        cls.id: cls for name, cls in _types.__dict__.items()
+        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
+    }
+)
