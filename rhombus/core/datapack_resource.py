@@ -47,6 +47,14 @@ class DatapackResource(RhombusASTNode):
         }
         return self.__class__(**new_fields)
 
+    def __rmatmul__(self, identifier: str) -> Self:
+        if not isinstance(identifier, str):
+            raise TypeError("Can only assign string identifiers")
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        instance = copy.deepcopy(self)
+        object.__setattr__(instance, "_identifier", identifier)
+        return instance
+
 
     def __repr__(self) -> str:
         if self.is_reference and self._identifier is not None:
@@ -126,8 +134,7 @@ class DatapackResource(RhombusASTNode):
             return None
         
         instance = cls.from_dict(file.data)
-        instance.reference = identifier
-        return instance
+        return identifier @ instance
 
     @classmethod
     def refer(cls, identifier: str, /) -> Self:
@@ -139,11 +146,11 @@ class DatapackResource(RhombusASTNode):
         object.__setattr__(instance, "_identifier", identifier)
         return instance
     
-    @reference.setter
-    def reference(self, value: str | None) -> None:
-        if not isinstance(value, str):
-            raise TypeError(f"Cannot assign non-string value '{value}' to reference identifier")
-        object.__setattr__(self, "_identifier", value)
+    # @reference.setter
+    # def reference(self, value: str | None) -> None:
+    #     if not isinstance(value, str):
+    #         raise TypeError(f"Cannot assign non-string value '{value}' to reference identifier")
+    #     object.__setattr__(self, "_identifier", value)
         
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."

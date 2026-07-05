@@ -468,8 +468,8 @@ def constant(argument: float) -> Density[types.constant]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#constant)
     """
-    return Density.constant(argument)
+    return Density(argument)
 
 def ref(identifier: str, /) -> Density[types.Reference]:
     """References an externally provided density function."""
-    return Density.refer(identifier)
+    return Density(identifier)

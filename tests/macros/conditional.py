@@ -15,7 +15,7 @@ def test_logic():
 
 def test_alternatives():
     
-    value = Density.refer("minecraft:in").AST
+    value = Density("minecraft:in").AST
     inp = Reference("rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()), definition=types.cache_once(value))
     assert when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(0) ==\
         range_choice(inp, -1.0, -1.0 + EPS, types.constant(1.0), range_choice(inp, 1.0, 1.0 + EPS, types.constant(-1.0), types.constant(0.0)))

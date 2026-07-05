@@ -180,7 +180,7 @@ class Reference(DensityFunction):
         elif "partitioned" in self.reference: # TODO: this should not be hardcoded
             return "Density.partitioned(" + self.definition.__repr__() + ")" 
         else:
-            return "Density.configured(\"" + self.reference + f"\", {self.definition.__repr__()}" + ")"
+            return self.reference.__repr__() + "@ Density(" + self.definition.__repr__() + ")"
     
     
 class constant(DensityFunction):

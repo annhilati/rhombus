@@ -1,6 +1,6 @@
 from rhombus import *
 
-distance_scale = Density.configured("config:distance_scale", default=1.0)
+distance_scale = "config:distance_scale" @ Density(1.0)
 
 def radius() -> Density:
     x = coords.x()
@@ -15,5 +15,3 @@ hopper = radius() * distance_scale + y_clamped_gradient(from_y=0, to_y=100, from
 
 out = hopper | noise(n, xz_scale=1, y_scale=1)
 # Cut the shape of the sampled noise from the hopper
-
-out.show_in_dir()

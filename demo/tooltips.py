@@ -30,14 +30,11 @@ ensity.x
 vanilla_legacy.x
 
 Density.partitioned
-Density.configured
-Density.refer
 Density.from_datapack
 Density.AST
 Density.compile
 Density.implement
 Density.as_dict
-Density.show_in_dir
 
 #======// Core //================================================================================//
 

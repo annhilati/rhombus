@@ -107,7 +107,7 @@ class Condition:
                 raise TypeError("then(it) is undefined because the initial condition was not composed of a condition with input")
             value = self._default_input
         return Causality(
-            _cases=[(self, Density.constant(value).AST)],
+            _cases=[(self, Density(value).AST)],
             _default_input=self._default_input
 )
 
@@ -304,7 +304,7 @@ class Causality:
                     )
                 subject = self._chain._default_input
 
-            self._subject = Density.constant(subject).AST
+            self._subject = Density(subject).AST
             del self._pending_subject
             return self
 
@@ -337,16 +337,16 @@ class Causality:
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
-        from rhombus.macros.performance import cachespecific
+        from rhombus.macros.performance import s_cache_transform
 
         if value is it:
             if self._default_input is None:
                 raise TypeError("otherwise(it) is undefined because the initial condition was not composed of a condition with input")
             value = self._default_input
-        result = Density.constant(value).AST
+        result = Density(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return cachespecific(Density(result), self._default_input or None)
+        return s_cache_transform(Density(result), self._default_input or None)
 
 
 @dataclass
@@ -367,7 +367,7 @@ class OtherPendingCondition:
             if self._chain._default_input is None:
                 raise TypeError("then(it) is undefined because the initial condition was not composed of a condition with input")
             value = self._chain._default_input
-        self._chain._cases.append((self._condition, Density.constant(value).AST))
+        self._chain._cases.append((self._condition, Density(value).AST))
         return self._chain
 
 
@@ -402,7 +402,7 @@ class when:
     _subject: DensityFunction
 
     def __init__(self, subject: AnyDensity):
-        self._subject = Density.constant(subject).AST
+        self._subject = Density(subject).AST
 
     def equals(self, value: float) -> Condition:
         return ComparisonCondition(input=self._subject, relation=Relation.EQUALS, value=value)

@@ -14,19 +14,15 @@ the type, worldgen developers will deal with most the time.
 ```py
 from rhombus import Density
 
-df = Density.constant(10)
-```
-
-You can also refer to another density function without its definition. 
-```py
-df = Density.refer("minecraft:continentalness")
+df = Density(10)                          # constant number
+df = Density("minecraft:continentalness") # referencing another function
 ```
 
 By default, file names are not chosen but generated. To allow users to configure your datapack or let
-other datapacks hook into your datapack, you can set a fixed name for a density function with the
-`~.configured()` classmethod
+other datapacks hook into your datapack, you can set a fixed name for a density function through
+the following idiom:
 ```py
-df = Density.configured("minecraft:my_variable", 5)
+df = "minecraft:my_variable" @ Density(5)
 ```
 
 #### From Dictionary
@@ -84,7 +80,7 @@ In-Place operators like `+=`, `*=`, etc. are supported too.
 ```py
 from rhombus import Density
 
-df = Density.constant(10) / 2
+df = Density(10) / 2
 
 df.as_dict()
 ```
@@ -104,7 +100,7 @@ their definitions. You will therefore lose information if you just use this meth
 ```py
 from rhombus import Density
 
-df = Density.constant(10) / 2
+df = Density(10) / 2
 
 df.compile("main")
 ```
@@ -129,7 +125,7 @@ from beet import DataPack
 
 dp = DataPack(path="pack")
 
-df = Density.constant(10) / 2
+df = Density(10) / 2
 
 df.implement(dp, "main")
 ```
@@ -140,7 +136,7 @@ Or analogue in a Beet plugin:
 from rhombus import Density
 from beet import Context
 
-df = Density.constant(10) / 2
+df = Density(10) / 2
 
 def beet_default(ctx: Context):
     df.implement(ctx.data, "main")

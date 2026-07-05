@@ -1,7 +1,7 @@
 """Macros for evaluating and improving the performance of density functions.
 """
 
-__all__ = ["autocache", "cachespecific", "get_size"]
+__all__ = ["rec_cache_transform", "s_cache_transform", "get_size"]
 
 
 from typing import NamedTuple, Any, Callable, Iterable
@@ -276,19 +276,21 @@ def _get_identity_condition(target_nodes: Iterable[RhombusASTNode]) -> Callable[
 
 
 @macro
-def autocache(argument: AnyDensity, *, caching_function: DensityFunction = types.cache_once, max_nodes: int = 5) -> Density:
-    """Optimizes a density function by automatically caching all recurring calculations.
+def rec_cache_transform(argument: AnyDensity, *, caching_function: DensityFunction = types.cache_once, max_nodes: int = 5) -> Density:
+    """Optimizes a density function by automatically caching recurring calculations.
     
     """
     wrapper = lambda value: Reference("rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()), definition=caching_function(value))
     return Density(_cache_nodes(argument.AST, condition=_get_occurance_and_size_condition(max_nodes), wrapper=wrapper)[0])
 
 @macro
-def cachespecific(argument: AnyDensity, *nodes: RhombusASTNode, caching_function: DensityFunction = types.cache_once) -> Density:
-    """Optimizes a density function by automatically caching all specified nodes."""
+def s_cache_transform(argument: AnyDensity, *nodes: RhombusASTNode, caching_function: DensityFunction = types.cache_once) -> Density:
+    """Optimizes a density function by caching all instances of specified nodes
+    (If the node occurs more than one time).
+    """
     wrapper = lambda node: Reference("rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()), definition=caching_function(node))
     condition = lambda node, occurances: _get_identity_condition(nodes)(node, occurances) and occurances.get(node, 0) > 1
-        # Cache if node is own of specified and it occurs multiple times
+        # Cache if node is one of specified and it occurs multiple times
     return Density(_cache_nodes(argument.AST, condition=condition, wrapper=wrapper)[0])
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:

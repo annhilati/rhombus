@@ -94,7 +94,7 @@ def floordiv(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int
 def mod(dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
-    return perf.autocache(dividend - divisor * floor(dividend / divisor, range=range))
+    return perf.rec_cache_transform(dividend - divisor * floor(dividend / divisor, range=range))
 
 @macro
 def sqrt(argument: AnyDensity, iterations: int = 3, guess: Callable[[Density], Density] = lambda d: d * 0.5) -> Density[types.range_choice]:

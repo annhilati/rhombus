@@ -43,9 +43,9 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
             origin = get_origin(hint)
             args = get_args(hint)
 
-            # Leaf: AnyDensity -> Density.constant(...)
+            # Leaf: AnyDensity -> Density(...)
             if is_anydensity_hint(hint):
-                return val if isinstance(val, Density) else Density.constant(val)
+                return val if isinstance(val, Density) else Density(val)
 
             # Union / |: try the first matching branch
             if origin is Union or isinstance(hint, types.UnionType):

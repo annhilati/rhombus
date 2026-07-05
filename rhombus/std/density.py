@@ -9,75 +9,80 @@ import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus.core.density_function import DensityFunction, constant, Reference
-from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
-from rhombus.std import types
 from rhombus.core.config import env
+from rhombus.std import types
 
 
 #======// Density Type //========================================================================//
 
-@dataclass
+@dataclass(frozen=False)
 class Density[Function: DensityFunction = DensityFunction]:
-    """Class representing a density calculation.
-    
-    When just using Rhombus for defining density functions, the constructor of this
-    class is not needed. To define a new density instead use:
-    - Macros from `rhombus.std.functions`, from `rhombus.macros` or other.
-    - `.constant()` to create a new Density from any interpretable value.
-    - `.refer()` to reference a density function that is provided externally, like by another datapack.
-    - `.configured()` to create a value that can be easily altered or referenced in the compiled datapack later.
-    - `.partitioned()` to compile a density function to a separate file. This is mainly used to enable caching.
+    """The **`Density`** class is the main interface for writing density functions
+    with Rhombus.
+
+    The `Density()` constructor accepts arguments of various types:
+    - `int` and `float` for constant values
+    - `str` for references
+    - `Density` and `DensityFunction`
+
+    It does not accept `dict` objects, as they are ambiguous and can be interpreted
+    in multiple ways. To deserialize such, use `~.from_dict()` instead.
+
+    By default, file names for density functions are not chosen but generated. To allow
+    users to configure your datapack or let other datapacks hook into your datapack, you
+    can set a fixed name through this idiom:
+    ```
+    df = "minecraft:my_variable" @ Density(5)
+    ```
     """
 
     AST: Function
     "The density function AST represented by this Density."
 
-    def __post_init__(self):
-        if not isinstance(self.AST, DensityFunction):
-            raise TypeError(f"Cannot initialize Density object with content of type '{type(self.AST).__name__}'")
+    @overload
+    def __init__(self, reference: str): ...
+    @overload
+    def __init__(self, value: int | float): ...
+    @overload
+    def __init__(self, ast: Function | Density[Function]): ...
+    @overload
+    def __init__(self, arg: AnyDensity): ...
+    def __init__(self, arg: AnyDensity):
+        self.AST = _unify(arg)
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
     
 
     #======// Factories //=======================================================================//
+          
+    @classmethod
+    def partitioned(cls, value: AnyDensity) -> Density[Reference]:
+        """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
+        value = Density(value)
+        return ("rhombus:partitioned/" + uuid_hash(value.as_dict())) @ value
 
-    @classmethod
-    def constant(cls, value: AnyDensity) -> Density:
-        """Creates a new `Density` object from any interpretable value.
-        
-        Allowed are:
-            - `float` and `int` numbers
-            - `str` references
-            - `dict` with the `type` key
-            - `Density` objects
-            - `DensityFunction` objects
-        """
-        return _unify(value)
-    
-    @classmethod
-    def refer(cls, identifier: str) -> Density[Reference]:
-        """Creates a new `Density` object refering to an externally provided density function."""
-        return cls(Reference(identifier))
-    
-    @classmethod
-    def configured(cls, name: str, default: AnyDensity) -> Density[Reference]:
-        """Creates a new `Density` object which value that can be easily altered or referenced in the compiled datapack later."""
-        name = "minecraft:" + name if not ":" in name else name
-        default = Density.constant(default).AST
+    def __rmatmul__(self, identifier: str):
+        if not isinstance(identifier, str):
+            raise TypeError("Density can only be assigned to a string identifier")
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        default = self.AST
         if isinstance(default, types.Reference) and isinstance(default.definition, tuple(env.caching_function_types)):
             default = default.definition
-        return Density(Reference(name, default))
-    
-    @classmethod
-    def partitioned(cls, value: AnyDensity):
-        """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
-        value = Density.constant(value)
-        return Density.configured("rhombus:partitioned/" + uuid_hash(value.as_dict()), value.AST)
+        return Density(Reference(identifier, default))
     
 
     #======// Toolchain //=======================================================================//
+    
+    @classmethod
+    @contextfunction(dp="datapack")
+    def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
+        """Creates a `Density` object from a dictionary.
+        
+        A Beet datapack can be provided as context.
+        """
+        return Density(DensityFunction.deserialize_toplevel(d))
 
     @classmethod
     @contextfunction(dp="datapack")
@@ -114,15 +119,6 @@ class Density[Function: DensityFunction = DensityFunction]:
             return None
 
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
-    
-    @classmethod
-    @contextfunction(dp="datapack")
-    def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
-        """Creates a `Density` object from a dictionary.
-        
-        A Beet datapack can be provided as context.
-        """
-        return Density(DensityFunction.deserialize_toplevel(d))
     
     def compile(self, identifier: str = "main", /) -> set[tuple[str, BeetFile]]:
         "Compiles the Density into Beet file class instances."
@@ -161,7 +157,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     #======// Arithmetic Magic //================================================================//
     
     def __add__(self, other) -> Density[types.add]:
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(types.add(self, other))
     
@@ -169,7 +165,7 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__add__(other)
     
     def __sub__(self, other) -> Density[types.add]:
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(
             types.add(
@@ -180,7 +176,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __rsub__(self, other) -> Density[types.add]:
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(
             types.add(
@@ -191,7 +187,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             )))
     
     def __mul__(self, other) -> Density[types.mul]:
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(types.mul(self, other))
     
@@ -199,12 +195,12 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__mul__(other)
     
     def __truediv__(self, other) -> Density[types.mul]:
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(types.mul(self, types.invert(other)))
     
     def __rtruediv__(self, other) -> Density[types.mul]:
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(types.mul(other, types.invert(self)))
 
@@ -222,7 +218,7 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     def __rmod__(self, other):
         from rhombus.macros.math import mod
-        return mod(self, other)
+        return mod(other, self)
     
     @overload
     def __pow__(self, other: Literal[2]) -> Density[types.square]: ...
@@ -249,12 +245,12 @@ class Density[Function: DensityFunction = DensityFunction]:
             return s
 
     def __and__(self, other):
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(types.max(self, other))
     
     def __or__(self, other):
-        other = Density.constant(other).AST
+        other = Density(other).AST
         self = self.AST
         return Density(types.min(self, other))
     
@@ -292,24 +288,24 @@ class Density[Function: DensityFunction = DensityFunction]:
 type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
-def _unify(v: int | float | str | Density | DensityFunction) -> Density:
-    """Interprets a QoL argument input and returns a Density object.
+def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
+    """Interprets a QoL argument input and returns a DensityFunction object.
     Applies logic like splitting large literal constants into calculations
     before constructing constant AST nodes.
     """
 
     if isinstance(v, Density):
-        return v
+        return v.AST
 
     if isinstance(v, DensityFunction):
-        return Density(v)
+        return v
 
     if isinstance(v, (int, float)):
-        return Density(constant(float(v)))
+        return constant(float(v))
 
     if isinstance(v, str):
         if ":" not in v:
             v = "minecraft:" + v
-        return Density(Reference(v))
+        return Reference(v)
 
-    raise ValueError(f"Cannot resolve object of type '{type(v).__name__}' to a density function")
+    raise ValueError(f"Cannot resolve object of type '{v.__class__.__name__}' to a density function AST")

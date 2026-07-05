@@ -19,10 +19,9 @@ class Noise(DatapackResource):
 
     **NOTE:** The id of a noise affects the seed for calculation. To ensure that
     the seed does not change when modifying the values of the noise, use the
-    following idiom:
+    following idiom to fix the id of the noise:
     ```
-    n = Noise(-9, [1, 2, 3]) # respective your values
-    n.reference = "minecraft:be_fixed"
+    n = "minecraft:be_fixed" @ Noise(-9, [1, 2, 3]) # respective your values
     ```
     
     Parameters:

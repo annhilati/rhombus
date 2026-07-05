@@ -145,4 +145,4 @@ class DerivativeComponent(SubParameters):
 
     def __init__(self, step: int, direction: AnyDensity):
         self.step = step
-        self.direction = Density.constant(direction).AST
+        self.direction = Density(direction).AST

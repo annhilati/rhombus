@@ -18,9 +18,9 @@ __all__ = [
 
 #======// Numeric Constants //===================================================================//
 
-Infinity = Density.constant(1) / 0
+Infinity = Density(1) / 0
 "Density equivalent to Java's `Double.POSITIVE_INFINITY`"
-NaN = Density.constant(0) / 0
+NaN = Density(0) / 0
 """Density equivalent to Java's `Double.NaN`
 
 **NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
@@ -40,7 +40,7 @@ e  = 2.7182818284590452 #35360287471352662497757247093699959574966
 def sum(*arguments: AnyDensity) -> Density[types.add]:
     "Returns the sum of any number of arguments."
     if len(arguments) == 0:
-        return Density.constant(0)
+        return Density(0)
     if len(arguments) == 1:
         return arguments[0]
     
@@ -56,7 +56,7 @@ def sum(*arguments: AnyDensity) -> Density[types.add]:
 def prod(*arguments: AnyDensity) -> Density[types.mul]:
     "Returns the product of any number of arguments."
     if len(arguments) == 0:
-        return Density.constant(0)
+        return Density(0)
     if len(arguments) == 1:
         return arguments[0]
     
@@ -72,7 +72,7 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
 def min(*arguments: AnyDensity) -> Density[types.min]:
     "Returns the minimum of any number of arguments."
     if len(arguments) == 0:
-        return Density.constant(0)
+        return Density(0)
     if len(arguments) == 1:
         return arguments[0]
     
@@ -88,7 +88,7 @@ def min(*arguments: AnyDensity) -> Density[types.min]:
 def max(*arguments: AnyDensity) -> Density[types.max]:
     "Returns the maximum of any number of arguments."
     if len(arguments) == 0:
-        return Density.constant(0)
+        return Density(0)
     if len(arguments) == 1:
         return arguments[0]
     
@@ -152,7 +152,7 @@ def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
-    return perf.cachespecific(dividend - divisor * floor(dividend / divisor), dividend, divisor)
+    return perf.s_cache_transform(dividend - divisor * floor(dividend / divisor), dividend, divisor)
 
 
 #======// Step Functions //======================================================================//
