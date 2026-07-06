@@ -1,5 +1,5 @@
 from typing import Callable, Final, Any, get_type_hints
-import hashlib, uuid, json, functools, inspect, dataclasses
+import hashlib, uuid, json, functools, inspect, dataclasses, contextvars
 
 import beet, beet.library.base
 
@@ -71,19 +71,19 @@ def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
                     overrides[env_attr] = value
 
             if needs_new_context:
-                # Get the actual environment object (the proxy exposes it via _current)
+                # Get the actual environment object (the proxy exposes it via _get_instance)
                 # and create a shallow copy so we can override attributes safely
-                current_env_obj = config.env._current
+                current_env_obj = config.env._get_instance()
                 new_env = copy.copy(current_env_obj)
                 
                 for attr, val in overrides.items():
                     setattr(new_env, attr, val)
                     
-                token = config._current_env.set(new_env)
+                token = config.env._ctxvar.set(new_env)
                 try:
                     return func(*bound.args, **bound.kwargs)  # type: ignore
                 finally:
-                    config._current_env.reset(token)
+                    config.env._ctxvar.reset(token)
             else:
                 return func(*bound.args, **bound.kwargs)  # type: ignore
 
@@ -118,3 +118,70 @@ def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
         for f in flds
         if f.init
     }
+
+
+#======// Global Bindings //=====================================================================//
+
+class GlobalBinding[T]:
+    """Provide a directly usable global object for any class instance.
+
+    The underlying instance is created lazily and stays bound to the current
+    context. The proxy makes it feel like a plain global object while leaving
+    the target class reusable in ordinary code.
+    """
+
+    def __init__(self, factory: Callable[[], T]) -> None:
+        self._factory = factory
+        self._ctxvar: contextvars.ContextVar[T | None] = contextvars.ContextVar(f"{factory.__name__}_binding", default=None)
+
+    def _get_instance(self) -> T:
+        instance = self._ctxvar.get()
+        if instance is None:
+            instance = self._factory()
+            self._ctxvar.set(instance)
+        return instance
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._get_instance(), name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name.startswith("_"):
+            object.__setattr__(self, name, value)
+        else:
+            setattr(self._get_instance(), name, value)
+
+    def __getattribute__(self, name: str) -> Any:
+        if name.startswith("__") and name.endswith("__"):
+            return getattr(self._get_instance(), name)
+        return object.__getattribute__(self, name)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> T:
+        return self._get_instance()(*args, **kwargs)
+
+    def __getattr__(self, name: str) -> Any:
+        _DELEGATED_METHODS = {
+            "__call__",
+            "__getitem__",
+            "__setitem__",
+            "__iter__",
+            "__len__",
+            "__contains__",
+            "__bool__",
+            "__eq__",
+            "__lt__",
+            "__le__",
+            "__gt__",
+            "__ge__",
+            "__add__",
+            "__sub__",
+            "__mul__",
+            "__truediv__",
+            "__radd__",
+            "__rsub__",
+            "__rmul__",
+            "__rtruediv__",
+        }
+        value = getattr(self._get_instance(), name)
+        if name in _DELEGATED_METHODS:
+            return lambda *args, **kwargs: getattr(self._get_instance(), name)(*args, **kwargs)
+        return value

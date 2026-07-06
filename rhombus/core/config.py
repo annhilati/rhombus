@@ -2,13 +2,13 @@ from typing import Protocol, TYPE_CHECKING, Callable, Any
 from types import ModuleType
 from dataclasses import dataclass, field
 from pathlib import Path
-from contextvars import ContextVar
 import beet, warnings, threading
 
 if TYPE_CHECKING:
     from rhombus.core import DensityFunction
     from rhombus.core.utils import BeetFile
 
+from rhombus.core.utils import GlobalBinding
 
 #======// Addon //===============================================================================//
 
@@ -100,30 +100,8 @@ class RhombusEnvironment:
             self._addons.append(addon_obj)
         
 
-_current_env: ContextVar[RhombusEnvironment] = ContextVar("current_env")
-
-class _EnvProxy:
-    
-    @property
-    def _current(self) -> RhombusEnvironment:
-        try:
-            return _current_env.get()
-        except LookupError:
-            env = RhombusEnvironment()
-            _current_env.set(env)
-            return env
-        
-    def __getattr__(self, name):
-        return getattr(self._current, name)
-    def __setattr__(self, name, value):
-        setattr(self._current, name, value)
-
-if TYPE_CHECKING:
-    env = RhombusEnvironment()
-    "Default Rhombus environment"
-else:
-    ctx = _EnvProxy()
-    env = _EnvProxy()
+env: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
+"Default Rhombus environment"
 
 
 def warn(message, category, filename, lineno, file=None, line=None):

@@ -126,12 +126,12 @@ class RhombusPreviewService:
                     files.update(result)
                     
                 elif isinstance(item, RhombusASTNode):
-                    result = {}
+                    result = set()
                     for node in item.inscribed_toplevel_nodes:
                         if node == item:
                             continue
-                        result[node.reference] = node.fileclass(node.serialize_toplevel())
-                    result[id] = item.fileclass(item.serialize_toplevel())
+                        result.add((node.reference, node.fileclass(node.serialize_toplevel())))
+                    result.add((id, item.fileclass(item.serialize_toplevel())))
                     files.update(result)
 
                 else:
@@ -235,12 +235,12 @@ class RhombusPreviewService:
             "last_change": self.last_change_timestamp,
             "latest_data": [
                 {
-                    "registry": "/".join(file.scope),
-                    "id": id,
-                    "content": file.encoder(file.data) if hasattr(file, "encoder") and hasattr(file, "data") else getattr(file, "text", str(file)),
-                    "language": getattr(file, "extension", ".json").lstrip("."),
+                    "registry": "/".join(f[1].scope),
+                    "id": f[0],
+                    "content": f[1].encoder(f[1].data) if hasattr(f[1], "encoder") and hasattr(f[1], "data") else getattr(f[1], "text", str(f[1])),
+                    "language": getattr(f[1], "extension", ".json").lstrip("."),
                 }
-                for id, file in self.latest_results
+                for f in self.latest_results
             ],
             "last_error": self.last_error_message,
         }
