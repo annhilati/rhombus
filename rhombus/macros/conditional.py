@@ -1,6 +1,6 @@
 """
 This module provides a fluent interface for realising conditionality by
-constructing nested `range_choice` expressions.
+constructing nested expressions with `range_choice` and `interval_select`.
 
 **IMPORTANT** If the conditionality produces a density function with recurring parts,
 they will automatically be cached.
@@ -26,13 +26,13 @@ __all__ = [
 ]
 
 from dataclasses import dataclass, field
-from typing import Any, Never, ClassVar
+from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.std.types import range_choice, literal_number_limit
-from rhombus.std.density import Density, AnyDensity
 from rhombus.core import config
+from rhombus.std.types import range_choice, interval_select, literal_number_limit
+from rhombus.std.density import Density, AnyDensity
 
 EPSILON = config.env.infinitesimal
 OMEGA = literal_number_limit
@@ -150,21 +150,22 @@ class ComparisonCondition(Condition):
             low, high = ensure_pair(self.value)
             return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON))._compile(when_true, when_false)
 
+        # Unbounded relations using interval_select
         if relation == Relation.LESS_THAN:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (-OMEGA, v))._compile(when_true, when_false)
+            return interval_select(input=self.input, thresholds=[v], functions=[when_true, when_false])
 
         if relation == Relation.LESS_OR_EQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (-OMEGA, v + EPSILON))._compile(when_true, when_false)
+            return interval_select(input=self.input, thresholds=[v + EPSILON], functions=[when_true, when_false])
 
         if relation == Relation.GREATER_THAN:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (v + EPSILON, OMEGA))._compile(when_true, when_false)
+            return interval_select(input=self.input, thresholds=[v + EPSILON], functions=[when_false, when_true])
 
         if relation == Relation.GREATER_OR_EQUAL:
             v = float(self.value)
-            return ComparisonCondition(self.input, Relation.ABOVE_BUT_UNDER, (v, OMEGA))._compile(when_true, when_false)
+            return interval_select(input=self.input, thresholds=[v], functions=[when_false, when_true])
 
         # Derived relations
         if relation == Relation.EQUALS:
