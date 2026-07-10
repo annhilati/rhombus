@@ -19,7 +19,8 @@ def atan(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1)) -> Density
     Parameters:
         xRange ((float, float)): The interval over which the function can take inputs.
     """
-    return functions.spline(argument, splines.sample_spline_points(py_math.atan, xRange))
+    points = max(5, round((xRange[1] - xRange[0]) / 1.5) + 1)
+    return functions.spline(argument, splines.sample_spline_points(py_math.atan, xRange, points))
 
 @macro
 def cos(argument: AnyDensity, xRange: tuple[float, float] = (-pi, pi)) -> Density[types.spline]:
@@ -44,14 +45,16 @@ def coth(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1)) -> Density
 @macro
 def erf(argument: AnyDensity, xRange: tuple[float, float] = (-3, 3)) -> Density[types.spline]:
     """Evaluates the value of the input on Gaussian error function."""
-    return functions.spline(argument, splines.sample_spline_points(py_math.erf, xRange))
+    points = max(5, round((xRange[1] - xRange[0]) / 1.5) + 1)
+    return functions.spline(argument, splines.sample_spline_points(py_math.erf, xRange, points))
 
 @macro
 def exp(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1), base: float = py_math.e) -> Density[types.spline]:
     """Evaluates the value of the input on an exponential function."""
     func = lambda x: base**x
     # TODO: Optimize spline point number
-    return functions.spline(argument, splines.sample_spline_points(func, xRange))
+    points = max(5, round((xRange[1] - xRange[0]) / 1.5) + 1)
+    return functions.spline(argument, splines.sample_spline_points(func, xRange, points))
 
 @macro
 def logistic(argument: AnyDensity,
@@ -72,7 +75,8 @@ def logistic(argument: AnyDensity,
     [Wikipedia](https://en.wikipedia.org/wiki/Logistic_function)
     """
     func = lambda x: capacity / ( 1 + py_math.exp(- growth_rate * (x - center)))
-    return functions.spline(argument, splines.sample_spline_points(func, xRange))
+    points = max(5, round((xRange[1] - xRange[0]) / 1.5) + 1)
+    return functions.spline(argument, splines.sample_spline_points(func, xRange, points))
 
 @macro
 def normalPDF(argument: AnyDensity, mean: float = 0, standard_deviation: float = 1/sqrt(2 * pi)) -> Density[types.spline]:
@@ -150,5 +154,6 @@ def tanh(argument: AnyDensity, xRange: tuple[float, float] = (-1, 1)) -> Density
     Parameters:
         xRange ((float, float)): The interval over which the function can take inputs.
     """
-    return functions.spline(argument, splines.sample_spline_points(py_math.tanh, xRange))
+    points = max(5, round((xRange[1] - xRange[0]) / 1.5) + 1)
+    return functions.spline(argument, splines.sample_spline_points(py_math.tanh, xRange, points))
 

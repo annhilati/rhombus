@@ -13,8 +13,14 @@ from matplotlib.figure import Figure
 import numpy as np, matplotlib.pyplot as plt
 
 
-def sample_spline_points(f: Callable[[float], float], interval: tuple[float, float], points=5, *, step_size=1e-8) -> list[tuple[float, float, float]]:
-    """Samples spline points based of an arbitrary function.
+def sample_spline_points(
+    f: Callable[[float], float], interval: tuple[float, float], points: int = 5, *, step_size=1e-5
+) -> list[tuple[float, float, float]]:
+    """Samples exactly `points` spline points optimally distributed for cubic interpolation.
+    
+    Uses a curvature-based density function (|f''(x)|^(1/4)) to place more points
+    where the function changes rapidly, minimizing the interpolation error while keeping
+    the point count fixed.
 
     Ideal for functions that satisfy:
     *   **Smoothness:** Function must be at least twice continuously differentiable in the interval.
@@ -26,19 +32,56 @@ def sample_spline_points(f: Callable[[float], float], interval: tuple[float, flo
         interval ((float, float)): The interval between to sample the function.
         points (int): The amount of points to sample between within the sample interval.
         step_size (float): The infinitesimal value that is used to calculate derivatives.
+    
     """
+    if points < 2:
+        raise ValueError("At least 2 points are required.")
 
-    xs = np.linspace(interval[0], interval[1], points)
-    points = []
-
-    for x in xs:
+    def get_point(x):
         y = f(x)
-
+        # 1st derivative for Hermite tangent
         m = (f(x + step_size) - f(x - step_size)) / (2 * step_size)
+        return (float(x), float(y), float(m))
+        
+    if points == 2:
+        return [get_point(interval[0]), get_point(interval[1])]
 
-        points.append((float(x), y, m))
+    def d2f(x):
+        # 2nd derivative to estimate curvature
+        return (f(x + step_size) - 2 * f(x) + f(x - step_size)) / (step_size ** 2)
 
-    return points
+    # 1. Erstelle ein dichtes Raster zum Integrieren der "Fehler-Dichte"
+    resolution = max(1000, points * 10)
+    dense_xs = np.linspace(interval[0], interval[1], resolution)
+    
+    # 2. Berechne die Dichte D(x) = |f''(x)|^(1/4)
+    # (Der Exponent 1/4 ist theoretisch optimal für die Fehlerverteilung bei kubischen Splines)
+    density = np.zeros_like(dense_xs)
+    for i, x in enumerate(dense_xs):
+        density[i] = abs(d2f(x)) ** 0.25
+        
+    # Füge eine minimale Basisdichte hinzu, damit rein lineare Bereiche (Dichte=0) nicht ignoriert werden
+    # Eine zu niedrige Basisdichte sorgt bei sehr großen Intervallen (z.B. -10 bis 10 bei Sigmoid) 
+    # für Überschwinger in den flachen Bereichen (Runge-Phänomen).
+    base_density = np.mean(density) * 0.5
+    if base_density == 0:
+        base_density = 1.0 
+    density += base_density
+    
+    # 3. Berechne die kumulative Verteilungsfunktion (CDF)
+    cdf = np.zeros_like(dense_xs)
+    for i in range(1, resolution):
+        cdf[i] = cdf[i-1] + (density[i] + density[i-1]) / 2 * (dense_xs[i] - dense_xs[i-1])
+        
+    # Normalisiere auf den Bereich [0, 1]
+    cdf /= cdf[-1]
+    
+    # 4. Verteile die Punkte gleichmäßig auf der Y-Achse der CDF und projiziere sie auf X zurück
+    target_cdfs = np.linspace(0, 1, points)
+    optimal_xs = np.interp(target_cdfs, cdf, dense_xs)
+    
+    # Punkte exakt berechnen (Tangenten etc.)
+    return [get_point(x) for x in optimal_xs]
 
 
 def poly_spline_points(
