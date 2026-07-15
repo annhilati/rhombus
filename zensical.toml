@@ -16,6 +16,9 @@ nav = [
         ]},
         {"Examples" = [
             "examples/conditionality.md"
+        ]},
+        {"Reference" = [
+            "reference/rhombus/index.md",
         ]}
     ]},
     {"Rhombus Developers" = [

@@ -18,6 +18,7 @@ test_pack/
 # Zensical
 .cache/
 site/
+docs/reference
 
 # Distribution & Packaging
 build/

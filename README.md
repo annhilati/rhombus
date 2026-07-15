@@ -51,28 +51,28 @@ Growing collection of macros for common patterns and complex operations, reducin
   - File Explorer & Viewer (built on monaco)
   - Spline Visualization
 - **Macro Library**
-  - Math
+  - [General Math](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/math.py)
     - sum, prod
     - Infinity, NaN
     - round, floor, ceil, mod
     - sgn, heaviside, monus, ramp
-  - Spline approximations
-    - Sampler for any Python function
+  - [Spline approximations](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/smath.py)
+    - [Sampler for any Python function](https://github.com/annhilati/rhombus/blob/main/rhombus/splines.py)
     - sin, cos, tan, atan, tanh, coth
     - exp (with arbitrary base)
     - smoothstep, normalPDF, normalCDF, erf, logistic
-  - Performance optimization
+  - [Performance optimization](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/performance.py)
     - evaluate the number of unique nodes of a function
     - automatically cache specific sub functions of a function
     - automatically cache all recurring sub functions of a function
-  - Expensive iterative Methods:
+  - [Expensive iterative Methods](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/emath.py)
     - sqrt
     - sin, cos, tan, exp, ln
     - round, ceil, floor, mod
-  - Working with Maps
+  - [Working with Maps](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/maps.py)
     - extrude_heightmap
-  - Fluent Interface for conditionality
-  - Coordinate reconstruction
+  - [Fluent Interface for conditionality](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/conditional.py)
+  - [Coordinate reconstruction](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/coords.py)
 - **Mod Support**
   - More Density Functions
   - Lithostitched
