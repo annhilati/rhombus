@@ -3,7 +3,7 @@ name = "rhombus"
 version = "0.1.0-pre1"
 description = ""
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = { file = "LICENSE" }
 authors = [
   { name = "Annhilati"},

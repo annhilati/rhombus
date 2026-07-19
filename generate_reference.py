@@ -1,5 +1,3 @@
-# TODO: Show class metadata at the top of class pages
-
 import re
 import griffe
 from griffe import Docstring, Object, Module, Class, Function, TypeAlias, Attribute
@@ -25,6 +23,20 @@ def dedent(s: str) -> str:
 def escape_markdown(text: str) -> str:
     return re.sub(r"([\\`*_{}\[\]()#+\-.!])", r"\\\1", text)
 
+def format_type_parameters(obj) -> str:
+    type_params = getattr(obj, "type_parameters", None)
+    if not type_params:
+        return ""
+    parts = []
+    for tp in type_params:
+        s = tp.name
+        if getattr(tp, "bound", None):
+            s += f": {tp.bound}"
+        if getattr(tp, "default", None):
+            s += f" = {tp.default}"
+        parts.append(s)
+    return f"[{', '.join(parts)}]"
+
 def render_docstring(docstring: Docstring) -> str:
     if not docstring:
         return ""
@@ -40,6 +52,33 @@ def render_docstring(docstring: Docstring) -> str:
             if kind == "text":
                 # IMPORTANT: Here we can post process
                 out = re.sub(r"-{3,}", "", section.value)
+                
+                def admonition_repl(match: re.Match):
+                    keyword = match.group("keyword").lower()
+                    valid_keywords = {"note", "abstract", "info", "tip", "success", "question", "warning", "failure", "danger", "bug", "example", "quote", "attention"}
+                    if keyword not in valid_keywords:
+                        return match.group(0)
+                    if keyword == "attention":
+                        keyword = "warning"
+                    content = match.group("content").strip()
+                    indented = "\n    ".join(content.split("\n"))
+                    return f"!!! {keyword}\n    {indented}"
+                    
+                out = re.sub(r"^\*\*(?P<keyword>[A-Za-z]+):\*\*(?P<content>.*?)(?=\n\n|\Z)", admonition_repl, out, flags=re.DOTALL | re.MULTILINE)
+                
+                # Fix markdown lists needing a blank line before them
+                lines = out.split("\n")
+                fixed_lines = []
+                for i, line in enumerate(lines):
+                    is_list_item = re.match(r"^\s*[-*+]\s", line) or re.match(r"^\s*\d+\.\s", line)
+                    if is_list_item and i > 0:
+                        prev_line = lines[i-1]
+                        prev_is_list = re.match(r"^\s*[-*+]\s", prev_line) or re.match(r"^\s*\d+\.\s", prev_line)
+                        if prev_line.strip() != "" and not prev_is_list:
+                            fixed_lines.append("")
+                    fixed_lines.append(line)
+                out = "\n".join(fixed_lines)
+                
                 parts.append(out)
 
             elif kind == "parameters":
@@ -74,11 +113,18 @@ def render_function(func: Function) -> str:
 
     def format_function_signature(func: Function) -> str:
         params = []
-        for p in func.parameters or []:
-            s = p.name
+        for p in getattr(func, "parameters", []):
+            kind_str = str(getattr(getattr(p, "kind", None), "name", getattr(getattr(p, "kind", None), "value", "")))
+            prefix = ""
+            if "var_positional" in kind_str:
+                prefix = "*"
+            elif "var_keyword" in kind_str:
+                prefix = "**"
+            
+            s = prefix + p.name
             if p.annotation:
                 s += f": {p.annotation}"
-            if p.default:
+            if p.default and not prefix:
                 s += f" = {p.default}"
             params.append(s)
         
@@ -91,7 +137,9 @@ def render_function(func: Function) -> str:
         elif "staticmethod" in labels:
             decorators += "@staticmethod\n"
             
-        return f"{decorators}def {func.name}({', '.join(params)}){returns}: ..."
+        type_params = format_type_parameters(func)
+            
+        return f"{decorators}def {func.name}{type_params}({', '.join(params)}){returns}: ..."
 
     signatures = []
     if hasattr(func, "overloads") and func.overloads:
@@ -177,15 +225,15 @@ def render_class_members(obj: Class) -> str:
         
         {"\n\n---\n".join([render_function(f) for f in constructors])}
 
-        {"## Properties" if properties else ""}
+        {"\n---\n## Properties" if properties else ""}
         
         {"\n\n---\n".join([render_property(p) for p in properties])}
 
-        {"## Methods" if methods else ""}
+        {"\n---\n## Methods" if methods else ""}
         
         {"\n\n---\n".join([render_function(f) for f in methods])}
 
-        {"## Static & Class Methods" if static_methods else ""}
+        {"\n---\n## Static & Class Methods" if static_methods else ""}
         
         {"\n\n---\n".join([render_function(f) for f in static_methods])}
     """)
@@ -202,7 +250,24 @@ def render_module_functions(obj: Module) -> str:
         {"\n\n---\n".join([render_function(f) for f in regular_functions])}
     """)
 
-def render_module_or_class(obj: Module | Class, parent_path: Path = Path(".")) -> dict[Path, str]:
+def format_class_signature(obj: Class) -> str:
+    parts = []
+    for dec in getattr(obj, "decorators", []):
+        val = getattr(dec, "value", dec)
+        parts.append(f"@{val}")
+        
+    bases = [str(b) for b in getattr(obj, "bases", [])]
+    bases = [b for b in bases if b != "object"]
+    bases_str = f"({', '.join(bases)})" if bases else ""
+    
+    type_params = format_type_parameters(obj)
+    
+    parts.append(f"class {obj.name}{type_params}{bases_str}: ...")
+    
+    sig = "\n".join(parts)
+    return f"```python\n{sig}\n```\n"
+
+def render_module_or_class(obj: Module | Class, parent_path: Path = Path("."), repo_url: str = "https://github.com/annhilati/rhombus/blob/main") -> dict[Path, str]:
     files: dict[Path, str] = {}
 
     submodules:  list[Module]    = sorted([m for m in obj.all_members.values() if isinstance(m, Module) and not m.name.startswith("_")], key=lambda m: m.name)
@@ -210,15 +275,38 @@ def render_module_or_class(obj: Module | Class, parent_path: Path = Path(".")) -
     typealiases: list[TypeAlias] = sorted([m for m in obj.all_members.values() if isinstance(m, TypeAlias) and not m.name.startswith("_")], key=lambda m: m.name)
     
     functions_block = render_class_members(obj) if isinstance(obj, Class) else render_module_functions(obj)
+    class_signature = format_class_signature(obj) if isinstance(obj, Class) else ""
+
+    rel_path = getattr(obj, "relative_filepath", getattr(obj, "filepath", ""))
+    rel_path_str = rel_path.as_posix() if hasattr(rel_path, "as_posix") else Path(str(rel_path)).as_posix()
+    
+    base_repo_url = repo_url.replace("/tree/", "/blob/")
+    
+    is_dir = False
+    if isinstance(obj, Module):
+        if rel_path_str.endswith("__init__.py"):
+            is_dir = True
+            rel_path_str = rel_path_str[:-12]
+        elif not rel_path_str.endswith(".py"):
+            is_dir = True
+            
+    if is_dir:
+        source_url = f"{base_repo_url.replace('/blob/', '/tree/')}/{rel_path_str}"
+    else:
+        line_suffix = ""
+        if getattr(obj, "lineno", None) and getattr(obj, "endlineno", None):
+            line_suffix = f"#L{obj.lineno}-L{obj.endlineno}"
+        source_url = f"{base_repo_url}/{rel_path_str}{line_suffix}"
 
     root = dedent(f"""
         ---
         title: {obj.name}
         ---
 
-        <h6>{obj.__class__.__name__} <code>{obj.path}</code> {f'• <a href="../index.md">Go back</a>' if obj.parent else ""}</h6>
+        <h6>{obj.__class__.__name__} <code>{obj.path}</code> • <a href="{source_url}">View Source</a> {f'• <a href="..">Go back</a>' if obj.parent else ""}</h6>
         {"# " + escape_markdown(obj.name) if not obj.docstring or (not obj.docstring.value.startswith("# ") and "\n# " not in obj.docstring.value) else ""}
 
+        {class_signature}
         {render_docstring(obj.docstring)}
 
         {"## Modules" if submodules else ""}
