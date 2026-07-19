@@ -130,12 +130,19 @@ def render_function(func: Function) -> str:
         
         returns = f" -> {func.returns}" if getattr(func, "returns", None) else ""
         
-        decorators = ""
+        decorators_list = []
+        for dec in getattr(func, "decorators", []):
+            val = getattr(dec, "value", dec)
+            decorators_list.append(f"@{val}\n")
+            
+        # Fallback for labels if decorators list is empty or doesn't include them
         labels = getattr(func, "labels", set())
-        if "classmethod" in labels:
-            decorators += "@classmethod\n"
-        elif "staticmethod" in labels:
-            decorators += "@staticmethod\n"
+        if "classmethod" in labels and not any("classmethod" in d for d in decorators_list):
+            decorators_list.insert(0, "@classmethod\n")
+        elif "staticmethod" in labels and not any("staticmethod" in d for d in decorators_list):
+            decorators_list.insert(0, "@staticmethod\n")
+            
+        decorators = "".join(decorators_list)
             
         type_params = format_type_parameters(func)
             
