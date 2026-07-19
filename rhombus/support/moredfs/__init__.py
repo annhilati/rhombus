@@ -10,7 +10,12 @@ This module significantly expands the flexibility of terrain generation by addin
 __version__ = "2.2.1"
 
 from .functions import *
-from .sub_parameters import DerivativeComponent, DistanceMetric, ExtraOctaves, RandomSampler
+from .sub_parameters import (
+    DerivativeComponent,
+    DistanceMetric,
+    ExtraOctaves,
+    RandomSampler,
+)
 
 from importlib.resources import files as _files
 from rhombus.core.config import RhombusAddon as _RhombusAddon
@@ -21,7 +26,10 @@ __addon__ = _RhombusAddon(
     name="MoreDfsAddon",
     preview_scripts=[_files("rhombus.support.moredfs").joinpath("deepslate.ts")],
     density_functions={
-        cls.id: cls for name, cls in _types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
-    }
+        cls.id: cls
+        for name, cls in _types.__dict__.items()
+        if isinstance(cls, type)
+        and issubclass(cls, _DensityFunction)
+        and hasattr(cls, "id")
+    },
 )

@@ -17,7 +17,10 @@ __addon__ = _RhombusAddon(
     name="Tectonic",
     preview_scripts=[_files("rhombus.support.tectonic").joinpath("deepslate.ts")],
     density_functions={
-        cls.id: cls for name, cls in _types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
-    }
+        cls.id: cls
+        for name, cls in _types.__dict__.items()
+        if isinstance(cls, type)
+        and issubclass(cls, _DensityFunction)
+        and hasattr(cls, "id")
+    },
 )

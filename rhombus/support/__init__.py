@@ -1,6 +1,6 @@
 """Provides integration and standard definitions for widely used Minecraft world generation mods.
 
-This package serves as a central hub for third-party mod support, 
+This package serves as a central hub for third-party mod support,
 exposing their custom density functions and node types for native use within Rhombus.
 
 When decoding density functions from datapacks while they are using function types from
@@ -12,7 +12,4 @@ env.load_addons(support.lithostitched)
 ```
 """
 
-from rhombus.support import (
-    tectonic, lithostitched, moredfs, ensity, 
-    vanilla_legacy
-)
+from rhombus.support import tectonic, lithostitched, moredfs, ensity, vanilla_legacy

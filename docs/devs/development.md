@@ -3,7 +3,7 @@ title: Roadmap
 icon: lucide/map
 ---
 
-<h6>Last updated: 14.06.2026</h6>
+<h6>Last updated: 19.07.2026</h6>
 
 # Roadmap
 
@@ -22,13 +22,13 @@ Phase 0 focusses on implementing all base functionality for constituting abstrac
 - ✅ **Vanilla coverage**: Modeling classes for the vanilla density function types and noise.
 
 ## 🚧 Phase 1: Content
-- 🚧 **Mod support**: Modeling classes for density function types and datapack resources from common used worldgen libraries.
-- 🚧 **Macro infrastructure**: Decorators to help with creating macros.
-- 🧪 **Spline generation**: Tools for generating spline configurations.
-- 🕔 **Field validation**: Warn when values in fields of density functions are invalid.
+- ✅ **Mod support**: Modeling classes for density function types and datapack resources from common used worldgen libraries.
+- ✅ **Macro infrastructure**: Decorators to help with creating macros.
+- ✅ **Spline generation**: Tools for generating spline configurations.
+- ❔ **Field validation**: Warn when values in fields of density functions are invalid.
 
-## 🕔 Phase 2: Optimization
+## 🚧 Phase 2: Optimization
 
 - 🧪 **Performance evaluation**: Debug methods for quantifying performance costs.
-- 🚧 **Caching**: Ensure proper caching in complex scenarios.
-- 🕔 **AST optimization**: Optimize the abstract syntax tree to cost less performance.
+- 🧪 **Caching**: Ensure proper caching in complex scenarios.
+- ❔ **AST optimization**: Optimize the abstract syntax tree to cost less performance.

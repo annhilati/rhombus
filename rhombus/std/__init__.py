@@ -21,8 +21,12 @@ from . import types as _types
 __addon__ = _RhombusAddon(
     name="StdAddon",
     density_functions={
-        cls.id: cls for name, cls in _types.__dict__.items()
-        if name in _types.__all__ and isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
+        cls.id: cls
+        for name, cls in _types.__dict__.items()
+        if name in _types.__all__
+        and isinstance(cls, type)
+        and issubclass(cls, _DensityFunction)
+        and hasattr(cls, "id")
     },
-    caching_functions={t.cache_2d, t.flat_cache, t.cache_all_in_cell, t.cache_once}
+    caching_functions={t.cache_2d, t.flat_cache, t.cache_all_in_cell, t.cache_once},
 )

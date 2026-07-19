@@ -5,11 +5,10 @@ import copy
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
 
 __all__ = ["RhombusASTNode"]
-    
+
 
 @dataclass_transform(field_specifiers=(dataclasses.Field, dataclasses.field))
 class NodeDataclassTransformer(type):
-
     def __new__(mcls, name, bases, ns, **kwargs):
         user_post_init = ns.get("__post_init__")
 
@@ -21,7 +20,7 @@ class NodeDataclassTransformer(type):
                     object.__setattr__(
                         self,
                         field.name,
-                        RhombusASTNode._freeze_field_value(getattr(self, field.name))
+                        RhombusASTNode._freeze_field_value(getattr(self, field.name)),
                     )
 
         ns["__post_init__"] = __post_init__
@@ -30,12 +29,7 @@ class NodeDataclassTransformer(type):
         init = kwargs.pop("init", True)
 
         if init:
-            cls = dataclasses.dataclass(
-                cls,
-                init=True,
-                repr=False,
-                eq=False
-            )
+            cls = dataclasses.dataclass(cls, init=True, repr=False, eq=False)
 
             original_init = cls.__init__
 
@@ -48,22 +42,25 @@ class NodeDataclassTransformer(type):
 
         return cls
 
+
 class RhombusASTNode(metaclass=NodeDataclassTransformer):
     """The **`RhombusASTNode`** class defines the common behaviour for all nodes
     in the abstract syntax tree of Rhombus. It thus can be called the base class
     for all nodes.
-    
+
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """
-  
+
     __dataclass_fields__: ClassVar[dict[str, dataclasses.Field[Any]]]
     __dataclass_params__: ClassVar[Any]
-    __match_args__:       ClassVar[tuple[str, ...]]
+    __match_args__: ClassVar[tuple[str, ...]]
 
     fileclass: ClassVar[type[BeetFile] | None]
 
     def __init__(self, *args, **kwargs):
-        raise NotImplementedError("Only subclasses of 'RhombusASTNode' can be instantiated directly, not 'RhombusASTNode' itself")
+        raise NotImplementedError(
+            "Only subclasses of 'RhombusASTNode' can be instantiated directly, not 'RhombusASTNode' itself"
+        )
 
     def __setattr__(self, name: str, value: Any) -> None:
         if getattr(self, "_rhombus_frozen", False) and name != "reference":
@@ -80,24 +77,32 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
             return frozenset(RhombusASTNode._freeze_field_value(v) for v in value)
         if isinstance(value, dict):
             return {
-                RhombusASTNode._freeze_field_value(k): RhombusASTNode._freeze_field_value(v)
+                RhombusASTNode._freeze_field_value(
+                    k
+                ): RhombusASTNode._freeze_field_value(v)
                 for k, v in value.items()
             }
         return value
-               
+
     def __repr__(self) -> str:
-        return self.__class__.__name__ + "(" + ", ".join([
-            param + "=" + value.__repr__()
-            for param, value
-            in self.fields.items()
-            if self.__dataclass_fields__[param].default != value
-        ]) + ")"
+        return (
+            self.__class__.__name__
+            + "("
+            + ", ".join(
+                [
+                    param + "=" + value.__repr__()
+                    for param, value in self.fields.items()
+                    if self.__dataclass_fields__[param].default != value
+                ]
+            )
+            + ")"
+        )
 
     def __eq__(self, other) -> bool:
         if type(self) is not type(other):
             return False
         return self.fields == other.fields
-    
+
     def __hash__(self) -> int:
         return hash(uuid_hash(self.serialize_toplevel()))
 
@@ -106,8 +111,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
 
     def __deepcopy__(self, memo: dict[int, Any]) -> Self:
         new_fields = {
-            name: copy.deepcopy(value, memo)
-            for name, value in self.fields.items()
+            name: copy.deepcopy(value, memo) for name, value in self.fields.items()
         }
         return self.__class__(**new_fields)
 
@@ -115,16 +119,16 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
     def fields(self) -> dict[str, Any]:
         "The fields of this node as a dictionary."
         return fields(self)
-      
-        
-    #======// Serialization //===================================================================//
-    
+
+    # ======// Serialization //===================================================================//
+
     @property
     def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
         """All nodes defined inside the abstract syntax tree of this node, that will
         require a separate file when compiling. This will include this node itself,
         if it always requires a separate file.
         """
+
         def _collect_inscribed_toplevel_nodes(value: Any) -> set["RhombusASTNode"]:
             nodes = set()
             if isinstance(value, RhombusASTNode):
@@ -137,25 +141,27 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
                 for item in value:
                     nodes |= _collect_inscribed_toplevel_nodes(item)
             return nodes
-        
+
         nodes = set()
         for value in self.fields.values():
             nodes |= _collect_inscribed_toplevel_nodes(value)
         return nodes
-    
+
     @property
     def reference(self) -> str:
         """The namespaced resource identifier of this node. This can be a fixed
         string or one generated from the nodes data.
         """
         return f"rhombus:generated/{uuid_hash(self.serialize_toplevel())}"
-    
+
     def serialize_toplevel(self) -> JSONValue:
         """Serializes the nodes data into the target format (usually a JSON
         dictionary), like it would be used at the top of a file structure.
         """
-        raise NotImplementedError(f"Class {self.__class__.__name__} is missing implementation of serialize_toplevel()")
-    
+        raise NotImplementedError(
+            f"Class {self.__class__.__name__} is missing implementation of serialize_toplevel()"
+        )
+
     def serialize_inline(self):
         """Serializes the nodes data into the target format (usually a JSON
         dictionary), like it would be used within a nested file structure.
@@ -166,14 +172,16 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         associated with the reference, use `~.inscribed_toplevel_nodes`.
         """
         return self.serialize_toplevel()
-    
+
     @classmethod
     def deserialize_toplevel(cls, data: JSONValue) -> Self:
         """Creates an instance of this node class from data (usually a JSON
-        dictionary) like it would be found at the top of a file structure. 
+        dictionary) like it would be found at the top of a file structure.
         """
-        raise NotImplementedError(f"Class {cls.__name__} is missing implementation of deserialize_toplevel()")
-    
+        raise NotImplementedError(
+            f"Class {cls.__name__} is missing implementation of deserialize_toplevel()"
+        )
+
     @classmethod
     def deserialize_inline(cls, data: JSONValue):
         """Creates an instance of this node class from data (usually a JSON

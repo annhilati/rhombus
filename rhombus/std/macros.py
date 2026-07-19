@@ -1,7 +1,19 @@
 __all__ = ["macro"]
 
-from typing import Callable, Any, Annotated, Union, cast, get_type_hints, get_args, get_origin
-import inspect, functools, sys, types
+from typing import (
+    Callable,
+    Any,
+    Annotated,
+    Union,
+    cast,
+    get_type_hints,
+    get_args,
+    get_origin,
+)
+import inspect
+import functools
+import sys
+import types
 
 from rhombus.core.utils import Annotation
 from rhombus.std.density import Density, AnyDensity
@@ -99,9 +111,13 @@ def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
                 if hint is not None:
                     param = sig.parameters[name]
                     if param.kind == inspect.Parameter.VAR_POSITIONAL:
-                        bound.arguments[name] = tuple(resolve_value(v, hint) for v in value)
+                        bound.arguments[name] = tuple(
+                            resolve_value(v, hint) for v in value
+                        )
                     elif param.kind == inspect.Parameter.VAR_KEYWORD:
-                        bound.arguments[name] = {k: resolve_value(v, hint) for k, v in value.items()}
+                        bound.arguments[name] = {
+                            k: resolve_value(v, hint) for k, v in value.items()
+                        }
                     else:
                         bound.arguments[name] = resolve_value(value, hint)
 

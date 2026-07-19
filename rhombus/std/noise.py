@@ -12,6 +12,7 @@ from beet.contrib.worldgen import WorldgenNoise
 from rhombus.core.datapack_resource import DatapackResource
 from rhombus.core.utils import BeetFile
 
+
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
@@ -23,7 +24,7 @@ class Noise(DatapackResource):
     ```
     n = "minecraft:be_fixed" @ Noise(-9, [1, 2, 3]) # respective your values
     ```
-    
+
     Parameters:
         firstOctave (int): Controls the base frequency of the noise. More negative values lead to more vast regions.
             The scale in blocks over which the noise changes significantly is approximately `2^(-firstOctave)`.
@@ -36,18 +37,18 @@ class Noise(DatapackResource):
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Noise) • [Wikipedia](https://en.wikipedia.org/wiki/Perlin_noise)
     """
- 
+
     fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
 
     firstOctave: int
-    amplitudes:  list[float]
+    amplitudes: list[float]
 
-    
     def __repr__(self) -> str:
         if self.is_reference and self._identifier is not None:
             return '"' + self.reference + '"'
         return f"Noise({self.firstOctave}, {self.amplitudes!r})"
-    
+
     def __call__(self, xz_scale: float, y_scale: float):
         from rhombus.std.functions import noise
+
         return noise(self, xz_scale, y_scale)

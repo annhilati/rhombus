@@ -7,4 +7,3 @@ To start the preview webserver and file-watching backend use `~.serve()`.
 """
 
 from rhombus.preview.service import serve, resources_from_datapack
-

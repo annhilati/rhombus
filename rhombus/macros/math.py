@@ -1,22 +1,34 @@
 """Macro module for general mathematical functions and constants."""
 
-import math as py_math
 from rhombus.std import Density, AnyDensity, f, types, macro
 from rhombus.macros import conditional as cond, performance as perf
 
 __all__ = [
-    "Infinity", "NaN",
-    "pi", "e",
-    "sum", "prod",
-    "min", "max",
-    "round", "floor", "ceil",
-    "round", "floor", "ceil",
-    "mod", "floordiv",
-    "heaviside", "ramp", "sgn", "monus",
-    "sqrt_linear_01", "sqrt_rational_01",
+    "Infinity",
+    "NaN",
+    "pi",
+    "e",
+    "sum",
+    "prod",
+    "min",
+    "max",
+    "round",
+    "floor",
+    "ceil",
+    "round",
+    "floor",
+    "ceil",
+    "mod",
+    "floordiv",
+    "heaviside",
+    "ramp",
+    "sgn",
+    "monus",
+    "sqrt_linear_01",
+    "sqrt_rational_01",
 ]
 
-#======// Numeric Constants //===================================================================//
+# ======// Numeric Constants //===================================================================//
 
 Infinity = Density(1) / 0
 "Density equivalent to Java's `Double.POSITIVE_INFINITY`"
@@ -28,13 +40,14 @@ chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted
 as air.
 """
 
-pi = 3.1415926535897932 #38462643383279502884197169399375105820974944592307816406
+pi = 3.1415926535897932  # 38462643383279502884197169399375105820974944592307816406
 "The constant `π` to 16 decimals."
-e  = 2.7182818284590452 #35360287471352662497757247093699959574966
+e = 2.7182818284590452  # 35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
 
 
-#======// Arithmetic //==========================================================================//
+# ======// Arithmetic //==========================================================================//
+
 
 @macro
 def sum(*arguments: AnyDensity) -> Density[types.add]:
@@ -43,7 +56,7 @@ def sum(*arguments: AnyDensity) -> Density[types.add]:
         return Density(0)
     if len(arguments) == 1:
         return arguments[0]
-    
+
     it = iter(arguments)
     result = next(it) + next(it)
 
@@ -52,6 +65,7 @@ def sum(*arguments: AnyDensity) -> Density[types.add]:
 
     return result
 
+
 @macro
 def prod(*arguments: AnyDensity) -> Density[types.mul]:
     "Returns the product of any number of arguments."
@@ -59,7 +73,7 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
         return Density(0)
     if len(arguments) == 1:
         return arguments[0]
-    
+
     it = iter(arguments)
     result = next(it) * next(it)
 
@@ -68,6 +82,7 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
 
     return result
 
+
 @macro
 def min(*arguments: AnyDensity) -> Density[types.min]:
     "Returns the minimum of any number of arguments."
@@ -75,7 +90,7 @@ def min(*arguments: AnyDensity) -> Density[types.min]:
         return Density(0)
     if len(arguments) == 1:
         return arguments[0]
-    
+
     it = iter(arguments)
     result = next(it) | next(it)
 
@@ -84,6 +99,7 @@ def min(*arguments: AnyDensity) -> Density[types.min]:
 
     return result
 
+
 @macro
 def max(*arguments: AnyDensity) -> Density[types.max]:
     "Returns the maximum of any number of arguments."
@@ -91,7 +107,7 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
         return Density(0)
     if len(arguments) == 1:
         return arguments[0]
-    
+
     it = iter(arguments)
     result = next(it) & next(it)
 
@@ -101,23 +117,33 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
     return result
 
 
-#======// Rounding //============================================================================//
+# ======// Rounding //============================================================================//
+
 
 @macro
 def round(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input to the nearest integer or given decimal.
-    
+
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     if decimals:
-        return ((argument * 10**decimals) + f.constant(1.5) * f.constant(2**52) - f.constant(1.5) * f.constant(2**52)) / 10**decimals
-    return argument + f.constant(1.5) * f.constant(2**52) - f.constant(1.5) * f.constant(2**52)
+        return (
+            (argument * 10**decimals)
+            + f.constant(1.5) * f.constant(2**52)
+            - f.constant(1.5) * f.constant(2**52)
+        ) / 10**decimals
+    return (
+        argument
+        + f.constant(1.5) * f.constant(2**52)
+        - f.constant(1.5) * f.constant(2**52)
+    )
+
 
 @macro
 def floor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input down to the nearest integer or given decimal.
-    
+
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
@@ -125,52 +151,79 @@ def floor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
         return round((argument - 0.5) * 10**decimals) / 10**decimals
     return round(argument - 0.5)
 
+
 @macro
 def ceil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
     """Rounds the input up to the nearest integer or given decimal.
-    
+
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     if decimals:
         return round((argument + 0.5) * 10**decimals) / 10**decimals
     return round(argument + 0.5)
 
+
 @macro
 def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
     """Returns the floor division of two inputs (`argument1 // argument2`).
-    
+
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
     return floor(dividend / divisor)
 
+
 @macro
 def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`).
-    
+
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
-    return perf.s_cache_transform(dividend - divisor * floor(dividend / divisor), dividend, divisor)
+    return perf.s_cache_transform(
+        dividend - divisor * floor(dividend / divisor), dividend, divisor
+    )
 
 
-#======// Step Functions //======================================================================//
+# ======// Step Functions //======================================================================//
+
 
 @macro
 def sgn(argument: AnyDensity) -> Density[types.range_choice]:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
-    return cond.when(argument).equals(0.0).then(0.0).elsewhen(cond.it).less(0.0).then(-1.0).otherwise(1.0)
+    return (
+        cond.when(argument)
+        .equals(0.0)
+        .then(0.0)
+        .elsewhen(cond.it)
+        .less(0.0)
+        .then(-1.0)
+        .otherwise(1.0)
+    )
+
 
 @macro
-def heaviside(argument: AnyDensity, *, at_zero: AnyDensity = 0.5) -> Density[types.range_choice]:
+def heaviside(
+    argument: AnyDensity, *, at_zero: AnyDensity = 0.5
+) -> Density[types.range_choice]:
     "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
-    return cond.when(argument).equals(0.0).then(at_zero).elsewhen(cond.it).less(0.0).then(0.0).otherwise(1.0)
+    return (
+        cond.when(argument)
+        .equals(0.0)
+        .then(at_zero)
+        .elsewhen(cond.it)
+        .less(0.0)
+        .then(0.0)
+        .otherwise(1.0)
+    )
+
 
 @macro
 def monus(argument1: AnyDensity, argument2: AnyDensity):
     """Returns `argument1 - argument2`, but when that's negative, returns `0.0` instead."""
     return f.max(argument1 - argument2, 0.0)
+
 
 @macro
 def ramp(argument: AnyDensity) -> Density[types.max]:
@@ -178,12 +231,14 @@ def ramp(argument: AnyDensity) -> Density[types.max]:
     return f.max(argument, 0)
 
 
-#======// Approximations //======================================================================//
+# ======// Approximations //======================================================================//
+
 
 @macro
 def sqrt_linear_01(argument: AnyDensity) -> Density[types.add]:
-    return 0.41731 + 0.59016*argument
+    return 0.41731 + 0.59016 * argument
+
 
 @macro
 def sqrt_rational_01(argument: AnyDensity) -> Density[types.mul]:
-    return argument / (0.41731+0.59016*argument)
+    return argument / (0.41731 + 0.59016 * argument)

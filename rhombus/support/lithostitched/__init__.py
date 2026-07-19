@@ -22,11 +22,14 @@ __addon__ = _RhombusAddon(
     name="Lithostitched",
     preview_scripts=[
         _files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
-        _files("rhombus.support.lithostitched").joinpath("deepslate.ts")
+        _files("rhombus.support.lithostitched").joinpath("deepslate.ts"),
     ],
     preview_beet_file_extensions={LithostitchedFastNoiseConfig},
     density_functions={
-        cls.id: cls for name, cls in _types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
-    }
+        cls.id: cls
+        for name, cls in _types.__dict__.items()
+        if isinstance(cls, type)
+        and issubclass(cls, _DensityFunction)
+        and hasattr(cls, "id")
+    },
 )

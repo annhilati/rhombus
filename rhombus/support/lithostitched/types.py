@@ -1,22 +1,30 @@
 from typing import ClassVar, Literal
 
-from rhombus.core.density_function import DensityFunction, MappedDensityFunction, SimpleDensityFunction
+from rhombus.core.density_function import (
+    DensityFunction,
+    MappedDensityFunction,
+    SimpleDensityFunction,
+)
 from rhombus.core.utils import JSONDict
 
 from .fast_noise_config import FastNoiseConfig
 
 
-#======// Density Function Classes //============================================================//
+# ======// Density Function Classes //============================================================//
+
 
 class axis(DensityFunction):
     id: ClassVar[str] = "lithostitched:axis"
     axis: Literal["x", "y", "z"]
 
+
 class ceil(MappedDensityFunction):
     id: ClassVar[str] = "lithostitched:ceil"
 
+
 class cos(MappedDensityFunction):
     id: ClassVar[str] = "lithostitched:cos"
+
 
 class fast_noise(DensityFunction):
     id: ClassVar[str] = "lithostitched:fast_noise"
@@ -27,8 +35,10 @@ class fast_noise(DensityFunction):
     shift_y: DensityFunction
     shift_z: DensityFunction
 
+
 class floor(MappedDensityFunction):
     id: ClassVar[str] = "lithostitched:floor"
+
 
 class mix(DensityFunction):
     id: ClassVar[str] = "lithostitched:mix"
@@ -36,8 +46,10 @@ class mix(DensityFunction):
     argument1: DensityFunction
     argument2: DensityFunction
 
+
 class original_marker(SimpleDensityFunction):
     id: ClassVar[str] = "lithostitched:original_marker"
+
 
 class select(DensityFunction):
     id: ClassVar[str] = "lithostitched:select"
@@ -88,7 +100,8 @@ class select(DensityFunction):
                 ],
             },
         }
-    
+
+
 class shift(DensityFunction):
     id: ClassVar[str] = "lithostitched:shift"
     input: DensityFunction
@@ -96,11 +109,14 @@ class shift(DensityFunction):
     shift_y: DensityFunction
     shift_z: DensityFunction
 
+
 class sin(MappedDensityFunction):
     id: ClassVar[str] = "lithostitched:sin"
 
+
 class sqrt(MappedDensityFunction):
     id: ClassVar[str] = "lithostitched:sqrt"
+
 
 class wrapped_marker(SimpleDensityFunction):
     id: ClassVar[str] = "lithostitched:wrapped_marker"

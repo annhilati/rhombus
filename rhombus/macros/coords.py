@@ -47,6 +47,7 @@ Through controlled exploitation of floating-point wraparound, precision loss, an
 conditional composition, this macro reconstructs the coordinates using only vanilla
 density functions.
 """
+
 from rhombus.std import Noise
 from rhombus.std import functions as f
 from rhombus.macros.math import floordiv, mod
@@ -55,19 +56,43 @@ __all__ = ["x", "z", "y"]
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
-_coord_base = f.flat_cache(f.cache_2d(-1 * f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-52, y_scale=0, shift_x=1.01, shift_y=0, shift_z=1.01)))
+_coord_base = f.flat_cache(
+    f.cache_2d(
+        -1
+        * f.shifted_noise(
+            noise=_coord_stripe_noise,
+            xz_scale=2**-52,
+            y_scale=0,
+            shift_x=1.01,
+            shift_y=0,
+            shift_z=1.01,
+        )
+    )
+)
 
 
-#======// Additional Information about the Implementation //=====================================//
+# ======// Additional Information about the Implementation //=====================================//
 #   Why are the nested multiplications exactly 27 (26 when leaving the coord_quad-sampling out) arguments long?
 #       2^26 is the smallest power of two that’s wider then a Minecraft world
 #   Why are the 5 outermost powers of two calculated by a density function and not given literal?
 #       Minecraft doesn’t allow literals over 1 million
 
 
-def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_shift_z: float):
+def _coord_component(
+    shift_x: float, shift_z: float, quad_shift_x: float, quad_shift_z: float
+):
     innermost = f.range_choice(
-        input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**-55, y_scale=0, shift_x=shift_x, shift_y=0, shift_z=shift_z)),
+        input=(
+            _coord_base
+            + f.shifted_noise(
+                noise=_coord_stripe_noise,
+                xz_scale=2**-55,
+                y_scale=0,
+                shift_x=shift_x,
+                shift_y=0,
+                shift_z=shift_z,
+            )
+        ),
         min_inclusive=0.0,
         max_exclusive=5e-324,
         when_in_range=1.0,
@@ -77,10 +102,22 @@ def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_s
     value = innermost
     for i in range(25):
         value = f.add(
-            argument1=2**i if 2**i < 1_000_000 else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -2**i / 65536.0)),
+            argument1=2**i
+            if 2**i < 1_000_000
+            else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -(2**i) / 65536.0)),
             argument2=f.mul(
                 argument1=f.range_choice(
-                    input=(_coord_base + f.shifted_noise(noise=_coord_stripe_noise, xz_scale=2**(-56-i), y_scale=0, shift_x=shift_x, shift_y=0, shift_z=shift_z)),
+                    input=(
+                        _coord_base
+                        + f.shifted_noise(
+                            noise=_coord_stripe_noise,
+                            xz_scale=2 ** (-56 - i),
+                            y_scale=0,
+                            shift_x=shift_x,
+                            shift_y=0,
+                            shift_z=shift_z,
+                        )
+                    ),
                     min_inclusive=0.0,
                     max_exclusive=5e-324,
                     when_in_range=1.0,
@@ -92,7 +129,14 @@ def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_s
 
     outermost_mul = f.mul(
         argument1=f.range_choice(
-            input=f.shifted_noise(noise=_coord_quad_noise, xz_scale=2**-25, y_scale=0, shift_x=quad_shift_x, shift_y=0, shift_z=quad_shift_z),
+            input=f.shifted_noise(
+                noise=_coord_quad_noise,
+                xz_scale=2**-25,
+                y_scale=0,
+                shift_x=quad_shift_x,
+                shift_y=0,
+                shift_z=quad_shift_z,
+            ),
             min_inclusive=-2.0,
             max_exclusive=2.0,
             when_in_range=-4.0,
@@ -103,13 +147,14 @@ def _coord_component(shift_x: float, shift_z: float, quad_shift_x: float, quad_s
 
     return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
 
+
 def x():
     """Returns the exact X-coordinate of the current block.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     return _coord_component(
         shift_x=0.99,
@@ -118,13 +163,14 @@ def x():
         quad_shift_z=0,
     )
 
+
 def z():
     """Returns the exact Z-coordinate of the current block.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     return _coord_component(
         shift_x=1.01,
@@ -133,10 +179,11 @@ def z():
         quad_shift_z=0.9821958456973294,
     )
 
+
 def y():
-    """Returns the exact Y-coordinate of the current block.
-    """
+    """Returns the exact Y-coordinate of the current block."""
     return f.cache_once(f.y_clamped_gradient(-4062, 4062, -4062, 4062))
+
 
 def chunk_x():
     """Returns the exact X-coordinate of the current chunk.
@@ -144,13 +191,15 @@ def chunk_x():
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     return floordiv(x(), 16)
+
 
 def chunk_y():
     """Returns the exact Y-coordinate of the current chunk."""
     return floordiv(y(), 16)
+
 
 def chunk_z():
     """Returns the exact Z-coordinate of the current chunk.
@@ -158,9 +207,10 @@ def chunk_z():
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     return floordiv(z(), 16)
+
 
 def chunk_relative_x():
     """Returns the exact X-coordinate inside of the current chunk.
@@ -168,13 +218,15 @@ def chunk_relative_x():
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     return mod(x(), 16)
+
 
 def chunk_relative_y():
     """Returns the exact Y-coordinate inside of the current chunk."""
     return mod(y(), 16)
+
 
 def chunk_relative_z():
     """Returns the exact Z-coordinate inside of the current chunk.
@@ -182,6 +234,6 @@ def chunk_relative_z():
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use. 
+    that it will not work, when other number types are in use.
     """
     return mod(z(), 16)

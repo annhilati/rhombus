@@ -24,6 +24,7 @@ from rhombus import (
 from rhombus.core.config import env
 
 from rhombus import std as _std
+
 env.load_addons(_std)
 
 # Convenience when importing *

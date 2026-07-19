@@ -26,6 +26,7 @@ node_modules/
 **.egg-info
 **/__pycache__/
 rhombus/preview/dist/
+.ruff_cache/
 
 # Typescript Build
 *.tsbuildinfo

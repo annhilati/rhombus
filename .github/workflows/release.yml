@@ -31,8 +31,13 @@ jobs:
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
-          pip install build twine hatchling pytest pytest_spec
+          pip install build twine hatchling pytest pytest_spec ruff
           pip install .
+
+      # Format code with ruff
+      - name: Format code
+        run: |
+          ruff format .
 
       # Run tests to ensure code quality before publishing
       - name: Run tests

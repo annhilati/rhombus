@@ -4,6 +4,7 @@ Provides specialized density function types for structuring the End dimension.
 These functions facilitate the separation and shaping of distinct regions,
 such as isolating the main central island from the surrounding outer islands.
 """
+
 """### [En-sityFunctions](https://modrinth.com/mod/en-sityfunction) by MikeStorm03
 
 Provides specialized density function types for structuring the End dimension.
@@ -24,7 +25,10 @@ __addon__ = _RhombusAddon(
     name="Ensity",
     preview_scripts=[_files("rhombus.support.ensity").joinpath("deepslate.ts")],
     density_functions={
-        cls.id: cls for name, cls in _types.__dict__.items()
-        if isinstance(cls, type) and issubclass(cls, _DensityFunction) and hasattr(cls, "id")
-    }
+        cls.id: cls
+        for name, cls in _types.__dict__.items()
+        if isinstance(cls, type)
+        and issubclass(cls, _DensityFunction)
+        and hasattr(cls, "id")
+    },
 )

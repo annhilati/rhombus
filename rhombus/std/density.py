@@ -9,12 +9,19 @@ import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus.core.density_function import DensityFunction, constant, Reference
-from rhombus.core.utils import JSONDict, BeetFile, uuid_hash, contextfunction, FROM_CONTEXT
+from rhombus.core.utils import (
+    JSONDict,
+    BeetFile,
+    uuid_hash,
+    contextfunction,
+    FROM_CONTEXT,
+)
 from rhombus.core.config import env
 from rhombus.std import types
 
 
-#======// Density Type //========================================================================//
+# ======// Density Type //========================================================================//
+
 
 @dataclass(frozen=False)
 class Density[Function: DensityFunction = DensityFunction]:
@@ -53,10 +60,9 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
-    
 
-    #======// Factories //=======================================================================//
-          
+    # ======// Factories //=======================================================================//
+
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density[Reference]:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
@@ -66,20 +72,23 @@ class Density[Function: DensityFunction = DensityFunction]:
     def __rmatmul__(self, identifier: str):
         if not isinstance(identifier, str):
             raise TypeError("Density can only be assigned to a string identifier")
-        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
-        if isinstance(default, types.Reference) and isinstance(default.definition, tuple(env.caching_function_types)):
+        if isinstance(default, types.Reference) and isinstance(
+            default.definition, tuple(env.caching_function_types)
+        ):
             default = default.definition
         return Density(Reference(identifier, default))
-    
 
-    #======// Toolchain //=======================================================================//
-    
+    # ======// Toolchain //=======================================================================//
+
     @classmethod
     @contextfunction(dp="datapack")
-    def from_dict(cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT) -> Density:
+    def from_dict(
+        cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT
+    ) -> Density:
         """Creates a `Density` object from a dictionary.
-        
+
         A Beet datapack can be provided as context.
         """
         return Density(DensityFunction.deserialize_toplevel(d))
@@ -89,116 +98,141 @@ class Density[Function: DensityFunction = DensityFunction]:
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
         "Creates a `Density` object from a density function in a Beet datapack."
 
-        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        identifier = "minecraft:" + identifier if ":" not in identifier else identifier
 
         file = dp[beet_worldgen.WorldgenDensityFunction].get(identifier)
         if file is None:
             return None
 
         return Density.from_dict(file.data, dp=dp)
-    
+
     @classmethod
     @contextfunction(dp="datapack")
-    def from_datapack_noise_router(cls,
+    def from_datapack_noise_router(
+        cls,
         dp: beet.DataPack,
         noise_settings: str,
-        noise_router: str | Literal[
-            "barrier", "continents", "depth", "erosion", "final_density", "fluid_level_floodedness", "fluid_level_spread",
-            "lava", "preliminary_surface_level", "ridges", "temperature", "vegetation", "vein_gap", "vein_ridged", "vein_toggle"
-        ]
+        noise_router: str
+        | Literal[
+            "barrier",
+            "continents",
+            "depth",
+            "erosion",
+            "final_density",
+            "fluid_level_floodedness",
+            "fluid_level_spread",
+            "lava",
+            "preliminary_surface_level",
+            "ridges",
+            "temperature",
+            "vegetation",
+            "vein_gap",
+            "vein_ridged",
+            "vein_toggle",
+        ],
     ) -> Density | None:
         "Creates a `Density` object from a noise router entry of a noise settings file in a Beet datapack."
 
-        identifier = "minecraft:" + noise_settings if not ":" in noise_settings else noise_settings
+        identifier = (
+            "minecraft:" + noise_settings
+            if ":" not in noise_settings
+            else noise_settings
+        )
 
         file = dp[beet_worldgen.WorldgenNoiseSettings].get(identifier)
         if file is None:
             return None
 
-        if file.data.get("noise_router") is None or file.data.get("noise_router").get(noise_router) is None:
+        if (
+            file.data.get("noise_router") is None
+            or file.data.get("noise_router").get(noise_router) is None
+        ):
             return None
 
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
-    
+
     def compile(self, identifier: str = "main", /) -> set[tuple[str, BeetFile]]:
         "Compiles the Density into Beet file class instances."
         files: set[tuple[str, BeetFile]] = set()
 
-        if ":" not in identifier: identifier = "minecraft:" + identifier
+        if ":" not in identifier:
+            identifier = "minecraft:" + identifier
 
         for node in self.AST.inscribed_toplevel_nodes:
             id = node.reference
             if id != identifier:
                 if node.fileclass is None:
-                    raise TypeError(f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'")
+                    raise TypeError(
+                        f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'"
+                    )
                 files.add((id, node.fileclass(node.serialize_toplevel())))
 
-        files.add((identifier, beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel())))
+        files.add(
+            (
+                identifier,
+                beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel()),
+            )
+        )
 
         return files
 
     def implement(self, dp: beet.DataPack, identifier: str) -> None:
-        """Implements the Density and all additionally required files in a datapack.
-        """
+        """Implements the Density and all additionally required files in a datapack."""
 
         files = self.compile(identifier)
         for id, file in files:
             dp[id] = file
-        
-    
-    #======// Debug //===========================================================================//
-    
+
+    # ======// Debug //===========================================================================//
+
     def as_dict(self) -> JSONDict:
         """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>
         The dictionary will not be fully inline. References that require separate files will be references."""
         return self.AST.serialize_toplevel()
-                   
 
-    #======// Arithmetic Magic //================================================================//
-    
+    # ======// Arithmetic Magic //================================================================//
+
     def __add__(self, other) -> Density[types.add]:
         other = Density(other).AST
         self = self.AST
         return Density(types.add(self, other))
-    
+
     def __radd__(self, other) -> Density[types.add]:
         return self.__add__(other)
-    
+
     def __sub__(self, other) -> Density[types.add]:
         other = Density(other).AST
         self = self.AST
         return Density(
             types.add(
                 argument1=self,
-                argument2=types.mul(
-                    argument1=other,
-                    argument2=constant(-1.0)
-            )))
-    
+                argument2=types.mul(argument1=other, argument2=constant(-1.0)),
+            )
+        )
+
     def __rsub__(self, other) -> Density[types.add]:
         other = Density(other).AST
         self = self.AST
         return Density(
             types.add(
                 argument1=other,
-                argument2=types.mul(
-                    argument1=self,
-                    argument2=constant(-1.0)
-            )))
-    
+                argument2=types.mul(argument1=self, argument2=constant(-1.0)),
+            )
+        )
+
     def __mul__(self, other) -> Density[types.mul]:
         other = Density(other).AST
         self = self.AST
         return Density(types.mul(self, other))
-    
+
     def __rmul__(self, other) -> Density[types.mul]:
         return self.__mul__(other)
-    
+
     def __truediv__(self, other) -> Density[types.mul]:
         other = Density(other).AST
         self = self.AST
         return Density(types.mul(self, types.invert(other)))
-    
+
     def __rtruediv__(self, other) -> Density[types.mul]:
         other = Density(other).AST
         self = self.AST
@@ -206,20 +240,24 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     def __floordiv__(self, other):
         from rhombus.macros.math import floordiv
+
         return floordiv(self, other)
-    
+
     def __rfloordiv__(self, other):
         from rhombus.macros.math import floordiv
+
         return floordiv(self, other)
-        
+
     def __mod__(self, other):
         from rhombus.macros.math import mod
+
         return mod(self, other)
 
     def __rmod__(self, other):
         from rhombus.macros.math import mod
+
         return mod(other, self)
-    
+
     @overload
     def __pow__(self, other: Literal[2]) -> Density[types.square]: ...
     @overload
@@ -248,45 +286,64 @@ class Density[Function: DensityFunction = DensityFunction]:
         other = Density(other).AST
         self = self.AST
         return Density(types.max(self, other))
-    
+
     def __or__(self, other):
         other = Density(other).AST
         self = self.AST
         return Density(types.min(self, other))
-    
+
     def __abs__(self) -> "Density[types.abs]":
         return Density(types.abs(self.AST))
-    
+
     def __neg__(self) -> Density[types.mul]:
         return Density(types.mul(self.AST, constant(-1.0)))
-    
+
     def __pos__(self) -> Self:
         return self
-    
 
-    #======// Logical Magic //===================================================================//
-    
+    # ======// Logical Magic //===================================================================//
+
     def __eq__(self, other):
         if not isinstance(other, Density):
             return False
         return self.AST == other.AST
-    
-    def __ne__(self, other): 
+
+    def __ne__(self, other):
         if not isinstance(other, Density):
             return False
         return self.AST != other.AST
 
-    def __gt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
-    def __lt__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
-    def __ge__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
-    def __le__(self, other): raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
-    def __bool__(self):      raise NotImplementedError("Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro")
+    def __gt__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __lt__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __ge__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __le__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __bool__(self):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
 
 
-#======// AnyDensity //==========================================================================//
+# ======// AnyDensity //==========================================================================//
 
 type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
+
 
 def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
     """Interprets a QoL argument input and returns a DensityFunction object.
@@ -308,4 +365,6 @@ def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
             v = "minecraft:" + v
         return Reference(v)
 
-    raise ValueError(f"Cannot resolve object of type '{v.__class__.__name__}' to a density function AST")
+    raise ValueError(
+        f"Cannot resolve object of type '{v.__class__.__name__}' to a density function AST"
+    )

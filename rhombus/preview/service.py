@@ -4,7 +4,12 @@ from pathlib import Path
 from typing import Any, Literal, Iterable
 from importlib.resources import files
 from contextlib import asynccontextmanager
-import threading, time, sys, os, subprocess, traceback
+import threading
+import time
+import sys
+import os
+import subprocess
+import traceback
 
 from rich import print
 from watchdog.observers import Observer
@@ -13,7 +18,9 @@ from watchdog.events import FileSystemEventHandler
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import fastapi, uvicorn, asyncio
+import fastapi
+import uvicorn
+import asyncio
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
@@ -21,11 +28,17 @@ import beet.contrib.worldgen as beet_worldgen
 from rhombus import Density
 from rhombus.core import BeetFile, RhombusASTNode
 
+
 def _get_relaunch_cmd():
     cmd = [sys.executable] + sys.argv
-    if os.name == 'nt' and not sys.argv[0].endswith(('.py', '.exe')) and os.path.exists(sys.argv[0] + '.exe'):
-        cmd = [sys.argv[0] + '.exe'] + sys.argv[1:]
+    if (
+        os.name == "nt"
+        and not sys.argv[0].endswith((".py", ".exe"))
+        and os.path.exists(sys.argv[0] + ".exe")
+    ):
+        cmd = [sys.argv[0] + ".exe"] + sys.argv[1:]
     return cmd
+
 
 class RhombusFilewatcher(FileSystemEventHandler):
     def __init__(self, service: RhombusPreviewService, watch_file: str | None = None):
@@ -34,7 +47,9 @@ class RhombusFilewatcher(FileSystemEventHandler):
         self.last_events: dict[tuple[str, str], float] = {}
         self.watch_file = watch_file
 
-    def _trigger(self, action: Literal["Created", "Deleted", "Changed", "Moved"], path: str):
+    def _trigger(
+        self, action: Literal["Created", "Deleted", "Changed", "Moved"], path: str
+    ):
         if self.watch_file and Path(path).name != self.watch_file:
             return
 
@@ -72,10 +87,14 @@ class RhombusFilewatcher(FileSystemEventHandler):
 
 
 class RhombusPreviewService:
-    def __init__(self, watch_path: Path | None, items: list[tuple[str, Density | RhombusASTNode | BeetFile]]):
+    def __init__(
+        self,
+        watch_path: Path | None,
+        items: list[tuple[str, Density | RhombusASTNode | BeetFile]],
+    ):
         self.watch_path = watch_path
         self.items = items
-        
+
         self.latest_results: set[tuple[str, BeetFile]] = set()
         self.changed_files: set[str] = set()
 
@@ -95,7 +114,7 @@ class RhombusPreviewService:
             self.shutdown()
 
         self.app = fastapi.FastAPI(lifespan=lifespan)
-        
+
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -110,8 +129,10 @@ class RhombusPreviewService:
         self.app.add_api_route("/data", self.get_data, methods=["GET"])
         self.app.add_api_route("/events", self.get_events, methods=["GET"])
         self.app.add_api_route("/addons/scripts", self.get_scripts, methods=["GET"])
-        self.app.add_api_route("/addons/scripts/{index}", self.get_script_file, methods=["GET"])
-        
+        self.app.add_api_route(
+            "/addons/scripts/{index}", self.get_script_file, methods=["GET"]
+        )
+
         dist_dir = files("rhombus.preview").joinpath("dist")
         self.app.mount("/", StaticFiles(directory=dist_dir, html=True), name="frontend")
 
@@ -119,18 +140,20 @@ class RhombusPreviewService:
         files: set[tuple[str, BeetFile]] = set()
         errors: list[str] = []
 
-        for (id, item) in self.items:
+        for id, item in self.items:
             try:
                 if isinstance(item, Density):
                     result = item.compile(id)
                     files.update(result)
-                    
+
                 elif isinstance(item, RhombusASTNode):
                     result = set()
                     for node in item.inscribed_toplevel_nodes:
                         if node == item:
                             continue
-                        result.add((node.reference, node.fileclass(node.serialize_toplevel())))
+                        result.add(
+                            (node.reference, node.fileclass(node.serialize_toplevel()))
+                        )
                     result.add((id, item.fileclass(item.serialize_toplevel())))
                     files.update(result)
 
@@ -170,21 +193,31 @@ class RhombusPreviewService:
             changed = list(self.changed_files)
             self.changed_files.clear()
 
-            if any(f.endswith('.py') for f in changed):
-                print("[#553bd9]RHOMBUS[reset]:  Checking for errors before reloading modules...")
+            if any(f.endswith(".py") for f in changed):
+                print(
+                    "[#553bd9]RHOMBUS[reset]:  Checking for errors before reloading modules..."
+                )
                 env = os.environ.copy()
                 env["RHOMBUS_CHECK_ONLY"] = "1"
-                
+
                 # Check if the script runs without errors up to the start() call
-                result = subprocess.run(_get_relaunch_cmd(), env=env, capture_output=True, text=True)
+                result = subprocess.run(
+                    _get_relaunch_cmd(), env=env, capture_output=True, text=True
+                )
                 if result.returncode != 0:
                     err_msg = result.stderr.strip() or result.stdout.strip()
-                    print(f"[red]RHOMBUS:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n")
-                    self.last_error_message = f"Failed to reload Python modules:\n{err_msg}"
+                    print(
+                        f"[red]RHOMBUS:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n"
+                    )
+                    self.last_error_message = (
+                        f"Failed to reload Python modules:\n{err_msg}"
+                    )
                     self.last_change_timestamp = time.time()
                     continue
 
-                print("[#553bd9]RHOMBUS[reset]:  Restarting process to reload modules...")
+                print(
+                    "[#553bd9]RHOMBUS[reset]:  Restarting process to reload modules..."
+                )
                 if self.observer is not None:
                     self.observer.stop()
                 os._exit(42)
@@ -198,7 +231,11 @@ class RhombusPreviewService:
     def start_watcher(self, path: Path):
         observer = Observer()
         if path.is_file():
-            observer.schedule(RhombusFilewatcher(self, watch_file=path.name), str(path.parent), recursive=False)
+            observer.schedule(
+                RhombusFilewatcher(self, watch_file=path.name),
+                str(path.parent),
+                recursive=False,
+            )
         else:
             observer.schedule(RhombusFilewatcher(self), str(path), recursive=True)
         observer.start()
@@ -208,9 +245,13 @@ class RhombusPreviewService:
     def startup(self):
         if self.watch_path is not None:
             self.start_watcher(self.watch_path)
-            print(f"[#553bd9]RHOMBUS[reset]:  Preview service is now watching {self.watch_path}")
+            print(
+                f"[#553bd9]RHOMBUS[reset]:  Preview service is now watching {self.watch_path}"
+            )
         else:
-            print(f"[#553bd9]RHOMBUS[reset]:  Preview service started (no file watching)")
+            print(
+                "[#553bd9]RHOMBUS[reset]:  Preview service started (no file watching)"
+            )
         sys.stdout.write("\033]0;Rhombus Preview Service\007")
         sys.stdout.flush()
 
@@ -227,8 +268,8 @@ class RhombusPreviewService:
         if self.observer is not None:
             self.observer.stop()
             self.observer.join()
-            
-    #======// Endpoints //=======================================================================//
+
+    # ======// Endpoints //=======================================================================//
 
     def get_data(self):
         return {
@@ -237,7 +278,9 @@ class RhombusPreviewService:
                 {
                     "registry": "/".join(f[1].scope),
                     "id": f[0],
-                    "content": f[1].encoder(f[1].data) if hasattr(f[1], "encoder") and hasattr(f[1], "data") else getattr(f[1], "text", str(f[1])),
+                    "content": f[1].encoder(f[1].data)
+                    if hasattr(f[1], "encoder") and hasattr(f[1], "data")
+                    else getattr(f[1], "text", str(f[1])),
                     "language": getattr(f[1], "extension", ".json").lstrip("."),
                 }
                 for f in self.latest_results
@@ -257,25 +300,30 @@ class RhombusPreviewService:
                     last_sent = self.last_change_timestamp
                     yield "data: update\n\n"
                 await asyncio.sleep(0.2)
-        
+
         return StreamingResponse(
-            event_generator(), 
+            event_generator(),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"
-            }
+                "X-Accel-Buffering": "no",
+            },
         )
 
     def get_scripts(self):
         from rhombus.core.config import env
         from pathlib import Path
-        return [{"name": Path(p).name, "url": f"/addons/scripts/{i}"} for i, p in enumerate(env.preview_scripts)]
+
+        return [
+            {"name": Path(p).name, "url": f"/addons/scripts/{i}"}
+            for i, p in enumerate(env.preview_scripts)
+        ]
 
     def get_script_file(self, index: int):
         from rhombus.core.config import env
         from pathlib import Path
+
         try:
             p = Path(env.preview_scripts[index])
             if not p.is_file():
@@ -287,12 +335,12 @@ class RhombusPreviewService:
 
 
 def serve(
-        *items: tuple[str, Density | RhombusASTNode | BeetFile],
-        watch_path: str | Path | None = Path.cwd(),
-        **uvicorn_args: Any
-    ) -> None:
+    *items: tuple[str, Density | RhombusASTNode | BeetFile],
+    watch_path: str | Path | None = Path.cwd(),
+    **uvicorn_args: Any,
+) -> None:
     """Starts the Rhombus Preview service ASGI application.
-    
+
     This includes the frontend and a file-watching backend. One can be used
     without the other or with other instance of the other.
     """
@@ -301,6 +349,7 @@ def serve(
 
     if not os.environ.get("RHOMBUS_SUPERVISOR_MODE"):
         import subprocess
+
         env = os.environ.copy()
         env["RHOMBUS_SUPERVISOR_MODE"] = "1"
         while True:
@@ -316,41 +365,45 @@ def serve(
                 continue
             sys.exit(proc.returncode)
 
-    preview_service = RhombusPreviewService(watch_path=Path(watch_path) if watch_path is not None else None, items=[item for item in items])
-
-    default_args = dict(
-        host="127.0.0.1",
-        port=8000,
-        access_log=False
+    preview_service = RhombusPreviewService(
+        watch_path=Path(watch_path) if watch_path is not None else None,
+        items=[item for item in items],
     )
+
+    default_args = dict(host="127.0.0.1", port=8000, access_log=False)
 
     uvicorn.run(preview_service.app, **default_args | uvicorn_args)
 
 
 def resources_from_datapack(
-        dp: beet.DataPack | Path | str, *,
-        overlays: list[str] | None = None,
-        additional_registries: Iterable[type[BeetFile]] = ()
-    ) -> list[tuple[str, BeetFile]]:
+    dp: beet.DataPack | Path | str,
+    *,
+    overlays: list[str] | None = None,
+    additional_registries: Iterable[type[BeetFile]] = (),
+) -> list[tuple[str, BeetFile]]:
     """Gathers worldgen related resources from a datapack.
     Use this function in the `items` parameter of `service.start()` to preview
     an already compiled datapack.
-    
+
     By default, `density_function`, `noise` and `noise_settings` are included.
     More registries can be extracted by providing an adequate Beet file class
     in `additional_registries`.
     """
-    additional_registries = set(additional_registries) | {beet_worldgen.WorldgenDensityFunction, beet_worldgen.WorldgenNoiseSettings, beet_worldgen.WorldgenNoise}
-    
+    additional_registries = set(additional_registries) | {
+        beet_worldgen.WorldgenDensityFunction,
+        beet_worldgen.WorldgenNoiseSettings,
+        beet_worldgen.WorldgenNoise,
+    }
+
     if isinstance(dp, (str, Path)):
         dp = beet.DataPack(path=dp, extend_namespace=additional_registries)
-    
+
     files_dict: dict[tuple[type[BeetFile], str], BeetFile] = {}
-    
+
     for typ in additional_registries:
         for id in list(dp[typ]):
             files_dict[(typ, id)] = dp[typ][id]
-            
+
     if overlays:
         for overlay_name in overlays:
             overlay_dp = dp.overlays.get(overlay_name)
@@ -360,5 +413,5 @@ def resources_from_datapack(
                         files_dict[(typ, id)] = overlay_dp[typ][id]
             else:
                 raise KeyError(f"Overlay '{overlay_name}' not found in datapack.")
-    
+
     return [(id, file) for (typ, id), file in files_dict.items()]

@@ -1,10 +1,21 @@
 from typing import ClassVar, Self, Literal, Optional
 
-from rhombus.core.density_function import DensityFunction, MappedDensityFunction, SimpleDensityFunction, DoubleArgumentDensityFunction
+from rhombus.core.density_function import (
+    DensityFunction,
+    MappedDensityFunction,
+    SimpleDensityFunction,
+    DoubleArgumentDensityFunction,
+)
 
-from .sub_parameters import DistanceMetric, RandomSampler, ExtraOctaves, DerivativeComponent
+from .sub_parameters import (
+    DistanceMetric,
+    RandomSampler,
+    ExtraOctaves,
+    DerivativeComponent,
+)
 
-#======// Density Function Base Classes //=======================================================//
+# ======// Density Function Base Classes //=======================================================//
+
 
 class DivisionFunctionBase(DensityFunction):
     numerator: DensityFunction
@@ -18,41 +29,54 @@ class DivisionFunctionBase(DensityFunction):
             DensityFunction.deserialize_inline(numerator),
             DensityFunction.deserialize_inline(denominator),
         )
-    
-    def serialize(self) -> dict:
-        return {"type": self.id, "numerator": self.numerator.serialize_inline(), "denominator": self.denominator.serialize_inline()}
-    
 
-#======// Function Type Classes //===============================================================//
+    def serialize(self) -> dict:
+        return {
+            "type": self.id,
+            "numerator": self.numerator.serialize_inline(),
+            "denominator": self.denominator.serialize_inline(),
+        }
+
+
+# ======// Function Type Classes //===============================================================//
+
 
 class acos(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:acos"
-    
+
+
 class asin(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:asin"
+
 
 class atan(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:atan"
 
+
 class cbrt(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cbrt"
 
+
 class ceil(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:ceil"
+
 
 class clamp(DensityFunction):
     id: ClassVar[str] = "moredfs:clamp"
     input: DensityFunction
     min: float
-    max:float
+    max: float
+
 
 class cos(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cos"
 
+
 class cosh(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cosh"
 
-class derivative():
+
+class derivative:
     id: ClassVar[str] = "moredfs:derivative"
     argument: DensityFunction
     component_x: Optional[DerivativeComponent] = None
@@ -60,14 +84,17 @@ class derivative():
     component_z: Optional[DerivativeComponent] = None
     # One of the components must be defined at least
 
+
 class distance(DensityFunction):
     id: ClassVar[str] = "moredfs:distance"
     distance_metric: DistanceMetric
     point1: Optional[list[DensityFunction]] = None
     point2: Optional[list[DensityFunction]] = None
 
+
 class div(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:div"
+
 
 class dot_product(DensityFunction):
     id: ClassVar[str] = "moredfs:dot_product"
@@ -77,22 +104,27 @@ class dot_product(DensityFunction):
     step_y: int = None
     step_z: int = None
 
+
 class floor(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:floor"
+
 
 class floor_div(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:floor_div"
 
+
 class floor_mod(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:floor_mod"
 
+
 class gapped_grid_square_spiral(DensityFunction):
     id: ClassVar[str] = "moredfs:gapped_grid_square_spiral"
-    x_size: int # > 0
-    z_size: int # > 0
-    spacing: int # > 0
+    x_size: int  # > 0
+    z_size: int  # > 0
+    spacing: int  # > 0
     grid_cell_args: list[DensityFunction]
     out_of_bounds_argument: DensityFunction
+
 
 class gradient_magnitude(DensityFunction):
     id: ClassVar[str] = "moredfs:gradient_magnitude"
@@ -101,41 +133,52 @@ class gradient_magnitude(DensityFunction):
     step_y: int = None
     step_z: int = None
 
+
 class ieee_rem(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:ieee_rem"
+
 
 class log(DensityFunction):
     id: ClassVar[str] = "moredfs:log"
     argument: DensityFunction
     base: DensityFunction
 
+
 class log2(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:log2"
+
 
 class log2_floor(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:log2_floor"
 
+
 class mod(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:mod"
+
 
 class ln(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:ln"
 
+
 class negate(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:negate"
+
 
 class or_else(DensityFunction):
     id: ClassVar[str] = "moredfs:or_else"
     argument: DensityFunction
     fallback: DensityFunction
 
+
 class polar_coords(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:polar_coords"
+
 
 class power(DensityFunction):
     id: ClassVar[str] = "moredfs:power"
     base: DensityFunction
     exponent: DensityFunction
+
 
 class profiler(DensityFunction):
     id: ClassVar[str] = "moredfs:profiler"
@@ -143,43 +186,55 @@ class profiler(DensityFunction):
     warm_up: int
     iterations: int
 
+
 class radius(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:radius"
 
+
 class radius_3d(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:radius_3d"
+
 
 class reciprocal(DensityFunction):
     id: ClassVar[str] = "moredfs:reciprocal"
     denominator: DensityFunction
 
+
 class remainder(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:remainder"
+
 
 class resolver(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:resolver"
 
+
 class round(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:round"
 
-class shift():
+
+class shift:
     id: ClassVar[str] = "moredfs:shift"
     argument: DensityFunction
     shift_x: DensityFunction
     shift_y: DensityFunction
     shift_z: DensityFunction
 
+
 class sigmoid(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sigmoid"
+
 
 class signum(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:signum"
 
+
 class sin(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sin"
 
+
 class sinh(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sinh"
+
 
 class single_channel_image_tessellation(DensityFunction):
     id: ClassVar[str] = "moredfs:single_channel_image_tessellation"
@@ -187,33 +242,41 @@ class single_channel_image_tessellation(DensityFunction):
     z_size: int
     deflated_frame_data: str
 
+
 class sqrt(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:sqrt"
+
 
 class subtract(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "moredfs:subtract"
 
+
 class tan(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:tan"
+
 
 class tanh(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:tanh"
 
+
 class value_noise(DensityFunction):
     id: ClassVar[str] = "moredfs:value_noise"
     sampler: RandomSampler
-    size_x: int # >= 0
-    size_y: int # >= 0
-    size_z: int # >= 0
+    size_x: int  # >= 0
+    size_y: int  # >= 0
+    size_z: int  # >= 0
     interpolation: Literal["none", "lerp", "smoothstep"]
     salt: Optional[int] = None
     extra_octaves: Optional[ExtraOctaves] = None
 
+
 class vector_angle(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "moredfs:vector_angle"
 
+
 class x(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:x"
+
 
 class x_clamped_gradient(DensityFunction):
     id: ClassVar[str] = "moredfs:x_clamped_gradient"
@@ -222,11 +285,14 @@ class x_clamped_gradient(DensityFunction):
     from_value: float
     to_value: float
 
+
 class y(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:y"
 
+
 class z(SimpleDensityFunction):
     id: ClassVar[str] = "moredfs:z"
+
 
 class z_clamped_gradient(DensityFunction):
     id: ClassVar[str] = "moredfs:z_clamped_gradient"
