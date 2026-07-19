@@ -39,8 +39,9 @@ Recurring expressions and resource intense operations can be cached automaticall
 - 🗄️ **Macro Library**<br>
 Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
 
+## Features
 <details>
-<summary><h2>Feature List</h2></summary>
+<summary>Unveil</summary>
 
 *This list only includes features that are principially not neccessary, but make up the real strengths of Rhombus.*
 
