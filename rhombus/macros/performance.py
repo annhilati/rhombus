@@ -17,7 +17,7 @@ from beet.contrib import worldgen as beet_worldgen
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std import types, AnyDensity, Density, macro
-from rhombus.core.config import env
+from rhombus.core.environment import env
 
 
 class DensityFunctionSizeInfo(NamedTuple):

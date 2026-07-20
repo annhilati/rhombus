@@ -1,4 +1,5 @@
 import re
+import subprocess
 import griffe
 from griffe import Docstring, Module, Class, Function, TypeAlias, Attribute
 from pathlib import Path
@@ -27,6 +28,21 @@ def dedent(s: str) -> str:
 
 def escape_markdown(text: str) -> str:
     return re.sub(r"([\\`*_{}\[\]()#+\-.!])", r"\\\1", text)
+
+def format_python_code(code: str) -> str:
+    if max((len(line) for line in code.split("\n")), default=0) <= 88:
+        return code
+    try:
+        result = subprocess.run(
+            ["ruff", "format", "-"],
+            input=code,
+            text=True,
+            capture_output=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except Exception:
+        return code
 
 
 def format_type_parameters(obj) -> str:
@@ -208,7 +224,7 @@ def render_function(func: Function) -> str:
     else:
         signatures.append(format_function_signature(func))
 
-    sig_block = "\n".join(signatures)
+    sig_block = format_python_code("\n".join(signatures))
 
     return dedent(f"""
         ### {escape_markdown(func.name)}
@@ -339,7 +355,7 @@ def format_class_signature(obj: Class) -> str:
 
     parts.append(f"class {obj.name}{type_params}{bases_str}: ...")
 
-    sig = "\n".join(parts)
+    sig = format_python_code("\n".join(parts))
     return f"```python\n{sig}\n```\n"
 
 
@@ -447,7 +463,7 @@ if __name__ == "__main__":
     files = render_module_or_class(griffe.load("rhombus", docstring_parser="google"))
 
     for path, content in files.items():
-        out_path = Path.cwd() / "docs/reference" / path.with_suffix(".md")
+        out_path = Path(__file__).parent / "reference" / path.with_suffix(".md")
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
             f.write(content)

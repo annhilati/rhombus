@@ -17,7 +17,7 @@ __version__ = "0.1.2"
 from .functions import floating_islands, lonely_island
 
 from importlib.resources import files as _files
-from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
 from . import types as _types
 

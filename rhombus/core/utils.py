@@ -73,7 +73,7 @@ def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
             bound.apply_defaults()
 
             # Import here to avoid circular imports if any
-            from rhombus.core import config
+            from rhombus.core import environment
             import copy
 
             needs_new_context = False
@@ -83,7 +83,7 @@ def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
                 value = bound.arguments.get(param)
 
                 if value is FROM_CONTEXT:
-                    bound.arguments[param] = getattr(config.env, env_attr)
+                    bound.arguments[param] = getattr(environment.env, env_attr)
                 else:
                     needs_new_context = True
                     overrides[env_attr] = value
@@ -91,17 +91,17 @@ def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
             if needs_new_context:
                 # Get the actual environment object (the proxy exposes it via _get_instance)
                 # and create a shallow copy so we can override attributes safely
-                current_env_obj = config.env._get_instance()
+                current_env_obj = environment.env._get_instance()
                 new_env = copy.copy(current_env_obj)
 
                 for attr, val in overrides.items():
                     setattr(new_env, attr, val)
 
-                token = config.env._ctxvar.set(new_env)
+                token = environment.env._ctxvar.set(new_env)
                 try:
                     return func(*bound.args, **bound.kwargs)  # type: ignore
                 finally:
-                    config.env._ctxvar.reset(token)
+                    environment.env._ctxvar.reset(token)
             else:
                 return func(*bound.args, **bound.kwargs)  # type: ignore
 

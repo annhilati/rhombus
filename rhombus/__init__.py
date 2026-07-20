@@ -21,7 +21,7 @@ from rhombus import (
     splines,
     preview,
 )
-from rhombus.core.config import env
+from rhombus.core.environment import env
 
 from rhombus import std as _std
 
@@ -29,3 +29,9 @@ env.load_addons(_std)
 
 # Convenience when importing *
 from rich import print
+
+def _warn(message, category, filename, lineno, file=None, line=None):
+    print(f"\033[38;2;220;150;80mRhombus Warning\n╰─×\033[0m {message}\n")
+
+import warnings as _warnings
+_warnings.showwarning = _warn

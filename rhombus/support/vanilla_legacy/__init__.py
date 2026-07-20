@@ -7,7 +7,7 @@ When importing from this module, ensure it is done after importing standard symb
 from .functions import *
 from . import types
 
-from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
 
 __addon__ = _RhombusAddon(

@@ -312,7 +312,7 @@ class RhombusPreviewService:
         )
 
     def get_scripts(self):
-        from rhombus.core.config import env
+        from rhombus.core.environment import env
         from pathlib import Path
 
         return [
@@ -321,7 +321,7 @@ class RhombusPreviewService:
         ]
 
     def get_script_file(self, index: int):
-        from rhombus.core.config import env
+        from rhombus.core.environment import env
         from pathlib import Path
 
         try:

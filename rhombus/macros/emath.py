@@ -51,9 +51,9 @@ def floor(
 ) -> Density[types.range_choice]:
     """Rounds the input down to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
-    from rhombus.core import config
+    from rhombus.core import environment
 
-    EPS = config.env.infinitesimal
+    EPS = environment.env.infinitesimal
 
     start_int = py_math.floor(range[0])
     end_int = py_math.floor(range[1])
@@ -81,9 +81,9 @@ def ceil(
 ) -> Density[types.range_choice]:
     """Rounds the input up to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
-    from rhombus.core import config
+    from rhombus.core import environment
 
-    EPS = config.env.infinitesimal
+    EPS = environment.env.infinitesimal
 
     start_int = py_math.ceil(range[0])
     end_int = py_math.ceil(range[1])

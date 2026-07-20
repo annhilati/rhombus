@@ -16,7 +16,7 @@ from rhombus.core.utils import (
     contextfunction,
     FROM_CONTEXT,
 )
-from rhombus.core.config import env
+from rhombus.core.environment import env
 from rhombus.std import types
 
 

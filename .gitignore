@@ -23,10 +23,8 @@ docs/reference
 # Distribution & Packaging
 build/
 node_modules/
-**.egg-info
-**/__pycache__/
-rhombus/preview/dist/
-.ruff_cache/
-
-# Typescript Build
 *.tsbuildinfo
+rhombus/preview/dist/
+**/__pycache__/
+**.egg-info
+.ruff_cache/

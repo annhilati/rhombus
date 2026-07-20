@@ -29,7 +29,7 @@ repository = "https://github.com/annhilati/rhombus"
 issues = "https://github.com/annhilati/rhombus/issues"
 
 [project.scripts]
-rhombus = "rhombus.cli:main"
+rhombus = "rhombus._cli:main"
 
 [build-system]
 requires = ["hatchling"]

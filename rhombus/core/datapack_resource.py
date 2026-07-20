@@ -13,7 +13,7 @@ from rhombus.core.utils import (
 )
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.core.config import env
+from rhombus.core.environment import env
 
 __all__ = ["DatapackResource"]
 

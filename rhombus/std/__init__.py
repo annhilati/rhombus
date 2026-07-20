@@ -14,7 +14,7 @@ from rhombus.std.functions import *
 from rhombus.std import functions as f
 from rhombus.std import types as t
 
-from rhombus.core.config import RhombusAddon as _RhombusAddon
+from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
 from . import types as _types
 

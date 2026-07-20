@@ -28,11 +28,11 @@ from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.core import config
+from rhombus.core import environment
 from rhombus.std.types import range_choice, interval_select, literal_number_limit
 from rhombus.std.density import Density, AnyDensity
 
-EPSILON = config.env.infinitesimal
+EPSILON = environment.env.infinitesimal
 OMEGA = literal_number_limit
 
 
