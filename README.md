@@ -21,11 +21,7 @@
 
 Rhombus is an eDSL delivered as a Python package that allows worldgen developers to comfortably write expressions resembling the abstract syntax trees of density functions for Minecraft while benefiting from Python's forgiving syntax.
 
-<h6><sub>This project is pretty similar to <a href="https://github.com/misode/gaia-beet">misode/gaia-beet</a>, which you might also find useful. Know that I started developing Rhombus before I knew about it, the similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that Rhombus does not see itself as a mere Beet plugin — although we heavily rely on it — but rather as a coherent, mostly separated language and it will be further developed and improved in exactly this sense.</sub></h6>
-
-<!-- > [!note]
-> **State of Development**<br>
-> Rhombus already has most features I imagined it to have. But it hasn't been put through its paces yet. There also probably is a lot of potential for optimizing it's internal API.  -->
+<!--h6><sub>This project is pretty similar to <a href="https://github.com/misode/gaia-beet">misode/gaia-beet</a>, which you might also find useful. Know that I started developing Rhombus before I knew about it, the similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that Rhombus does not see itself as a mere Beet plugin — although we heavily rely on it — but rather as a coherent, mostly separated language and it will be further developed and improved in exactly this sense.</sub></h6-->
 
 ## Key Advantages
 - 📦 **Object-oriented Design**<br>
@@ -111,3 +107,17 @@ FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 ```
 
 ![Preview](docs/images/preview.png)
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=2f353d&height=1"/>
+
+> [!note]
+> ### Rhombus' current State and it's Development in the Future<br>
+> Rhombus is a finished product which holds what it promises. It is maintained so that it is fully up to date with Minecraft and does not contain any outdated features, but ...<br>
+> There is no active development of new features, nor is the project expanding into new areas of world generation - At least not reliably.
+> As long as there isn't significant public interest, Rhombus will remain a hobby project and will only be developed in spurts, driven by flashes of inspiration.
+> If such interest arises or if someone comes forward who wants to work with me to further improve Rhombus, then there will certainly be many more new features released on a more regular basis.
+> That's something I'm looking forward to, and I'd be happy to see it happen in the future.
+> Until then I'm happy to add smaller new features, mod support, or macros upon request, but nothing fundamentally new.
+>
+> Thank you for reading this and for your interest in Rhombus!<br>
+> Annhilati on July 20, 2026
