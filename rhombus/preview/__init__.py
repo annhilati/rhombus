@@ -6,4 +6,6 @@ and other worldgen-related resources.
 To start the preview webserver and file-watching backend use `~.serve()`.
 """
 
-from rhombus.preview.service import serve, resources_from_datapack
+__all__ = ["serve", "resources_from_datapack"]
+
+from rhombus.preview._service import serve, resources_from_datapack

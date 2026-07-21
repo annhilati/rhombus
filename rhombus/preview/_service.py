@@ -25,7 +25,7 @@ import asyncio
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus import Density
+from rhombus.std.density import Density
 from rhombus.core import BeetFile, RhombusASTNode
 
 
@@ -47,7 +47,7 @@ class RhombusFilewatcher(FileSystemEventHandler):
         self.last_events: dict[tuple[str, str], float] = {}
         self.watch_file = watch_file
 
-    def _trigger(
+    def trigger(
         self, action: Literal["Created", "Deleted", "Changed", "Moved"], path: str
     ):
         if self.watch_file and Path(path).name != self.watch_file:
@@ -71,19 +71,19 @@ class RhombusFilewatcher(FileSystemEventHandler):
 
     def on_created(self, event):
         if not event.is_directory:
-            self._trigger("Created", event.src_path)
+            self.trigger("Created", event.src_path)
 
     def on_deleted(self, event):
         if not event.is_directory:
-            self._trigger("Deleted", event.src_path)
+            self.trigger("Deleted", event.src_path)
 
     def on_modified(self, event):
         if not event.is_directory:
-            self._trigger("Changed", event.src_path)
+            self.trigger("Changed", event.src_path)
 
     def on_moved(self, event):
         if not event.is_directory:
-            self._trigger("Moved", f"{event.src_path} -> {event.dest_path}")
+            self.trigger("Moved", f"{event.src_path} -> {event.dest_path}")
 
 
 class RhombusPreviewService:
@@ -342,7 +342,7 @@ def serve(
     """Starts the Rhombus Preview service ASGI application.
 
     This includes the frontend and a file-watching backend. One can be used
-    without the other or with other instance of the other.
+    without the other or with another instance of the other.
     """
     if os.environ.get("RHOMBUS_CHECK_ONLY") == "1":
         return

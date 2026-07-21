@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 def sample_spline_points(
     f: Callable[[float], float],
-    interval: tuple[float, float],
+    domain: tuple[float, float],
     points: int = 5,
     *,
     step_size=1e-5,
@@ -34,7 +34,7 @@ def sample_spline_points(
 
     Parameters:
         f (float -> float): The function to sample the spline points from.
-        interval ((float, float)): The interval between to sample the function.
+        domain ((float, float)): The interval between to sample the function.
         points (int): The amount of points to sample between within the sample interval.
         step_size (float): The infinitesimal value that is used to calculate derivatives.
 
@@ -49,7 +49,7 @@ def sample_spline_points(
         return (float(x), float(y), float(m))
 
     if points == 2:
-        return [get_point(interval[0]), get_point(interval[1])]
+        return [get_point(domain[0]), get_point(domain[1])]
 
     def d2f(x):
         # 2nd derivative to estimate curvature
@@ -57,7 +57,7 @@ def sample_spline_points(
 
     # 1. Erstelle ein dichtes Raster zum Integrieren der "Fehler-Dichte"
     resolution = max(1000, points * 10)
-    dense_xs = np.linspace(interval[0], interval[1], resolution)
+    dense_xs = np.linspace(domain[0], domain[1], resolution)
 
     # 2. Berechne die Dichte D(x) = |f''(x)|^(1/4)
     # (Der Exponent 1/4 ist theoretisch optimal für die Fehlerverteilung bei kubischen Splines)
@@ -92,10 +92,10 @@ def sample_spline_points(
 
 
 def poly_spline_points(
-    a: float, b: float, c: float, d: float, sample_interval: tuple[float, float]
+    a: float, b: float, c: float, d: float, domain: tuple[float, float]
 ) -> list[tuple[float, float, float]]:
-    """Calculates spline points for an arbitrary polynomial `ax³ + bx² + cx + d` within the `sample_interval`."""
-    x0, x1 = sample_interval
+    """Calculates spline points for an arbitrary polynomial `ax³ + bx² + cx + d` within the `domain` interval."""
+    x0, x1 = domain
 
     def f(x):
         return a * x**3 + b * x**2 + c * x + d

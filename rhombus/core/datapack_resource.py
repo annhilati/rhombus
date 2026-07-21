@@ -55,17 +55,9 @@ class DatapackResource(RhombusASTNode):
         }
         return self.__class__(**new_fields)
 
-    def __rmatmul__(self, identifier: str) -> Self:
-        if not isinstance(identifier, str):
-            raise TypeError("Can only assign string identifiers")
-        identifier = "minecraft:" + identifier if ":" not in identifier else identifier
-        instance = copy.deepcopy(self)
-        object.__setattr__(instance, "_identifier", identifier)
-        return instance
-
     def __repr__(self) -> str:
         if self.is_reference and self._identifier is not None:
-            return '"' + self.reference + '"'
+            return self.__class__.__name__ + '.refer("' + self.reference + '")'
         return super().__repr__()
 
     def __hash__(self):
@@ -153,6 +145,14 @@ class DatapackResource(RhombusASTNode):
         """
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         instance = cls(**{param: None for param in annotated_fields(cls)})
+        object.__setattr__(instance, "_identifier", identifier)
+        return instance
+
+    def __rmatmul__(self, identifier: str) -> Self:
+        if not isinstance(identifier, str):
+            raise TypeError("Can only assign string identifiers")
+        identifier = "minecraft:" + identifier if ":" not in identifier else identifier
+        instance = copy.deepcopy(self)
         object.__setattr__(instance, "_identifier", identifier)
         return instance
 

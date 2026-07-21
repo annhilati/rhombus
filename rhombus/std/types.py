@@ -260,7 +260,7 @@ class spline(DensityFunction):
                     {
                         "location": point[0],
                         "value": point[1].serialize_inline()["spline"]
-                        if isinstance(point[1].serialize_inline(), dict)
+                        if isinstance(point[1], type(self))
                         else point[1].serialize_inline(),
                         "derivative": point[2],
                     }

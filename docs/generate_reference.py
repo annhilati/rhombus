@@ -44,6 +44,19 @@ def format_python_code(code: str) -> str:
     except Exception:
         return code
 
+def safe_is_type(obj, attr: str) -> bool:
+    try:
+        return getattr(obj, attr, False)
+    except Exception:
+        return False
+
+def is_documented_member(m) -> bool:
+    if m.name.startswith("_") and not m.name.startswith("__"):
+        return False
+    if getattr(m, "is_alias", False):
+        return getattr(m, "is_exported", False)
+    return True
+
 
 def format_type_parameters(obj) -> str:
     type_params = getattr(obj, "type_parameters", None)
@@ -251,6 +264,29 @@ def render_property(attr: Attribute) -> str:
     """)
 
 
+def render_constant(attr: Attribute) -> str:
+    parts = []
+    if attr.annotation:
+        parts.append(f"{attr.name}: {attr.annotation}")
+    else:
+        parts.append(attr.name)
+        
+    if attr.value:
+        parts[-1] += f" = {attr.value}"
+
+    sig = format_python_code("\n".join(parts))
+    
+    return dedent(f"""
+        ### {escape_markdown(attr.name)}
+
+        ```python
+        {sig}
+        ```
+
+        {render_docstring(attr.docstring)}
+    """)
+
+
 def render_typealias(obj: TypeAlias) -> str:
     return dedent(f"""
         ### {escape_markdown(obj.name)}
@@ -265,15 +301,16 @@ def render_typealias(obj: TypeAlias) -> str:
 
 def render_class_members(obj: Class) -> str:
     constructors: list[Function] = []
+    constants: list[Attribute] = []
     properties: list[Attribute] = []
     methods: list[Function] = []
     static_methods: list[Function] = []
 
     for m in obj.all_members.values():
-        if m.name.startswith("_") and not m.name.startswith("__"):
+        if not is_documented_member(m):
             continue
 
-        if isinstance(m, Function):
+        if safe_is_type(m, "is_function"):
             labels = m.labels or set()
 
             if m.name in ("__init__", "__new__"):
@@ -289,23 +326,36 @@ def render_class_members(obj: Class) -> str:
             else:
                 methods.append(m)
 
-        elif isinstance(m, Attribute):
+        elif safe_is_type(m, "is_attribute"):
             labels = m.labels or set()
             if "property" in labels:
                 properties.append(m)
+            else:
+                is_field = False
+                if m.annotation and "instance-attribute" in labels:
+                    if not m.name.isupper():
+                        is_field = True
+                
+                if not is_field:
+                    constants.append(m)
 
     constructors.sort(key=lambda m: m.name)
+    constants.sort(key=lambda m: m.name)
     properties.sort(key=lambda m: m.name)
     methods.sort(key=lambda m: (m.name.startswith("__"), m.name))
     static_methods.sort(key=lambda m: m.name)
 
-    if not (constructors or properties or methods or static_methods):
+    if not (constructors or constants or properties or methods or static_methods):
         return ""
 
     return dedent(f"""
         {"## Constructors" if constructors else ""}
         
         {"\n\n---\n".join([render_function(f) for f in constructors])}
+
+        {"\n---\n## Constants" if constants else ""}
+        
+        {"\n\n---\n".join([render_constant(c) for c in constants])}
 
         {"\n---\n## Properties" if properties else ""}
         
@@ -326,7 +376,7 @@ def render_module_functions(obj: Module) -> str:
         [
             m
             for m in obj.all_members.values()
-            if isinstance(m, Function) and not m.name.startswith("_")
+            if safe_is_type(m, "is_function") and is_documented_member(m)
         ],
         key=lambda m: m.name,
     )
@@ -370,7 +420,7 @@ def render_module_or_class(
         [
             m
             for m in obj.all_members.values()
-            if isinstance(m, Module) and not m.name.startswith("_")
+            if safe_is_type(m, "is_module") and is_documented_member(m)
         ],
         key=lambda m: m.name,
     )
@@ -378,7 +428,7 @@ def render_module_or_class(
         [
             m
             for m in obj.all_members.values()
-            if isinstance(m, Class) and not m.name.startswith("_")
+            if safe_is_type(m, "is_class") and is_documented_member(m)
         ],
         key=lambda m: m.name,
     )
@@ -386,17 +436,26 @@ def render_module_or_class(
         [
             m
             for m in obj.all_members.values()
-            if isinstance(m, TypeAlias) and not m.name.startswith("_")
+            if safe_is_type(m, "is_type_alias") and is_documented_member(m)
+        ],
+        key=lambda m: m.name,
+    )
+    constants: list[Attribute] = sorted(
+        [
+            m
+            for m in obj.all_members.values()
+            if safe_is_type(m, "is_attribute") and safe_is_type(obj, "is_module") and is_documented_member(m)
         ],
         key=lambda m: m.name,
     )
 
     functions_block = (
         render_class_members(obj)
-        if isinstance(obj, Class)
+        if safe_is_type(obj, "is_class")
         else render_module_functions(obj)
     )
-    class_signature = format_class_signature(obj) if isinstance(obj, Class) else ""
+    class_signature = format_class_signature(obj) if safe_is_type(obj, "is_class") else ""
+    obj_type_name = "Class" if safe_is_type(obj, "is_class") else "Module"
 
     rel_path = getattr(obj, "relative_filepath", getattr(obj, "filepath", ""))
     rel_path_str = (
@@ -408,7 +467,7 @@ def render_module_or_class(
     base_repo_url = repo_url.replace("/tree/", "/blob/")
 
     is_dir = False
-    if isinstance(obj, Module):
+    if safe_is_type(obj, "is_module"):
         if rel_path_str.endswith("__init__.py"):
             is_dir = True
             rel_path_str = rel_path_str[:-12]
@@ -428,7 +487,7 @@ def render_module_or_class(
         title: {obj.name}
         ---
 
-        <h6>{obj.__class__.__name__} <code>{obj.path}</code> • <a href="{source_url}">View Source</a> {'• <a href="..">Go back</a>' if obj.parent else ""}</h6>
+        <h6>{obj_type_name} <code>{obj.path}</code> • <a href="{source_url}">View Source</a> {'• <a href="..">Go back</a>' if obj.parent else ""}</h6>
         {"# " + escape_markdown(obj.name) if not obj.docstring or (not obj.docstring.value.startswith("# ") and "\n# " not in obj.docstring.value) else ""}
 
         {class_signature}
@@ -445,6 +504,10 @@ def render_module_or_class(
         {"## Types" if typealiases else ""}
         
         {"\n\n".join([render_typealias(t) for t in typealiases])}
+        
+        {"## Constants" if constants else ""}
+        
+        {"\n\n".join([render_constant(c) for c in constants])}
         
         {functions_block}
     """)

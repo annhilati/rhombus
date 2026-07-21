@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Callable
+from __future__ import annotations
+
+from typing import Callable, Any, Optional, TYPE_CHECKING
 from types import ModuleType
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -41,7 +43,7 @@ class RhombusEnvironment:
 
         This could look like this:
         ```
-        env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("sqrt.js"))
+        env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("deepslate.ts"))
         ```
         """
 
@@ -134,7 +136,7 @@ class RhombusAddon:
             It is recommended to provide these paths with the `files().joinpath()` method from `importlib.resources`.
         preview_beet_file_extensions (set[BeetFile]): Beet file classes for datapack file types to include in the
             Rhombus Preview. 
-        on_apply (Callable[[RhombusEnvironment], None]): Custom function that is called, when the addon is loaded.
+        on_apply (Optional[Callable[[RhombusEnvironment], Any]]): Custom function that is called, when the addon is loaded.
     """
 
     name: str
@@ -142,7 +144,7 @@ class RhombusAddon:
     caching_functions: set["DensityFunction"] = field(default_factory=set)
     preview_scripts: list[str | Path] = field(default_factory=list)
     preview_beet_file_extensions: set["BeetFile"] = field(default_factory=set)
-    on_apply: Callable[["RhombusEnvironment"], None] | None = None
+    on_apply: Optional[Callable[["RhombusEnvironment"], Any]] = None
 
     def apply_to_rhombus_env(self, env: "RhombusEnvironment") -> None:
         if self.on_apply:
@@ -159,4 +161,8 @@ class RhombusAddon:
 # NOTE: rhombus.core should not include runtime relevant symbols.
 # Thus 'env' should be moved somewhere else in the future.
 env: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
-"Default Rhombus environment"
+"""The default global Rhombus environment.
+
+For more information on how to use environments see
+[`RhombusEnvironment`](https://annhilati.github.io/rhombus/reference/rhombus/core/config/RhombusEnvironment/).
+"""
