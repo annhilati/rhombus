@@ -172,7 +172,7 @@ class Reference(DensityFunction):
             )
 
     @property
-    def reference(self) -> str:
+    def identifier(self) -> str:
         return self.target
 
     @classmethod
@@ -209,12 +209,12 @@ class Reference(DensityFunction):
 
     def __repr__(self) -> str:
         if self.definition is None:
-            return '"' + self.reference + '"'
-        elif "partitioned" in self.reference:
+            return '"' + self.identifier + '"'
+        elif "partitioned" in self.identifier:
             return "Density.partitioned(" + self.definition.__repr__() + ")"
         else:
             return (
-                self.reference.__repr__()
+                self.identifier.__repr__()
                 + "@ Density("
                 + self.definition.__repr__()
                 + ")"

@@ -12,6 +12,8 @@ __all__ = [
     "prod",
     "min",
     "max",
+    "smin",
+    "smax",
     "round",
     "floor",
     "ceil",
@@ -117,6 +119,72 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
     return result
 
 
+@macro
+def smax(*arguments: AnyDensity, smoothing_factor: AnyDensity = 0.1, degree: int = 3) -> Density:
+    """Returns the smooth maximum of any number of arguments.
+    
+    This function uses a piecewise polynomial approximation to smooth out the hard 
+    edges of the regular `max()` function.
+    
+    Parameters:
+        smoothing_factor (AnyDensity): The smoothing radius (lambda). It defines the interval
+            `[-smoothing_factor, smoothing_factor]` around the intersection where the blending occurs. 
+            Outside this distance, the function behaves exactly like the regular `max()`.
+        degree (int): The polynomial degree used for the interpolation. 
+            `2` = quadratic, `3` = cubic (default), `4` = quartic, etc.
+            Higher degrees yield smoother derivatives at the boundary.
+    """
+    if len(arguments) == 0:
+        return Density(0)
+    if len(arguments) == 1:
+        return Density(arguments[0])
+
+    it = iter(arguments)
+    result = next(it)
+
+    for x in it:
+        diff_clamped = max(smoothing_factor - f.abs(result - x), 0.0)
+        power = diff_clamped ** degree
+        denominator = (2 * degree) * (smoothing_factor ** (degree - 1))
+        
+        result = max(result, x) + (power / denominator)
+
+    return result
+
+
+@macro
+def smin(*arguments: AnyDensity, smoothing_factor: AnyDensity = 0.1, degree: int = 3) -> Density:
+    """Returns the smooth minimum of any number of arguments.
+    
+    This function uses a piecewise polynomial approximation to smooth out the hard 
+    edges of the regular `min()` function.
+    
+    Parameters:
+        smoothing_factor (AnyDensity): The smoothing radius (lambda). It defines the interval
+            `[-smoothing_factor, smoothing_factor]` around the intersection where the blending occurs. 
+            Outside this distance, the function behaves exactly like the regular `min()`.
+        degree (int): The polynomial degree used for the interpolation. 
+            `2` = quadratic, `3` = cubic (default), `4` = quartic, etc.
+            Higher degrees yield smoother derivatives at the boundary.
+    """
+    if len(arguments) == 0:
+        return Density(0)
+    if len(arguments) == 1:
+        return Density(arguments[0])
+
+    it = iter(arguments)
+    result = next(it)
+
+    for x in it:
+        diff_clamped = max(smoothing_factor - f.abs(result - x), 0.0)
+        power = diff_clamped ** degree
+        denominator = (2 * degree) * (smoothing_factor ** (degree - 1))
+        
+        result = min(result, x) - (power / denominator)
+
+    return result
+
+
 # ======// Rounding //============================================================================//
 
 
@@ -181,7 +249,7 @@ def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
     **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
     that it will not work, when other number types are in use.
     """
-    return perf.s_cache_transform(
+    return perf.specified_cache(
         dividend - divisor * floor(dividend / divisor), dividend, divisor
     )
 

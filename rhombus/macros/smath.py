@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 import math as py_math
-from math import sqrt, pi
+from math import sqrt, pi, e
 
 from rhombus.std import Density, AnyDensity, functions, types, macro
 from rhombus import splines
@@ -77,7 +77,7 @@ def erf(
 
 @macro
 def exp(
-    argument: AnyDensity, domain: tuple[float, float] = (-1, 1), base: float = py_math.e
+    argument: AnyDensity, domain: tuple[float, float] = (-1, 1), base: float = e
 ) -> Density[types.spline]:
     """Evaluates the value of the input on an exponential function."""
     func = lambda x: base**x
@@ -183,7 +183,7 @@ def sin(
 def smoothstep(
     argument: AnyDensity,
     domain: tuple[float, float] = (-1, 1),
-    yRange: tuple[float, float] = (-1, 1),
+    range: tuple[float, float] = (-1, 1),
 ) -> Density[types.spline]:
     """Evaluates a smoothstep transition of the input.
 
@@ -193,14 +193,14 @@ def smoothstep(
 
     Parameters:
         domain ((float, float)): The input interval over which the smooth transition occurs.
-        yRange ((float, float)): The output range of the transition.
+        range ((float, float)): The output range of the transition.
             The function smoothly interpolates between these values inside domain.
 
     ---
     [Wikipedia](https://en.wikipedia.org/wiki/Smoothstep)
     """
     return functions.spline(
-        argument, [(domain[0], yRange[0], 0), (domain[1], yRange[1], 0)]
+        argument, [(domain[0], range[0], 0), (domain[1], range[1], 0)]
     )
 
 

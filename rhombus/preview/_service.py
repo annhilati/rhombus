@@ -152,7 +152,7 @@ class RhombusPreviewService:
                         if node == item:
                             continue
                         result.add(
-                            (node.reference, node.fileclass(node.serialize_toplevel()))
+                            (node.identifier, node.fileclass(node.serialize_toplevel()))
                         )
                     result.add((id, item.fileclass(item.serialize_toplevel())))
                     files.update(result)

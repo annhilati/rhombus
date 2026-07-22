@@ -1,6 +1,6 @@
 """Macros for evaluating and improving the performance of density functions."""
 
-__all__ = ["rec_cache_transform", "s_cache_transform", "get_size"]
+__all__ = ["recurrence_cache", "specified_cache", "get_size"]
 
 
 from typing import NamedTuple, Any, Callable, Iterable
@@ -16,7 +16,8 @@ if sys.getrecursionlimit() < 10000:
 from beet.contrib import worldgen as beet_worldgen
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.std import types, AnyDensity, Density, macro
+from rhombus.std import AnyDensity, Density, macro
+from rhombus.std.types import cache_once
 from rhombus.core.environment import env
 
 
@@ -139,7 +140,7 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
         if isinstance(f[1], beet_worldgen.WorldgenDensityFunction)
     }
     reference_definitions: dict[str, DensityFunction] = {
-        ref.reference: ref.definition
+        ref.identifier: ref.definition
         for ref in node.inscribed_toplevel_nodes
         if isinstance(ref, Reference) and ref.definition is not None
     }
@@ -161,31 +162,31 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
             if isinstance(value, Reference):
                 if value.definition is not None:
-                    if value.reference not in visited_references:
-                        visited_references.add(value.reference)
+                    if value.identifier not in visited_references:
+                        visited_references.add(value.identifier)
                         visit(value.definition, we_are_in_cached=we_are_in_cached)
                     return
 
-                if value.reference in reference_definitions:
-                    if value.reference not in visited_references:
-                        visited_references.add(value.reference)
+                if value.identifier in reference_definitions:
+                    if value.identifier not in visited_references:
+                        visited_references.add(value.identifier)
                         visit(
-                            reference_definitions[value.reference],
+                            reference_definitions[value.identifier],
                             we_are_in_cached=we_are_in_cached,
                         )
                     return
 
-                if value.reference in visited_references:
+                if value.identifier in visited_references:
                     return
 
-                if files.get(value.reference):
-                    visited_references.add(value.reference)
+                if files.get(value.identifier):
+                    visited_references.add(value.identifier)
                     visit(
-                        Density.from_dict(files[value.reference].data).AST,
+                        Density.from_dict(files[value.identifier].data).AST,
                         we_are_in_cached=we_are_in_cached,
                     )
                 else:
-                    collect_unique_unknown_references.add(value.reference)
+                    collect_unique_unknown_references.add(value.identifier)
                     count_total_unknown_references += 1
                 return
 
@@ -216,14 +217,12 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
 def _cache_nodes(
     root: DensityFunction,
-    condition: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
+    condition: Callable[[DensityFunction], bool],
     wrapper: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
         "rhombus:partitioned/" + uuid_hash(df.serialize_toplevel()),
-        definition=types.cache_once(df),
+        definition=cache_once(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
-
-    occurances = _count_node_values(root)
     replacement_info: dict[DensityFunction, int] = {}
 
     def visit_and_replace_if_needed(
@@ -241,7 +240,7 @@ def _cache_nodes(
             # AND it is not already cached by a wrapper higher up in the tree (to prevent double caching):
             if (
                 not is_already_cached_ref
-                and condition(value, occurances)
+                and condition(value)
                 and value not in nodes_being_cached
             ):
                 # First, recursively optimize the node's inner children
@@ -304,10 +303,11 @@ def _cache_nodes(
 
 def _get_occurance_and_size_condition(
     max_nodes: int,
-) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    occurances: dict[RhombusASTNode, int],
+) -> Callable[[DensityFunction], bool]:
     "Applies if the node exceeds a specified size and occurs multiple times."
 
-    def condition(node: DensityFunction, occurances: dict[RhombusASTNode, int]) -> bool:
+    def condition(node: DensityFunction) -> bool:
         return (
             occurances.get(node, 0) > 1
             and _df_size_info(node).toplevel_nodes > max_nodes
@@ -318,7 +318,7 @@ def _get_occurance_and_size_condition(
 
 def _get_identity_condition(
     target_nodes: Iterable[RhombusASTNode],
-) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+) -> Callable[[DensityFunction], bool]:
     "Applies if the node is one of the specified target nodes."
     targets = []
     for n in target_nodes:
@@ -327,7 +327,7 @@ def _get_identity_condition(
         else:
             targets.append(n)
 
-    def condition(node: DensityFunction, occurances: dict[RhombusASTNode, int]) -> bool:
+    def condition(node: DensityFunction) -> bool:
         for target in targets:
             if isinstance(target, type) and isinstance(node, target):
                 return True
@@ -339,41 +339,55 @@ def _get_identity_condition(
 
 
 @macro
-def rec_cache_transform(
+def recurrence_cache(
     argument: AnyDensity,
     *,
-    caching_function: DensityFunction = types.cache_once,
+    caching_function: DensityFunction = cache_once,
     max_nodes: int = 5,
 ) -> Density:
-    """Optimizes a density function by automatically caching recurring calculations."""
+    """Applies caching to recurring parts of a density function by partitioning it and wrapping it
+    with a caching function.
+    
+    Parameters:
+        caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
+        max_nodes (int): Number of nodes a recurring function part must have to get partitioned.
+    """
     wrapper = lambda value: Reference(
         "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
         definition=caching_function(value),
     )
+    occurances = _count_node_values(argument.AST)
     return Density(
         _cache_nodes(
             argument.AST,
-            condition=_get_occurance_and_size_condition(max_nodes),
+            condition=_get_occurance_and_size_condition(max_nodes, occurances),
             wrapper=wrapper,
         )[0]
     )
 
 
 @macro
-def s_cache_transform(
+def specified_cache(
     argument: AnyDensity,
-    *nodes: RhombusASTNode,
-    caching_function: DensityFunction = types.cache_once,
+    *functions: Density,
+    caching_function: DensityFunction = cache_once,
 ) -> Density:
-    """Optimizes a density function by caching all instances of specified nodes
-    (If the node occurs more than one time).
+    """Applies cahing to specific parts of a density function. All subfunctions
+    that are equal to a node specified in `nodes` and occur multiple times
+    are partitioned and wrapped in a caching function.
+    
+    Parameters:
+        *functions (Density): Subfunctions to cache. (Values not of type `Density` are ignored)
+        caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
     """
     wrapper = lambda node: Reference(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
         definition=caching_function(node),
     )
-    condition = lambda node, occurances: (
-        _get_identity_condition(nodes)(node, occurances) and occurances.get(node, 0) > 1
+    occurances = _count_node_values(argument.AST)
+    identity_cond = _get_identity_condition([n.AST for n in functions if isinstance(n, Density)])
+    condition = lambda node: (
+        identity_cond(node) and occurances.get(node, 0) > 1
     )
     # Cache if node is one of specified and it occurs multiple times
     return Density(_cache_nodes(argument.AST, condition=condition, wrapper=wrapper)[0])

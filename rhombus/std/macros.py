@@ -1,3 +1,5 @@
+"""The macro infrastructure of Rhombus."""
+
 __all__ = ["macro"]
 
 from typing import (
@@ -22,9 +24,10 @@ from rhombus.std.density import Density, AnyDensity
 def macro[**P, R](fn: Callable[P, R]) -> Callable[P, R]:
     """The **`macro`** decorator allows functions to use the `AnyDensity` type
     for annotation of its arguments to automatically resolve passed values to
-    `Density` objects. This is usefull to allow shorthands such as literal
-    numbers or reference strings without encountering type errors or having
-    to deal with type unification.
+    `Density` objects.
+    
+    This is usefull to allow shorthands such as literal numbers or reference
+    strings without encountering type errors or having to deal with type coercion.
     """
 
     def decorator[**P, R](func: Callable[P, R]) -> Callable[P, R]:

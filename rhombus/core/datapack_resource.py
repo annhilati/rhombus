@@ -28,36 +28,36 @@ class DatapackResource(RhombusASTNode):
     """
 
     fileclass: ClassVar[type[BeetFile]]
-    _identifier: str | None = field(init=False, default=None)
+    _reference: str | None = field(init=False, default=None)
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
-        return self.reference == other.reference
+        return self.identifier == other.identifier
 
     @property
     def is_reference(self) -> bool:
         return (
-            all(v is None for f, v in self.fields.items() if f != "_identifier")
-            and self._identifier is not None
+            all(v is None for f, v in self.fields.items() if f != "_reference")
+            and self._reference is not None
         )
 
     def __copy__(self) -> Self:
         if self.is_reference:
-            return self.refer(self._identifier)
+            return self.refer(self._reference)
         return self.__class__(**self.fields)
 
     def __deepcopy__(self, memo: dict[int, Any]) -> Self:
-        if self._identifier is not None:
-            return self.refer(self._identifier)
+        if self._reference is not None:
+            return self.refer(self._reference)
         new_fields = {
             name: copy.deepcopy(value, memo) for name, value in self.fields.items()
         }
         return self.__class__(**new_fields)
 
     def __repr__(self) -> str:
-        if self.is_reference and self._identifier is not None:
-            return self.__class__.__name__ + '.refer("' + self.reference + '")'
+        if self.is_reference and self._reference is not None:
+            return self.__class__.__name__ + '.refer("' + self.identifier + '")'
         return super().__repr__()
 
     def __hash__(self):
@@ -69,7 +69,7 @@ class DatapackResource(RhombusASTNode):
     @property
     def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
         nodes = set()
-        if not all(v is None for f, v in self.fields.items() if f != "_identifier"):
+        if not all(v is None for f, v in self.fields.items() if f != "_reference"):
             nodes.add(self)
             for param, value in self.fields.items():
                 if isinstance(value, RhombusASTNode):
@@ -77,12 +77,12 @@ class DatapackResource(RhombusASTNode):
         return nodes
 
     @property
-    def reference(self):
-        if self._identifier is not None:
+    def identifier(self):
+        if self._reference is not None:
             return (
-                self._identifier
-                if ":" in self._identifier
-                else "minecraft:" + self._identifier
+                self._reference
+                if ":" in self._reference
+                else "minecraft:" + self._reference
             )
         return "rhombus:generated/" + uuid_hash(self.serialize_toplevel())
 
@@ -94,7 +94,7 @@ class DatapackResource(RhombusASTNode):
         }
 
     def serialize_inline(self) -> str:
-        return self.reference
+        return self.identifier
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict):
@@ -145,7 +145,7 @@ class DatapackResource(RhombusASTNode):
         """
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         instance = cls(**{param: None for param in annotated_fields(cls)})
-        object.__setattr__(instance, "_identifier", identifier)
+        object.__setattr__(instance, "_reference", identifier)
         return instance
 
     def __rmatmul__(self, identifier: str) -> Self:
@@ -153,14 +153,14 @@ class DatapackResource(RhombusASTNode):
             raise TypeError("Can only assign string identifiers")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         instance = copy.deepcopy(self)
-        object.__setattr__(instance, "_identifier", identifier)
+        object.__setattr__(instance, "_reference", identifier)
         return instance
 
     # @reference.setter
     # def reference(self, value: str | None) -> None:
     #     if not isinstance(value, str):
     #         raise TypeError(f"Cannot assign non-string value '{value}' to reference identifier")
-    #     object.__setattr__(self, "_identifier", value)
+    #     object.__setattr__(self, "_reference", value)
 
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."

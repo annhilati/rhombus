@@ -24,12 +24,12 @@ from __future__ import annotations
 __all__ = ["when", "NOT", "ALL", "ANY", "it"]
 
 from dataclasses import dataclass, field
-from typing import Any, Never
+from typing import Any, Never, TypeVar, Generic
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
 from rhombus.core import environment
-from rhombus.std.types import range_choice, interval_select, literal_number_limit
+from rhombus.std.types import range_choice, interval_select, mul, constant, literal_number_limit
 from rhombus.std.density import Density, AnyDensity
 
 EPSILON = environment.env.infinitesimal
@@ -290,8 +290,83 @@ def ANY(*conditions: Condition) -> Condition:
     return result
 
 
-# ======// Causality Class //=====================================================================//
+# ======// Condition Builder //===================================================================//
 
+T = TypeVar("T")
+
+class _ConditionBuilder(Generic[T]):
+    _subject: DensityFunction
+
+    def _wrap(self, cond: Condition) -> T:
+        raise NotImplementedError
+
+    def equals(self, value: float) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.EQUALS, value=value))
+
+    def unequals(self, value: float) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.UNEQUAL, value=value))
+
+    def greater(self, value: float) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.GREATER_THAN, value=value))
+
+    def less(self, value: float) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.LESS_THAN, value=value))
+
+    def atleast(self, value: float) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value))
+
+    def atmost(self, value: float) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value))
+
+    def inside(self, low: float, high: float, /) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.INSIDE, value=(low, high)))
+
+    def atleast_but_less(self, low: float, high: float, /) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.ABOVE_BUT_UNDER, value=(low, high)))
+
+    def outside(self, low: float, high: float, /) -> T:
+        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.OUTSIDE, value=(low, high)))
+
+    def is_nan(self) -> T:
+        return self._wrap(~(
+            when(self._subject).less(0)
+            | when(mul(self._subject, constant(-1.0))).less(0)
+            | when(self._subject).inside(-0.1, 0.1)
+        ))
+
+    def is_infinite(self) -> T:
+        return self._wrap(
+            when(mul(self._subject, constant(0.0))).unequals(0.0) & (
+                when(self._subject).less(0) | when(mul(self._subject, constant(-1.0))).less(0)
+            )
+        )
+
+
+@dataclass
+class OtherPendingCondition:
+    _chain: Causality
+    _condition: Condition
+
+    def then(self, value: AnyDensity | Itself) -> Causality:
+        """Specifies the value that is returned, if the condition applies.
+
+        ## Continuation
+            **Append another alternative condition**
+                `~.elsewhen(AnyDensity)`
+            **Specify the fallback value and close the expression**
+                `~.otherwise(AnyDensity)`
+        """
+        if value is it:
+            if self._chain._default_input is None:
+                raise TypeError(
+                    "then(it) is undefined because the initial condition was not composed of a condition with input"
+                )
+            value = self._chain._default_input
+        self._chain._cases.append((self._condition, Density(value).AST))
+        return self._chain
+
+
+# ======// Causality Class //=====================================================================//
 
 @dataclass
 class Causality:
@@ -301,7 +376,7 @@ class Causality:
     def __post_init__(self):
         self.elsewhen = type(self).elsewhen()._bind(self)
 
-    class elsewhen:
+    class elsewhen(_ConditionBuilder[OtherPendingCondition]):
         """Specifies a fallback option for the conditionality if none of the
         preceding conditions apply. When called without arguments, the input
         of the initial condition is used.
@@ -327,6 +402,10 @@ class Causality:
             **`~.atleast_but_less(float, float)`**
                 `low <= self < high`
                 This is the standard case for `range_choice`.
+            **`~.is_nan()`**
+                `self == NaN`
+            **`~.is_infinite()`**
+                `self == +Infinity` or `self == -Infinity`
         """
 
         _chain: Causality
@@ -354,93 +433,34 @@ class Causality:
         def __call__(self, subject: AnyDensity | Itself = it):
             return type(self)(subject)._bind(self._chain)
 
-        def equals(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).equals(value))
+        def _wrap(self, cond: Condition) -> OtherPendingCondition:
+            return OtherPendingCondition(self._chain, cond)
 
-        def unequals(self, value: float) -> Condition:
-            return OtherPendingCondition(
-                self._chain, when(self._subject).unequals(value)
-            )
-
-        def greater(self, value: float) -> Condition:
-            return OtherPendingCondition(
-                self._chain, when(self._subject).greater(value)
-            )
-
-        def less(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).less(value))
-
-        def atleast(self, value: float) -> Condition:
-            return OtherPendingCondition(
-                self._chain, when(self._subject).atleast(value)
-            )
-
-        def atmost(self, value: float) -> Condition:
-            return OtherPendingCondition(self._chain, when(self._subject).atmost(value))
-
-        def inside(self, low: float, high: float, /) -> Condition:
-            return OtherPendingCondition(
-                self._chain, when(self._subject).inside(low, high)
-            )
-
-        def atleast_but_less(self, low: float, high: float, /) -> Condition:
-            return OtherPendingCondition(
-                self._chain, when(self._subject).atleast_but_less(low, high)
-            )
-
-        def outside(self, low: float, high: float, /) -> Condition:
-            return OtherPendingCondition(
-                self._chain, when(self._subject).outside(low, high)
-            )
-
-    def otherwise(self, value: AnyDensity | Itself) -> Density[range_choice]:
+    def otherwise(self, value: AnyDensity | Itself = it) -> Density[range_choice | interval_select]:
         """Specified a fallback value that is returned if none of the conditions apply.
 
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
-        from rhombus.macros.performance import s_cache_transform
+        from rhombus.macros.performance import specified_cache
 
         if value is it:
             if self._default_input is None:
                 raise TypeError(
-                    "otherwise(it) is undefined because the initial condition was not composed of a condition with input"
+                    "otherwise(it) is undefined because the initial condition was not composed of a singular condition with input"
                 )
             value = self._default_input
         result = Density(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return s_cache_transform(Density(result), self._default_input or None)
+        return specified_cache(Density(result), self._default_input or None)
 
-
-@dataclass
-class OtherPendingCondition:
-    _chain: Causality
-    _condition: Condition
-
-    def then(self, value: AnyDensity | Itself) -> Causality:
-        """Specifies the value that is returned, if the condition applies.
-
-        ## Continuation
-            **Append another alternative condition**
-                `~.elsewhen(AnyDensity)`
-            **Specify the fallback value and close the expression**
-                `~.otherwise(AnyDensity)`
-        """
-        if value is it:
-            if self._chain._default_input is None:
-                raise TypeError(
-                    "then(it) is undefined because the initial condition was not composed of a condition with input"
-                )
-            value = self._chain._default_input
-        self._chain._cases.append((self._condition, Density(value).AST))
-        return self._chain
 
 
 # ======// Condition Fabric //====================================================================//
 
 
-class when:
+class when(_ConditionBuilder[Condition]):
     """Opens a new conditionality fluent interface.
 
     To continue, use one  of the following methods to specify the condition:
@@ -465,6 +485,10 @@ class when:
         **`~.atleast_but_less(float, float)`**
             `low <= self < high`
             This is the standard case for `range_choice`.
+        **`~.is_nan()`**
+            `self == NaN`
+        **`~.is_infinite()`**
+            `self == +Infinity` or `self == -Infinity`
     """
 
     _subject: DensityFunction
@@ -472,47 +496,5 @@ class when:
     def __init__(self, subject: AnyDensity):
         self._subject = Density(subject).AST
 
-    def equals(self, value: float) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.EQUALS, value=value
-        )
-
-    def unequals(self, value: float) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.UNEQUAL, value=value
-        )
-
-    def greater(self, value: float) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.GREATER_THAN, value=value
-        )
-
-    def less(self, value: float) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.LESS_THAN, value=value
-        )
-
-    def atleast(self, value: float) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value
-        )
-
-    def atmost(self, value: float) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value
-        )
-
-    def inside(self, low: float, high: float, /) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.INSIDE, value=(low, high)
-        )
-
-    def atleast_but_less(self, low: float, high: float, /) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.ABOVE_BUT_UNDER, value=(low, high)
-        )
-
-    def outside(self, low: float, high: float, /) -> Condition:
-        return ComparisonCondition(
-            input=self._subject, relation=Relation.OUTSIDE, value=(low, high)
-        )
+    def _wrap(self, cond: Condition) -> Condition:
+        return cond

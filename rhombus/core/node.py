@@ -1,6 +1,7 @@
 from typing import Self, Any, ClassVar, dataclass_transform
 import dataclasses
 import copy
+from functools import cached_property
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
 
@@ -104,7 +105,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
         return self.fields == other.fields
 
     def __hash__(self) -> int:
-        return hash(uuid_hash(self.serialize_toplevel()))
+        return hash(self.identifier)
 
     def __copy__(self) -> Self:
         return self.__class__(**self.fields)
@@ -147,8 +148,9 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer):
             nodes |= _collect_inscribed_toplevel_nodes(value)
         return nodes
 
-    @property
-    def reference(self) -> str:
+    # TODO: Should this be a field instead that gets automatically set on initialization?
+    @cached_property
+    def identifier(self) -> str:
         """The namespaced resource identifier of this node. This can be a fixed
         string or one generated from the nodes data.
         """

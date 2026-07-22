@@ -159,7 +159,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             identifier = "minecraft:" + identifier
 
         for node in self.AST.inscribed_toplevel_nodes:
-            id = node.reference
+            id = node.identifier
             if id != identifier:
                 if node.fileclass is None:
                     raise TypeError(
@@ -266,8 +266,8 @@ class Density[Function: DensityFunction = DensityFunction]:
     def __pow__(self, other: int) -> Density[types.mul]: ...
     def __pow__(self, other):
         wrapped = self.AST
-        if not isinstance(other, int) or other < 0:
-            raise ValueError("Can only raise to positive integers")
+        if not isinstance(other, int):
+            raise ValueError("Can only raise to integer powers")
         if other == 0:
             return Density(types.constant(1))
         elif other == 1:
@@ -276,11 +276,13 @@ class Density[Function: DensityFunction = DensityFunction]:
             return Density(types.square(wrapped))
         elif other == 3:
             return Density(types.cube(wrapped))
-        elif other > 3:
-            s = Density(types.mul(wrapped, wrapped))
-            for i in range(other - 2):
-                s = Density(types.mul(s.AST, wrapped))
-            return s
+        
+        result = self
+        for _ in range(abs(other) - 1):
+            result = Density(types.mul(result.AST, wrapped))
+        if other < 0:
+            result = Density(types.invert(result.AST))
+        return result
 
     def __and__(self, other):
         other = Density(other).AST

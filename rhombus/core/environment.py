@@ -56,9 +56,6 @@ class RhombusEnvironment:
 
         Addon registration typically includes adding custom density function types to the
         decoding register or providing visualization patches for the preview.
-
-        `RhombusAddon` is a protocoll requiring the `apply_to_rhombus_env` method.
-        This can be a module or a class and principially also any other object.
         """
         for addon_target in addons:
             if isinstance(addon_target, ModuleType):
@@ -164,5 +161,5 @@ env: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
 """The default global Rhombus environment.
 
 For more information on how to use environments see
-[`RhombusEnvironment`](https://annhilati.github.io/rhombus/reference/rhombus/core/config/RhombusEnvironment/).
+[`RhombusEnvironment`](https://annhilati.github.io/rhombus/reference/rhombus/core/environment/RhombusEnvironment/).
 """

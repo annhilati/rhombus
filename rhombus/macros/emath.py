@@ -123,7 +123,7 @@ def mod(
 ) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
-    return perf.rec_cache_transform(
+    return perf.recurrence_cache(
         dividend - divisor * floor(dividend / divisor, range=range)
     )
 

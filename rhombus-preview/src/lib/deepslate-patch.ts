@@ -12,16 +12,75 @@ export const patchState = {
   targetZ: undefined as number | undefined
 };
 
+//======// Polyfill for IntervalSelect //==========================================================//
+class IntervalSelect extends DensityFunction {
+  constructor(
+    public input: DensityFunction,
+    public thresholds: number[],
+    public functions: DensityFunction[]
+  ) {
+    super();
+  }
+
+  public compute(context: any): number {
+    const val = this.input.compute(context);
+    for (let i = 0; i < this.thresholds.length; i++) {
+      if (val < this.thresholds[i]) {
+        return this.functions[i].compute(context);
+      }
+    }
+    return this.functions[this.functions.length - 1].compute(context);
+  }
+
+  public minValue(): number {
+    let min = this.functions[0].minValue();
+    for (let i = 1; i < this.functions.length; i++) {
+      min = Math.min(min, this.functions[i].minValue());
+    }
+    return min;
+  }
+
+  public maxValue(): number {
+    let max = this.functions[0].maxValue();
+    for (let i = 1; i < this.functions.length; i++) {
+      max = Math.max(max, this.functions[i].maxValue());
+    }
+    return max;
+  }
+
+  public mapAll(visitor: any): DensityFunction {
+    return visitor.map(new IntervalSelect(
+      this.input.mapAll(visitor),
+      this.thresholds,
+      this.functions.map(f => f.mapAll(visitor))
+    ));
+  }
+}
+
 //======// Patch of DensityFunction.fromJson to globally validate unknown types //===============//
 const originalFromJson = DensityFunction.fromJson;
 
 /**
  * Monkey-patches `DensityFunction.fromJson` to intercept and log unknown density function types.
- * Deepslate normally defaults unknown types to `Constant.ZERO`, which suppresses errors.
- * This patch detects that behavior and records it in `patchState.errors`.
+ * It also polyfills missing functions like `interval_select`.
  */
 DensityFunction.fromJson = function (obj: unknown, inputParser?: (obj: unknown) => DensityFunction): DensityFunction {
   const parserToUse = inputParser ?? DensityFunction.fromJson;
+  
+  if (typeof obj === 'object' && obj !== null && 'type' in obj) {
+    const typeStr = (obj as any).type;
+    if (typeof typeStr === 'string') {
+      const typeId = typeStr.replace(/^minecraft:/, '');
+      
+      if (typeId === 'interval_select') {
+        const input = parserToUse((obj as any).input);
+        const thresholds = (obj as any).thresholds as number[];
+        const functions = ((obj as any).functions as unknown[]).map(f => parserToUse(f));
+        return new IntervalSelect(input, thresholds, functions);
+      }
+    }
+  }
+
   const result = originalFromJson.call(this, obj, parserToUse);
   
   if (typeof obj === 'object' && obj !== null && 'type' in obj) {

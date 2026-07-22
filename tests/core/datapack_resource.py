@@ -10,7 +10,7 @@ class DummyResource(DatapackResource):
 def test_resource_reference():
     res = DummyResource.refer("my:reference")
     assert res.is_reference
-    assert res.reference == "my:reference"
+    assert res.identifier == "my:reference"
 
 
 def test_resource_serialization():

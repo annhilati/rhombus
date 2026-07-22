@@ -51,8 +51,9 @@ density functions.
 from rhombus.std import Noise
 from rhombus.std import functions as f
 from rhombus.macros.math import floordiv, mod
+from rhombus.macros import performance as perf
 
-__all__ = ["x", "z", "y"]
+__all__ = ["x", "z", "y", "chunk_x", "chunk_z", "chunk_y", "chunk_relative_x", "chunk_relative_y", "chunk_relative_z"]
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
@@ -145,11 +146,11 @@ def _coord_component(
         argument2=value,
     )
 
-    return f.interpolated(f.flat_cache(f.cache_2d(outermost_mul)))
+    return perf.recurrence_cache(f.interpolated(f.flat_cache(f.cache_2d(outermost_mul))), max_nodes=4)
 
 
 def x():
-    """Returns the exact X-coordinate of the current block.
+    """Returns the X-coordinate of the current block.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -165,7 +166,7 @@ def x():
 
 
 def z():
-    """Returns the exact Z-coordinate of the current block.
+    """Returns the Z-coordinate of the current block.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -181,12 +182,15 @@ def z():
 
 
 def y():
-    """Returns the exact Y-coordinate of the current block."""
+    """Returns the Y-coordinate of the current block.
+    
+    **NOTE:** This macro is technically limited to ±4062. Outside this range, the value is clamped.
+    """
     return f.cache_once(f.y_clamped_gradient(-4062, 4062, -4062, 4062))
 
 
 def chunk_x():
-    """Returns the exact X-coordinate of the current chunk.
+    """Returns the X-coordinate of the current chunk.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -197,12 +201,12 @@ def chunk_x():
 
 
 def chunk_y():
-    """Returns the exact Y-coordinate of the current chunk."""
+    """Returns the Y-coordinate of the current chunk."""
     return floordiv(y(), 16)
 
 
 def chunk_z():
-    """Returns the exact Z-coordinate of the current chunk.
+    """Returns the Z-coordinate of the current chunk.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -213,7 +217,7 @@ def chunk_z():
 
 
 def chunk_relative_x():
-    """Returns the exact X-coordinate inside of the current chunk.
+    """Returns the X-coordinate inside of the current chunk.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
@@ -224,12 +228,12 @@ def chunk_relative_x():
 
 
 def chunk_relative_y():
-    """Returns the exact Y-coordinate inside of the current chunk."""
+    """Returns the Y-coordinate inside of the current chunk."""
     return mod(y(), 16)
 
 
 def chunk_relative_z():
-    """Returns the exact Z-coordinate inside of the current chunk.
+    """Returns the Z-coordinate inside of the current chunk.
 
     **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
 
