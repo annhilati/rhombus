@@ -1,4 +1,4 @@
-<a href="#"><img width="2000" alt="Header" src="docs/images/header.svg" /></a>
+<a href="#"><img width="2000" src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/header.svg" alt="Header"/></a>
 
 <h1 align="center">
     <a href="https://annhilati.github.io/rhombus"><img alt="Static Badge" height="38" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact-minimal/documentation/ghpages_vector.svg"></a>
@@ -50,6 +50,7 @@ Growing collection of macros for common patterns and complex operations, reducin
 - **Macro Library**
   - [General Math](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/math.py)
     - sum, prod
+    - smax, smin
     - Infinity, NaN
     - round, floor, ceil, mod
     - sgn, heaviside, monus, ramp
@@ -106,7 +107,21 @@ height_map = spline(erosion, [
 FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 ```
 
-![Preview](docs/images/preview.png)
+![Preview](https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/preview.png)
+
+## Spread the Word
+
+The easiest way to support the Rhombus project is to propagate it's use in your projects. You can use our custom [devins-badges](https://github.com/intergrav/devins-badges).
+
+<p align=center>
+  <a href="https:/github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a>
+  <br>
+  <code>&lt;a href="https:/github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a></code>
+  <br>
+  <a href="https:/github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a>
+  <br>
+  <code>&lt;a href="https:/github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a></code>
+</p>
 
 <img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=2f353d&height=1"/>
 
