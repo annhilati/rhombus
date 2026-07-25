@@ -39,7 +39,7 @@ Growing collection of macros for common patterns and complex operations, reducin
 <details>
 <summary>Unveil</summary>
 
-*This list only includes features that are principially not neccessary, but make up the real strengths of Rhombus.*
+*This list only includes features that are principally not necessary, but make up the real strengths of Rhombus.*
 
 - **Rhombus Preview**  
     A lightweight local frontend with file-watching for previewing density functions
@@ -111,28 +111,31 @@ FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 
 ## Spread the Word
 
-The easiest way to support the Rhombus project is to propagate it's use in your projects. You can use our custom [devins-badges](https://github.com/intergrav/devins-badges).
+The easiest way to support the Rhombus project is to propagate its use in your projects. You can use our custom [devins-badges](https://github.com/intergrav/devins-badges):
 
 <p align=center>
-  <a href="https:/github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a>
+  <a href="https://github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a>
   <br>
-  <code>&lt;a href="https:/github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a></code>
+  <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a></code>
   <br>
-  <a href="https:/github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a>
   <br>
-  <code>&lt;a href="https:/github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a></code>
+  <a href="https://github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a>
+  <br>
+  <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a></code>
 </p>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=2f353d&height=1"/>
+
+<h2></h2>
 
 > [!note]
-> ### Rhombus' current State and it's Development in the Future<br>
+> ### Rhombus' current State and its Development in the Future<br>
 > Rhombus is a finished product which holds what it promises. It is maintained so that it is fully up to date with Minecraft and does not contain any outdated features, but ...<br>
-> There is no active development of new features, nor is the project expanding into new areas of world generation - At least not reliably.
+> 
+> There is no active development of new features. The project also isn't going to expand into new areas of world generation - At least not for now.
 > As long as there isn't significant public interest, Rhombus will remain a hobby project and will only be developed in spurts, driven by flashes of inspiration.
-> If such interest arises or if someone comes forward who wants to work with me to further improve Rhombus, then there will certainly be many more new features released on a more regular basis.
-> That's something I'm looking forward to, and I'd be happy to see it happen in the future.
-> Until then I'm happy to add smaller new features, mod support, or macros upon request, but nothing fundamentally new.
+> If such interest eventually arises or if someone comes forward who wants to further improve Rhombus by working together with me, then there will certainly be many more new features released on a more regular basis.
+> That's something I'm looking forward to.
+> Until then I'm happy to add smaller new features - mod support, or macros - upon request, but nothing fundamentally new.
 >
 > Thank you for reading this and for your interest in Rhombus!<br>
 > Annhilati on July 20, 2026
