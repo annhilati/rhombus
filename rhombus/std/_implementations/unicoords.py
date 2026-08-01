@@ -48,19 +48,17 @@ conditional composition, this macro reconstructs the coordinates using only vani
 density functions.
 """
 
-from rhombus.std import Noise
-from rhombus.std import functions as f
-from rhombus.macros.math import floordiv, mod
-from rhombus.macros import performance as perf
+from rhombus.std.math import mul, add
+from rhombus.std.noise import Noise, shifted_noise
+from rhombus.std.caching import flat_cache, cache_2d, interpolated, recurrence_cache
 
-__all__ = ["x", "z", "y", "chunk_x", "chunk_z", "chunk_y", "chunk_relative_x", "chunk_relative_y", "chunk_relative_z"]
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
-_coord_base = f.flat_cache(
-    f.cache_2d(
+_coord_base = flat_cache(
+    cache_2d(
         -1
-        * f.shifted_noise(
+        * shifted_noise(
             noise=_coord_stripe_noise,
             xz_scale=2**-52,
             y_scale=0,
@@ -82,10 +80,10 @@ _coord_base = f.flat_cache(
 def _coord_component(
     shift_x: float, shift_z: float, quad_shift_x: float, quad_shift_z: float
 ):
-    innermost = f.range_choice(
+    innermost = range_choice(
         input=(
             _coord_base
-            + f.shifted_noise(
+            + shifted_noise(
                 noise=_coord_stripe_noise,
                 xz_scale=2**-55,
                 y_scale=0,
@@ -102,15 +100,15 @@ def _coord_component(
 
     value = innermost
     for i in range(25):
-        value = f.add(
+        value = add(
             argument1=2**i
             if 2**i < 1_000_000
-            else (f.mul(65536.0, 2**i / 65536.0 if i != 24 else -(2**i) / 65536.0)),
-            argument2=f.mul(
-                argument1=f.range_choice(
+            else (mul(65536.0, 2**i / 65536.0 if i != 24 else -(2**i) / 65536.0)),
+            argument2=mul(
+                argument1=range_choice(
                     input=(
                         _coord_base
-                        + f.shifted_noise(
+                        + shifted_noise(
                             noise=_coord_stripe_noise,
                             xz_scale=2 ** (-56 - i),
                             y_scale=0,
@@ -128,9 +126,9 @@ def _coord_component(
             ),
         )
 
-    outermost_mul = f.mul(
-        argument1=f.range_choice(
-            input=f.shifted_noise(
+    outermost_mul = mul(
+        argument1=range_choice(
+            input=shifted_noise(
                 noise=_coord_quad_noise,
                 xz_scale=2**-25,
                 y_scale=0,
@@ -146,98 +144,4 @@ def _coord_component(
         argument2=value,
     )
 
-    return perf.recurrence_cache(f.interpolated(f.flat_cache(f.cache_2d(outermost_mul))), max_nodes=4)
-
-
-def x():
-    """Returns the X-coordinate of the current block.
-
-    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return _coord_component(
-        shift_x=0.99,
-        shift_z=1.01,
-        quad_shift_x=0.9821958456973294,
-        quad_shift_z=0,
-    )
-
-
-def z():
-    """Returns the Z-coordinate of the current block.
-
-    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return _coord_component(
-        shift_x=1.01,
-        shift_z=0.99,
-        quad_shift_x=0,
-        quad_shift_z=0.9821958456973294,
-    )
-
-
-def y():
-    """Returns the Y-coordinate of the current block.
-    
-    **NOTE:** This macro is technically limited to ±4062. Outside this range, the value is clamped.
-    """
-    return f.cache_once(f.y_clamped_gradient(-4062, 4062, -4062, 4062))
-
-
-def chunk_x():
-    """Returns the X-coordinate of the current chunk.
-
-    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return floordiv(x(), 16)
-
-
-def chunk_y():
-    """Returns the Y-coordinate of the current chunk."""
-    return floordiv(y(), 16)
-
-
-def chunk_z():
-    """Returns the Z-coordinate of the current chunk.
-
-    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return floordiv(z(), 16)
-
-
-def chunk_relative_x():
-    """Returns the X-coordinate inside of the current chunk.
-
-    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return mod(x(), 16)
-
-
-def chunk_relative_y():
-    """Returns the Y-coordinate inside of the current chunk."""
-    return mod(y(), 16)
-
-
-def chunk_relative_z():
-    """Returns the Z-coordinate inside of the current chunk.
-
-    **NOTE:** This macro is very resource-intensive. It should not be used if the usecase isn't absolutely minimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
-    return mod(z(), 16)
+    return recurrence_cache(interpolated(flat_cache(cache_2d(outermost_mul))), max_nodes=4)

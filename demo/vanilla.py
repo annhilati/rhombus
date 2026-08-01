@@ -1,5 +1,5 @@
 from rhombus import *
-from rhombus.support.vanilla_legacy import weird_scaled_sampler
+from rhombus.std.types_legacy.vanilla_legacy import weird_scaled_sampler
 
 register(support.vanilla_legacy.weird_scaled_sampler)
 

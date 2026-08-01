@@ -1,15 +1,12 @@
-from rhombus.std import (
-    Density,
-    Noise,
-    AnyDensity,
-    macro,
-)
-from rhombus.std.functions import *
-from rhombus.macros import *
-from rhombus.macros.math import (
+from rhombus.std import *
+from rhombus.std.math import (
+    add,
+    mul,
+    pow,
+    abs,
     Infinity,
     NaN,
-    max, # Make sure max and min override max and min from the std functions
+    max,
     min,
     smax,
     smin,
@@ -20,10 +17,17 @@ from rhombus.macros.math import (
     floor,
     sgn,
 )
-# from rhombus.macros.performance import recurrence_cache, specified_cache
-from rhombus.macros.conditional import when
-from rhombus.macros.coords import y
-from rhombus.macros.maps import extrude_heightmap
+from rhombus.std.caching import (
+    flat_cache,
+    cache_2d,
+    interpolated,
+    cache_once,
+    # recurrence_cache,
+    # specified_cache
+)
+from rhombus.std.conditional import when
+from rhombus.std.coords import x, y, z
+from rhombus.std.maps import extrude_heightmap
 from rhombus.support import *
 from rhombus import (
     splines,

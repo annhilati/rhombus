@@ -1,5 +1,5 @@
 from rhombus import *
-from rhombus.std import types
+from rhombus.std.types import types
 from rhombus.core.density_function import Reference
 from rhombus.core.utils import uuid_hash
 

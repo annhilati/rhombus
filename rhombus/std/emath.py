@@ -1,6 +1,6 @@
 """
 `emath` stands for '*expensive* maths'. This is because the macros in this
-module use approximation methods that have high performance costs.
+module use approximation methods that have high cachingormance costs.
 Either they require a large number of calculations, or they multiply
 the abstract syntax tree of the input.
 
@@ -12,8 +12,9 @@ from typing import Callable
 import math as py_math
 
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std import functions, macro, types
-from rhombus.macros import math, conditional as cond, performance as perf
+from rhombus.std import macro, math, caching
+from rhombus.std import conditional as cond
+from rhombus.std.types import types
 
 
 # ======// Rounding //============================================================================//
@@ -123,7 +124,7 @@ def mod(
 ) -> Density[types.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
-    return perf.recurrence_cache(
+    return caching.recurrence_cache(
         dividend - divisor * floor(dividend / divisor, range=range)
     )
 
@@ -147,9 +148,9 @@ def sqrt(
 def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
     """Returns the exponential function value of the input, so `e` exponentiated to the input."""
     if terms <= 0:
-        return functions.constant(1)
+        return Density(1)
 
-    terms_list = [functions.constant(1)] + [
+    terms_list = [Density(1)] + [
         (argument**k) / py_math.factorial(k) for k in range(1, terms + 1)
     ]
     return math.sum(*terms_list)
@@ -158,7 +159,7 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
 @macro
 def ln(argument: AnyDensity, terms: int = 4) -> Density[types.range_choice]:
     """Returns the natual logarithm value of the input.<br>"""
-    y = argument - functions.constant(1)
+    y = argument - Density(1)
 
     terms_list = [
         ((-1 if (k % 2 == 0) else 1) * (y**k) / k) for k in range(1, terms + 1)
@@ -188,7 +189,7 @@ def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 @macro
 def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the cosine value of the input in radians."""
-    terms_list = [functions.constant(1)] + [
+    terms_list = [Density(1)] + [
         ((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k))
         for k in range(1, terms + 1)
     ]
@@ -250,7 +251,7 @@ def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 @macro
 def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>"""
-    terms_list = [functions.constant(1)] + [
+    terms_list = [Density(1)] + [
         (argument ** (2 * k)) / py_math.factorial(2 * k) for k in range(1, terms + 1)
     ]
     return math.sum(*terms_list)

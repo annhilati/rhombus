@@ -10,13 +10,13 @@ __version__ = "26.2"
 from rhombus.std.noise import *
 from rhombus.std.macros import *
 from rhombus.std.density import *
-from rhombus.std.functions import *
-from rhombus.std import functions as f
-from rhombus.std import types as t
+from functions import *
+from . import functions as f
+from rhombus.std.types import types as t
 
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
-from . import types as _types
+from .types import types as _types
 
 __addon__ = _RhombusAddon(
     name="StdAddon",

@@ -15,16 +15,31 @@ if TYPE_CHECKING:
 from rhombus.core.utils import GlobalBinding
 
 
+
+# ======// Versioning //==========================================================================//
+
+type DatapackVersion = float
+
+class RhombusVersionError(Exception):
+    """Exception raised when a function or macro is not supported in the target version."""
+    pass
+
+
 # ======// Environment //=========================================================================//
 
 
 class RhombusEnvironment:
+    _misode_versions_cache: list[dict] | None = None
+
     def __init__(self):
 
         # Context
         self.datapack: beet.DataPack | None = None
 
         # Configuration
+        self.datapack_version: DatapackVersion | None = None
+        self.strict_versioning: bool = True
+        """If True, throws errors when macros/functions are not supported in the target version. If False, warns and tries to use a default."""
         self.deserialize_references_directly: bool = False
         self.infinitesimal: float = 1e-16
 
@@ -50,6 +65,31 @@ class RhombusEnvironment:
         self._addons: list[RhombusAddon] = []
 
         self._reg_lock = threading.RLock()
+
+    def set_version(self, version: str | int | float) -> None:
+        """Sets the datapack version. If a string is provided (e.g. '1.21.4'), it is resolved to a datapack version using Misode's data."""
+        if isinstance(version, (int, float)):
+            self.datapack_version = float(version)
+            return
+
+        if RhombusEnvironment._misode_versions_cache is None:
+            import urllib.request
+            import json
+            try:
+                with urllib.request.urlopen('https://raw.githubusercontent.com/misode/mcmeta/summary/versions/data.json') as response:
+                    RhombusEnvironment._misode_versions_cache = json.loads(response.read().decode('utf-8'))
+            except Exception as e:
+                raise RuntimeError(f"Failed to fetch version mapping from Misode: {e}")
+
+        for v in RhombusEnvironment._misode_versions_cache:
+            if v.get('id') == version:
+                if 'data_pack_version' in v:
+                    self.datapack_version = float(v['data_pack_version'])
+                    return
+                else:
+                    raise ValueError(f"Version '{version}' does not have a data_pack_version.")
+        
+        raise ValueError(f"Minecraft version '{version}' not found in Misode data.")
 
     def load_addons(self, *addons: ModuleType | "RhombusAddon") -> None:
         """Loads addons for Rhombus and calls their individual registration procedures.

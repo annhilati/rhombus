@@ -17,8 +17,11 @@ __all__ = [
 import math as py_math
 from math import sqrt, pi, e
 
-from rhombus.std import Density, AnyDensity, functions, types, macro
+from rhombus.std import Density, AnyDensity, macro
 from rhombus import splines
+from rhombus.std.types import types
+
+from ..macros import functions
 
 
 @macro

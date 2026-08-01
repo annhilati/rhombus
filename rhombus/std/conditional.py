@@ -24,16 +24,17 @@ from __future__ import annotations
 __all__ = ["when", "NOT", "ALL", "ANY", "it"]
 
 from dataclasses import dataclass, field
-from typing import Any, Never, TypeVar, Generic
+from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
 from rhombus.core import environment
-from rhombus.std.types import range_choice, interval_select, mul, constant, literal_number_limit
+from rhombus.std.types import types
 from rhombus.std.density import Density, AnyDensity
+from rhombus.std import caching
 
 EPSILON = environment.env.infinitesimal
-OMEGA = literal_number_limit
+OMEGA = types.literal_number_limit
 
 
 class Itself:
@@ -146,7 +147,7 @@ class ComparisonCondition(Condition):
         # Primitive case
         if relation == Relation.ABOVE_BUT_UNDER:
             low, high = ensure_pair(self.value)
-            return range_choice(
+            return types.range_choice(
                 input=self.input,
                 min_inclusive=max(low, -OMEGA),
                 max_exclusive=min(high, OMEGA),
@@ -154,6 +155,7 @@ class ComparisonCondition(Condition):
                 when_out_of_range=when_false,
             )
 
+        # TODO: re-add range_choice for older versions
         # Other
         if relation == Relation.INSIDE:
             low, high = ensure_pair(self.value)
@@ -164,13 +166,13 @@ class ComparisonCondition(Condition):
         # Unbounded relations using interval_select
         if relation == Relation.LESS_THAN:
             v = float(self.value)
-            return interval_select(
+            return types.interval_select(
                 input=self.input, thresholds=[v], functions=[when_true, when_false]
             )
 
         if relation == Relation.LESS_OR_EQUAL:
             v = float(self.value)
-            return interval_select(
+            return types.interval_select(
                 input=self.input,
                 thresholds=[v + EPSILON],
                 functions=[when_true, when_false],
@@ -178,7 +180,7 @@ class ComparisonCondition(Condition):
 
         if relation == Relation.GREATER_THAN:
             v = float(self.value)
-            return interval_select(
+            return types.interval_select(
                 input=self.input,
                 thresholds=[v + EPSILON],
                 functions=[when_false, when_true],
@@ -186,7 +188,7 @@ class ComparisonCondition(Condition):
 
         if relation == Relation.GREATER_OR_EQUAL:
             v = float(self.value)
-            return interval_select(
+            return types.interval_select(
                 input=self.input, thresholds=[v], functions=[when_false, when_true]
             )
 
@@ -292,9 +294,7 @@ def ANY(*conditions: Condition) -> Condition:
 
 # ======// Condition Builder //===================================================================//
 
-T = TypeVar("T")
-
-class _ConditionBuilder(Generic[T]):
+class _ConditionBuilder[T]:
     _subject: DensityFunction
 
     def _wrap(self, cond: Condition) -> T:
@@ -330,14 +330,14 @@ class _ConditionBuilder(Generic[T]):
     def is_nan(self) -> T:
         return self._wrap(~(
             when(self._subject).less(0)
-            | when(mul(self._subject, constant(-1.0))).less(0)
+            | when(types.mul(self._subject, types.constant(-1.0))).less(0)
             | when(self._subject).inside(-0.1, 0.1)
         ))
 
     def is_infinite(self) -> T:
         return self._wrap(
-            when(mul(self._subject, constant(0.0))).unequals(0.0) & (
-                when(self._subject).less(0) | when(mul(self._subject, constant(-1.0))).less(0)
+            when(types.mul(self._subject, types.constant(0.0))).unequals(0.0) & (
+                when(self._subject).less(0) | when(types.mul(self._subject, types.constant(-1.0))).less(0)
             )
         )
 
@@ -436,14 +436,12 @@ class Causality:
         def _wrap(self, cond: Condition) -> OtherPendingCondition:
             return OtherPendingCondition(self._chain, cond)
 
-    def otherwise(self, value: AnyDensity | Itself = it) -> Density[range_choice | interval_select]:
+    def otherwise(self, value: AnyDensity | Itself = it) -> Density[types.range_choice | types.interval_select]:
         """Specified a fallback value that is returned if none of the conditions apply.
 
         Returns:
             Density: The resulting density function representing the entire conditionality expression.
         """
-        from rhombus.macros.performance import specified_cache
-
         if value is it:
             if self._default_input is None:
                 raise TypeError(
@@ -453,7 +451,7 @@ class Causality:
         result = Density(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return specified_cache(Density(result), self._default_input or None)
+        return caching.specified_cache(Density(result), self._default_input or None)
 
 
 

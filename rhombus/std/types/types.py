@@ -4,47 +4,10 @@ These are the data models for the vanilla density function types.
 
 They are not needed for normal use of the Rhombus language.
 """
-
-__all__ = [
-    "Reference",
-    "constant",
-    "abs",
-    "add",
-    "beardifier",
-    "blend_alpha",
-    "blend_density",
-    "blend_offset",
-    "cache_2d",
-    "cache_all_in_cell",
-    "cache_once",
-    "clamp",
-    "cube",
-    "end_islands",
-    "find_top_surface",
-    "flat_cache",
-    "half_negative",
-    "interpolated",
-    "interval_select",
-    "invert",
-    "max",
-    "min",
-    "mul",
-    "noise",
-    "old_blended_noise",
-    "quarter_negative",
-    "range_choice",
-    "shift",
-    "shift_a",
-    "shift_b",
-    "shifted_noise",
-    "spline",
-    "square",
-    "squeeze",
-    "y_clamped_gradient",
-]
+from __future__ import annotations
 
 
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, TYPE_CHECKING
 from rhombus.core import (
     RhombusASTNode,
     DensityFunction,
@@ -55,7 +18,9 @@ from rhombus.core import (
     constant,
     JSONDict,
 )
-from rhombus.std.noise import Noise
+
+if TYPE_CHECKING:
+    from rhombus.std.noise import Noise
 
 literal_number_limit: Literal[1000000] = 1000000.0
 """The maximum literal value allowed as a density function shorthand and
@@ -123,8 +88,19 @@ class cube(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cube"
 
 
+class distance_to_point(DensityFunction):
+    id: ClassVar[str] = "minecraft:distance_to_point"
+    point: tuple[int, int, int]
+    metric: Literal["euclidean", "euclidean_squared", "manhattan", "chebyshev"]
+
+
+# Deprecated
 class end_islands(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:end_islands"
+
+
+class end_outer_islands(SimpleDensityFunction):
+    id: ClassVar[str] = "minecraft:end_outer_islands"
 
 
 class find_top_surface(DensityFunction):
@@ -138,6 +114,15 @@ class find_top_surface(DensityFunction):
 class flat_cache(autoCachedMappedFunctionBase):
     id: ClassVar[str] = "minecraft:flat_cache"
 
+
+class gradient(DensityFunction):
+    id: ClassVar[str] = "minecraft:gradient"
+    axis: Literal["x", "y", "z"]
+    tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
+    from_coordinate: int
+    to_coordinate: int # != from_coordinate
+    from_value: float
+    to_value: float
 
 class half_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:half_negative"
@@ -156,6 +141,11 @@ class interval_select(DensityFunction):
 
 class invert(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:invert"
+
+
+class log(DensityFunction):
+    id: ClassVar[str] = "minecraft:log"
+    input: DensityFunction
 
 
 class max(DoubleArgumentDensityFunction):
@@ -188,6 +178,11 @@ class old_blended_noise(DensityFunction):
     y_factor: float
     smear_scale_multiplier: float
 
+
+class pow(DensityFunction):
+    id: ClassVar[str] = "minecraft:pow"
+    base: DensityFunction
+    exponent: DensityFunction
 
 class quarter_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:quarter_negative"
@@ -225,6 +220,18 @@ class shifted_noise(DensityFunction):
     shift_x: DensityFunction
     shift_y: DensityFunction
     shift_z: DensityFunction
+
+
+class sign(DensityFunction):
+    id: ClassVar[str] = "minecraft:sign"
+    input: DensityFunction
+
+
+class slice(DensityFunction):
+    id: ClassVar[str] = "minecraft:slice"
+    axis: Literal["x", "y", "z"]
+    coordinate: int
+    input: DensityFunction
 
 
 class spline(DensityFunction):
@@ -291,10 +298,16 @@ class square(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:square"
 
 
+class sqrt(DensityFunction):
+    id: ClassVar[str] = "minecraft:sqrt"
+    input: DensityFunction
+    
+
 class squeeze(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:squeeze"
 
 
+# Deprecated
 class y_clamped_gradient(DensityFunction):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
     from_y: int

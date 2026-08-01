@@ -17,7 +17,7 @@ from rhombus.core.utils import (
     FROM_CONTEXT,
 )
 from rhombus.core.environment import env
-from rhombus.std import types
+from rhombus.std.types import types
 
 
 # ======// Density Type //========================================================================//
@@ -193,30 +193,24 @@ class Density[Function: DensityFunction = DensityFunction]:
     # ======// Arithmetic Magic //================================================================//
 
     def __add__(self, other) -> Density[types.add]:
-        other = Density(other).AST
-        self = self.AST
-        return Density(types.add(self, other))
+        return Density(types.add(self.AST, Density(other).AST))
 
     def __radd__(self, other) -> Density[types.add]:
         return self.__add__(other)
 
     def __sub__(self, other) -> Density[types.add]:
-        other = Density(other).AST
-        self = self.AST
         return Density(
             types.add(
-                argument1=self,
-                argument2=types.mul(argument1=other, argument2=constant(-1.0)),
+                argument1=self.AST,
+                argument2=types.mul(argument1=Density(other).AST, argument2=constant(-1.0)),
             )
         )
 
     def __rsub__(self, other) -> Density[types.add]:
-        other = Density(other).AST
-        self = self.AST
         return Density(
             types.add(
-                argument1=other,
-                argument2=types.mul(argument1=self, argument2=constant(-1.0)),
+                argument1=Density(other).AST,
+                argument2=types.mul(argument1=self.AST, argument2=constant(-1.0)),
             )
         )
 
@@ -239,62 +233,32 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density(types.mul(other, types.invert(self)))
 
     def __floordiv__(self, other):
-        from rhombus.macros.math import floordiv
-
+        from rhombus.std.math import floordiv
         return floordiv(self, other)
 
     def __rfloordiv__(self, other):
-        from rhombus.macros.math import floordiv
-
+        from rhombus.std.math import floordiv
         return floordiv(self, other)
 
     def __mod__(self, other):
-        from rhombus.macros.math import mod
-
+        from rhombus.std.math import mod
         return mod(self, other)
 
     def __rmod__(self, other):
-        from rhombus.macros.math import mod
-
+        from rhombus.std.math import mod
         return mod(other, self)
 
-    @overload
-    def __pow__(self, other: Literal[2]) -> Density[types.square]: ...
-    @overload
-    def __pow__(self, other: Literal[3]) -> Density[types.cube]: ...
-    @overload
-    def __pow__(self, other: int) -> Density[types.mul]: ...
-    def __pow__(self, other):
-        wrapped = self.AST
-        if not isinstance(other, int):
-            raise ValueError("Can only raise to integer powers")
-        if other == 0:
-            return Density(types.constant(1))
-        elif other == 1:
-            return self
-        elif other == 2:
-            return Density(types.square(wrapped))
-        elif other == 3:
-            return Density(types.cube(wrapped))
-        
-        result = self
-        for _ in range(abs(other) - 1):
-            result = Density(types.mul(result.AST, wrapped))
-        if other < 0:
-            result = Density(types.invert(result.AST))
-        return result
+    def __pow__(self, other) -> Density[types.pow]:
+        from rhombus.std.math import pow
+        return pow(self, other)
 
     def __and__(self, other):
-        other = Density(other).AST
-        self = self.AST
-        return Density(types.max(self, other))
+        return Density(types.max(self.AST, Density(other).AST))
 
     def __or__(self, other):
-        other = Density(other).AST
-        self = self.AST
-        return Density(types.min(self, other))
+        return Density(types.min(self.AST, Density(other).AST))
 
-    def __abs__(self) -> "Density[types.abs]":
+    def __abs__(self) -> Density[types.abs]:
         return Density(types.abs(self.AST))
 
     def __neg__(self) -> Density[types.mul]:

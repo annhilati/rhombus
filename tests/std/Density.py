@@ -1,5 +1,5 @@
 from rhombus import Density
-from rhombus.std import types
+from rhombus.std.types import types
 from rhombus.core import environment
 import beet
 import beet.contrib.worldgen as worldgen

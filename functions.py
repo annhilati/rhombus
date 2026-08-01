@@ -44,7 +44,7 @@ from typing import overload
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.noise import Noise
 from rhombus.std.macros import macro
-from rhombus.std import types
+from rhombus.std.types import types
 from rhombus.core.environment import env
 
 # ======// Basic Arithmetic //====================================================================//

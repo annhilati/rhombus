@@ -192,7 +192,7 @@ class Reference(DensityFunction):
     def serialize_toplevel(self) -> JSONDict:
         if self.definition is not None:
             return self.definition.serialize_toplevel()
-        from rhombus.std import types
+        from rhombus.std.types import types
 
         return types.add(self, constant(0.0)).serialize_toplevel()
 
@@ -232,7 +232,7 @@ class constant(DensityFunction):
         return cls(float(data))
 
     def serialize_toplevel(self) -> float | JSONDict:
-        from rhombus.std import types
+        from rhombus.std.types import types
 
         def ensure_not_exceeding_limit(value: float) -> JSONValue:
 

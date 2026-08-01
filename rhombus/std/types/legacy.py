@@ -1,10 +1,3 @@
-__all__ = [
-    "slide",
-    "terrain_shaper_spline",
-    "weird_scaled_sampler",
-]
-
-
 from typing import ClassVar, Literal
 
 from rhombus.core import DensityFunction, MappedDensityFunction, JSONDict
