@@ -1,13 +1,7 @@
-"""Vanilla density function types
-
-These are the data models for the vanilla density function types.
-
-They are not needed for normal use of the Rhombus language.
-"""
 from __future__ import annotations
 
-
 from typing import ClassVar, Literal, TYPE_CHECKING
+
 from rhombus.core import (
     RhombusASTNode,
     DensityFunction,
@@ -28,6 +22,7 @@ in the `argument` field of the `minecraft:constant` density function type.
 """
 # This corresponds to net.minecraft.world.level.levelgen.DensityFunctions.NOISE_VALUE_CODEC
 
+_ = Reference, constant
 
 class autoCachedMappedFunctionBase(MappedDensityFunction):
     # We leave this for now.
@@ -36,7 +31,6 @@ class autoCachedMappedFunctionBase(MappedDensityFunction):
     #     definition = cls(DensityFunction.deserialize_inline(data["argument"]))
     #     return Reference("rhombus:partitioned/" + uuid_hash(definition.serialize_toplevel()), definition)
     ...
-
 
 class abs(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:abs"
@@ -94,11 +88,6 @@ class distance_to_point(DensityFunction):
     metric: Literal["euclidean", "euclidean_squared", "manhattan", "chebyshev"]
 
 
-# Deprecated
-class end_islands(SimpleDensityFunction):
-    id: ClassVar[str] = "minecraft:end_islands"
-
-
 class end_outer_islands(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:end_outer_islands"
 
@@ -123,6 +112,7 @@ class gradient(DensityFunction):
     to_coordinate: int # != from_coordinate
     from_value: float
     to_value: float
+
 
 class half_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:half_negative"
@@ -305,12 +295,3 @@ class sqrt(DensityFunction):
 
 class squeeze(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:squeeze"
-
-
-# Deprecated
-class y_clamped_gradient(DensityFunction):
-    id: ClassVar[str] = "minecraft:y_clamped_gradient"
-    from_y: int
-    to_y: int
-    from_value: float
-    to_value: float

@@ -1,12 +1,11 @@
 """Macro module for general mathematical functions and constants."""
 
-from rhombus.std import Density, AnyDensity, macro
-from rhombus.std import conditional as cond, caching
-from rhombus.std import _implementations
-from rhombus.std.types import types
+from rhombus.std import Density, AnyDensity, macro, conditional as cond, caching, _implementations
+from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
 
+# TODO: Update
 __all__ = [
     "Infinity",
     "NaN",
@@ -50,7 +49,7 @@ e  = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
 
 
-def constant(argument: float) -> Density[types.constant]:
+def constant(argument: float) -> Density[vt.constant]:
     """Declares a constant float value."""
     return Density(argument)
 
@@ -58,41 +57,41 @@ def constant(argument: float) -> Density[types.constant]:
 # ======// Arithmetic //==========================================================================//
 
 @macro
-def add(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.add]:
+def add(argument1: AnyDensity, argument2: AnyDensity) -> Density[vt.add]:
     """Returns the sum of two inputs."""
-    return Density(types.add(argument1.AST, argument2.AST))
+    return Density(vt.add(argument1.AST, argument2.AST))
 
 @macro
-def sub(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.add]:
+def sub(argument1: AnyDensity, argument2: AnyDensity) -> Density[vt.add]:
     """Returns the difference of two inputs."""
-    return Density(types.add(argument1.AST, types.mul(-1, argument2.AST)))
+    return Density(vt.add(argument1.AST, vt.mul(-1, argument2.AST)))
 
 @macro
-def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[types.mul]:
+def mul(argument1: AnyDensity, argument2: AnyDensity) -> Density[vt.mul]:
     """Returns the product of two inputs."""
-    return Density(types.mul(argument1.AST, argument2.AST))
+    return Density(vt.mul(argument1.AST, argument2.AST))
 
 @macro
-def div(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.mul]:
+def div(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.mul]:
     """Returns the quotient of two inputs."""
-    return Density(types.mul(dividend.AST, types.invert(divisor.AST)))
+    return Density(vt.mul(dividend.AST, vt.invert(divisor.AST)))
 
 @macro
-def square(argument: AnyDensity) -> Density[types.square]:
+def square(argument: AnyDensity) -> Density[vt.square]:
     """Raises the input to the power of 2."""
-    return Density(types.square(argument.AST))
+    return Density(vt.square(argument.AST))
 
 @macro
-def cube(argument: AnyDensity) -> Density[types.cube]:
+def cube(argument: AnyDensity) -> Density[vt.cube]:
     """Raises the input to the power of 3."""
-    return Density(types.cube(argument.AST))
+    return Density(vt.cube(argument.AST))
 
 @macro((133, _implementations.math_pre_113.pow))
-def pow(base: AnyDensity, exponent: AnyDensity) -> Density[types.pow]:
-    return Density(types.pow(base.AST, exponent.AST))
+def pow(base: AnyDensity, exponent: AnyDensity) -> Density[vt.pow]:
+    return Density(vt.pow(base.AST, exponent.AST))
 
 @macro
-def sum(*arguments: AnyDensity) -> Density[types.add]:
+def sum(*arguments: AnyDensity) -> Density[vt.add]:
     "Returns the sum of any number of arguments."
     if len(arguments) == 0:
         return Density(0)
@@ -109,7 +108,7 @@ def sum(*arguments: AnyDensity) -> Density[types.add]:
 
 
 @macro
-def prod(*arguments: AnyDensity) -> Density[types.mul]:
+def prod(*arguments: AnyDensity) -> Density[vt.mul]:
     "Returns the product of any number of arguments."
     if len(arguments) == 0:
         return Density(0)
@@ -128,16 +127,16 @@ def prod(*arguments: AnyDensity) -> Density[types.mul]:
 # ======// Ordering //===========================================================================//
 
 @macro
-def clamp(input: AnyDensity, min: float, max: float) -> Density[types.clamp]:
+def clamp(input: AnyDensity, min: float, max: float) -> Density[vt.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max.
 
     **NOTE:** [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
     """
-    return Density(types.clamp(input.AST, min, max))
+    return Density(vt.clamp(input.AST, min, max))
 
 
 @macro
-def min(*arguments: AnyDensity) -> Density[types.min]:
+def min(*arguments: AnyDensity) -> Density[vt.min]:
     "Returns the minimum of any number of arguments."
     if len(arguments) == 0:
         return Density(0)
@@ -145,16 +144,16 @@ def min(*arguments: AnyDensity) -> Density[types.min]:
         return arguments[0]
 
     it = iter(arguments)
-    result = types.min(next(it.AST), next(it.AST))
+    result = vt.min(next(it.AST), next(it.AST))
 
     for x in it:
-        result = types.min(result, x.AST)
+        result = vt.min(result, x.AST)
 
     return Density(result)
 
 
 @macro
-def max(*arguments: AnyDensity) -> Density[types.max]:
+def max(*arguments: AnyDensity) -> Density[vt.max]:
     "Returns the maximum of any number of arguments."
     if len(arguments) == 0:
         return Density(0)
@@ -162,10 +161,10 @@ def max(*arguments: AnyDensity) -> Density[types.max]:
         return arguments[0]
 
     it = iter(arguments)
-    result = types.max(next(it.AST), next(it.AST))
+    result = vt.max(next(it.AST), next(it.AST))
 
     for x in it:
-        result = types.max(result, x.AST)
+        result = vt.max(result, x.AST)
 
     return Density(result)
 
@@ -240,12 +239,8 @@ def smin(*arguments: AnyDensity, smoothing_factor: AnyDensity = 0.1, degree: int
 
 
 @macro
-def round(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
-    """Rounds the input to the nearest integer or given decimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
+def round(argument: AnyDensity, decimals: int = 0) -> Density[vt.add]:
+    """Rounds the input to the nearest integer or given decimal."""
     if decimals:
         return (
             (argument * 10**decimals)
@@ -260,46 +255,30 @@ def round(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
 
 
 @macro
-def floor(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
-    """Rounds the input down to the nearest integer or given decimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
+def floor(argument: AnyDensity, decimals: int = 0) -> Density[vt.add]:
+    """Rounds the input down to the nearest integer or given decimal."""
     if decimals:
         return round((argument - 0.5) * 10**decimals) / 10**decimals
     return round(argument - 0.5)
 
 
 @macro
-def ceil(argument: AnyDensity, decimals: int = 0) -> Density[types.add]:
-    """Rounds the input up to the nearest integer or given decimal.
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
+def ceil(argument: AnyDensity, decimals: int = 0) -> Density[vt.add]:
+    """Rounds the input up to the nearest integer or given decimal."""
     if decimals:
         return round((argument + 0.5) * 10**decimals) / 10**decimals
     return round(argument + 0.5)
 
 
 @macro
-def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.range_choice]:
-    """Returns the floor division of two inputs (`argument1 // argument2`).
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
+def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.range_choice]:
+    """Returns the floor division of two inputs (`argument1 // argument2`)."""
     return floor(dividend / divisor)
 
 
 @macro
-def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
-    """Returns the modulo of two inputs (`argument1 % argument2`).
-
-    **NOTE:** This implementation exploits the IEEE 754 Java Double implementation, which means
-    that it will not work, when other number types are in use.
-    """
+def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.add]:
+    """Returns the modulo of two inputs (`argument1 % argument2`)."""
     return caching.specified_cache(
         dividend - divisor * floor(dividend / divisor), dividend, divisor
     )
@@ -309,7 +288,7 @@ def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[types.add]:
 
 
 @macro
-def sgn(argument: AnyDensity) -> Density[types.range_choice]:
+def sgn(argument: AnyDensity) -> Density[vt.range_choice]:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
     if env.datapack_version is not None and env.datapack_version < 113:
         return (
@@ -321,13 +300,13 @@ def sgn(argument: AnyDensity) -> Density[types.range_choice]:
             .then(-1.0)
             .otherwise(1.0)
         )
-    return Density(types.sign(argument.AST))
+    return Density(vt.sign(argument.AST))
 
 
 @macro
 def heaviside(
     argument: AnyDensity, *, at_zero: AnyDensity = 0.5
-) -> Density[types.range_choice]:
+) -> Density[vt.range_choice]:
     "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
     return (
         cond.when(argument)
@@ -347,6 +326,6 @@ def monus(argument1: AnyDensity, argument2: AnyDensity):
 
 
 @macro
-def ramp(argument: AnyDensity) -> Density[types.max]:
+def ramp(argument: AnyDensity) -> Density[vt.max]:
     """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
     return max(argument, 0)

@@ -1,7 +1,12 @@
 from typing import ClassVar, Literal
 
-from rhombus.core import DensityFunction, MappedDensityFunction, JSONDict
-from rhombus.std import Noise
+from rhombus.core import DensityFunction, MappedDensityFunction, SimpleDensityFunction, JSONDict
+from rhombus.std import noise
+
+
+# Removed with 113
+class end_islands(SimpleDensityFunction):
+    id: ClassVar[str] = "minecraft:end_islands"
 
 
 class slide(MappedDensityFunction):
@@ -70,5 +75,14 @@ class terrain_shaper_spline(DensityFunction):
 class weird_scaled_sampler(DensityFunction):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     input: DensityFunction
-    noise: Noise
+    noise: noise.Noise
     rarity_value_mapper: Literal["type_1", "type_2"]
+
+
+# Removed with 113
+class y_clamped_gradient(DensityFunction):
+    id: ClassVar[str] = "minecraft:y_clamped_gradient"
+    from_y: int
+    to_y: int
+    from_value: float
+    to_value: float

@@ -3,8 +3,7 @@
 __all__ = ["extrude_heightmap"]
 
 
-from rhombus.std import Density, AnyDensity, macro
-from rhombus.std import coords
+from rhombus.std import Density, AnyDensity, macro, coords
 
 
 @macro

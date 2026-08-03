@@ -5,15 +5,16 @@ For more information on the use and parameters, see `~.Noise`.
 __all__ = ["Noise", "noise", "old_blended_noise", "shifted_noise", "shift", "shift_a", "shift_b"]
 
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core.datapack_resource import DatapackResource
-from rhombus.core.utils import BeetFile
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
-from rhombus.std.types import types
+from rhombus.core.utils import BeetFile, JSONDict
+from rhombus.std import Density, AnyDensity, macro
+from rhombus.support import vanilla as vt
+
+from rhombus.core.environment import env
 
 
 class Noise(DatapackResource):
@@ -29,13 +30,25 @@ class Noise(DatapackResource):
     ```
 
     Parameters:
-        firstOctave (int): Controls the base frequency of the noise. More negative values lead to more vast regions.
-            The scale in blocks over which the noise changes significantly is approximately `2^(-firstOctave)`.
+        base_octave (int): Formerly `firstOctave`. Controls the base frequency of the noise. More negative values lead to more vast regions.
+            The scale in blocks over which the noise changes significantly is approximately `2^(-base_octave)`.
             E.g. `-9` corresponds to ~512 blocks between two oppositely polarized areas.
+            If `legacy_random_source` in the noise settings is true, it must be an integer less than or equal to 1,
+            otherwise the value range is not unlimited.
 
-        amplitudes (list[float]): Controls how detailed the noise is.
+        amplitudes (list[float]): Formerly `amplitudes` (now serialized as `amplitude_modifiers`). Controls how detailed the noise is.
             Every amplitude adds an overlayed copy ("octave") of the noise half the scale of the octave before.
             The magnitude of the amplitudes are relative weight factors. A `0` skips the octave.
+            The length of this list implicitly defines the `octave_count` of the noise.
+
+        base_amplitude (float, optional): A scale factor applied to the noise output. Defaults to 1.0.
+            If `normalize` is True, this is the expected amplitude of the final output.
+            If `normalize` is False, this is the amplitude of the first octave.
+
+        normalize (bool or "legacy", optional): Controls how the output amplitude should be normalized. Defaults to True.
+            - `True`: `base_amplitude` determines the final output range.
+            - `False`: `base_amplitude` only scales the first octave.
+            - `"legacy"`: Inherits older normalization behavior (often smaller range).
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Noise) • [Wikipedia](https://en.wikipedia.org/wiki/Perlin_noise)
@@ -43,8 +56,52 @@ class Noise(DatapackResource):
 
     fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
 
-    firstOctave: int
+    base_octave: int
     amplitudes: list[float]
+    base_amplitude: float = 1.0
+    normalize: bool | Literal["legacy"] = True
+
+    def serialize_toplevel(self) -> JSONDict:
+        if env.datapack_version < 113:
+            return {
+                "firstOctave": self.base_octave,
+                "amplitudes": self.amplitudes
+            }
+        
+        data: JSONDict = {
+            "base_octave": self.base_octave,
+            "base_amplitude": self.base_amplitude,
+            "normalize": self.normalize,
+            "octave_count": len(self.amplitudes)
+        }
+        
+        if any(a != 1.0 for a in self.amplitudes):
+            data["amplitude_modifiers"] = self.amplitudes
+            
+        return data
+
+    @classmethod
+    def deserialize_toplevel(cls, data: JSONDict) -> "Noise":
+        if "firstOctave" in data:
+            return cls(
+                base_octave=data["firstOctave"],
+                amplitudes=data["amplitudes"]
+            )
+        
+        base_octave = data["base_octave"]
+        octave_count = data.get("octave_count", 1)
+        amplitudes = data.get("amplitude_modifiers", [1.0] * octave_count)
+        
+        kwargs = {
+            "base_octave": base_octave,
+            "amplitudes": amplitudes,
+        }
+        if "base_amplitude" in data:
+            kwargs["base_amplitude"] = data["base_amplitude"]
+        if "normalize" in data:
+            kwargs["normalize"] = data["normalize"]
+            
+        return cls(**kwargs)
 
     def __call__(self, xz_scale: float = 1, y_scale: float = 1):
         return noise(self, xz_scale=xz_scale, y_scale=y_scale)
@@ -52,7 +109,7 @@ class Noise(DatapackResource):
 
 def noise(
     noise: Noise, xz_scale: float = 1, y_scale: float = 1
-) -> Density[types.noise]:
+) -> Density[vt.noise]:
     """Samples a noise.
 
     Parameters:
@@ -64,7 +121,7 @@ def noise(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#noise)
     """
-    return Density(types.noise(noise, xz_scale, y_scale))
+    return Density(vt.noise(noise, xz_scale, y_scale))
 
 
 def old_blended_noise(
@@ -73,7 +130,7 @@ def old_blended_noise(
     xz_factor: float,
     y_factor: float,
     smear_scale_multiplier: float,
-) -> Density[types.old_blended_noise]:
+) -> Density[vt.old_blended_noise]:
     """Samples a legacy noise.
 
     These noises are blocky in character, consisting of rectangular regions with varying value tendencies, interspersed with smaller, scattered structures.
@@ -91,7 +148,7 @@ def old_blended_noise(
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#old_blended_noise)
     """
     return Density(
-        types.old_blended_noise(
+        vt.old_blended_noise(
             xz_scale, y_scale, xz_factor, y_factor, smear_scale_multiplier
         )
     )
@@ -105,7 +162,7 @@ def shifted_noise(
     shift_x: AnyDensity,
     shift_y: AnyDensity,
     shift_z: AnyDensity,
-) -> Density[types.shifted_noise]:
+) -> Density[vt.shifted_noise]:
     """Samples a noise after shifting the input coordinates.
 
     Parameters:
@@ -120,45 +177,45 @@ def shifted_noise(
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shifted_noise)
     """
     return Density(
-        types.shifted_noise(
+        vt.shifted_noise(
             noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST
         )
     )
 
 
-def shift(argument: Noise) -> Density[types.shift]:
+def shift(argument: Noise) -> Density[vt.shift]:
     """Samples a noise at `(x/4, y/4, z/4)`, then multiplies it by `4`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift)
     """
-    return Density(types.shift(argument.AST))
+    return Density(vt.shift(argument.AST))
 
 
-def shift_a(argument: Noise) -> Density[types.shift_a]:
+def shift_a(argument: Noise) -> Density[vt.shift_a]:
     """Samples a noise at `(x/4, 0, z/4)`, then multiplies it by `4`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_a)
     """
-    return Density(types.shift_a(argument.AST))
+    return Density(vt.shift_a(argument.AST))
 
 
-def shift_b(argument: Noise) -> Density[types.shift_b]:
+def shift_b(argument: Noise) -> Density[vt.shift_b]:
     """Samples a noise at `(z/4, x/4, 0)`, then multiplies it by `4`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_b)
     """
-    return Density(types.shift_b(argument.AST))
+    return Density(vt.shift_b(argument.AST))
 
 
 # TODO: Re-add the implementation reference
-def end_outer_islands() -> Density[types.end_outer_islands]:
+def end_outer_islands() -> Density[vt.end_outer_islands]:
     """Returns a value using a special noise algorithm used for outer end islands.
     The minimum value is set to `-0.84375`, the maximum value to `0.5625`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands) -
     """
-    return Density(types.end_outer_islands())
+    return Density(vt.end_outer_islands())

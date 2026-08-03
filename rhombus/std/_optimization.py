@@ -1,4 +1,4 @@
-from typing import NamedTuple, Any, Callable, Iterable
+from typing import NamedTuple, Any, Callable
 import dataclasses
 import json
 import sys
@@ -10,9 +10,10 @@ if sys.getrecursionlimit() < 10000:
 
 from beet.contrib import worldgen as beet_worldgen
 
+from rhombus.std import Density
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.std import AnyDensity, Density, macro
-from rhombus.std.types.types import cache_once
+from rhombus.support.vanilla import cache_once
+
 from rhombus.core.environment import env
 
 
@@ -23,7 +24,7 @@ class DensityFunctionSizeInfo(NamedTuple):
     total_unknown_references: int
 
 
-def _count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
+def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
     """Recursively count unique nodes.
 
     Nodes that are equal are grouped.
@@ -119,7 +120,7 @@ def _count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
     return result
 
 
-def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
+def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
     if not isinstance(node, DensityFunction):
         raise TypeError("Expected DensityFunction instance")
@@ -210,7 +211,7 @@ def _df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
     )
 
 
-def _cache_nodes(
+def cache_nodes(
     root: DensityFunction,
     condition: Callable[[DensityFunction], bool],
     wrapper: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
@@ -240,7 +241,7 @@ def _cache_nodes(
             ):
                 # First, recursively optimize the node's inner children
                 # before caching the entire node.
-                optimized_value, inner_replacements = _cache_nodes(
+                optimized_value, inner_replacements = cache_nodes(
                     value, condition, wrapper
                 )
 

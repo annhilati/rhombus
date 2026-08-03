@@ -11,10 +11,8 @@ iterative methods, such as Newton's method.
 from typing import Callable
 import math as py_math
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std import macro, math, caching
-from rhombus.std import conditional as cond
-from rhombus.std.types import types
+from rhombus.std import Density, AnyDensity, macro, math, caching, conditional as cond
+from rhombus.support import vanilla as vt
 
 
 # ======// Rounding //============================================================================//
@@ -23,7 +21,7 @@ from rhombus.std.types import types
 @macro
 def round(
     argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[types.range_choice]:
+) -> Density[vt.range_choice]:
     """Rounds the input to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
     start_int = py_math.ceil(range[0])
@@ -49,7 +47,7 @@ def round(
 @macro
 def floor(
     argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[types.range_choice]:
+) -> Density[vt.range_choice]:
     """Rounds the input down to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
     from rhombus.core import environment
@@ -79,7 +77,7 @@ def floor(
 @macro
 def ceil(
     argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[types.range_choice]:
+) -> Density[vt.range_choice]:
     """Rounds the input up to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
     from rhombus.core import environment
@@ -112,7 +110,7 @@ def ceil(
 @macro
 def floordiv(
     dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[types.range_choice]:
+) -> Density[vt.range_choice]:
     """Returns the floor division of two inputs (`argument1 // argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will be left unrounded."""
     return floor(dividend / divisor, range=range)
@@ -121,7 +119,7 @@ def floordiv(
 @macro
 def mod(
     dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[types.add]:
+) -> Density[vt.add]:
     """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
     return caching.recurrence_cache(
@@ -134,7 +132,7 @@ def sqrt(
     argument: AnyDensity,
     iterations: int = 3,
     guess: Callable[[Density], Density] = lambda d: d * 0.5,
-) -> Density[types.range_choice]:
+) -> Density[vt.range_choice]:
     """Returns the square root of the input."""
     x = guess(argument)
 
@@ -145,7 +143,7 @@ def sqrt(
 
 
 @macro
-def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
+def exp(argument: AnyDensity, terms: int = 4) -> Density[vt.add]:
     """Returns the exponential function value of the input, so `e` exponentiated to the input."""
     if terms <= 0:
         return Density(1)
@@ -157,7 +155,7 @@ def exp(argument: AnyDensity, terms: int = 4) -> Density[types.add]:
 
 
 @macro
-def ln(argument: AnyDensity, terms: int = 4) -> Density[types.range_choice]:
+def ln(argument: AnyDensity, terms: int = 4) -> Density[vt.range_choice]:
     """Returns the natual logarithm value of the input.<br>"""
     y = argument - Density(1)
 
@@ -173,7 +171,7 @@ def ln(argument: AnyDensity, terms: int = 4) -> Density[types.range_choice]:
 
 
 @macro
-def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def sin(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the sine value of the input in radians."""
     terms_list = [argument] + [
         (
@@ -187,7 +185,7 @@ def sin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
 
 @macro
-def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def cos(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the cosine value of the input in radians."""
     terms_list = [Density(1)] + [
         ((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k))
@@ -197,13 +195,13 @@ def cos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
 
 @macro
-def tan(argument: AnyDensity, terms: int = 3) -> Density[types.mul]:
+def tan(argument: AnyDensity, terms: int = 3) -> Density[vt.mul]:
     """Returns the tangent value of the input in radians."""
     return sin(argument, terms) / cos(argument, terms)
 
 
 @macro
-def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def asin(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the arc sine value of the input in radians."""
     terms_list = [
         (py_math.factorial(2 * k) / (4**k * py_math.factorial(k) ** 2 * (2 * k + 1)))
@@ -219,7 +217,7 @@ def asin(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
 
 @macro
-def acos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def acos(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the arc cosine value of the input in radians."""
     return (
         cond.when(argument)
@@ -230,7 +228,7 @@ def acos(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
 
 @macro
-def atan(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def atan(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the arc tangent value of the input in radians."""
     terms_list = [
         ((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / (2 * k + 1))
@@ -240,7 +238,7 @@ def atan(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
 
 @macro
-def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def sinh(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the hyperbolic sine value of the input in radians.<br>"""
     terms_list = [
         (argument ** (2 * k + 1)) / py_math.factorial(2 * k + 1) for k in range(terms)
@@ -249,7 +247,7 @@ def sinh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
 
 
 @macro
-def cosh(argument: AnyDensity, terms: int = 3) -> Density[types.add]:
+def cosh(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
     """Returns the hyperbolic cosine value of the input in radians.<br>"""
     terms_list = [Density(1)] + [
         (argument ** (2 * k)) / py_math.factorial(2 * k) for k in range(1, terms + 1)

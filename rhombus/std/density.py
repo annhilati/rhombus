@@ -17,7 +17,7 @@ from rhombus.core.utils import (
     FROM_CONTEXT,
 )
 from rhombus.core.environment import env
-from rhombus.std.types import types
+from rhombus.support import vanilla as vt
 
 
 # ======// Density Type //========================================================================//
@@ -74,7 +74,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             raise TypeError("Density can only be assigned to a string identifier")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
-        if isinstance(default, types.Reference) and isinstance(
+        if isinstance(default, vt.Reference) and isinstance(
             default.definition, tuple(env.caching_function_types)
         ):
             default = default.definition
@@ -192,45 +192,45 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     # ======// Arithmetic Magic //================================================================//
 
-    def __add__(self, other) -> Density[types.add]:
-        return Density(types.add(self.AST, Density(other).AST))
+    def __add__(self, other) -> Density[vt.add]:
+        return Density(vt.add(self.AST, Density(other).AST))
 
-    def __radd__(self, other) -> Density[types.add]:
+    def __radd__(self, other) -> Density[vt.add]:
         return self.__add__(other)
 
-    def __sub__(self, other) -> Density[types.add]:
+    def __sub__(self, other) -> Density[vt.add]:
         return Density(
-            types.add(
+            vt.add(
                 argument1=self.AST,
-                argument2=types.mul(argument1=Density(other).AST, argument2=constant(-1.0)),
+                argument2=vt.mul(argument1=Density(other).AST, argument2=constant(-1.0)),
             )
         )
 
-    def __rsub__(self, other) -> Density[types.add]:
+    def __rsub__(self, other) -> Density[vt.add]:
         return Density(
-            types.add(
+            vt.add(
                 argument1=Density(other).AST,
-                argument2=types.mul(argument1=self.AST, argument2=constant(-1.0)),
+                argument2=vt.mul(argument1=self.AST, argument2=constant(-1.0)),
             )
         )
 
-    def __mul__(self, other) -> Density[types.mul]:
+    def __mul__(self, other) -> Density[vt.mul]:
         other = Density(other).AST
         self = self.AST
-        return Density(types.mul(self, other))
+        return Density(vt.mul(self, other))
 
-    def __rmul__(self, other) -> Density[types.mul]:
+    def __rmul__(self, other) -> Density[vt.mul]:
         return self.__mul__(other)
 
-    def __truediv__(self, other) -> Density[types.mul]:
+    def __truediv__(self, other) -> Density[vt.mul]:
         other = Density(other).AST
         self = self.AST
-        return Density(types.mul(self, types.invert(other)))
+        return Density(vt.mul(self, vt.invert(other)))
 
-    def __rtruediv__(self, other) -> Density[types.mul]:
+    def __rtruediv__(self, other) -> Density[vt.mul]:
         other = Density(other).AST
         self = self.AST
-        return Density(types.mul(other, types.invert(self)))
+        return Density(vt.mul(other, vt.invert(self)))
 
     def __floordiv__(self, other):
         from rhombus.std.math import floordiv
@@ -248,21 +248,21 @@ class Density[Function: DensityFunction = DensityFunction]:
         from rhombus.std.math import mod
         return mod(other, self)
 
-    def __pow__(self, other) -> Density[types.pow]:
+    def __pow__(self, other) -> Density[vt.pow]:
         from rhombus.std.math import pow
         return pow(self, other)
 
     def __and__(self, other):
-        return Density(types.max(self.AST, Density(other).AST))
+        return Density(vt.max(self.AST, Density(other).AST))
 
     def __or__(self, other):
-        return Density(types.min(self.AST, Density(other).AST))
+        return Density(vt.min(self.AST, Density(other).AST))
 
-    def __abs__(self) -> Density[types.abs]:
-        return Density(types.abs(self.AST))
+    def __abs__(self) -> Density[vt.abs]:
+        return Density(vt.abs(self.AST))
 
-    def __neg__(self) -> Density[types.mul]:
-        return Density(types.mul(self.AST, constant(-1.0)))
+    def __neg__(self) -> Density[vt.mul]:
+        return Density(vt.mul(self.AST, constant(-1.0)))
 
     def __pos__(self) -> Self:
         return self

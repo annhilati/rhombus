@@ -17,6 +17,12 @@ from rhombus.std.math import (
     floor,
     sgn,
 )
+from rhombus.std.noise import (
+    Noise, 
+    noise,
+    old_blended_noise,
+    shifted_noise,
+)
 from rhombus.std.caching import (
     flat_cache,
     cache_2d,

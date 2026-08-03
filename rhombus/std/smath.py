@@ -18,23 +18,48 @@ import math as py_math
 from math import sqrt, pi, e
 
 from rhombus.std import Density, AnyDensity, macro
+from rhombus.support import vanilla as vt
 from rhombus import splines
-from rhombus.std.types import types
 
-from ..macros import functions
+
+# TODO: Move this?
+@macro
+def spline(
+    coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
+) -> Density[vt.spline]:
+    """Computes the value of a cubic spline for the input.
+
+    The values for the points represent in order: `location`, `value` and `derivative`.
+
+    For values beyond the outermost spline points, the value of the nearest spline point is returned.
+
+    **NOTE:** If multiple spline points have the same location, for inputs less than the
+    location, values aproaching the first defined value will be returned. For
+    inputs equal to or greather than the location, values leaving the second
+    defined values will be returned. ("first" and "second" refer to the order
+    of definition in `points`).
+
+    **NOTE:** Approximations for various functions done by splines can be found in `rhombus.macros.smath`.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
+    """
+    points = [(p[0], p[1].AST, p[2]) for p in points]
+    return Density(vt.spline(coordinate.AST, points))
+
 
 
 @macro
 def atan(
     argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the arc tangent value of the input.
 
     Parameters:
         domain ((float, float)): The interval over which the function can take inputs.
     """
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(py_math.atan, domain, points)
     )
 
@@ -42,7 +67,7 @@ def atan(
 @macro
 def cos(
     argument: AnyDensity, domain: tuple[float, float] = (-pi, pi)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the cosine value of the input.
 
     Parameters:
@@ -50,7 +75,7 @@ def cos(
             A wider interval will automatically use more spline points to maintain accuracy.
     """
     points = max(round(2 * (domain[1] - domain[0]) / pi + 1), 3)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(py_math.cos, domain, points)
     )
 
@@ -58,7 +83,7 @@ def cos(
 @macro
 def coth(
     argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the hyperbolic cotangent value of the input.
 
     Parameters:
@@ -70,10 +95,10 @@ def coth(
 @macro
 def erf(
     argument: AnyDensity, domain: tuple[float, float] = (-3, 3)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the value of the input on Gaussian error function."""
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(py_math.erf, domain, points)
     )
 
@@ -81,11 +106,11 @@ def erf(
 @macro
 def exp(
     argument: AnyDensity, domain: tuple[float, float] = (-1, 1), base: float = e
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the value of the input on an exponential function."""
     func = lambda x: base**x
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(func, domain, points)
     )
 
@@ -97,7 +122,7 @@ def logistic(
     growth_rate: float = 4,
     center: float = 0,
     domain: tuple[float, float] = (-1, 1),
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the value of the input on a logistic function.
 
     Parameters:
@@ -111,7 +136,7 @@ def logistic(
     """
     func = lambda x: capacity / (1 + py_math.exp(-growth_rate * (x - center)))
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(func, domain, points)
     )
 
@@ -119,7 +144,7 @@ def logistic(
 @macro
 def normalPDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the value of the input on a normal distributed probability density function.
 
     Parameters:
@@ -134,7 +159,7 @@ def normalPDF(
         / (standard_deviation * py_math.sqrt(2 * py_math.pi))
         * py_math.exp(-0.5 * ((x - mean) / standard_deviation) ** 2)
     )
-    return functions.spline(
+    return spline(
         argument,
         splines.sample_spline_points(
             func, (mean - 3.5 * standard_deviation, mean + 3.5 * standard_deviation), 13
@@ -145,7 +170,7 @@ def normalPDF(
 @macro
 def normalCDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the value of the input on a normal distributed cumulative distribution function.
 
     Parameters:
@@ -158,7 +183,7 @@ def normalCDF(
     func = lambda x: (
         0.5 * (1 + py_math.erf((x - mean) / (standard_deviation * py_math.sqrt(2))))
     )
-    return functions.spline(
+    return spline(
         argument,
         splines.sample_spline_points(
             func, (mean - 3.5 * standard_deviation, mean + 3.5 * standard_deviation), 13
@@ -169,7 +194,7 @@ def normalCDF(
 @macro
 def sin(
     argument: AnyDensity, domain: tuple[float, float] = (-pi, pi)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the sine value of the input.
 
     Parameters:
@@ -177,7 +202,7 @@ def sin(
             A wider interval will automatically use more spline points to maintain accuracy.
     """
     points = max(round(2 * (domain[1] - domain[0]) / pi + 1), 3)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(py_math.sin, domain, points)
     )
 
@@ -187,7 +212,7 @@ def smoothstep(
     argument: AnyDensity,
     domain: tuple[float, float] = (-1, 1),
     range: tuple[float, float] = (-1, 1),
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates a smoothstep transition of the input.
 
     The smoothstep curve rises smoothly from `yRange[0]` to `yRange[1]` while the
@@ -202,7 +227,7 @@ def smoothstep(
     ---
     [Wikipedia](https://en.wikipedia.org/wiki/Smoothstep)
     """
-    return functions.spline(
+    return spline(
         argument, [(domain[0], range[0], 0), (domain[1], range[1], 0)]
     )
 
@@ -210,7 +235,7 @@ def smoothstep(
 @macro
 def tan(
     argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[types.mul]:
+) -> Density[vt.mul]:
     """Evaluates the tangent value of the input.
 
     Parameters:
@@ -222,13 +247,13 @@ def tan(
 @macro
 def tanh(
     argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[types.spline]:
+) -> Density[vt.spline]:
     """Evaluates the hyperbolic tangent value of the input.
 
     Parameters:
         domain ((float, float)): The interval over which the function can take inputs.
     """
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return functions.spline(
+    return spline(
         argument, splines.sample_spline_points(py_math.tanh, domain, points)
     )

@@ -28,13 +28,13 @@ from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.core import environment
-from rhombus.std.types import types
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std import caching
+from rhombus.std import Density, AnyDensity, caching
+from rhombus.support import vanilla as vt
 
-EPSILON = environment.env.infinitesimal
-OMEGA = types.literal_number_limit
+from rhombus.core.environment import env
+
+EPSILON = env.infinitesimal
+OMEGA = vt.literal_number_limit
 
 
 class Itself:
@@ -147,7 +147,7 @@ class ComparisonCondition(Condition):
         # Primitive case
         if relation == Relation.ABOVE_BUT_UNDER:
             low, high = ensure_pair(self.value)
-            return types.range_choice(
+            return vt.range_choice(
                 input=self.input,
                 min_inclusive=max(low, -OMEGA),
                 max_exclusive=min(high, OMEGA),
@@ -166,13 +166,13 @@ class ComparisonCondition(Condition):
         # Unbounded relations using interval_select
         if relation == Relation.LESS_THAN:
             v = float(self.value)
-            return types.interval_select(
+            return vt.interval_select(
                 input=self.input, thresholds=[v], functions=[when_true, when_false]
             )
 
         if relation == Relation.LESS_OR_EQUAL:
             v = float(self.value)
-            return types.interval_select(
+            return vt.interval_select(
                 input=self.input,
                 thresholds=[v + EPSILON],
                 functions=[when_true, when_false],
@@ -180,7 +180,7 @@ class ComparisonCondition(Condition):
 
         if relation == Relation.GREATER_THAN:
             v = float(self.value)
-            return types.interval_select(
+            return vt.interval_select(
                 input=self.input,
                 thresholds=[v + EPSILON],
                 functions=[when_false, when_true],
@@ -188,7 +188,7 @@ class ComparisonCondition(Condition):
 
         if relation == Relation.GREATER_OR_EQUAL:
             v = float(self.value)
-            return types.interval_select(
+            return vt.interval_select(
                 input=self.input, thresholds=[v], functions=[when_false, when_true]
             )
 
@@ -330,14 +330,14 @@ class _ConditionBuilder[T]:
     def is_nan(self) -> T:
         return self._wrap(~(
             when(self._subject).less(0)
-            | when(types.mul(self._subject, types.constant(-1.0))).less(0)
+            | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
             | when(self._subject).inside(-0.1, 0.1)
         ))
 
     def is_infinite(self) -> T:
         return self._wrap(
-            when(types.mul(self._subject, types.constant(0.0))).unequals(0.0) & (
-                when(self._subject).less(0) | when(types.mul(self._subject, types.constant(-1.0))).less(0)
+            when(vt.mul(self._subject, vt.constant(0.0))).unequals(0.0) & (
+                when(self._subject).less(0) | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
             )
         )
 
@@ -436,7 +436,7 @@ class Causality:
         def _wrap(self, cond: Condition) -> OtherPendingCondition:
             return OtherPendingCondition(self._chain, cond)
 
-    def otherwise(self, value: AnyDensity | Itself = it) -> Density[types.range_choice | types.interval_select]:
+    def otherwise(self, value: AnyDensity | Itself = it) -> Density[vt.range_choice | vt.interval_select]:
         """Specified a fallback value that is returned if none of the conditions apply.
 
         Returns:

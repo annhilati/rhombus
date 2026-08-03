@@ -16,13 +16,13 @@ from typing import (
 from types import NotImplementedType
 import inspect
 import functools
+import logging
 import sys
 import types
 
 from rhombus.core.environment import DatapackVersion, RhombusVersionError
 from rhombus.core.utils import Annotation
-from rhombus.std.density import Density, AnyDensity
-import logging
+from rhombus.std import Density, AnyDensity
 
 
 def _create_argument_resolver(func: Callable) -> Callable:

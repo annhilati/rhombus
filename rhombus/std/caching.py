@@ -1,20 +1,22 @@
-from typing import overload
+from typing import overload, Callable, Iterable
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.noise import Noise
-from rhombus.std.macros import macro
-from rhombus.std.types import types
 from rhombus.core.environment import env
+from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro
+from rhombus.support import vanilla as vt
+
+from ._optimization import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 
 
 @overload
 def cache_2d(
     argument: AnyDensity, *, partition: bool = True
-) -> Density[types.Reference]: ...
+) -> Density[vt.Reference]: ...
 @overload
 def cache_2d(
     argument: AnyDensity, *, partition: bool = False
-) -> Density[types.cache_2d]: ...
+) -> Density[vt.cache_2d]: ...
 @macro
 def cache_2d(argument: AnyDensity, *, partition: bool = True):
     """Only computes the input density once per horizontal position.
@@ -23,22 +25,22 @@ def cache_2d(argument: AnyDensity, *, partition: bool = True):
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
     """
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(
+        if isinstance(argument.AST, vt.Reference) and isinstance(
             argument.AST.definition, tuple(env.caching_function_types)
         ):
             argument = Density(argument.AST.definition)
-        return Density.partitioned(types.cache_2d(argument.AST))
-    return Density(types.cache_2d(argument.AST))
+        return Density.partitioned(vt.cache_2d(argument.AST))
+    return Density(vt.cache_2d(argument.AST))
 
 
 @overload
 def cache_all_in_cell(
     argument: AnyDensity, *, partition: bool = True
-) -> Density[types.Reference]: ...
+) -> Density[vt.Reference]: ...
 @overload
 def cache_all_in_cell(
     argument: AnyDensity, *, partition: bool = False
-) -> Density[types.cache_all_in_cell]: ...
+) -> Density[vt.cache_all_in_cell]: ...
 @macro
 def cache_all_in_cell(argument: AnyDensity, partition: bool = True):
     """🚨 Should not be used in datapacks.
@@ -51,22 +53,22 @@ def cache_all_in_cell(argument: AnyDensity, partition: bool = True):
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
     """
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(
+        if isinstance(argument.AST, vt.Reference) and isinstance(
             argument.AST.definition, tuple(env.caching_function_types)
         ):
             argument = Density(argument.AST.definition)
-        return Density.partitioned(types.cache_all_in_cell(argument.AST))
-    return Density(types.cache_all_in_cell(argument.AST))
+        return Density.partitioned(vt.cache_all_in_cell(argument.AST))
+    return Density(vt.cache_all_in_cell(argument.AST))
 
 
 @overload
 def cache_once(
     argument: AnyDensity, *, partition: bool = True
-) -> Density[types.Reference]: ...
+) -> Density[vt.Reference]: ...
 @overload
 def cache_once(
     argument: AnyDensity, *, partition: bool = False
-) -> Density[types.cache_once]: ...
+) -> Density[vt.cache_once]: ...
 @macro
 def cache_once(argument: AnyDensity, *, partition: bool = True):
     """If this density function is referenced twice, it is only computed once per block position.
@@ -77,22 +79,22 @@ def cache_once(argument: AnyDensity, *, partition: bool = True):
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_once)
     """
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(
+        if isinstance(argument.AST, vt.Reference) and isinstance(
             argument.AST.definition, tuple(env.caching_function_types)
         ):
             argument = Density(argument.AST.definition)
-        return Density.partitioned(types.cache_once(argument.AST))
-    return Density(types.cache_once(argument.AST))
+        return Density.partitioned(vt.cache_once(argument.AST))
+    return Density(vt.cache_once(argument.AST))
 
 
 @overload
 def flat_cache(
     argument: AnyDensity, *, partition: bool = True
-) -> Density[types.Reference]: ...
+) -> Density[vt.Reference]: ...
 @overload
 def flat_cache(
     argument: AnyDensity, *, partition: bool = False
-) -> Density[types.flat_cache]: ...
+) -> Density[vt.flat_cache]: ...
 @macro
 def flat_cache(argument: AnyDensity, *, partition: bool = True):
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
@@ -101,16 +103,16 @@ def flat_cache(argument: AnyDensity, *, partition: bool = True):
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
     if partition:
-        if isinstance(argument.AST, types.Reference) and isinstance(
+        if isinstance(argument.AST, vt.Reference) and isinstance(
             argument.AST.definition, tuple(env.caching_function_types)
         ):
             argument = Density(argument.AST.definition)
-        return Density.partitioned(types.flat_cache(argument.AST))
-    return Density(types.flat_cache(argument.AST))
+        return Density.partitioned(vt.flat_cache(argument.AST))
+    return Density(vt.flat_cache(argument.AST))
 
 
 @macro
-def interpolated(argument: AnyDensity) -> Density[types.interpolated]:
+def interpolated(argument: AnyDensity) -> Density[vt.interpolated]:
     """Interpolates at each block in one cell based on the input density function
     value of some cells around. The size of each cell is 4 by 4.
 
@@ -119,33 +121,8 @@ def interpolated(argument: AnyDensity) -> Density[types.interpolated]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
     """
-    return Density(types.interpolated(argument.AST))
+    return Density(vt.interpolated(argument.AST))
 
-
-
-
-
-__all__ = ["recurrence_cache", "specified_cache", "get_size"]
-
-
-from typing import NamedTuple, Any, Callable, Iterable
-import dataclasses
-import json
-import sys
-
-# Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
-# We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
-if sys.getrecursionlimit() < 10000:
-    sys.setrecursionlimit(10000)
-
-from beet.contrib import worldgen as beet_worldgen
-
-from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.std import AnyDensity, Density, macro
-from rhombus.std.types.types import cache_once
-from rhombus.core.environment import env
-
-from ._optimization import _count_node_values, _cache_nodes, _df_size_info, DensityFunctionSizeInfo
 
 def _get_occurance_and_size_condition(
     max_nodes: int,
@@ -156,7 +133,7 @@ def _get_occurance_and_size_condition(
     def condition(node: DensityFunction) -> bool:
         return (
             occurances.get(node, 0) > 1
-            and _df_size_info(node).toplevel_nodes > max_nodes
+            and df_size_info(node).toplevel_nodes > max_nodes
         )
 
     return condition
@@ -202,9 +179,9 @@ def recurrence_cache(
         "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
         definition=caching_function(value),
     )
-    occurances = _count_node_values(argument.AST)
+    occurances = count_node_values(argument.AST)
     return Density(
-        _cache_nodes(
+        cache_nodes(
             argument.AST,
             condition=_get_occurance_and_size_condition(max_nodes, occurances),
             wrapper=wrapper,
@@ -230,13 +207,13 @@ def specified_cache(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
         definition=caching_function(node),
     )
-    occurances = _count_node_values(argument.AST)
+    occurances = count_node_values(argument.AST)
     identity_cond = _get_identity_condition([n.AST for n in functions if isinstance(n, Density)])
     condition = lambda node: (
         identity_cond(node) and occurances.get(node, 0) > 1
     )
     # Cache if node is one of specified and it occurs multiple times
-    return Density(_cache_nodes(argument.AST, condition=condition, wrapper=wrapper)[0])
+    return Density(cache_nodes(argument.AST, condition=condition, wrapper=wrapper)[0])
 
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:
@@ -249,4 +226,4 @@ def get_size(df: Density) -> DensityFunctionSizeInfo:
             - `~.unique_unknown_references`: Number of unique references with unknown definition
             - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
     """
-    return _df_size_info(df.AST)
+    return df_size_info(df.AST)
