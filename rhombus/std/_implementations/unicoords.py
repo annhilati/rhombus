@@ -49,6 +49,7 @@ density functions.
 """
 
 from rhombus.std.math import mul, add
+from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, shifted_noise
 from rhombus.std.caching import flat_cache, cache_2d, interpolated, recurrence_cache
 

@@ -20,7 +20,7 @@ import logging
 import sys
 import types
 
-from rhombus.core.environment import DatapackVersion, RhombusVersionError
+from rhombus.core.environment import DatapackVersion
 from rhombus.core.utils import Annotation
 from rhombus.std import Density, AnyDensity
 

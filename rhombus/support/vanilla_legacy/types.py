@@ -1,18 +1,30 @@
 from typing import ClassVar, Literal
 
-from rhombus.core import DensityFunction, MappedDensityFunction, SimpleDensityFunction, JSONDict
+from rhombus.core import (
+    DensityFunction,
+    MappedDensityFunction,
+    SimpleDensityFunction,
+    JSONDict,
+)
 from rhombus.std import noise
 
 
-# Removed with 113
+# Deprecated with 113
 class end_islands(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:end_islands"
 
 
+# Deprecated with 111
+class invert(MappedDensityFunction):
+    id: ClassVar[str] = "minecraft:invert"
+
+
+# Deprecated with 10
 class slide(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:slide"
 
 
+# Deprecated with 10
 class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
     coordinate: DensityFunction
@@ -62,6 +74,7 @@ class spline(DensityFunction):
         }
 
 
+# Deprecated with 10
 class terrain_shaper_spline(DensityFunction):
     id: ClassVar[str] = "minecraft:terrain_shaper_spline"
     spline: Literal["offset", "factor", "jaggedness"]
@@ -72,6 +85,7 @@ class terrain_shaper_spline(DensityFunction):
     weirdness: DensityFunction
 
 
+# Deprecated with 104
 class weird_scaled_sampler(DensityFunction):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     input: DensityFunction
@@ -79,7 +93,7 @@ class weird_scaled_sampler(DensityFunction):
     rarity_value_mapper: Literal["type_1", "type_2"]
 
 
-# Removed with 113
+# Deprecated with 113
 class y_clamped_gradient(DensityFunction):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
     from_y: int

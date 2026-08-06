@@ -1,10 +1,10 @@
 from typing import overload, Callable, Iterable
 
-from rhombus.core.environment import env
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std import Density, AnyDensity, macro
 from rhombus.support import vanilla as vt
+
+from rhombus.core.environment import env
 
 from ._optimization import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 

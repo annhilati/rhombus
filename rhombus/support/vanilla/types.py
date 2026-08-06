@@ -24,13 +24,13 @@ in the `argument` field of the `minecraft:constant` density function type.
 
 _ = Reference, constant
 
-class autoCachedMappedFunctionBase(MappedDensityFunction):
-    # We leave this for now.
-    # @classmethod
-    # def deserialize_toplevel(cls, data: JSONDict) -> Reference:
-    #     definition = cls(DensityFunction.deserialize_inline(data["argument"]))
-    #     return Reference("rhombus:partitioned/" + uuid_hash(definition.serialize_toplevel()), definition)
-    ...
+
+class RoundingDensityFunction(MappedDensityFunction):
+    multiple: DensityFunction
+
+
+# ======// Model Classes //======================================================================//
+
 
 class abs(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:abs"
@@ -40,7 +40,7 @@ class add(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:add"
 
     def __repr__(self) -> str:
-        return "(" + self.argument1.__repr__() + " + " + self.argument2.__repr__() + ")"
+        return "(" + self.left.__repr__() + " + " + self.right.__repr__() + ")"
 
 
 class beardifier(SimpleDensityFunction):
@@ -59,16 +59,20 @@ class blend_offset(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:blend_offset"
 
 
-class cache_2d(autoCachedMappedFunctionBase):
+class cache_2d(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cache_2d"
 
 
-class cache_all_in_cell(autoCachedMappedFunctionBase):
+class cache_all_in_cell(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cache_all_in_cell"
 
 
-class cache_once(autoCachedMappedFunctionBase):
+class cache_once(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cache_once"
+
+
+class ceil(RoundingDensityFunction):
+    id: ClassVar[str] = "minecraft:ceil"
 
 
 class clamp(DensityFunction):
@@ -80,12 +84,19 @@ class clamp(DensityFunction):
 
 class cube(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cube"
+    
+    def __repr__(self) -> str:
+            return "(" + self.input.__repr__() + " ** 3)"
 
 
 class distance_to_point(DensityFunction):
     id: ClassVar[str] = "minecraft:distance_to_point"
     point: tuple[int, int, int]
     metric: Literal["euclidean", "euclidean_squared", "manhattan", "chebyshev"]
+
+
+class div(DoubleArgumentDensityFunction):
+    id: ClassVar[str] = "minecraft:div"
 
 
 class end_outer_islands(SimpleDensityFunction):
@@ -100,8 +111,12 @@ class find_top_surface(DensityFunction):
     cell_height: int
 
 
-class flat_cache(autoCachedMappedFunctionBase):
+class flat_cache(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:flat_cache"
+
+
+class floor(RoundingDensityFunction):
+    id: ClassVar[str] = "minecraft:floor"
 
 
 class gradient(DensityFunction):
@@ -109,7 +124,7 @@ class gradient(DensityFunction):
     axis: Literal["x", "y", "z"]
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
     from_coordinate: int
-    to_coordinate: int # != from_coordinate
+    to_coordinate: int  # != from_coordinate
     from_value: float
     to_value: float
 
@@ -129,13 +144,15 @@ class interval_select(DensityFunction):
     functions: list[DensityFunction]  # one Element more than thresholds
 
 
-class invert(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:invert"
+class lerp(DensityFunction):
+    id: ClassVar[str] = "minecraft:lerp"
+    alpha: DensityFunction
+    first: DensityFunction
+    second: DensityFunction
 
 
-class log(DensityFunction):
+class log(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:log"
-    input: DensityFunction
 
 
 class max(DoubleArgumentDensityFunction):
@@ -150,7 +167,14 @@ class mul(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:mul"
 
     def __repr__(self) -> str:
-        return "(" + self.argument1.__repr__() + " * " + self.argument2.__repr__() + ")"
+        return "(" + self.left.__repr__() + " * " + self.right.__repr__() + ")"
+
+
+class negate(MappedDensityFunction):
+    id: ClassVar[str] = "minecraft:negate"
+    
+    def __repr__(self) -> str:
+                return "- " + self.input.__repr__()
 
 
 class noise(DensityFunction):
@@ -173,6 +197,10 @@ class pow(DensityFunction):
     id: ClassVar[str] = "minecraft:pow"
     base: DensityFunction
     exponent: DensityFunction
+    
+    def __repr__(self) -> str:
+                return "(" + self.base.__repr__() + " ** " + self.exponent.__repr__() + ")"
+
 
 class quarter_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:quarter_negative"
@@ -187,19 +215,27 @@ class range_choice(DensityFunction):
     when_out_of_range: DensityFunction
 
 
+class reciprocal(MappedDensityFunction):
+    id: ClassVar[str] = "minecraft:reciprocal"
+
+
+class round(RoundingDensityFunction):
+    id: ClassVar[str] = "minecraft:round"
+
+
 class shift(DensityFunction):
     id: ClassVar[str] = "minecraft:shift"
-    argument: Noise
+    noise: Noise
 
 
 class shift_a(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_a"
-    argument: Noise
+    noise: Noise
 
 
 class shift_b(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_b"
-    argument: Noise
+    noise: Noise
 
 
 class shifted_noise(DensityFunction):
@@ -286,12 +322,23 @@ class spline(DensityFunction):
 
 class square(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:square"
+    
+    def __repr__(self) -> str:
+                return "(" + self.input.__repr__() + " ** 2)"
 
 
 class sqrt(DensityFunction):
     id: ClassVar[str] = "minecraft:sqrt"
     input: DensityFunction
-    
+
 
 class squeeze(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:squeeze"
+
+
+class sub(DoubleArgumentDensityFunction):
+    id: ClassVar[str] = "minecraft:sub"
+
+
+class truncate(RoundingDensityFunction):
+    id: ClassVar[str] = "minecraft:truncate"

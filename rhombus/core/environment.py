@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+__all__ = ["DatapackVersion", "RhombusVersionError", "RhombusEnvironment", "RhombusAddon", "env"]
+
 from typing import Callable, Any, Optional, TYPE_CHECKING
 from types import ModuleType
 from dataclasses import dataclass, field

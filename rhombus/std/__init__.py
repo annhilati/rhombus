@@ -20,4 +20,4 @@ from . import (
 
 # Convenience
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, RhombusVersionError
+from rhombus.std.macros import macro

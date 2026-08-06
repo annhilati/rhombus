@@ -199,58 +199,60 @@ class Density[Function: DensityFunction = DensityFunction]:
         return self.__add__(other)
 
     def __sub__(self, other) -> Density[vt.add]:
-        return Density(
-            vt.add(
-                argument1=self.AST,
-                argument2=vt.mul(argument1=Density(other).AST, argument2=constant(-1.0)),
-            )
-        )
+        from rhombus.std.math import sub
+
+        return sub(self, other)
 
     def __rsub__(self, other) -> Density[vt.add]:
-        return Density(
-            vt.add(
-                argument1=Density(other).AST,
-                argument2=vt.mul(argument1=self.AST, argument2=constant(-1.0)),
-            )
-        )
+        from rhombus.std.math import sub
+
+        return sub(other, self)
 
     def __mul__(self, other) -> Density[vt.mul]:
-        other = Density(other).AST
-        self = self.AST
-        return Density(vt.mul(self, other))
+        return Density(vt.mul(self.AST, Density(other).AST))
 
     def __rmul__(self, other) -> Density[vt.mul]:
         return self.__mul__(other)
 
     def __truediv__(self, other) -> Density[vt.mul]:
-        other = Density(other).AST
-        self = self.AST
-        return Density(vt.mul(self, vt.invert(other)))
+        from rhombus.std.math import div
+
+        return div(self, other)
 
     def __rtruediv__(self, other) -> Density[vt.mul]:
-        other = Density(other).AST
-        self = self.AST
-        return Density(vt.mul(other, vt.invert(self)))
+        from rhombus.std.math import div
+
+        return div(other, self)
 
     def __floordiv__(self, other):
         from rhombus.std.math import floordiv
+
         return floordiv(self, other)
 
     def __rfloordiv__(self, other):
         from rhombus.std.math import floordiv
-        return floordiv(self, other)
+
+        return floordiv(other, self)
 
     def __mod__(self, other):
         from rhombus.std.math import mod
+
         return mod(self, other)
 
     def __rmod__(self, other):
         from rhombus.std.math import mod
+
         return mod(other, self)
 
     def __pow__(self, other) -> Density[vt.pow]:
         from rhombus.std.math import pow
+
         return pow(self, other)
+
+    def __rpow__(self, other) -> Density[vt.pow]:
+        from rhombus.std.math import pow
+
+        return pow(other, self)
 
     def __and__(self, other):
         return Density(vt.max(self.AST, Density(other).AST))
@@ -262,7 +264,9 @@ class Density[Function: DensityFunction = DensityFunction]:
         return Density(vt.abs(self.AST))
 
     def __neg__(self) -> Density[vt.mul]:
-        return Density(vt.mul(self.AST, constant(-1.0)))
+        if env.datapack_version < 111:
+            return self * -1
+        return Density(vt.negate(self.AST))
 
     def __pos__(self) -> Self:
         return self
@@ -279,6 +283,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             return False
         return self.AST != other.AST
 
+    # IDEA: Allow building Conditions here -> when needs to become a function to allow conditions and subjects
     def __gt__(self, other):
         raise NotImplementedError(
             "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"

@@ -1,7 +1,7 @@
 from typing import Self, Any, ClassVar, dataclass_transform
+from functools import cached_property
 import dataclasses
 import copy
-from functools import cached_property
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
 

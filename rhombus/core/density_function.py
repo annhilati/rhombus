@@ -6,6 +6,7 @@ from beet.contrib.worldgen import WorldgenDensityFunction
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
+
 from rhombus.core.environment import env
 
 __all__ = [
@@ -126,32 +127,63 @@ class SimpleDensityFunction(DensityFunction):
 
 class MappedDensityFunction(DensityFunction):
     """The **`MappedDensityFunction`** base class implements functionality for
-    density function types that map an argument `argument` to a value.
+    density function types that map an argument `input` to a value.
     """
 
-    argument: DensityFunction
+    input: DensityFunction
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + "(" + self.argument.__repr__() + ")"
-
+        return self.__class__.__name__ + "(" + self.input.__repr__() + ")"
+    
+    def serialize_toplevel(self):
+        if env.datapack_version < 111:
+            return {"type": self.id, "argument": self.input.serialize_inline()}
+        else:
+            return super().serialize_toplevel()
+    
+    @classmethod
+    def deserialize_toplevel(cls, data):
+        if env.datapack_version < 111:
+            return cls(DensityFunction.deserialize_inline(data["argument"]))
+        else:
+            return super().deserialize_toplevel(data)
+        
 
 class DoubleArgumentDensityFunction(DensityFunction):
     """The **`DoubleArgumentDensityFunction`** base class implements functionality for
-    density function types that take two arguments `argument1` and `argument2`.
+    density function types that take two arguments `left` and `right`.
     """
 
-    argument1: DensityFunction
-    argument2: DensityFunction
+    left: DensityFunction
+    right: DensityFunction
 
     def __repr__(self) -> str:
         return (
             self.__class__.__name__
             + "("
-            + self.argument1.__repr__()
+            + self.left.__repr__()
             + ", "
-            + self.argument2.__repr__()
+            + self.right.__repr__()
             + ")"
         )
+        
+    def serialize_toplevel(self):
+        if env.datapack_version < 111:
+            return {
+                "type": self.id,
+                "argument1": self.left.serialize_inline(),
+                "argument2": self.right.serialize_inline(),
+            }
+        return super().serialize_toplevel()
+    
+    def deserialize_toplevel(cls, data):
+        if env.datapack_version < 111:
+            return cls(
+                DensityFunction.deserialize_inline(data["argument1"]),
+                DensityFunction.deserialize_inline(data["argument2"]),
+            )
+        return super().deserialize_toplevel(data)
+
 
 
 # ======// Primitives //==========================================================================//
@@ -192,9 +224,9 @@ class Reference(DensityFunction):
     def serialize_toplevel(self) -> JSONDict:
         if self.definition is not None:
             return self.definition.serialize_toplevel()
-        from rhombus.std.types import types
+        from rhombus.support import vanilla as vt
 
-        return types.add(self, constant(0.0)).serialize_toplevel()
+        return vt.add(self, constant(0.0)).serialize_toplevel()
 
     def serialize_inline(self) -> str:
         return self.target
@@ -223,31 +255,31 @@ class Reference(DensityFunction):
 
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
-    argument: float
+    value: float
 
     @classmethod
     def deserialize_toplevel(cls, data: dict | int | float):
         if isinstance(data, dict):
-            return cls(float(data["argument"]))
+            return cls(float(data["argument"] if env.datapack_version < 111 else data["value"]))
         return cls(float(data))
 
     def serialize_toplevel(self) -> float | JSONDict:
-        from rhombus.std.types import types
+        from rhombus.support import vanilla as vt 
 
         def ensure_not_exceeding_limit(value: float) -> JSONValue:
 
-            if abs(value) < types.literal_number_limit:
+            if abs(value) < vt.literal_number_limit:
                 return value
 
-            return types.mul(
-                ensure_not_exceeding_limit(value / types.literal_number_limit),
-                types.literal_number_limit,
+            return vt.mul(
+                ensure_not_exceeding_limit(value / vt.literal_number_limit),
+                vt.literal_number_limit,
             ).serialize_inline()
 
-        return ensure_not_exceeding_limit(self.argument)
+        return ensure_not_exceeding_limit(self.value)
 
     def __repr__(self) -> str:
-        return str(self.argument)
+        return str(self.value)
 
 
 class Unknown(DensityFunction):

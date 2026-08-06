@@ -28,13 +28,76 @@ from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.std import Density, AnyDensity, caching
+from rhombus.std import Density, AnyDensity, macro, caching
 from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
 
 EPSILON = env.infinitesimal
 OMEGA = vt.literal_number_limit
+
+
+# ======// Vanilla Coverage //====================================================================//
+
+
+# IDEA: Move this
+@macro
+def range_choice(
+    input: AnyDensity,
+    min_inclusive: float,
+    max_exclusive: float,
+    when_in_range: AnyDensity,
+    when_out_of_range: AnyDensity,
+) -> Density[vt.range_choice]:
+    """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
+
+    **NOTE:** To create logic or conditional expressions, use `rhombus.macros.conditional`.
+
+    ```
+    if input >= min_inclucive:
+        if input < max_exclusive:
+            return when_in_range
+    return when_out_of_range
+    ```
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
+    """
+    return Density(
+        vt.range_choice(
+            input.AST,
+            min_inclusive,
+            max_exclusive,
+            when_in_range.AST,
+            when_out_of_range.AST,
+        )
+    )
+
+
+@macro
+def interval_select(
+    input: AnyDensity, thresholds: list[float], functions: list[AnyDensity]
+):
+    """Selects between a number of density functions based on an input density function and a set of threshold values.
+
+    Parameters:
+        input (density function): Density Function, to be compared with given thresholds.
+        thresholds (list[float]):  Threshold values to compare input with. Must be non-empty.
+            If `input < thresholds[i]`, `functions[i]` will be selected. If the input is greater than the last threshold value, the last function will be selected.
+            Must be one fewer thresholds than functions.
+        functions (list[density function]): List of density functions to be selected from. Must be one more element in functions than in thresholds.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interval_select)
+    """
+    return Density(
+        vt.interval_select(
+            input.AST, thresholds, [function.AST for function in functions]
+        )
+    )
+
+
+# ======// Conditionality Fluent Interface //=====================================================//
 
 
 class Itself:
@@ -155,7 +218,6 @@ class ComparisonCondition(Condition):
                 when_out_of_range=when_false,
             )
 
-        # TODO: re-add range_choice for older versions
         # Other
         if relation == Relation.INSIDE:
             low, high = ensure_pair(self.value)
@@ -163,6 +225,7 @@ class ComparisonCondition(Condition):
                 self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON)
             )._compile(when_true, when_false)
 
+        # TODO: re-add range_choice for older versions
         # Unbounded relations using interval_select
         if relation == Relation.LESS_THAN:
             v = float(self.value)
@@ -294,6 +357,7 @@ def ANY(*conditions: Condition) -> Condition:
 
 # ======// Condition Builder //===================================================================//
 
+
 class _ConditionBuilder[T]:
     _subject: DensityFunction
 
@@ -301,43 +365,85 @@ class _ConditionBuilder[T]:
         raise NotImplementedError
 
     def equals(self, value: float) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.EQUALS, value=value))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.EQUALS, value=value
+            )
+        )
 
     def unequals(self, value: float) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.UNEQUAL, value=value))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.UNEQUAL, value=value
+            )
+        )
 
     def greater(self, value: float) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.GREATER_THAN, value=value))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.GREATER_THAN, value=value
+            )
+        )
 
     def less(self, value: float) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.LESS_THAN, value=value))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.LESS_THAN, value=value
+            )
+        )
 
     def atleast(self, value: float) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value
+            )
+        )
 
     def atmost(self, value: float) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value
+            )
+        )
 
     def inside(self, low: float, high: float, /) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.INSIDE, value=(low, high)))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.INSIDE, value=(low, high)
+            )
+        )
 
     def atleast_but_less(self, low: float, high: float, /) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.ABOVE_BUT_UNDER, value=(low, high)))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject,
+                relation=Relation.ABOVE_BUT_UNDER,
+                value=(low, high),
+            )
+        )
 
     def outside(self, low: float, high: float, /) -> T:
-        return self._wrap(ComparisonCondition(input=self._subject, relation=Relation.OUTSIDE, value=(low, high)))
+        return self._wrap(
+            ComparisonCondition(
+                input=self._subject, relation=Relation.OUTSIDE, value=(low, high)
+            )
+        )
 
     def is_nan(self) -> T:
-        return self._wrap(~(
-            when(self._subject).less(0)
-            | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
-            | when(self._subject).inside(-0.1, 0.1)
-        ))
+        return self._wrap(
+            ~(
+                when(self._subject).less(0)
+                | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
+                | when(self._subject).inside(-0.1, 0.1)
+            )
+        )
 
     def is_infinite(self) -> T:
         return self._wrap(
-            when(vt.mul(self._subject, vt.constant(0.0))).unequals(0.0) & (
-                when(self._subject).less(0) | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
+            when(vt.mul(self._subject, vt.constant(0.0))).unequals(0.0)
+            & (
+                when(self._subject).less(0)
+                | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
             )
         )
 
@@ -367,6 +473,7 @@ class OtherPendingCondition:
 
 
 # ======// Causality Class //=====================================================================//
+
 
 @dataclass
 class Causality:
@@ -436,7 +543,9 @@ class Causality:
         def _wrap(self, cond: Condition) -> OtherPendingCondition:
             return OtherPendingCondition(self._chain, cond)
 
-    def otherwise(self, value: AnyDensity | Itself = it) -> Density[vt.range_choice | vt.interval_select]:
+    def otherwise(
+        self, value: AnyDensity | Itself = it
+    ) -> Density[vt.range_choice | vt.interval_select]:
         """Specified a fallback value that is returned if none of the conditions apply.
 
         Returns:
@@ -452,7 +561,6 @@ class Causality:
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
         return caching.specified_cache(Density(result), self._default_input or None)
-
 
 
 # ======// Condition Fabric //====================================================================//

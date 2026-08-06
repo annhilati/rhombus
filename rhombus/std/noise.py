@@ -9,8 +9,7 @@ from typing import ClassVar, Literal
 
 from beet.contrib.worldgen import WorldgenNoise
 
-from rhombus.core.datapack_resource import DatapackResource
-from rhombus.core.utils import BeetFile, JSONDict
+from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std import Density, AnyDensity, macro
 from rhombus.support import vanilla as vt
 
@@ -41,11 +40,11 @@ class Noise(DatapackResource):
             The magnitude of the amplitudes are relative weight factors. A `0` skips the octave.
             The length of this list implicitly defines the `octave_count` of the noise.
 
-        base_amplitude (float, optional): A scale factor applied to the noise output. Defaults to 1.0.
+        base_amplitude (float): A scale factor applied to the noise output. Defaults to 1.0.
             If `normalize` is True, this is the expected amplitude of the final output.
             If `normalize` is False, this is the amplitude of the first octave.
 
-        normalize (bool or "legacy", optional): Controls how the output amplitude should be normalized. Defaults to True.
+        normalize (bool | Literal["legacy"]): Controls how the output amplitude should be normalized. Defaults to True.
             - `True`: `base_amplitude` determines the final output range.
             - `False`: `base_amplitude` only scales the first octave.
             - `"legacy"`: Inherits older normalization behavior (often smaller range).
