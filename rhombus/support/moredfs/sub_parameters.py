@@ -8,7 +8,7 @@ from rhombus.core import (
     serialize_any_inline,
     deserialize_any_inline,
 )
-from rhombus.std import Density, AnyDensity
+from rhombus.std.density import Density, AnyDensity
 
 
 class RandomSampler(SubParameters):

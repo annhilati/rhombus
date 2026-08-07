@@ -1,4 +1,6 @@
-from rhombus.std import Noise, Density, AnyDensity, macro
+from rhombus.std.noise import Noise
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro
 
 from . import types
 

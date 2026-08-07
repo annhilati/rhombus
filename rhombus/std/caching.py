@@ -1,7 +1,8 @@
 from typing import overload, Callable, Iterable
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.std import Density, AnyDensity, macro
+from rhombus.std.density import Density, AnyDensity, _unify
+from rhombus.std.macros import macro
 from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
@@ -193,7 +194,7 @@ def recurrence_cache(
 def specified_cache(
     argument: AnyDensity,
     *functions: Density,
-    caching_function: DensityFunction = cache_once,
+    caching_function: DensityFunction = vt.cache_once,
 ) -> Density:
     """Applies cahing to specific parts of a density function. All subfunctions
     that are equal to a node specified in `nodes` and occur multiple times
@@ -205,7 +206,7 @@ def specified_cache(
     """
     wrapper = lambda node: Reference(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
-        definition=caching_function(node),
+        definition=_unify(caching_function(node)),
     )
     occurances = count_node_values(argument.AST)
     identity_cond = _get_identity_condition([n.AST for n in functions if isinstance(n, Density)])

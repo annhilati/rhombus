@@ -11,7 +11,9 @@ from rhombus.core import (
     Reference,
     constant,
     JSONDict,
+    field
 )
+from rhombus.core.environment import env
 
 if TYPE_CHECKING:
     from rhombus.std.noise import Noise
@@ -71,13 +73,13 @@ class cache_once(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cache_once"
 
 
-class ceil(RoundingDensityFunction):
+class ceil(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:ceil"
 
 
 class clamp(DensityFunction):
     id: ClassVar[str] = "minecraft:clamp"
-    input: DensityFunction  # no references
+    input: DensityFunction
     min: float
     max: float
 
@@ -89,21 +91,21 @@ class cube(MappedDensityFunction):
             return "(" + self.input.__repr__() + " ** 3)"
 
 
-class distance_to_point(DensityFunction):
+class distance_to_point(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:distance_to_point"
     point: tuple[int, int, int]
     metric: Literal["euclidean", "euclidean_squared", "manhattan", "chebyshev"]
 
 
-class div(DoubleArgumentDensityFunction):
+class div(DoubleArgumentDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:div"
 
 
-class end_outer_islands(SimpleDensityFunction):
+class end_outer_islands(SimpleDensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:end_outer_islands"
 
 
-class find_top_surface(DensityFunction):
+class find_top_surface(DensityFunction, versions=(82, ...)):
     id: ClassVar[str] = "minecraft:find_top_surface"
     density: DensityFunction
     upper_bound: DensityFunction
@@ -115,11 +117,11 @@ class flat_cache(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:flat_cache"
 
 
-class floor(RoundingDensityFunction):
+class floor(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:floor"
 
 
-class gradient(DensityFunction):
+class gradient(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:gradient"
     axis: Literal["x", "y", "z"]
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
@@ -137,21 +139,21 @@ class interpolated(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:interpolated"
 
 
-class interval_select(DensityFunction):
+class interval_select(DensityFunction, versions=(104, ...)):
     id: ClassVar[str] = "minecraft:interval_select"
     input: DensityFunction
-    thresholds: list[float]  # non-empty
-    functions: list[DensityFunction]  # one Element more than thresholds
+    thresholds: list[float] = field(validate=lambda x: len(x) > 1)
+    functions: list[DensityFunction] = field(validate=lambda x, df: len(x) == len(df.thresholds) + 1) # one Element more than thresholds
 
 
-class lerp(DensityFunction):
+class lerp(DensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:lerp"
     alpha: DensityFunction
     first: DensityFunction
     second: DensityFunction
 
 
-class log(MappedDensityFunction):
+class log(MappedDensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:log"
 
 
@@ -170,7 +172,7 @@ class mul(DoubleArgumentDensityFunction):
         return "(" + self.left.__repr__() + " * " + self.right.__repr__() + ")"
 
 
-class negate(MappedDensityFunction):
+class negate(MappedDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:negate"
     
     def __repr__(self) -> str:
@@ -186,14 +188,14 @@ class noise(DensityFunction):
 
 class old_blended_noise(DensityFunction):
     id: ClassVar[str] = "minecraft:old_blended_noise"
-    xz_scale: float
-    y_scale: float
-    xz_factor: float
-    y_factor: float
-    smear_scale_multiplier: float
+    xz_scale: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
+    y_scale: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
+    xz_factor: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
+    y_factor: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
+    smear_scale_multiplier: float = field(added_with=10, validate=lambda x: 1 <= x <= 8)
 
 
-class pow(DensityFunction):
+class pow(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:pow"
     base: DensityFunction
     exponent: DensityFunction
@@ -215,27 +217,27 @@ class range_choice(DensityFunction):
     when_out_of_range: DensityFunction
 
 
-class reciprocal(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:reciprocal"
+class reciprocal(MappedDensityFunction, versions=(82, ...)):
+    id: ClassVar[str] = field("minecraft:reciprocal", legacy_values={111.0: "minecraft:invert"})
 
 
-class round(RoundingDensityFunction):
+class round(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:round"
 
 
 class shift(DensityFunction):
     id: ClassVar[str] = "minecraft:shift"
-    noise: Noise
+    noise: Noise = field(legacy_keys={111.0: "argument"})
 
 
 class shift_a(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_a"
-    noise: Noise
+    noise: Noise = field(legacy_keys={111.0: "argument"})
 
 
 class shift_b(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_b"
-    noise: Noise
+    noise: Noise = field(legacy_keys={111.0: "argument"})
 
 
 class shifted_noise(DensityFunction):
@@ -248,12 +250,11 @@ class shifted_noise(DensityFunction):
     shift_z: DensityFunction
 
 
-class sign(DensityFunction):
+class sign(MappedDensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:sign"
-    input: DensityFunction
 
 
-class slice(DensityFunction):
+class slice(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:slice"
     axis: Literal["x", "y", "z"]
     coordinate: int
@@ -264,6 +265,8 @@ class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
     coordinate: DensityFunction
     points: list[tuple[float, DensityFunction, float]]
+    min_value: float = field(removed_with=10.0)
+    max_value: float = field(removed_with=10.0)
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> "spline":
@@ -282,6 +285,7 @@ class spline(DensityFunction):
                 )
                 for point in data["spline"]["points"]
             ],
+            # TODO: Include min/max_value
         )
 
     def serialize_toplevel(self) -> JSONDict:
@@ -300,6 +304,10 @@ class spline(DensityFunction):
                     for point in self.points
                 ],
             },
+            **({
+                "min_value": self.min_value,
+                "max_value": self.max_value,
+            } if env.datapack_version < 10.0 else {})
         }
 
     @property
@@ -327,18 +335,17 @@ class square(MappedDensityFunction):
                 return "(" + self.input.__repr__() + " ** 2)"
 
 
-class sqrt(DensityFunction):
+class sqrt(MappedDensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:sqrt"
-    input: DensityFunction
 
 
 class squeeze(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:squeeze"
 
 
-class sub(DoubleArgumentDensityFunction):
+class sub(DoubleArgumentDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:sub"
 
 
-class truncate(RoundingDensityFunction):
+class truncate(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:truncate"

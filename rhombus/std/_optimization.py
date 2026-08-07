@@ -10,7 +10,7 @@ if sys.getrecursionlimit() < 10000:
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.std import Density
+from rhombus.std.density import Density
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.support.vanilla import cache_once
 
@@ -241,12 +241,16 @@ def cache_nodes(
             ):
                 # First, recursively optimize the node's inner children
                 # before caching the entire node.
-                optimized_value, inner_replacements = cache_nodes(
-                    value, condition, wrapper
+                new_nodes_being_cached = nodes_being_cached | frozenset([value])
+                optimized_value = dataclasses.replace(
+                    value,
+                    **{
+                        field_name: visit_and_replace_if_needed(
+                            field_value, new_nodes_being_cached
+                        )
+                        for field_name, field_value in value.fields.items()
+                    },
                 )
-
-                for k, v in inner_replacements.items():
-                    replacement_info[k] = replacement_info.get(k, 0) + v
 
                 replacement_info[value] = replacement_info.get(value, 0) + 1
 

@@ -59,7 +59,7 @@ import base64
 from typing import Literal
 
 from PIL import Image
-from rhombus.std import Density, AnyDensity, macro
+from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
 from rhombus.core import DensityFunction
 from . import types
 from .sub_parameters import (

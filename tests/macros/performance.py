@@ -1,4 +1,4 @@
-from rhombus.std import performance
+from rhombus.std import caching as performance
 from rhombus.std import Density
 from rhombus.core import Reference
 

@@ -5,77 +5,20 @@ from rhombus.core import (
     MappedDensityFunction,
     SimpleDensityFunction,
     JSONDict,
+    field
 )
 from rhombus.std import noise
 
 
-# Deprecated with 113
-class end_islands(SimpleDensityFunction):
+class end_islands(SimpleDensityFunction, versions=(9, 133)):
     id: ClassVar[str] = "minecraft:end_islands"
 
 
-# Deprecated with 111
-class invert(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:invert"
-
-
-# Deprecated with 10
-class slide(MappedDensityFunction):
+class slide(MappedDensityFunction, versions=(9, 10)):
     id: ClassVar[str] = "minecraft:slide"
 
 
-# Deprecated with 10
-class spline(DensityFunction):
-    id: ClassVar[str] = "minecraft:spline"
-    coordinate: DensityFunction
-    points: list[tuple[float, DensityFunction, float]]
-    min_value: float
-    max_value: float
-
-    @classmethod
-    def deserialize_toplevel(cls, data: JSONDict) -> "spline":
-        return cls(
-            DensityFunction.deserialize_inline(data["spline"]["coordinate"]),
-            [
-                (
-                    point["location"],
-                    DensityFunction.deserialize_inline(
-                        {"type": "minecraft:spline", "spline": point["value"]}
-                    )
-                    if isinstance(point["value"], dict)
-                    and point["value"].get("type") is None
-                    else DensityFunction.deserialize_inline(point["value"]),
-                    point["derivative"],
-                )
-                for point in data["spline"]["points"]
-            ],
-            data["min_value"],
-            data["max_value"],
-        )
-
-    def serialize_toplevel(self) -> JSONDict:
-        return {
-            "type": self.id,
-            "spline": {
-                "coordinate": self.coordinate.serialize_inline(),
-                "points": [
-                    {
-                        "location": point[0],
-                        "value": point[1].serialize_inline()["spline"]
-                        if isinstance(point[1].serialize_inline(), dict)
-                        else point[1].serialize_inline(),
-                        "derivative": point[2],
-                    }
-                    for point in self.points
-                ],
-            },
-            "min_value": self.min_value,
-            "max_value": self.max_value,
-        }
-
-
-# Deprecated with 10
-class terrain_shaper_spline(DensityFunction):
+class terrain_shaper_spline(DensityFunction, versions=(9, 10)):
     id: ClassVar[str] = "minecraft:terrain_shaper_spline"
     spline: Literal["offset", "factor", "jaggedness"]
     min_value: float
@@ -85,18 +28,16 @@ class terrain_shaper_spline(DensityFunction):
     weirdness: DensityFunction
 
 
-# Deprecated with 104
-class weird_scaled_sampler(DensityFunction):
+class weird_scaled_sampler(DensityFunction, versions=(9, 104)):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     input: DensityFunction
     noise: noise.Noise
     rarity_value_mapper: Literal["type_1", "type_2"]
 
 
-# Deprecated with 113
-class y_clamped_gradient(DensityFunction):
+class y_clamped_gradient(DensityFunction, versions=(9, 113)):
     id: ClassVar[str] = "minecraft:y_clamped_gradient"
-    from_y: int
-    to_y: int
+    from_y: int = field(validate=lambda x: -4064 <= x <= 4062)
+    to_y: int = field(validate=lambda x: -4064 <= x <= 4062)
     from_value: float
     to_value: float

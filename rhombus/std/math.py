@@ -1,6 +1,6 @@
 """Macro module for general mathematical functions and constants."""
 
-from rhombus.std import Density, AnyDensity, macro, conditional as cond, caching
+from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro; from rhombus.std import conditional as cond, caching
 from rhombus.std._implementations import pre113_math
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
@@ -41,29 +41,7 @@ __all__ = [
     "monus",
 ]
 
-# ======// Numeric Constants //===================================================================//
 
-Infinity = Density(1) / 0
-"Density equivalent to Java's `Double.POSITIVE_INFINITY`"
-NaN = Density(0) / 0
-"""Density equivalent to Java's `Double.NaN`
-
-**NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
-chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
-as air.
-"""
-
-pi = Density(
-    3.1415926535897932
-)  # 38462643383279502884197169399375105820974944592307816406
-"The constant `π` to 16 decimals."
-e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
-"Euler's number `e` to 16 decimals."
-
-
-def constant(value: float) -> Density[vt.constant]:
-    """Declares a constant float value."""
-    return Density(value)
 
 
 # ======// Arithmetic //==========================================================================//
@@ -78,7 +56,7 @@ def add(df1: AnyDensity, df2: AnyDensity) -> Density[vt.add]:
 @macro
 def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density[vt.add]:
     """Returns the difference of two inputs."""
-    if env.datapack_version < 111:
+    if env.datapack_version is not None and env.datapack_version < 111:
         return Density(vt.add(minuend.AST, vt.mul(-1, subtrahend.AST)))
     else:
         return Density(vt.sub(minuend.AST, subtrahend.AST))
@@ -93,7 +71,7 @@ def mul(df1: AnyDensity, df2: AnyDensity) -> Density[vt.mul]:
 @macro
 def div(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.mul]:
     """Returns the quotient of two inputs."""
-    if env.datapack_version < 111:
+    if env.datapack_version is not None and env.datapack_version < 111:
         return Density(vt.mul(dividend.AST, lt.invert(divisor.AST)))
     else:
         return Density(vt.div(dividend.AST, divisor.AST))
@@ -149,6 +127,30 @@ def prod(*dfs: AnyDensity) -> Density[vt.mul]:
 
     return result
 
+
+# ======// Numeric Constants //===================================================================//
+
+Infinity = Density(1) / 0
+"Density equivalent to Java's `Double.POSITIVE_INFINITY`"
+NaN = Density(0) / 0
+"""Density equivalent to Java's `Double.NaN`
+
+**NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
+chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
+as air.
+"""
+
+pi = Density(
+    3.1415926535897932
+)  # 38462643383279502884197169399375105820974944592307816406
+"The constant `π` to 16 decimals."
+e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
+"Euler's number `e` to 16 decimals."
+
+
+def constant(value: float) -> Density["vt.constant"]:
+    """Declares a constant float value."""
+    return Density(value)
 
 # ======// Ordering //===========================================================================//
 
@@ -272,7 +274,7 @@ def smin(
 @macro
 def round(df: AnyDensity, decimals: int = 0) -> Density[vt.round]:
     """Rounds the input to the nearest integer or given decimal."""
-    if env.datapack_version < 111:
+    if env.datapack_version is not None and env.datapack_version < 111:
         if decimals:
             return (
                 (df * 10**decimals)
@@ -289,7 +291,7 @@ def round(df: AnyDensity, decimals: int = 0) -> Density[vt.round]:
 @macro
 def floor(df: AnyDensity, decimals: int = 0) -> Density[vt.floor]:
     """Rounds the input down to the nearest integer or given decimal."""
-    if env.datapack_version < 111:
+    if env.datapack_version is not None and env.datapack_version < 111:
         if decimals:
             return round((df - 0.5) * 10**decimals) / 10**decimals
         return round(df - 0.5)
@@ -300,7 +302,7 @@ def floor(df: AnyDensity, decimals: int = 0) -> Density[vt.floor]:
 @macro
 def ceil(df: AnyDensity, decimals: int = 0) -> Density[vt.ceil]:
     """Rounds the input up to the nearest integer or given decimal."""
-    if env.datapack_version < 111:
+    if env.datapack_version is not None and env.datapack_version < 111:
         if decimals:
             return round((df + 0.5) * 10**decimals) / 10**decimals
         return round(df + 0.5)

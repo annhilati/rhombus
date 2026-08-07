@@ -1,9 +1,9 @@
 # Datapack version 113 was introduced with 26.3-snap6
 
-from rhombus.std import Density
+from rhombus.std.density import Density
 from rhombus.support import vanilla as vt
 
-def pow(base: Density, exponent: int) -> Density[vt.square | vt.cube | vt.mul | vt.invert]:
+def pow(base: Density, exponent: int) -> Density[vt.square | vt.cube | vt.mul | vt.reciprocal]:
     wrapped = base.AST
     if not isinstance(exponent, int):
         raise ValueError("Can only raise to integer powers in this version")
@@ -20,5 +20,5 @@ def pow(base: Density, exponent: int) -> Density[vt.square | vt.cube | vt.mul | 
     for _ in range(abs(exponent) - 1):
         result = Density(vt.mul(result.AST, wrapped))
     if exponent < 0:
-        result = Density(vt.invert(result.AST))
+        result = Density(vt.reciprocal(result.AST))
     return result

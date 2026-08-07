@@ -8,12 +8,12 @@ __version__ = "26.3"
 
 __addon__ = _RhombusAddon(
     name="VanillaLegacy",
-    density_functions={
-        cls.id: cls
+    density_functions=[
+        cls
         for name, cls in _types.__dict__.items()
-        if name in _types.__all__
+        if not name.startswith("_")
         and isinstance(cls, type)
         and issubclass(cls, _DensityFunction)
         and hasattr(cls, "id")
-    },
+    ],
 )

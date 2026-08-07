@@ -58,8 +58,8 @@ def test_serialize_literals():
 
     assert Reference("some:reference").serialize_toplevel() == {
         "type": "minecraft:add",
-        "argument1": "some:reference",
-        "argument2": 0.0,
+        "left": "some:reference",
+        "right": 0.0,
     }
     # Be aware of the order of arguments
 

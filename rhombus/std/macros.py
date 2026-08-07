@@ -22,7 +22,7 @@ import types
 
 from rhombus.core.environment import DatapackVersion
 from rhombus.core.utils import Annotation
-from rhombus.std import Density, AnyDensity
+from rhombus.std.density import Density, AnyDensity
 
 
 def _create_argument_resolver(func: Callable) -> Callable:

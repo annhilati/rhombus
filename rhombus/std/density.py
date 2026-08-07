@@ -17,8 +17,9 @@ from rhombus.core.utils import (
     FROM_CONTEXT,
 )
 from rhombus.core.environment import env
-from rhombus.support import vanilla as vt
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from rhombus.support import vanilla as vt
 
 # ======// Density Type //========================================================================//
 
@@ -74,6 +75,7 @@ class Density[Function: DensityFunction = DensityFunction]:
             raise TypeError("Density can only be assigned to a string identifier")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
+        from rhombus.support import vanilla as vt
         if isinstance(default, vt.Reference) and isinstance(
             default.definition, tuple(env.caching_function_types)
         ):
@@ -192,29 +194,31 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     # ======// Arithmetic Magic //================================================================//
 
-    def __add__(self, other) -> Density[vt.add]:
+    def __add__(self, other) -> Density["vt.add"]:
+        from rhombus.support import vanilla as vt
         return Density(vt.add(self.AST, Density(other).AST))
 
-    def __radd__(self, other) -> Density[vt.add]:
+    def __radd__(self, other) -> Density["vt.add"]:
         return self.__add__(other)
 
-    def __sub__(self, other) -> Density[vt.add]:
+    def __sub__(self, other) -> Density["vt.add"]:
         from rhombus.std.math import sub
 
         return sub(self, other)
 
-    def __rsub__(self, other) -> Density[vt.add]:
+    def __rsub__(self, other) -> Density["vt.add"]:
         from rhombus.std.math import sub
 
         return sub(other, self)
 
-    def __mul__(self, other) -> Density[vt.mul]:
+    def __mul__(self, other) -> Density["vt.mul"]:
+        from rhombus.support import vanilla as vt
         return Density(vt.mul(self.AST, Density(other).AST))
 
-    def __rmul__(self, other) -> Density[vt.mul]:
+    def __rmul__(self, other) -> Density["vt.mul"]:
         return self.__mul__(other)
 
-    def __truediv__(self, other) -> Density[vt.mul]:
+    def __truediv__(self, other) -> Density["vt.mul"]:
         from rhombus.std.math import div
 
         return div(self, other)
@@ -244,27 +248,31 @@ class Density[Function: DensityFunction = DensityFunction]:
 
         return mod(other, self)
 
-    def __pow__(self, other) -> Density[vt.pow]:
+    def __pow__(self, other) -> Density["vt.pow"]:
         from rhombus.std.math import pow
 
         return pow(self, other)
 
-    def __rpow__(self, other) -> Density[vt.pow]:
+    def __rpow__(self, other) -> Density["vt.pow"]:
         from rhombus.std.math import pow
 
         return pow(other, self)
 
     def __and__(self, other):
+        from rhombus.support import vanilla as vt
         return Density(vt.max(self.AST, Density(other).AST))
 
     def __or__(self, other):
+        from rhombus.support import vanilla as vt
         return Density(vt.min(self.AST, Density(other).AST))
 
-    def __abs__(self) -> Density[vt.abs]:
+    def __abs__(self) -> Density["vt.abs"]:
+        from rhombus.support import vanilla as vt
         return Density(vt.abs(self.AST))
 
-    def __neg__(self) -> Density[vt.mul]:
-        if env.datapack_version < 111:
+    def __neg__(self) -> Density["vt.mul"]:
+        from rhombus.support import vanilla as vt
+        if env.datapack_version is not None and env.datapack_version < 111:
             return self * -1
         return Density(vt.negate(self.AST))
 

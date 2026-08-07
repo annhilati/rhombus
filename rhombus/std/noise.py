@@ -10,7 +10,7 @@ from typing import ClassVar, Literal
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
-from rhombus.std import Density, AnyDensity, macro
+from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
 from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
@@ -61,7 +61,7 @@ class Noise(DatapackResource):
     normalize: bool | Literal["legacy"] = True
 
     def serialize_toplevel(self) -> JSONDict:
-        if env.datapack_version < 113:
+        if env.datapack_version is not None and env.datapack_version < 113:
             return {
                 "firstOctave": self.base_octave,
                 "amplitudes": self.amplitudes

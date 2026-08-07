@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-__all__ = ["DatapackVersion", "RhombusVersionError", "RhombusEnvironment", "RhombusAddon", "env"]
+__all__ = ["RhombusVersion", "DatapackVersion", "ModVersion", "VersionLike", "RhombusVersionError", "RhombusEnvironment", "RhombusAddon", "env"]
 
 from typing import Callable, Any, Optional, TYPE_CHECKING
-from types import ModuleType
+from types import ModuleType, EllipsisType
 from dataclasses import dataclass, field
+from functools import total_ordering
 from pathlib import Path
 import threading
+import re
 
 import beet
 
@@ -20,7 +22,68 @@ from rhombus.core.utils import GlobalBinding
 
 # ======// Versioning //==========================================================================//
 
-type DatapackVersion = float
+type DatapackVersion = float | int
+type ModVersion = tuple[str, str | tuple[int, ...]]
+type VersionLike = DatapackVersion | ModVersion | str | "RhombusVersion"
+
+@total_ordering
+class RhombusVersion:
+    namespace: str
+    version: tuple[int, ...]
+
+    def __init__(
+        self,
+        spec: VersionLike,
+        default_namespace: str = "datapack",
+    ):
+        if isinstance(spec, RhombusVersion):
+            self.namespace = spec.namespace
+            self.version = spec.version
+        elif isinstance(spec, (float, int)):
+            self.namespace = "datapack"
+            parts = str(float(spec)).split(".")
+            self.version = tuple(int(p) for p in parts)
+        elif isinstance(spec, tuple) and len(spec) == 2:
+            self.namespace = spec[0]
+            v = spec[1]
+            if isinstance(v, str):
+                parts = re.findall(r"\d+", v)
+                self.version = tuple(int(p) for p in parts)
+            elif isinstance(v, (float, int)):
+                parts = str(float(v)).split(".")
+                self.version = tuple(int(p) for p in parts)
+            else:
+                self.version = tuple(int(p) for p in v)
+        elif isinstance(spec, str):
+            self.namespace = default_namespace
+            parts = re.findall(r"\d+", spec)
+            self.version = tuple(int(p) for p in parts)
+        else:
+            raise TypeError(f"Invalid version spec: {spec}")
+
+    def __eq__(self, other):
+        if not isinstance(other, RhombusVersion):
+            return NotImplemented
+        if self.namespace != other.namespace:
+            return False
+        length = max(len(self.version), len(other.version))
+        v1 = self.version + (0,) * (length - len(self.version))
+        v2 = other.version + (0,) * (length - len(other.version))
+        return v1 == v2
+
+    def __lt__(self, other):
+        if not isinstance(other, RhombusVersion):
+            return NotImplemented
+        if self.namespace != other.namespace:
+            return NotImplemented
+        length = max(len(self.version), len(other.version))
+        v1 = self.version + (0,) * (length - len(self.version))
+        v2 = other.version + (0,) * (length - len(other.version))
+        return v1 < v2
+
+    def __repr__(self) -> str:
+        return f"RhombusVersion({self.namespace!r}, {self.version})"
+
 
 class RhombusVersionError(Exception):
     """Exception raised when a function or macro is not supported in the target version."""
@@ -39,7 +102,7 @@ class RhombusEnvironment:
         self.datapack: beet.DataPack | None = None
 
         # Configuration
-        self.datapack_version: DatapackVersion | None = None
+        self._datapack_version: RhombusVersion | None = None
         self.strict_versioning: bool = True
         """If True, throws errors when macros/functions are not supported in the target version. If False, warns and tries to use a default."""
         self.deserialize_references_directly: bool = False
@@ -58,17 +121,26 @@ class RhombusEnvironment:
         """Paths of JavaScript or TypeScript files in this attribute will be loaded by
         Rhombus Preview and patched into Deepslate.
 
-        This could look like this:
-        ```
-        env.preview_scripts.append(files("rhombus.support.lithostitched").joinpath("deepslate.ts"))
-        ```
+        This allows plugins to add functionality to the webapp, like registering a custom
+        decoding register or providing visualization patches for the preview.
         """
 
         self._addons: list[RhombusAddon] = []
 
         self._reg_lock = threading.RLock()
 
-    def set_version(self, version: str | int | float) -> None:
+    @property
+    def datapack_version(self) -> RhombusVersion | None:
+        return self._datapack_version
+
+    @datapack_version.setter
+    def datapack_version(self, value: float | tuple | str | RhombusVersion | None):
+        if value is None:
+            self._datapack_version = None
+        else:
+            self._datapack_version = RhombusVersion(value)
+
+    def set_version(self, version: str | DatapackVersion) -> None:
         """Sets the datapack version. If a string is provided (e.g. '1.21.4'), it is resolved to a datapack version using Misode's data."""
         if isinstance(version, (int, float)):
             self.datapack_version = float(version)
@@ -121,6 +193,27 @@ class RhombusEnvironment:
 
             addon_obj.apply_to_rhombus_env(self)
             self._addons.append(addon_obj)
+
+    def check_version(self, spec: VersionLike | EllipsisType) -> bool | None:
+        """Prüft, ob die Version der Umgebung den Anforderungen entspricht.
+        Gibt None zurück, wenn die Version der Umgebung unbekannt ist."""
+        if spec is ...:
+            return False
+        req = RhombusVersion(spec)
+        
+        if req.namespace == "datapack":
+            if self.datapack_version is None:
+                return None
+            return self.datapack_version >= req
+            
+        for addon in self._addons:
+            if addon.name.lower() == req.namespace.lower():
+                if getattr(addon, "version", None) is None:
+                    return None
+                addon_ver = RhombusVersion((addon.name, addon.version))
+                return addon_ver >= req
+                
+        return False
 
 
 # ======// Addon //===============================================================================//
@@ -179,19 +272,25 @@ class RhombusAddon:
     """
 
     name: str
-    density_functions: dict[str, "DensityFunction"] = field(default_factory=dict)
-    caching_functions: set["DensityFunction"] = field(default_factory=set)
+    version: str | tuple | None = None
+    density_functions: dict[str, type["DensityFunction"]] | list[type["DensityFunction"]] = field(default_factory=dict)
+    caching_functions: set[type["DensityFunction"]] = field(default_factory=set)
     preview_scripts: list[str | Path] = field(default_factory=list)
-    preview_beet_file_extensions: set["BeetFile"] = field(default_factory=set)
+    preview_beet_file_extensions: set[type["BeetFile"]] = field(default_factory=set)
     on_apply: Optional[Callable[["RhombusEnvironment"], Any]] = None
 
     def apply_to_rhombus_env(self, env: "RhombusEnvironment") -> None:
         if self.on_apply:
             self.on_apply(env)
 
-        env.density_function_type_deserialization_register.update(
-            self.density_functions
-        )
+        if isinstance(self.density_functions, dict):
+            env.density_function_type_deserialization_register.update(self.density_functions)
+        else:
+            for cls in self.density_functions:
+                for fid in getattr(cls, "get_all_known_ids", lambda: [getattr(cls, "id", "")])():
+                    if fid:
+                        env.density_function_type_deserialization_register[fid] = cls
+                        
         env.caching_function_types.update(self.caching_functions)
         env.preview_scripts.extend(self.preview_scripts)
         env.preview_beet_file_extensions.update(self.preview_beet_file_extensions)

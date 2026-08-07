@@ -28,7 +28,7 @@ from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.std import Density, AnyDensity, macro, caching
+from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro; from rhombus.std import caching
 from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
@@ -560,7 +560,8 @@ class Causality:
         result = Density(value).AST
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
-        return caching.specified_cache(Density(result), self._default_input or None)
+        default_input = Density(self._default_input) if self._default_input is not None else None
+        return caching.specified_cache(Density(result), default_input)
 
 
 # ======// Condition Fabric //====================================================================//

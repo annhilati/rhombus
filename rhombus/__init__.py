@@ -17,8 +17,10 @@ from builtins import abs as python_abs
 from rhombus._prelude import *
 
 from rhombus.core.environment import env
-from rhombus import std as _std
-env.load_addons(_std)
+from rhombus.support import vanilla as _vanilla
+
+env.load_addons(_vanilla)
+env.datapack_version = 113
 
 # Convenience when importing *
 from rich import print

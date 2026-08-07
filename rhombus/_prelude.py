@@ -3,7 +3,6 @@ from rhombus.std.math import (
     add,
     mul,
     pow,
-    abs,
     Infinity,
     NaN,
     max,

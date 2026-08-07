@@ -3,7 +3,7 @@ import warnings
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-from rhombus.core.node import RhombusASTNode
+from rhombus.core.node import RhombusASTNode, field
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 
@@ -37,14 +37,31 @@ class DensityFunction(RhombusASTNode):
     # ======// Serialization //===================================================================//
 
     def serialize_toplevel(self) -> JSONDict:
-        return {
-            "type": self.id,
-            **{
-                parameter: serialize_any_inline(value)
-                for parameter, value in self.fields.items()
-                if value is not None
-            },
-        }
+        if not self.is_active(env):
+            # TODO: Nur warnen
+            from rhombus.core.environment import RhombusVersionError
+            raise RhombusVersionError(f"DensityFunction '{self.id}' is not supported in the current environment.")
+
+        result = {"type": self.id}
+        
+        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
+        
+        for parameter, value in self.fields.items():
+            if value is None:
+                continue
+            
+            meta = rhombus_fields.get(parameter)
+            json_key = parameter
+            if meta:
+                if not meta.is_active(env):
+                    continue
+                json_key = meta.get_json_key(env, default=parameter)
+                if meta.validate and not meta.validate(value):
+                    raise ValueError(f"Validation failed for field '{parameter}' of '{self.id}'")
+            
+            result[json_key] = serialize_any_inline(value)
+            
+        return result
 
     # serialize_inline() is inherited from RhombusASTNode
 
@@ -85,15 +102,24 @@ class DensityFunction(RhombusASTNode):
                 )
 
         fields = annotated_fields(cls)
-
-        return cls(
-            **{
-                parameter: deserialize_any_inline(value, tp)
-                for parameter, value in data.items()
-                if parameter in fields
-                for tp in (fields[parameter],)
-            }
-        )
+        rhombus_fields = getattr(cls, "__rhombus_fields__", {})
+        
+        kwargs = {}
+        for parameter, tp in fields.items():
+            meta = rhombus_fields.get(parameter)
+            json_key = parameter
+            if meta:
+                if not meta.is_active(env):
+                    continue
+                json_key = meta.get_json_key(env, default=parameter)
+            
+            if json_key in data:
+                val = deserialize_any_inline(data[json_key], tp)
+                if meta and meta.validate and not meta.validate(val):
+                    raise ValueError(f"Validation failed for field '{parameter}' of '{cls.id}'")
+                kwargs[parameter] = val
+                
+        return cls(**kwargs)
 
     @classmethod
     def deserialize_inline(cls, data: JSONDict | float | int | str) -> Self:
@@ -130,23 +156,10 @@ class MappedDensityFunction(DensityFunction):
     density function types that map an argument `input` to a value.
     """
 
-    input: DensityFunction
+    input: DensityFunction = field(legacy_keys={111.0: "argument"})
 
     def __repr__(self) -> str:
         return self.__class__.__name__ + "(" + self.input.__repr__() + ")"
-    
-    def serialize_toplevel(self):
-        if env.datapack_version < 111:
-            return {"type": self.id, "argument": self.input.serialize_inline()}
-        else:
-            return super().serialize_toplevel()
-    
-    @classmethod
-    def deserialize_toplevel(cls, data):
-        if env.datapack_version < 111:
-            return cls(DensityFunction.deserialize_inline(data["argument"]))
-        else:
-            return super().deserialize_toplevel(data)
         
 
 class DoubleArgumentDensityFunction(DensityFunction):
@@ -154,8 +167,8 @@ class DoubleArgumentDensityFunction(DensityFunction):
     density function types that take two arguments `left` and `right`.
     """
 
-    left: DensityFunction
-    right: DensityFunction
+    left: DensityFunction = field(legacy_keys={111.0: "argument1"})
+    right: DensityFunction = field(legacy_keys={111.0: "argument2"})
 
     def __repr__(self) -> str:
         return (
@@ -166,23 +179,6 @@ class DoubleArgumentDensityFunction(DensityFunction):
             + self.right.__repr__()
             + ")"
         )
-        
-    def serialize_toplevel(self):
-        if env.datapack_version < 111:
-            return {
-                "type": self.id,
-                "argument1": self.left.serialize_inline(),
-                "argument2": self.right.serialize_inline(),
-            }
-        return super().serialize_toplevel()
-    
-    def deserialize_toplevel(cls, data):
-        if env.datapack_version < 111:
-            return cls(
-                DensityFunction.deserialize_inline(data["argument1"]),
-                DensityFunction.deserialize_inline(data["argument2"]),
-            )
-        return super().deserialize_toplevel(data)
 
 
 
@@ -255,12 +251,12 @@ class Reference(DensityFunction):
 
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
-    value: float
+    argument: float = field()
 
     @classmethod
     def deserialize_toplevel(cls, data: dict | int | float):
         if isinstance(data, dict):
-            return cls(float(data["argument"] if env.datapack_version < 111 else data["value"]))
+            return super().deserialize_toplevel(data)
         return cls(float(data))
 
     def serialize_toplevel(self) -> float | JSONDict:
@@ -276,10 +272,10 @@ class constant(DensityFunction):
                 vt.literal_number_limit,
             ).serialize_inline()
 
-        return ensure_not_exceeding_limit(self.value)
+        return ensure_not_exceeding_limit(self.argument)
 
     def __repr__(self) -> str:
-        return str(self.value)
+        return str(self.argument)
 
 
 class Unknown(DensityFunction):

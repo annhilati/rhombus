@@ -1,4 +1,4 @@
-from rhombus.std import Noise
+from rhombus.std.noise import Noise
 
 
 def test_deserialization():
