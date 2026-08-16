@@ -7,7 +7,7 @@ from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
 
-from ._optimization import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
+from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 
 
 @overload

@@ -63,7 +63,10 @@ class RhombusVersion:
 
     def __eq__(self, other):
         if not isinstance(other, RhombusVersion):
-            return NotImplemented
+            try:
+                other = RhombusVersion(other)
+            except Exception:
+                return NotImplemented
         if self.namespace != other.namespace:
             return False
         length = max(len(self.version), len(other.version))
@@ -73,7 +76,10 @@ class RhombusVersion:
 
     def __lt__(self, other):
         if not isinstance(other, RhombusVersion):
-            return NotImplemented
+            try:
+                other = RhombusVersion(other)
+            except Exception:
+                return NotImplemented
         if self.namespace != other.namespace:
             return NotImplemented
         length = max(len(self.version), len(other.version))

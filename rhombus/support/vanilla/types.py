@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import ClassVar, Literal, TYPE_CHECKING
 
 from rhombus.core import (
-    RhombusASTNode,
     DensityFunction,
     SimpleDensityFunction,
     MappedDensityFunction,
@@ -126,7 +125,7 @@ class gradient(DensityFunction, versions=(113, ...)):
     axis: Literal["x", "y", "z"]
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
     from_coordinate: int
-    to_coordinate: int  # != from_coordinate
+    to_coordinate: int = field(validate=lambda x, df: x == df.from_coordinate)
     from_value: float
     to_value: float
 
@@ -270,6 +269,12 @@ class spline(DensityFunction):
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> "spline":
+        kwargs = {}
+        if "min_value" in data:
+            kwargs["min_value"] = data["min_value"]
+        if "max_value" in data:
+            kwargs["max_value"] = data["max_value"]
+
         return cls(
             DensityFunction.deserialize_inline(data["spline"]["coordinate"]),
             [
@@ -285,7 +290,7 @@ class spline(DensityFunction):
                 )
                 for point in data["spline"]["points"]
             ],
-            # TODO: Include min/max_value
+            **kwargs
         )
 
     def serialize_toplevel(self) -> JSONDict:
@@ -310,14 +315,6 @@ class spline(DensityFunction):
             } if env.datapack_version < 10.0 else {})
         }
 
-    @property
-    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
-        "Recursive search for all inscribed nodes, that will require a file when compiling"
-        nodes = set()
-        nodes |= self.coordinate.inscribed_toplevel_nodes
-        for point in self.points:
-            nodes |= point[1].inscribed_toplevel_nodes
-        return nodes
 
     def show(self):
         "Only for debugging. Opens the spline in a pyplot."

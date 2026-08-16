@@ -78,7 +78,7 @@ _coord_base = flat_cache(
 #       Minecraft doesn’t allow literals over 1 million
 
 
-def _coord_component(
+def coord_component(
     shift_x: float, shift_z: float, quad_shift_x: float, quad_shift_z: float
 ):
     innermost = range_choice(

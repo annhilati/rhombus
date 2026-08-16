@@ -221,8 +221,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
     __rhombus_versions__: ClassVar[tuple[VersionLike, VersionLike | EllipsisType] | None]
     __rhombus_legacy_values__: ClassVar[dict[str, dict[VersionLike, Any]]]
     __rhombus_fields__: ClassVar[dict[str, FieldMeta]]
-    _rhombus_frozen: bool
-
+    _rhombus_frozen: ClassVar[bool]
 
     fileclass: ClassVar[type[BeetFile] | None]
 
