@@ -1,7 +1,9 @@
-from typing import Literal
+from typing import Literal, overload
 
 from rhombus.core import RhombusVersionError
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro; from rhombus.std import math, caching
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro
+from rhombus.std import math, caching
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 from rhombus.core.environment import env
@@ -141,7 +143,7 @@ def slice(df: AnyDensity, x: int = None, y: int = None, z: int = None) -> Densit
 def x():
     """Returns the X-coordinate of the current block."""
     if env.datapack_version is not None and env.datapack_version < 113:
-        return unicoords._coord_component(
+        return unicoords.coord_component(
             shift_x=0.99,
             shift_z=1.01,
             quad_shift_x=0.9821958456973294,
@@ -176,7 +178,7 @@ def y():
 def z():
     """Returns the Z-coordinate of the current block."""
     if env.datapack_version is not None and env.datapack_version < 113:
-        return unicoords._coord_component(
+        return unicoords.coord_component(
             shift_x=1.01,
             shift_z=0.99,
             quad_shift_x=0,

@@ -4,10 +4,9 @@ from rhombus.core import (
     DensityFunction,
     MappedDensityFunction,
     SimpleDensityFunction,
-    JSONDict,
     field
 )
-from rhombus.std import noise
+from rhombus.std.noise import Noise
 
 
 class end_islands(SimpleDensityFunction, versions=(9, 133)):
@@ -31,7 +30,7 @@ class terrain_shaper_spline(DensityFunction, versions=(9, 10)):
 class weird_scaled_sampler(DensityFunction, versions=(9, 104)):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     input: DensityFunction
-    noise: noise.Noise
+    noise: Noise
     rarity_value_mapper: Literal["type_1", "type_2"]
 
 

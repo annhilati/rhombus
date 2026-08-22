@@ -1,7 +1,8 @@
 """Macro module for general mathematical functions and constants."""
 
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro; from rhombus.std import conditional as cond, caching
+from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
 from rhombus.std._implementations import pre113_math
+from rhombus.std import conditional as cond, caching
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 from rhombus.core.environment import env
@@ -128,7 +129,7 @@ def prod(*dfs: AnyDensity) -> Density[vt.mul]:
     return result
 
 
-# ======// Numeric Constants //===================================================================//
+# ======// Constants //==========================================================================//
 
 Infinity = Density(1) / 0
 "Density equivalent to Java's `Double.POSITIVE_INFINITY`"
@@ -148,9 +149,10 @@ e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
 
 
-def constant(value: float) -> Density["vt.constant"]:
+def constant(value: float) -> Density[vt.constant]:
     """Declares a constant float value."""
     return Density(value)
+
 
 # ======// Ordering //===========================================================================//
 

@@ -13,12 +13,11 @@ from typing import (
     get_origin,
     overload,
 )
-from types import NotImplementedType
+from types import NotImplementedType, UnionType
 import inspect
 import functools
 import logging
 import sys
-import types
 
 from rhombus.core.environment import DatapackVersion
 from rhombus.core.utils import Annotation
@@ -45,7 +44,7 @@ def _create_argument_resolver(func: Callable) -> Callable:
         if origin is Annotated:
             return is_anydensity_hint(get_args(hint)[0])
 
-        if origin is Union or isinstance(hint, types.UnionType):
+        if origin is Union or isinstance(hint, UnionType):
             return any(is_anydensity_hint(arg) for arg in get_args(hint))
 
         return False
@@ -59,7 +58,7 @@ def _create_argument_resolver(func: Callable) -> Callable:
             return val if isinstance(val, Density) else Density(val)
 
         # Union / |: try the first matching branch
-        if origin is Union or isinstance(hint, types.UnionType):
+        if origin is Union or isinstance(hint, UnionType):
             first_exception: Exception | None = None
 
             for arg in args:
