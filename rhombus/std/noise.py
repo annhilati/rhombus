@@ -209,10 +209,11 @@ def shift_b(argument: Noise) -> Density[vt.shift_b]:
     return Density(vt.shift_b(argument.AST))
 
 
-# TODO: Re-add the implementation reference
 def end_outer_islands() -> Density[vt.end_outer_islands]:
-    """Returns a value using a special noise algorithm used for outer end islands.
-    The minimum value is set to `-0.84375`, the maximum value to `0.5625`.
+    """Returns a value using a
+    [special noise](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
+    algorithm used for outer end islands. The minimum value is set to `-0.84375`,
+    the maximum value to `0.5625`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands) -

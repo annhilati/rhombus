@@ -225,35 +225,42 @@ class ComparisonCondition(Condition):
                 self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON)
             )._compile(when_true, when_false)
 
-        # TODO: re-add range_choice for older versions
-        # Unbounded relations using interval_select
+        # Unbounded relations using interval_select or range_choice fallback
         if relation == Relation.LESS_THAN:
             v = float(self.value)
-            return vt.interval_select(
-                input=self.input, thresholds=[v], functions=[when_true, when_false]
-            )
+            if vt.interval_select.is_active(env):
+                return vt.interval_select(
+                    input=self.input, thresholds=[v], functions=[when_true, when_false]
+                )
+            return vt.range_choice(self.input, -OMEGA, v, when_true, when_false)
 
         if relation == Relation.LESS_OR_EQUAL:
             v = float(self.value)
-            return vt.interval_select(
-                input=self.input,
-                thresholds=[v + EPSILON],
-                functions=[when_true, when_false],
-            )
+            if vt.interval_select.is_active(env):
+                return vt.interval_select(
+                    input=self.input,
+                    thresholds=[v + EPSILON],
+                    functions=[when_true, when_false],
+                )
+            return vt.range_choice(self.input, -OMEGA, v + EPSILON, when_true, when_false)
 
         if relation == Relation.GREATER_THAN:
             v = float(self.value)
-            return vt.interval_select(
-                input=self.input,
-                thresholds=[v + EPSILON],
-                functions=[when_false, when_true],
-            )
+            if vt.interval_select.is_active(env):
+                return vt.interval_select(
+                    input=self.input,
+                    thresholds=[v + EPSILON],
+                    functions=[when_false, when_true],
+                )
+            return vt.range_choice(self.input, -OMEGA, v + EPSILON, when_false, when_true)
 
         if relation == Relation.GREATER_OR_EQUAL:
             v = float(self.value)
-            return vt.interval_select(
-                input=self.input, thresholds=[v], functions=[when_false, when_true]
-            )
+            if vt.interval_select.is_active(env):
+                return vt.interval_select(
+                    input=self.input, thresholds=[v], functions=[when_false, when_true]
+                )
+            return vt.range_choice(self.input, -OMEGA, v, when_false, when_true)
 
         # Derived relations
         if relation == Relation.EQUALS:

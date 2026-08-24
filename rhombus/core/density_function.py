@@ -3,7 +3,7 @@ import warnings
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-from rhombus.core.node import RhombusASTNode, field
+from rhombus.core.node import RhombusASTNode, field, FieldMeta
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 
@@ -37,10 +37,24 @@ class DensityFunction(RhombusASTNode):
     # ======// Serialization //===================================================================//
 
     def serialize_toplevel(self) -> JSONDict:
+        active_env = env
         if not self.is_active(env):
-            # TODO: Nur warnen
-            from rhombus.core.environment import RhombusVersionError
-            raise RhombusVersionError(f"DensityFunction '{self.id}' is not supported in the current environment.")
+            import warnings
+            
+            fallback_version = 9.0
+            versions = getattr(self.__class__, "__rhombus_versions__", None)
+            if versions is not None and versions[0] is not ...:
+                fallback_version = versions[0]
+
+            warnings.warn(
+                f"DensityFunction '{self.id}' is not supported in the current environment. "
+                f"Falling back to serialization rules of version {fallback_version}.",
+                UserWarning,
+                stacklevel=2
+            )
+            from rhombus.core.environment import RhombusEnvironment
+            active_env = RhombusEnvironment()
+            active_env.datapack_version = fallback_version
 
         result = {"type": self.id}
         
@@ -50,12 +64,12 @@ class DensityFunction(RhombusASTNode):
             if value is None:
                 continue
             
-            meta = rhombus_fields.get(parameter)
+            meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
-                if not meta.is_active(env):
+                if not meta.is_active(active_env):
                     continue
-                json_key = meta.get_json_key(env, default=parameter)
+                json_key = meta.get_json_key(active_env, default=parameter)
                 if meta.validate and not meta.validate(value):
                     raise ValueError(f"Validation failed for field '{parameter}' of '{self.id}'")
             
@@ -106,7 +120,7 @@ class DensityFunction(RhombusASTNode):
         
         kwargs = {}
         for parameter, tp in fields.items():
-            meta = rhombus_fields.get(parameter)
+            meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
                 if not meta.is_active(env):

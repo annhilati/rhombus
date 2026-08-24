@@ -78,7 +78,7 @@ class ceil(RoundingDensityFunction, versions=(111, ...)):
 
 class clamp(DensityFunction):
     id: ClassVar[str] = "minecraft:clamp"
-    input: DensityFunction
+    input: DensityFunction = field(validate=lambda x: not isinstance(x, Reference) if env.datapack_version < 101.2 else True)
     min: float
     max: float
 

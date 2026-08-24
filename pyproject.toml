@@ -9,7 +9,6 @@ authors = [
   { name = "Annhilati"},
 ]
 dependencies = [
-  # TODO: Don't hard require packages only used for specific interop
   "beet==0.111.0",
   "numpy==2.3.3",
   "typer==0.25.1",

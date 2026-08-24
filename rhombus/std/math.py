@@ -7,7 +7,6 @@ from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 from rhombus.core.environment import env
 
-# TODO: Update
 __all__ = [
     "Infinity",
     "NaN",
@@ -31,9 +30,7 @@ __all__ = [
     "round",
     "floor",
     "ceil",
-    "round",
-    "floor",
-    "ceil",
+    "truncate",
     "mod",
     "floordiv",
     "heaviside",
@@ -159,10 +156,7 @@ def constant(value: float) -> Density[vt.constant]:
 
 @macro
 def clamp(input: AnyDensity, min: float, max: float) -> Density[vt.clamp]:
-    """Returns the larger value from the input and min, and the smaller value from that and max.
-
-    **NOTE:** [MC-252814](https://bugs.mojang.com/browse/MC/issues/MC-252814): *Clamp density function takes a direct input and doesn't allow a reference*
-    """
+    """Returns the larger value from the input and min, and the smaller value from that and max."""
     return Density(vt.clamp(input.AST, min, max))
 
 
