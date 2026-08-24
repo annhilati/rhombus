@@ -10,12 +10,10 @@ from . import (
     conditional,
     coords,
     density,
-    emath,
     macros,
     maps,
-    math,
     noise,
-    smath,
+    math
 )
 
 # Convenience

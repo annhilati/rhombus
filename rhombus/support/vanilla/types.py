@@ -318,7 +318,7 @@ class spline(DensityFunction):
 
     def show(self):
         "Only for debugging. Opens the spline in a pyplot."
-        from rhombus.splines import show_spline
+        from rhombus.std.math._splinelib import show_spline
 
         if any((not isinstance(p[1], constant) for p in self.points)):
             raise ValueError("Can only show splines with numeric values")

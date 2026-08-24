@@ -1,6 +1,7 @@
 """The `smath` module features Hermite spline approximations of common mathematical functions."""
 
 __all__ = [
+    "spline",
     "atan",
     "cos",
     "coth",
@@ -49,47 +50,7 @@ def spline(
 
 
 
-@macro
-def atan(
-    argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[vt.spline]:
-    """Evaluates the arc tangent value of the input.
 
-    Parameters:
-        domain ((float, float)): The interval over which the function can take inputs.
-    """
-    points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return spline(
-        argument, splines.sample_spline_points(py_math.atan, domain, points)
-    )
-
-
-@macro
-def cos(
-    argument: AnyDensity, domain: tuple[float, float] = (-pi, pi)
-) -> Density[vt.spline]:
-    """Evaluates the cosine value of the input.
-
-    Parameters:
-        domain ((float, float)): The interval over which the function can take inputs.
-            A wider interval will automatically use more spline points to maintain accuracy.
-    """
-    points = max(round(2 * (domain[1] - domain[0]) / pi + 1), 3)
-    return spline(
-        argument, splines.sample_spline_points(py_math.cos, domain, points)
-    )
-
-
-@macro
-def coth(
-    argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[vt.spline]:
-    """Evaluates the hyperbolic cotangent value of the input.
-
-    Parameters:
-        domain ((float, float)): The interval over which the function can take inputs.
-    """
-    return 1 / tanh(argument, domain)
 
 
 @macro
@@ -192,22 +153,6 @@ def normalCDF(
 
 
 @macro
-def sin(
-    argument: AnyDensity, domain: tuple[float, float] = (-pi, pi)
-) -> Density[vt.spline]:
-    """Evaluates the sine value of the input.
-
-    Parameters:
-        domain ((float, float)): The interval over which the function can take inputs.
-            A wider interval will automatically use more spline points to maintain accuracy.
-    """
-    points = max(round(2 * (domain[1] - domain[0]) / pi + 1), 3)
-    return spline(
-        argument, splines.sample_spline_points(py_math.sin, domain, points)
-    )
-
-
-@macro
 def smoothstep(
     argument: AnyDensity,
     domain: tuple[float, float] = (-1, 1),
@@ -232,28 +177,3 @@ def smoothstep(
     )
 
 
-@macro
-def tan(
-    argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[vt.mul]:
-    """Evaluates the tangent value of the input.
-
-    Parameters:
-        domain ((float, float)): The interval over which the function can take inputs.
-    """
-    return sin(argument, domain) / cos(argument, domain)
-
-
-@macro
-def tanh(
-    argument: AnyDensity, domain: tuple[float, float] = (-1, 1)
-) -> Density[vt.spline]:
-    """Evaluates the hyperbolic tangent value of the input.
-
-    Parameters:
-        domain ((float, float)): The interval over which the function can take inputs.
-    """
-    points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return spline(
-        argument, splines.sample_spline_points(py_math.tanh, domain, points)
-    )

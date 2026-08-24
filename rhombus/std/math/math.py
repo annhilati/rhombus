@@ -1,12 +1,5 @@
 """Macro module for general mathematical functions and constants."""
 
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
-from rhombus.std._implementations import pre113_math
-from rhombus.std import conditional as cond, caching
-from rhombus.support import vanilla as vt, vanilla_legacy as lt
-
-from rhombus.core.environment import env
-
 __all__ = [
     "Infinity",
     "NaN",
@@ -39,7 +32,33 @@ __all__ = [
     "monus",
 ]
 
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro
+from rhombus.std import conditional as cond, caching
+from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
+from rhombus.core.environment import env
+
+
+# ======// Constants //==========================================================================//
+
+Infinity = Density(1) / 0
+"Density equivalent to Java's `Double.POSITIVE_INFINITY`"
+NaN = Density(0) / 0
+"""Density equivalent to Java's `Double.NaN`
+
+**NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
+chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
+as air.
+"""
+
+e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
+"Euler's number `e` to 16 decimals."
+
+
+def constant(value: float) -> Density[vt.constant]:
+    """Declares a constant float value."""
+    return Density(value)
 
 
 # ======// Arithmetic //==========================================================================//
@@ -70,7 +89,7 @@ def mul(df1: AnyDensity, df2: AnyDensity) -> Density[vt.mul]:
 def div(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.mul]:
     """Returns the quotient of two inputs."""
     if env.datapack_version is not None and env.datapack_version < 111:
-        return Density(vt.mul(dividend.AST, lt.invert(divisor.AST)))
+        return Density(vt.mul(dividend.AST, vt.reciprocal(divisor.AST)))
     else:
         return Density(vt.div(dividend.AST, divisor.AST))
 
@@ -87,8 +106,26 @@ def cube(df: AnyDensity) -> Density[vt.cube]:
     return Density(vt.cube(df.AST))
 
 
-@macro((133, pre113_math.pow))
+@macro
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density[vt.pow]:
+    if env.datapack_version < 113:
+        if not isinstance(exponent, int):
+            raise ValueError("Can only raise to integer powers in this version")
+        if 0 <= abs(exponent) <= 3:
+            result = {
+                0: Density(vt.constant(1)),
+                1: base,
+                2: Density(vt.square(base.AST)),
+                3: Density(vt.cube(base.AST))
+            }[exponent]
+        else:
+            result = base
+            for _ in range(abs(exponent) - 1):
+                result = Density(vt.mul(result.AST, base.AST))
+        if exponent < 0:
+            result = Density(vt.reciprocal(result.AST))
+        return result
+    
     return Density(vt.pow(base.AST, exponent.AST))
 
 
@@ -125,30 +162,6 @@ def prod(*dfs: AnyDensity) -> Density[vt.mul]:
 
     return result
 
-
-# ======// Constants //==========================================================================//
-
-Infinity = Density(1) / 0
-"Density equivalent to Java's `Double.POSITIVE_INFINITY`"
-NaN = Density(0) / 0
-"""Density equivalent to Java's `Double.NaN`
-
-**NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
-chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
-as air.
-"""
-
-pi = Density(
-    3.1415926535897932
-)  # 38462643383279502884197169399375105820974944592307816406
-"The constant `π` to 16 decimals."
-e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
-"Euler's number `e` to 16 decimals."
-
-
-def constant(value: float) -> Density[vt.constant]:
-    """Declares a constant float value."""
-    return Density(value)
 
 
 # ======// Ordering //===========================================================================//
@@ -306,6 +319,7 @@ def ceil(df: AnyDensity, decimals: int = 0) -> Density[vt.ceil]:
         return Density(vt.ceil(df.AST, 10**-decimals))
 
 
+# TODO: Versionspezifizierung im decorator wieder entfernen?
 @macro((111, NotImplemented))
 def truncate(df: AnyDensity, decimals: int = 0) -> Density[vt.truncate]:
     """Truncates the input to the nearest integer or given decimal."""

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["RhombusVersion", "DatapackVersion", "ModVersion", "VersionLike", "RhombusVersionError", "RhombusEnvironment", "RhombusAddon", "env"]
+__all__ = ["RhombusVersion", "DatapackVersion", "NamespacedVersion", "VersionLike", "RhombusVersionError", "RhombusEnvironment", "RhombusAddon", "env"]
 
 from typing import Callable, Any, Optional, TYPE_CHECKING
 from types import ModuleType, EllipsisType
@@ -23,8 +23,8 @@ from rhombus.core.utils import GlobalBinding
 # ======// Versioning //==========================================================================//
 
 type DatapackVersion = float | int
-type ModVersion = tuple[str, str | tuple[int, ...]]
-type VersionLike = DatapackVersion | ModVersion | str | "RhombusVersion"
+type NamespacedVersion = tuple[str, str | tuple[int, ...]]
+type VersionLike = DatapackVersion | NamespacedVersion | str | "RhombusVersion"
 
 @total_ordering
 class RhombusVersion:

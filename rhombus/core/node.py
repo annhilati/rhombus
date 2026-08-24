@@ -40,7 +40,7 @@ def field[Node, Value](
     validate: Callable[[Value], bool] | Callable[[Value, Node], bool] | None = None,
     **kwargs
 ) -> dataclasses.Field:
-    meta = FieldMeta(added_with, removed_with, legacy_keys, legacy_values, validate)
+    meta = FieldMeta(added_with=added_with, removed_with=removed_with, legacy_keys=legacy_keys, legacy_values=legacy_values, validate=validate)
     metadata = kwargs.get("metadata", {})
     metadata["rhombus_meta"] = meta
     kwargs["metadata"] = metadata
@@ -103,11 +103,7 @@ class NodeDataclassTransformer(type):
                                     raise ValueError(f"Validation failed for field '{field.name}' with value {val!r} against node {self!r}")
 
                     # Freeze the node value (e.g. lists/dicts) to ensure immutability
-                    object.__setattr__(
-                        self,
-                        field.name,
-                        RhombusASTNode._freeze_field_value(val),
-                    )
+                    object.__setattr__(self, field.name, _freeze_field_value(val))
 
         ns["__post_init__"] = __post_init__
         cls = super().__new__(mcls, name, bases, ns)
@@ -206,6 +202,26 @@ class NodeDataclassTransformer(type):
 
         return cls
 
+def _freeze_field_value(value: Any) -> Any:
+    # Unwrap Density wrapper objects if they are passed in!
+    from rhombus.std.density import Density
+    if isinstance(value, Density):
+        value = value.AST
+
+    if isinstance(value, list):
+        return tuple(_freeze_field_value(v) for v in value)
+    if isinstance(value, tuple):
+        return tuple(_freeze_field_value(v) for v in value)
+    if isinstance(value, set):
+        return frozenset(_freeze_field_value(v) for v in value)
+    if isinstance(value, dict):
+        return {
+            _freeze_field_value(
+                k
+            ): _freeze_field_value(v)
+            for k, v in value.items()
+        }
+    return value
 
 class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
     """The **`RhombusASTNode`** class defines the common behaviour for all nodes
@@ -234,28 +250,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
         if getattr(self, "_rhombus_frozen", False) and name != "reference":
             raise dataclasses.FrozenInstanceError(f"cannot assign to field '{name}'")
         object.__setattr__(self, name, value)
-
-    @staticmethod
-    def _freeze_field_value(value: Any) -> Any:
-        # Unwrap Density wrapper objects if they are passed in!
-        from rhombus.std.density import Density
-        if isinstance(value, Density):
-            value = value.AST
-
-        if isinstance(value, list):
-            return tuple(RhombusASTNode._freeze_field_value(v) for v in value)
-        if isinstance(value, tuple):
-            return tuple(RhombusASTNode._freeze_field_value(v) for v in value)
-        if isinstance(value, set):
-            return frozenset(RhombusASTNode._freeze_field_value(v) for v in value)
-        if isinstance(value, dict):
-            return {
-                RhombusASTNode._freeze_field_value(
-                    k
-                ): RhombusASTNode._freeze_field_value(v)
-                for k, v in value.items()
-            }
-        return value
+   
 
     def __repr__(self) -> str:
         return (

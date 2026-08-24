@@ -12,4 +12,6 @@ env.load_addons(support.lithostitched)
 ```
 """
 
-from rhombus.support import tectonic, lithostitched, moredfs, ensity
+# TODO: Implement proper mod versioning
+
+from rhombus.support import tectonic, lithostitched, moredfs, ensity, vanilla, vanilla_legacy

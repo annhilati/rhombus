@@ -112,35 +112,7 @@ def preview(
 
 
 def main() -> None:
-    try:
-        cli()
-    # except RhombusCLIProblem as e:
-    #     print(f"\n  [#62a8f0]Error[/#62a8f0]")
-    #     print(f"  [#62a8f0]╰─×[/#62a8f0] {str(e)}")
-    #     sys.exit(1)
-
-    # except Exception as e:
-    #     tb = e.__traceback__
-    #     frames = traceback.extract_tb(tb)
-
-    #     print(f"\n  [red]Unexpected {type(e).__name__}[/red]")
-    #     print(f"  [red]╰─×[/red] {str(e)}")
-
-    #     if len(frames) >= 2:
-    #         first = frames[-1]
-    #         second = frames[-2]
-    #         print(f"\n    [red]This was first issued in '{first.name}' ({first.filename}, line {first.lineno})[/red]")
-    #         print(f"    [red]       {first.line}[/red]")
-    #         print(f"    [red]Then passed on to        '{second.name}' ({second.filename}, line {second.lineno})[/red]")
-    #         print(f"    [red]       {second.line}[/red]")
-    #     elif len(frames) == 1:
-    #         first = frames[-1]
-    #         print(f"\n    [red]This was issued in '{first.name}' ({first.filename}, line {first.lineno})[/red]")
-    #         print(f"    [red]       {first.line}[/red]")
-
-    #     sys.exit(1)
-    except:
-        raise
+    cli()
 
 
 if __name__ == "__main__":
