@@ -26,7 +26,7 @@ from rhombus.std.caching import (
     flat_cache,
     cache_2d,
     interpolated,
-    cache_once,
+    cache,
     # recurrence_cache,
     # specified_cache
 )

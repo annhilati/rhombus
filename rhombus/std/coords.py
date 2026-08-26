@@ -149,7 +149,7 @@ def x():
             quad_shift_x=0.9821958456973294,
             quad_shift_z=0,
         )
-    return caching.cache_once(
+    return caching.cache(
         gradient(
             "x",
             "clamp_to_edge",
@@ -163,7 +163,7 @@ def x():
 
 def y():
     """Returns the Y-coordinate of the current block."""
-    return caching.cache_once(
+    return caching.cache(
         gradient(
             "y",
             "clamp_to_edge",
@@ -184,7 +184,7 @@ def z():
             quad_shift_x=0,
             quad_shift_z=0.9821958456973294,
         )
-    return caching.cache_once(
+    return caching.cache(
         gradient(
             "z",
             "clamp_to_edge",

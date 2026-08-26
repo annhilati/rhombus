@@ -16,5 +16,5 @@ __addon__ = _RhombusAddon(
         and issubclass(cls, _DensityFunction)
         and hasattr(cls, "id")
     ],
-    caching_functions={_types.cache_2d, _types.flat_cache, _types.cache_all_in_cell, _types.cache_once},
+    caching_functions={_types.cache_2d, _types.flat_cache, _types.cache_all_in_cell, _types.cache},
 )

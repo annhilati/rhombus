@@ -36,7 +36,7 @@ def test_alternatives():
     value = Density("minecraft:in").AST
     inp = Reference(
         "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
-        definition=types.cache_once(value),
+        definition=types.cache(value),
     )
     assert when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(
         0

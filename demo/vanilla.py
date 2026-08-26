@@ -52,7 +52,7 @@ overworld_offset = flat_cache(
     (
         cache_2d(
             (
-                (blend_offset() * (1.0 + (-1.0 * cache_once(blend_alpha()))))
+                (blend_offset() * (1.0 + (-1.0 * cache(blend_alpha()))))
                 + (
                     (
                         -0.5037500262260437
@@ -755,7 +755,7 @@ overworld_offset = flat_cache(
                             ],
                         )
                     )
-                    * (cache_once(blend_alpha()))
+                    * (cache(blend_alpha()))
                 )
             )
         )
@@ -1511,7 +1511,7 @@ overworld_sloped_cheese = (
     + overworld_base_3d_noise
 )
 
-overworld_caves_pillars = cache_once(
+overworld_caves_pillars = cache(
     (
         (
             (2.0 * noise(noise=Noise(-7, [1.0, 1.0]), xz_scale=25.0, y_scale=0.3))
@@ -1588,13 +1588,13 @@ overworld_caves_noodles = range_choice(
         )
     ),
 )
-overworld_caves_spaghetti_roughness_function = cache_once(
+overworld_caves_spaghetti_roughness_function = cache(
     (
         (-0.05 + (-0.05 * noise(noise=Noise(-8, [1.0]), xz_scale=1.0, y_scale=1.0)))
         * (-0.4 + abs(noise(noise=Noise(-5, [1.0]), xz_scale=1.0, y_scale=1.0)))
     )
 )
-overworld_caves_entrances = cache_once(
+overworld_caves_entrances = cache(
     min(
         (
             (0.37 + noise(noise=Noise(-7, [0.4, 0.5, 1.0]), xz_scale=0.75, y_scale=0.5))
@@ -1606,7 +1606,7 @@ overworld_caves_entrances = cache_once(
                 input=(
                     max(
                         weird_scaled_sampler(
-                            input=cache_once(
+                            input=cache(
                                 noise(
                                     noise=Noise(-11, [1.0]), xz_scale=2.0, y_scale=1.0
                                 )
@@ -1615,7 +1615,7 @@ overworld_caves_entrances = cache_once(
                             rarity_value_mapper="type_1",
                         ),
                         weird_scaled_sampler(
-                            input=cache_once(
+                            input=cache(
                                 noise(
                                     noise=Noise(-11, [1.0]), xz_scale=2.0, y_scale=1.0
                                 )
@@ -1638,7 +1638,7 @@ overworld_caves_entrances = cache_once(
         ),
     )
 )
-overworld_caves_spaghetti_2d_thickness_modulator = cache_once(
+overworld_caves_spaghetti_2d_thickness_modulator = cache(
     (-0.95 + (-0.35 * noise(noise=Noise(-11, [1.0]), xz_scale=2.0, y_scale=1.0)))
 )
 overworld_caves_spaghetti_2d = clamp(

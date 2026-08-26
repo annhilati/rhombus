@@ -9,9 +9,31 @@ from rhombus.core import (
 from rhombus.std.noise import Noise
 
 
-class end_islands(SimpleDensityFunction, versions=(9, 133)):
+class end_islands(SimpleDensityFunction, versions=(9, 113)):
     id: ClassVar[str] = "minecraft:end_islands"
 
+
+class cache_2d(MappedDensityFunction, versions=(9, 118)):
+    id: ClassVar[str] = "minecraft:cache_2d"
+
+
+class cache_all_in_cell(MappedDensityFunction, versions=(9, 118)):
+    id: ClassVar[str] = "minecraft:cache_all_in_cell"
+
+
+class flat_cache(MappedDensityFunction, versions=(9, 118)):
+    id: ClassVar[str] = "minecraft:flat_cache"
+    
+
+class shifted_noise(DensityFunction, versions=(9, 118)):
+    id: ClassVar[str] = "minecraft:shifted_noise"
+    noise: Noise
+    xz_scale: float
+    y_scale: float
+    shift_x: DensityFunction
+    shift_y: DensityFunction
+    shift_z: DensityFunction
+    
 
 class slide(MappedDensityFunction, versions=(9, 10)):
     id: ClassVar[str] = "minecraft:slide"

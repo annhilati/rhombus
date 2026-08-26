@@ -12,7 +12,7 @@ from beet.contrib import worldgen as beet_worldgen
 
 from rhombus.std.density import Density
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.support.vanilla import cache_once
+from rhombus.support.vanilla import cache
 
 from rhombus.core.environment import env
 
@@ -216,7 +216,7 @@ def cache_nodes(
     condition: Callable[[DensityFunction], bool],
     wrapper: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
         "rhombus:partitioned/" + uuid_hash(df.serialize_toplevel()),
-        definition=cache_once(df),
+        definition=cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
     replacement_info: dict[DensityFunction, int] = {}

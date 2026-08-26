@@ -60,16 +60,8 @@ class blend_offset(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:blend_offset"
 
 
-class cache_2d(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:cache_2d"
-
-
-class cache_all_in_cell(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:cache_all_in_cell"
-
-
-class cache_once(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:cache_once"
+class cache(MappedDensityFunction):
+    id: ClassVar[str] = field("minecraft:cache", legacy_values={118: "minecraft:cache_once"})
 
 
 class ceil(RoundingDensityFunction, versions=(111, ...)):
@@ -112,10 +104,6 @@ class find_top_surface(DensityFunction, versions=(82, ...)):
     cell_height: int
 
 
-class flat_cache(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:flat_cache"
-
-
 class floor(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:floor"
 
@@ -136,6 +124,8 @@ class half_negative(MappedDensityFunction):
 
 class interpolated(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:interpolated"
+    cell_size_xz: int = field(added_with=118, validate=lambda x: x > 0)
+    cell_size_y: int = field(added_with=118, validate=lambda x: x > 0)
 
 
 class interval_select(DensityFunction, versions=(104, ...)):
@@ -183,6 +173,9 @@ class noise(DensityFunction):
     noise: Noise
     xz_scale: float
     y_scale: float
+    shift_x: DensityFunction = field(added_with=118, default=constant(0))
+    shift_y: DensityFunction = field(added_with=118, default=constant(0))
+    shift_z: DensityFunction = field(added_with=118, default=constant(0))
 
 
 class old_blended_noise(DensityFunction):
@@ -237,16 +230,6 @@ class shift_a(DensityFunction):
 class shift_b(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_b"
     noise: Noise = field(legacy_keys={111.0: "argument"})
-
-
-class shifted_noise(DensityFunction):
-    id: ClassVar[str] = "minecraft:shifted_noise"
-    noise: Noise
-    xz_scale: float
-    y_scale: float
-    shift_x: DensityFunction
-    shift_y: DensityFunction
-    shift_z: DensityFunction
 
 
 class sign(MappedDensityFunction, versions=(113, ...)):

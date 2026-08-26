@@ -30,6 +30,7 @@ __all__ = [
     "ramp",
     "sgn",
     "monus",
+    "spline"
 ]
 
 from rhombus.std.density import Density, AnyDensity
@@ -385,3 +386,31 @@ def monus(minuend: AnyDensity, subtrahend: AnyDensity):
 def ramp(df: AnyDensity) -> Density[vt.max]:
     """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
     return max(df, 0)
+
+
+# ======// Spline //=============================================================================//
+
+
+@macro
+def spline(
+    coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
+) -> Density[vt.spline]:
+    """Computes the value of a cubic spline for the input.
+
+    The values for the points represent in order: `location`, `value` and `derivative`.
+
+    For values beyond the outermost spline points, the value of the nearest spline point is returned.
+
+    **NOTE:** If multiple spline points have the same location, for inputs less than the
+    location, values aproaching the first defined value will be returned. For
+    inputs equal to or greather than the location, values leaving the second
+    defined values will be returned. ("first" and "second" refer to the order
+    of definition in `points`).
+
+    **NOTE:** Approximations for various functions done by splines can be found in `rhombus.macros.smath`.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
+    """
+    points = [(p[0], p[1].AST, p[2]) for p in points]
+    return Density(vt.spline(coordinate.AST, points))

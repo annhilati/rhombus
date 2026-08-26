@@ -73,7 +73,7 @@ def asec(df: AnyDensity) -> Density:
         .then(atan((df**2 - 1)**0.5))
         .otherwise(NaN)
     )
-    
+
 @macro
 def acsc(df: AnyDensity) -> Density:
     return (
@@ -85,8 +85,8 @@ def acsc(df: AnyDensity) -> Density:
         .then(atan(1 / (df**2 - 1)**0.5))
         .otherwise(NaN)
     )
-    
-    
+
+
 # ======// Hyperbolic Trigonometric Functions //=================================================//
 
 @macro
