@@ -1,4 +1,5 @@
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro
 from rhombus.support import vanilla as vt
 
 
@@ -25,7 +26,7 @@ def blend_alpha() -> Density[vt.blend_alpha]:
 
 
 @macro
-def blend_density(argument: AnyDensity) -> Density[vt.blend_density]:
+def blend_density(df: AnyDensity) -> Density[vt.blend_density]:
     """Used for smooth transition to chunks generated in old versions.
 
     Does not affect the density value.
@@ -33,7 +34,7 @@ def blend_density(argument: AnyDensity) -> Density[vt.blend_density]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_density)
     """
-    return Density(vt.blend_density(argument.AST))
+    return Density(vt.blend_density(df.AST))
 
 
 def blend_offset() -> Density[vt.blend_offset]:

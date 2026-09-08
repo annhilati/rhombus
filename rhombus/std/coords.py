@@ -1,4 +1,4 @@
-from typing import Literal, overload
+from typing import Literal, Optional, overload
 
 from rhombus.core import RhombusVersionError
 from rhombus.std.density import Density, AnyDensity
@@ -99,25 +99,25 @@ def distance_to_point(
 
 @macro
 def find_top_surface(
-    density: AnyDensity, upper_bound: AnyDensity, lower_bound: int, cell_height: int
+    density: AnyDensity, start: AnyDensity, stop: int, step_size: int
 ) -> Density[vt.find_top_surface]:
     """Returns the topmost Y-coordinate where the given `density` evaluates to a value greater than `0`.
 
-    The search starts at the Y-coordinate evaluated by `upper_bound` (rounded down to the nearest
-    multiple of `cell_height`) and steps downwards by `cell_height` until it reaches `lower_bound`.
+    The search starts at the Y-coordinate evaluated by `start` (rounded down to the nearest
+    multiple of `step_size`) and steps downwards by `step_size` until it reaches `stop`.
     If a positive density is found during this scan, that Y-coordinate is returned. If no such
-    position exists or the upper bound is below the lower bound, `lower_bound` is returned.
+    position exists or the start is below `stop`, `stop` is returned.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#find_top_surface)
     """
     return Density(
-        vt.find_top_surface(density.AST, upper_bound.AST, lower_bound, cell_height)
+        vt.find_top_surface(density.AST, start.AST, stop, step_size)
     )
 
 
 @macro
-def slice(df: AnyDensity, x: int = None, y: int = None, z: int = None) -> Density[vt.slice]:
+def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density[vt.slice]:
     """Fixes the coordinate of one or more axes for the given density function.
 
     When evaluating the resulting density, the specified `x`, `y`, or `z` coordinates will be used

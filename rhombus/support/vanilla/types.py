@@ -1,3 +1,5 @@
+"""Module with definitions of density function types in the newest version. For legacy functions see `rhombus.support.vanilla_legacy`."""
+
 from __future__ import annotations
 
 from typing import ClassVar, Literal, TYPE_CHECKING
@@ -28,7 +30,7 @@ _ = Reference, constant
 
 class RoundingDensityFunction(MappedDensityFunction):
     multiple: DensityFunction
-
+ 
 
 # ======// Model Classes //======================================================================//
 
@@ -165,7 +167,7 @@ class negate(MappedDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:negate"
     
     def __repr__(self) -> str:
-                return "- " + self.input.__repr__()
+        return "- " + self.input.__repr__()
 
 
 class noise(DensityFunction):
@@ -185,6 +187,16 @@ class old_blended_noise(DensityFunction):
     xz_factor: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
     y_factor: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
     smear_scale_multiplier: float = field(added_with=10, validate=lambda x: 1 <= x <= 8)
+
+
+class ore_vein(DensityFunction, versions=(118, ...)):
+    ore_block: str
+    raw_ore_block: str
+    filler_block: str
+    raw_ore_chance: float = field(validate=lambda x: 0 <= x <= 1)
+    density: int
+    richness: int
+    filler_gap: int
 
 
 class pow(DensityFunction, versions=(113, ...)):

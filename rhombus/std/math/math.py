@@ -13,6 +13,7 @@ __all__ = [
     "square",
     "cube",
     "pow",
+    "log",
     "sum",
     "prod",
     "clamp",
@@ -44,9 +45,9 @@ from rhombus.core.environment import env
 # ======// Constants //==========================================================================//
 
 Infinity = Density(1) / 0
-"Density equivalent to Java's `Double.POSITIVE_INFINITY`"
+"Density equivalent to Java's `Float.POSITIVE_INFINITY`"
 NaN = Density(0) / 0
-"""Density equivalent to Java's `Double.NaN`
+"""Density equivalent to Java's `Float.NaN`
 
 **NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
 chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
@@ -126,8 +127,17 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density[vt.pow]:
         if exponent < 0:
             result = Density(vt.reciprocal(result.AST))
         return result
-    
+    if exponent == Density(0.5):
+        return Density(vt.sqrt(base.AST))
     return Density(vt.pow(base.AST, exponent.AST))
+
+
+def log(df: AnyDensity, base: AnyDensity = e):
+    if env.datapack_version < 113:
+        raise NotImplementedError("Logarithm is not available in this version")
+    if base == Density(e):
+        return vt.log(df.AST)
+    return vt.log(df.AST) / vt.log(base.AST)
 
 
 @macro
@@ -169,9 +179,9 @@ def prod(*dfs: AnyDensity) -> Density[vt.mul]:
 
 
 @macro
-def clamp(input: AnyDensity, min: float, max: float) -> Density[vt.clamp]:
+def clamp(df: AnyDensity, min: float, max: float) -> Density[vt.clamp]:
     """Returns the larger value from the input and min, and the smaller value from that and max."""
-    return Density(vt.clamp(input.AST, min, max))
+    return Density(vt.clamp(df.AST, min, max))
 
 
 @macro

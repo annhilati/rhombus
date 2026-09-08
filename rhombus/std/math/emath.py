@@ -22,7 +22,7 @@ from rhombus.support import vanilla as vt
 
 @macro
 def round(
-    argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)
+    df: AnyDensity, *, range: tuple[int, int] = (-1, 1)
 ) -> Density[vt.range_choice]:
     """Rounds the input to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
@@ -33,7 +33,7 @@ def round(
         raise ValueError("'range' requires a lower and upper bound")
 
     expr = (
-        cond.when(argument)
+        cond.when(df)
         .inside(start_int - 0.5, start_int + 0.5)
         .then(float(start_int))
     )
@@ -48,7 +48,7 @@ def round(
 
 @macro
 def floor(
-    argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)
+    df: AnyDensity, *, range: tuple[int, int] = (-1, 1)
 ) -> Density[vt.range_choice]:
     """Rounds the input down to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
@@ -63,7 +63,7 @@ def floor(
         raise ValueError("'range' requires a lower and upper bound")
 
     expr = (
-        cond.when(argument)
+        cond.when(df)
         .inside(start_int, start_int + 1.0 - EPS)
         .then(float(start_int))
     )
@@ -78,7 +78,7 @@ def floor(
 
 @macro
 def ceil(
-    argument: AnyDensity, *, range: tuple[int, int] = (-1, 1)
+    df: AnyDensity, *, range: tuple[int, int] = (-1, 1)
 ) -> Density[vt.range_choice]:
     """Rounds the input up to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
@@ -93,7 +93,7 @@ def ceil(
         raise ValueError("'range' requires a lower and upper bound")
 
     expr = (
-        cond.when(argument)
+        cond.when(df)
         .inside(start_int - 1.0 + EPS, start_int)
         .then(float(start_int))
     )
@@ -131,127 +131,39 @@ def mod(
 
 @macro
 def sqrt(
-    argument: AnyDensity,
+    df: AnyDensity,
     iterations: int = 3,
     guess: Callable[[Density], Density] = lambda d: d * 0.5,
 ) -> Density[vt.range_choice]:
     """Returns the square root of the input."""
-    x = guess(argument)
+    x = guess(df)
 
     for _ in range(iterations):
-        x = 0.5 * (x + (argument / x))
+        x = 0.5 * (x + (df / x))
 
-    return cond.when(argument).atleast(0).then(x).otherwise(math.NaN)
+    return cond.when(df).atleast(0).then(x).otherwise(math.NaN)
 
 
 @macro
-def exp(argument: AnyDensity, terms: int = 4) -> Density[vt.add]:
+def exp(df: AnyDensity, terms: int = 4) -> Density[vt.add]:
     """Returns the exponential function value of the input, so `e` exponentiated to the input."""
     if terms <= 0:
         return Density(1)
 
     terms_list = [Density(1)] + [
-        (argument**k) / py_math.factorial(k) for k in range(1, terms + 1)
+        (df**k) / py_math.factorial(k) for k in range(1, terms + 1)
     ]
     return math.sum(*terms_list)
 
 
 @macro
-def ln(argument: AnyDensity, terms: int = 4) -> Density[vt.range_choice]:
+def ln(df: AnyDensity, terms: int = 4) -> Density[vt.range_choice]:
     """Returns the natual logarithm value of the input.<br>"""
-    y = argument - Density(1)
+    y = df - Density(1)
 
     terms_list = [
         ((-1 if (k % 2 == 0) else 1) * (y**k) / k) for k in range(1, terms + 1)
     ]
     return (
-        cond.when(argument).greater(0).then(math.sum(*terms_list)).otherwise(math.NaN)
+        cond.when(df).greater(0).then(math.sum(*terms_list)).otherwise(math.NaN)
     )
-
-
-# ======// Trigonometry //========================================================================//
-
-
-@macro
-def sin(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the sine value of the input in radians."""
-    terms_list = [argument] + [
-        (
-            (-1 if (k % 2) else 1)
-            * (argument ** (2 * k + 1))
-            / py_math.factorial(2 * k + 1)
-        )
-        for k in range(1, terms + 1)
-    ]
-    return math.sum(*terms_list)
-
-
-@macro
-def cos(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the cosine value of the input in radians."""
-    terms_list = [Density(1)] + [
-        ((-1 if (k % 2) else 1) * (argument ** (2 * k)) / py_math.factorial(2 * k))
-        for k in range(1, terms + 1)
-    ]
-    return math.sum(*terms_list)
-
-
-@macro
-def tan(argument: AnyDensity, terms: int = 3) -> Density[vt.mul]:
-    """Returns the tangent value of the input in radians."""
-    return sin(argument, terms) / cos(argument, terms)
-
-
-@macro
-def asin(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the arc sine value of the input in radians."""
-    terms_list = [
-        (py_math.factorial(2 * k) / (4**k * py_math.factorial(k) ** 2 * (2 * k + 1)))
-        * (argument ** (2 * k + 1))
-        for k in range(terms)
-    ]
-    return (
-        cond.when(argument)
-        .inside(-1, 1)
-        .then(math.sum(*terms_list))
-        .otherwise(math.NaN)
-    )
-
-
-@macro
-def acos(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the arc cosine value of the input in radians."""
-    return (
-        cond.when(argument)
-        .inside(-1, 1)
-        .then((math.pi / 2) - asin(argument, terms))
-        .otherwise(math.NaN)
-    )
-
-
-@macro
-def atan(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the arc tangent value of the input in radians."""
-    terms_list = [
-        ((-1 if (k % 2) else 1) * (argument ** (2 * k + 1)) / (2 * k + 1))
-        for k in range(terms)
-    ]
-    return math.sum(*terms_list)
-
-
-@macro
-def sinh(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the hyperbolic sine value of the input in radians.<br>"""
-    terms_list = [
-        (argument ** (2 * k + 1)) / py_math.factorial(2 * k + 1) for k in range(terms)
-    ]
-    return math.sum(*terms_list)
-
-
-@macro
-def cosh(argument: AnyDensity, terms: int = 3) -> Density[vt.add]:
-    """Returns the hyperbolic cosine value of the input in radians.<br>"""
-    terms_list = [Density(1)] + [
-        (argument ** (2 * k)) / py_math.factorial(2 * k) for k in range(1, terms + 1)
-    ]
-    return math.sum(*terms_list)

@@ -116,7 +116,7 @@ def flat_cache(df: AnyDensity, *, partition: bool = True):
 
 
 @macro
-def interpolated(df: AnyDensity) -> Density[vt.interpolated]:
+def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) -> Density[vt.interpolated]:
     """Interpolates at each block in one cell based on the input density function
     value of some cells around. The size of each cell is 4 by 4.
 
@@ -125,7 +125,7 @@ def interpolated(df: AnyDensity) -> Density[vt.interpolated]:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
     """
-    return Density(vt.interpolated(df.AST))
+    return Density(vt.interpolated(df.AST, cell_size_xz, cell_size_y))
 
 
 def _get_occurance_and_size_condition(

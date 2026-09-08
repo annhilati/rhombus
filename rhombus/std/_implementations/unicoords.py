@@ -50,16 +50,18 @@ density functions.
 
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
-from rhombus.std.noise import Noise, shifted_noise
-from rhombus.std.caching import flat_cache, cache_2d, interpolated, recurrence_cache
+from rhombus.std.noise import Noise, noise
+from rhombus.std.caching import flat_cache, interpolated, recurrence_cache
+
+from rhombus.support import vanilla_legacy as lt
 
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
 _coord_base = flat_cache(
-    cache_2d(
+    lt.cache_2d((
         -1
-        * shifted_noise(
+        * noise(
             noise=_coord_stripe_noise,
             xz_scale=2**-52,
             y_scale=0,
@@ -67,7 +69,7 @@ _coord_base = flat_cache(
             shift_y=0,
             shift_z=1.01,
         )
-    )
+    ).AST)
 )
 
 
@@ -84,7 +86,7 @@ def coord_component(
     innermost = range_choice(
         input=(
             _coord_base
-            + shifted_noise(
+            + noise(
                 noise=_coord_stripe_noise,
                 xz_scale=2**-55,
                 y_scale=0,
@@ -109,7 +111,7 @@ def coord_component(
                 argument1=range_choice(
                     input=(
                         _coord_base
-                        + shifted_noise(
+                        + noise(
                             noise=_coord_stripe_noise,
                             xz_scale=2 ** (-56 - i),
                             y_scale=0,
@@ -129,7 +131,7 @@ def coord_component(
 
     outermost_mul = mul(
         argument1=range_choice(
-            input=shifted_noise(
+            input=noise(
                 noise=_coord_quad_noise,
                 xz_scale=2**-25,
                 y_scale=0,
@@ -145,4 +147,4 @@ def coord_component(
         argument2=value,
     )
 
-    return recurrence_cache(interpolated(flat_cache(cache_2d(outermost_mul))), max_nodes=4)
+    return recurrence_cache(interpolated(flat_cache(lt.cache_2d(outermost_mul.AST))), max_nodes=4)

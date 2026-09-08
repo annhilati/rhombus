@@ -11,7 +11,7 @@ from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
-from rhombus.support import vanilla as vt
+from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 from rhombus.core.environment import env
 
@@ -107,7 +107,12 @@ class Noise(DatapackResource):
 
 
 def noise(
-    noise: Noise, xz_scale: float = 1, y_scale: float = 1
+    noise: Noise,
+    xz_scale: float = 1,
+    y_scale: float = 1,
+    shift_x: AnyDensity = 0,
+    shift_y: AnyDensity = 0,
+    shift_z: AnyDensity = 0,
 ) -> Density[vt.noise]:
     """Samples a noise.
 
@@ -116,11 +121,16 @@ def noise(
         xz_scale (float): Scales the X and Z coordinates before sampling.
         y_scale (float): Scales the Y coordinate before sampling.
             A `y_scale` of `0` will result in the noise sampled at `Y=0` for all `Y` of the density function, meaning that it effectively is 2D.
+        shift_x (density function): Shifts the X coordinate before sampling.
+        shift_y (density function): Shifts the Y coordinate before sampling.
+        shift_z (density function): Shifts the Z coordinate before sampling.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#noise)
     """
-    return Density(vt.noise(noise, xz_scale, y_scale))
+    if env.datapack_version < 113 and not (0 == shift_x == shift_y == shift_z):
+        return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
+    return Density(vt.noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
 
 
 def old_blended_noise(
@@ -149,35 +159,6 @@ def old_blended_noise(
     return Density(
         vt.old_blended_noise(
             xz_scale, y_scale, xz_factor, y_factor, smear_scale_multiplier
-        )
-    )
-
-
-@macro
-def shifted_noise(
-    noise: Noise,
-    xz_scale: float,
-    y_scale: float,
-    shift_x: AnyDensity,
-    shift_y: AnyDensity,
-    shift_z: AnyDensity,
-) -> Density[vt.shifted_noise]:
-    """Samples a noise after shifting the input coordinates.
-
-    Parameters:
-        noise: Noise: The noise to sample.
-        xz_scale (float): Scales the X and Z coordinates before sampling.
-        y_scale (float): Scales the Y coordinate before sampling.
-        shift_x (density function): Shifts the X coordinate before sampling.
-        shift_y (density function): Shifts the Y coordinate before sampling.
-        shift_z (density function): Shifts the Z coordinate before sampling.
-
-    ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shifted_noise)
-    """
-    return Density(
-        vt.shifted_noise(
-            noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST
         )
     )
 

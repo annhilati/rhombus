@@ -8,7 +8,6 @@ from rhombus.core import (
 )
 from rhombus.std.noise import Noise
 
-
 class end_islands(SimpleDensityFunction, versions=(9, 113)):
     id: ClassVar[str] = "minecraft:end_islands"
 
