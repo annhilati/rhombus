@@ -2,7 +2,7 @@ from typing import overload, Callable, Iterable
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std.density import Density, AnyDensity, _unify
-from rhombus.std.macros import macro
+from rhombus.std.macros import macro, implementation
 from rhombus.std import coords
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
@@ -14,11 +14,11 @@ from ._implementations.performance import count_node_values, cache_nodes, df_siz
 # @overload
 # def cache_2d(
 #     df: AnyDensity, *, partition: bool = True
-# ) -> Density[vt.Reference]: ...
+# ) -> Density: ...
 # @overload
 # def cache_2d(
 #     df: AnyDensity, *, partition: bool = False
-# ) -> Density[lt.cache_2d]: ...
+# ) -> Density: ...
 # @macro
 # def cache_2d(df: AnyDensity, *, partition: bool = True):
 #     """Only computes the input density once per horizontal position.
@@ -38,11 +38,11 @@ from ._implementations.performance import count_node_values, cache_nodes, df_siz
 # @overload
 # def cache_all_in_cell(
 #     df: AnyDensity, *, partition: bool = True
-# ) -> Density[vt.Reference]: ...
+# ) -> Density: ...
 # @overload
 # def cache_all_in_cell(
 #     df: AnyDensity, *, partition: bool = False
-# ) -> Density[lt.cache_all_in_cell]: ...
+# ) -> Density: ...
 # @macro
 # def cache_all_in_cell(df: AnyDensity, partition: bool = True):
 #     """🚨 Should not be used in datapacks.
@@ -66,11 +66,11 @@ from ._implementations.performance import count_node_values, cache_nodes, df_siz
 @overload
 def cache(
     df: AnyDensity, *, partition: bool = True
-) -> Density[vt.Reference]: ...
+) -> Density: ...
 @overload
 def cache(
     df: AnyDensity, *, partition: bool = False
-) -> Density[vt.cache]: ...
+) -> Density: ...
 @macro
 def cache(df: AnyDensity, *, partition: bool = True):
     """If this density function is referenced twice, it is only computed once per block position.
@@ -92,11 +92,11 @@ def cache(df: AnyDensity, *, partition: bool = True):
 @overload
 def flat_cache(
     df: AnyDensity, *, partition: bool = True
-) -> Density[vt.Reference]: ...
+) -> Density: ...
 @overload
 def flat_cache(
     df: AnyDensity, *, partition: bool = False
-) -> Density[lt.flat_cache]: ...
+) -> Density: ...
 @macro
 def flat_cache(df: AnyDensity, *, partition: bool = True):
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
@@ -104,7 +104,8 @@ def flat_cache(df: AnyDensity, *, partition: bool = True):
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
     """
-    if env.datapack_version < 118:
+    @implementation(until=118)
+    def flat_cache():
         if partition:
             if isinstance(df.AST, vt.Reference) and isinstance(
                 df.AST.definition, tuple(env.caching_function_types)
@@ -112,11 +113,14 @@ def flat_cache(df: AnyDensity, *, partition: bool = True):
                 df = Density(df.AST.definition)
             return Density.partitioned(lt.flat_cache(df.AST))
         return Density(lt.flat_cache(df.AST))
-    return cache(coords.slice(df, y=0))
+    
+    @implementation
+    def flat_cache():
+        return cache(coords.slice(df, y=0))
 
 
 @macro
-def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) -> Density[vt.interpolated]:
+def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) -> Density:
     """Interpolates at each block in one cell based on the input density function
     value of some cells around. The size of each cell is 4 by 4.
 

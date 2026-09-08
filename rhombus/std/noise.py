@@ -10,7 +10,8 @@ from typing import ClassVar, Literal
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro, implementation
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 from rhombus.core.environment import env
@@ -105,7 +106,7 @@ class Noise(DatapackResource):
     def __call__(self, xz_scale: float = 1, y_scale: float = 1):
         return noise(self, xz_scale=xz_scale, y_scale=y_scale)
 
-
+@macro
 def noise(
     noise: Noise,
     xz_scale: float = 1,
@@ -113,7 +114,7 @@ def noise(
     shift_x: AnyDensity = 0,
     shift_y: AnyDensity = 0,
     shift_z: AnyDensity = 0,
-) -> Density[vt.noise]:
+) -> Density:
     """Samples a noise.
 
     Parameters:
@@ -128,9 +129,15 @@ def noise(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#noise)
     """
-    if env.datapack_version < 113 and not (0 == shift_x == shift_y == shift_z):
+    @implementation(until=113)
+    def noise_legacy():
+        if 0 == shift_x == shift_y == shift_z:
+            return Density(vt.noise(noise, xz_scale, y_scale))
         return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
-    return Density(vt.noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
+    
+    @implementation
+    def noise_legacy():
+        return Density(vt.noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
 
 
 def old_blended_noise(
@@ -139,7 +146,7 @@ def old_blended_noise(
     xz_factor: float,
     y_factor: float,
     smear_scale_multiplier: float,
-) -> Density[vt.old_blended_noise]:
+) -> Density:
     """Samples a legacy noise.
 
     These noises are blocky in character, consisting of rectangular regions with varying value tendencies, interspersed with smaller, scattered structures.
@@ -163,7 +170,7 @@ def old_blended_noise(
     )
 
 
-def shift(argument: Noise) -> Density[vt.shift]:
+def shift(argument: Noise) -> Density:
     """Samples a noise at `(x/4, y/4, z/4)`, then multiplies it by `4`.
 
     ---
@@ -172,7 +179,7 @@ def shift(argument: Noise) -> Density[vt.shift]:
     return Density(vt.shift(argument.AST))
 
 
-def shift_a(argument: Noise) -> Density[vt.shift_a]:
+def shift_a(argument: Noise) -> Density:
     """Samples a noise at `(x/4, 0, z/4)`, then multiplies it by `4`.
 
     ---
@@ -181,7 +188,7 @@ def shift_a(argument: Noise) -> Density[vt.shift_a]:
     return Density(vt.shift_a(argument.AST))
 
 
-def shift_b(argument: Noise) -> Density[vt.shift_b]:
+def shift_b(argument: Noise) -> Density:
     """Samples a noise at `(z/4, x/4, 0)`, then multiplies it by `4`.
 
     ---
@@ -190,7 +197,7 @@ def shift_b(argument: Noise) -> Density[vt.shift_b]:
     return Density(vt.shift_b(argument.AST))
 
 
-def end_outer_islands() -> Density[vt.end_outer_islands]:
+def end_outer_islands() -> Density:
     """Returns a value using a
     [special noise](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
     algorithm used for outer end islands. The minimum value is set to `-0.84375`,

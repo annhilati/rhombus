@@ -59,8 +59,40 @@ class NodeDataclassTransformer(type):
         ns: dict[str, Any],
         **kwargs: Any
     ) -> type:
-        versions = kwargs.pop("versions", dataclasses.MISSING)
+        module_name = ns.get("__module__", "")
+        from rhombus.core.environment import get_module_version_namespace
+        default_ns = get_module_version_namespace(module_name)
+
+        raw_versions = kwargs.pop("versions", dataclasses.MISSING)
+        if raw_versions is not dataclasses.MISSING:
+            from rhombus.core.environment import RhombusVersion
+            v1, v2 = raw_versions
+            v1 = RhombusVersion(v1, default_namespace=default_ns) if v1 is not ... and v1 is not None else v1
+            v2 = RhombusVersion(v2, default_namespace=default_ns) if v2 is not ... and v2 is not None else v2
+            versions = (v1, v2)
+        else:
+            versions = dataclasses.MISSING
         
+        for name, field_obj in ns.items():
+            if isinstance(field_obj, dataclasses.Field) and "rhombus_meta" in field_obj.metadata:
+                meta: FieldMeta = field_obj.metadata["rhombus_meta"]
+                if meta.added_with is not ... and meta.added_with is not None:
+                    meta.added_with = RhombusVersion(meta.added_with, default_namespace=default_ns)
+                if meta.removed_with is not ... and meta.removed_with is not None:
+                    meta.removed_with = RhombusVersion(meta.removed_with, default_namespace=default_ns)
+                
+                new_legacy_keys = {}
+                for k, v in meta.legacy_keys.items():
+                    k_norm = RhombusVersion(k, default_namespace=default_ns) if k is not ... else k
+                    new_legacy_keys[k_norm] = v
+                meta.legacy_keys = new_legacy_keys
+                
+                new_legacy_values = {}
+                for k, v in meta.legacy_values.items():
+                    k_norm = RhombusVersion(k, default_namespace=default_ns) if k is not ... else k
+                    new_legacy_values[k_norm] = v
+                meta.legacy_values = new_legacy_values
+
         legacy_values_map = {}
         annotations = ns.get("__annotations__", {})
         for name, annotation in annotations.items():
@@ -120,6 +152,15 @@ class NodeDataclassTransformer(type):
                 object.__setattr__(self, "_rhombus_frozen", False)
                 
                 from rhombus.core.environment import env
+                
+                if not self.__class__.is_active(env):
+                    import warnings
+                    warnings.warn(
+                        f"Node '{self.__class__.__name__}' is being instantiated but is not supported in the target environment version ({env.datapack_version}).",
+                        UserWarning,
+                        stacklevel=2
+                    )
+                
                 all_fields = dataclasses.fields(self.__class__)
                 active_fields: list[dataclasses.Field] = []
                 

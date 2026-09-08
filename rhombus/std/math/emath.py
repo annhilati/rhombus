@@ -23,7 +23,7 @@ from rhombus.support import vanilla as vt
 @macro
 def round(
     df: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[vt.range_choice]:
+) -> Density:
     """Rounds the input to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
     start_int = py_math.ceil(range[0])
@@ -49,7 +49,7 @@ def round(
 @macro
 def floor(
     df: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[vt.range_choice]:
+) -> Density:
     """Rounds the input down to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
     from rhombus.core import environment
@@ -79,7 +79,7 @@ def floor(
 @macro
 def ceil(
     df: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[vt.range_choice]:
+) -> Density:
     """Rounds the input up to the nearest integer within the specified range.
     Values outside this range's rounding intervals will be left unrounded."""
     from rhombus.core import environment
@@ -112,7 +112,7 @@ def ceil(
 @macro
 def floordiv(
     dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[vt.range_choice]:
+) -> Density:
     """Returns the floor division of two inputs (`argument1 // argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will be left unrounded."""
     return floor(dividend / divisor, range=range)
@@ -121,7 +121,7 @@ def floordiv(
 @macro
 def mod(
     dividend: AnyDensity, divisor: AnyDensity, *, range: tuple[int, int] = (-1, 1)
-) -> Density[vt.add]:
+) -> Density:
     """Returns the modulo of two inputs (`argument1 % argument2`) within the specified range.
     Values where the quotient falls outside this range's rounding intervals will not be calculated as true modulo."""
     return caching.recurrence_cache(
@@ -134,7 +134,7 @@ def sqrt(
     df: AnyDensity,
     iterations: int = 3,
     guess: Callable[[Density], Density] = lambda d: d * 0.5,
-) -> Density[vt.range_choice]:
+) -> Density:
     """Returns the square root of the input."""
     x = guess(df)
 
@@ -145,7 +145,7 @@ def sqrt(
 
 
 @macro
-def exp(df: AnyDensity, terms: int = 4) -> Density[vt.add]:
+def exp(df: AnyDensity, terms: int = 4) -> Density:
     """Returns the exponential function value of the input, so `e` exponentiated to the input."""
     if terms <= 0:
         return Density(1)
@@ -157,7 +157,7 @@ def exp(df: AnyDensity, terms: int = 4) -> Density[vt.add]:
 
 
 @macro
-def ln(df: AnyDensity, terms: int = 4) -> Density[vt.range_choice]:
+def ln(df: AnyDensity, terms: int = 4) -> Density:
     """Returns the natual logarithm value of the input.<br>"""
     y = df - Density(1)
 

@@ -2,7 +2,7 @@ import math as py_math
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro
-from rhombus.std.math import _splinelib, splines, e, NaN
+from rhombus.std.math import _splinelib, splines, math, e, NaN
 from rhombus.std import caching, conditional
 
 from rhombus.core.environment import env
@@ -15,11 +15,11 @@ pi = 3.1415926535897932 # 384626433832795028841971693993751058209749445923078164
 
 @macro
 def sin(df: AnyDensity) -> Density:
-    return splines.spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.sin, (-pi, pi), 5))
+    return math.spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.sin, (-pi, pi), 5))
 
 @macro
 def cos(df: AnyDensity) -> Density:
-    return splines.spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.cos, (-pi, pi), 5))
+    return math.spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.cos, (-pi, pi), 5))
 
 # ======// Derived Trigonometric Functions //====================================================//
 
@@ -56,7 +56,7 @@ def acos(df: AnyDensity) -> Density:
 
 @macro
 def atan(df: AnyDensity) -> Density:
-    return splines.spline(df, _splinelib.sample_spline_points(py_math.atan, (-8, 8), points=5))
+    return math.spline(df, _splinelib.sample_spline_points(py_math.atan, (-8, 8), points=5))
 
 @macro
 def acot(df: AnyDensity) -> Density:
@@ -100,7 +100,7 @@ def cosh(df: AnyDensity) -> Density:
 @macro
 def tanh(df: AnyDensity) -> Density:
     if env.datapack_version < 113:
-        return splines.spline(df, _splinelib.sample_spline_points(py_math.tanh, (-3.5, 3.5), points=5))
+        return math.spline(df, _splinelib.sample_spline_points(py_math.tanh, (-3.5, 3.5), points=5))
     return (e**df - e**(-df)) / (e**df + e**(-df))
 
 @macro

@@ -3,7 +3,7 @@ from rhombus.std.macros import macro
 from rhombus.support import vanilla as vt
 
 
-def beardifier() -> Density[vt.beardifier]:
+def beardifier() -> Density:
     """Adds [beards](https://minecraft.wiki/w/Structure_definition) for structures.
     Its value is added to `final_density` in the noise settings by the game.
     Adding more instances manually increases the beards' size.
@@ -14,7 +14,7 @@ def beardifier() -> Density[vt.beardifier]:
     return Density(vt.beardifier())
 
 
-def blend_alpha() -> Density[vt.blend_alpha]:
+def blend_alpha() -> Density:
     """Used for smooth transition to chunks generated in old versions.
 
     Returns a constant value of `1.0`.
@@ -26,7 +26,7 @@ def blend_alpha() -> Density[vt.blend_alpha]:
 
 
 @macro
-def blend_density(df: AnyDensity) -> Density[vt.blend_density]:
+def blend_density(df: AnyDensity) -> Density:
     """Used for smooth transition to chunks generated in old versions.
 
     Does not affect the density value.
@@ -37,7 +37,7 @@ def blend_density(df: AnyDensity) -> Density[vt.blend_density]:
     return Density(vt.blend_density(df.AST))
 
 
-def blend_offset() -> Density[vt.blend_offset]:
+def blend_offset() -> Density:
     """Used for smooth transition to chunks generated in old versions.
 
     Returns a constant value of `1.0`.

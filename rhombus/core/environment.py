@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["RhombusVersion", "DatapackVersion", "NamespacedVersion", "VersionLike", "RhombusVersionError", "RhombusEnvironment", "RhombusAddon", "env"]
+__all__ = ["RhombusVersion", "DatapackVersion", "VersionString", "VersionLike", "RhombusEnvironment", "RhombusAddon", "env", "get_module_version_namespace"]
 
 from typing import Callable, Any, Optional, TYPE_CHECKING
 from types import ModuleType, EllipsisType
@@ -9,6 +9,7 @@ from functools import total_ordering
 from pathlib import Path
 import threading
 import re
+import sys
 
 import beet
 
@@ -23,8 +24,18 @@ from rhombus.core.utils import GlobalBinding
 # ======// Versioning //==========================================================================//
 
 type DatapackVersion = float | int
-type NamespacedVersion = tuple[str, str | tuple[int, ...]]
-type VersionLike = DatapackVersion | NamespacedVersion | str | "RhombusVersion"
+type VersionString = str
+type VersionLike = DatapackVersion | VersionString | "RhombusVersion"
+
+def get_module_version_namespace(module_name: str, default: str = "datapack") -> str:
+    parts = module_name.split('.')
+    while parts:
+        current_module_name = '.'.join(parts)
+        module = sys.modules.get(current_module_name)
+        if module and hasattr(module, "__version_namespace__"):
+            return getattr(module, "__version_namespace__")
+        parts.pop()
+    return default
 
 @total_ordering
 class RhombusVersion:
@@ -40,20 +51,9 @@ class RhombusVersion:
             self.namespace = spec.namespace
             self.version = spec.version
         elif isinstance(spec, (float, int)):
-            self.namespace = "datapack"
+            self.namespace = default_namespace
             parts = str(float(spec)).split(".")
             self.version = tuple(int(p) for p in parts)
-        elif isinstance(spec, tuple) and len(spec) == 2:
-            self.namespace = spec[0]
-            v = spec[1]
-            if isinstance(v, str):
-                parts = re.findall(r"\d+", v)
-                self.version = tuple(int(p) for p in parts)
-            elif isinstance(v, (float, int)):
-                parts = str(float(v)).split(".")
-                self.version = tuple(int(p) for p in parts)
-            else:
-                self.version = tuple(int(p) for p in v)
         elif isinstance(spec, str):
             self.namespace = default_namespace
             parts = re.findall(r"\d+", spec)
@@ -89,11 +89,6 @@ class RhombusVersion:
 
     def __repr__(self) -> str:
         return f"RhombusVersion({self.namespace!r}, {self.version})"
-
-
-class RhombusVersionError(Exception):
-    """Exception raised when a function or macro is not supported in the target version."""
-    pass
 
 
 # ======// Environment //=========================================================================//

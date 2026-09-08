@@ -1,6 +1,6 @@
 """The macro infrastructure of Rhombus."""
 
-__all__ = ["macro"]
+__all__ = ["macro", "implementation", "resolve_ast"]
 
 from typing import (
     Callable,
@@ -13,13 +13,14 @@ from typing import (
     get_origin,
     overload,
 )
-from types import NotImplementedType, UnionType
+from dataclasses import dataclass, field
+from types import UnionType
 import inspect
 import functools
-import logging
 import sys
 
-from rhombus.core.environment import DatapackVersion
+from rhombus.core.node import RhombusASTNode
+from rhombus.core.environment import VersionLike
 from rhombus.core.utils import Annotation
 from rhombus.std.density import Density, AnyDensity
 
@@ -125,80 +126,198 @@ def _create_argument_resolver(func: Callable) -> Callable:
     return wrapper
 
 
-class MacroDispatcher:
-    def __init__(self, default_func: Callable):
-        self.default_impl = _create_argument_resolver(default_func)
-        self.registry: list[tuple[DatapackVersion, Callable | NotImplementedType]] = []
+_macro_registrations: list[tuple[Any, Callable]] = []
+
+def implementation(*, until: VersionLike | None = None):
+    """Decorator for inner functions inside a macro to register them as implementations.
+    If 'until' is None, it acts as the default fallback implementation.
+    """
+    def decorator(func: Callable):
+        _macro_registrations.append((until, func))
+        return func
+    return decorator
+
+
+@dataclass(repr=False, eq=False)
+class UnresolvedMacroNode(RhombusASTNode):
+    dispatcher: "MacroDispatcher" = field(repr=False, compare=False)
+    args: tuple[Any, ...] = field(repr=False, compare=False)
+    kwargs: dict[str, Any] = field(repr=False, compare=False)
+    
+    _cached_version: Any = field(init=False, default=None, repr=False, compare=False)
+    _cached_node: RhombusASTNode | None = field(init=False, default=None, repr=False, compare=False)
+
+    def resolve(self) -> RhombusASTNode:
+        from rhombus.core.environment import env
+        current_version = env.datapack_version
         
-        # Override the __name__ and __doc__ back to the original for clarity
-        functools.update_wrapper(self, default_func)
-        self.__signature__ = inspect.signature(default_func)
+        if self._cached_version == current_version and self._cached_node is not None:
+            return self._cached_node
+            
+        density_result = self.dispatcher._execute_for_version(*self.args, **self.kwargs)
+        self._cached_version = current_version
+        
+        if isinstance(density_result, Density):
+            self._cached_node = density_result.AST
+        elif isinstance(density_result, RhombusASTNode):
+            self._cached_node = density_result
+        else:
+            raise TypeError(f"Macro implementation returned invalid type: {type(density_result)}")
+            
+        return self._cached_node
+
+    # Pass through standard methods to the resolved node
+    def serialize_inline(self) -> Any:
+        return self.resolve().serialize_inline()
+
+    def serialize_toplevel(self) -> Any:
+        return self.resolve().serialize_toplevel()
+
+    @property
+    def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
+        return self.resolve().inscribed_toplevel_nodes
+        
+    def get_size(self) -> int:
+        return self.resolve().get_size()
+
+
+def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
+    """Recursively traverses the AST and resolves all UnresolvedMacroNodes."""
+    if isinstance(node, UnresolvedMacroNode):
+        return resolve_ast(node.resolve())
+        
+    changes = {}
+    for field_name, child_value in node.fields.items():
+        if isinstance(child_value, RhombusASTNode):
+            resolved_child = resolve_ast(child_value)
+            if resolved_child is not child_value:
+                changes[field_name] = resolved_child
+        elif isinstance(child_value, list):
+            new_list = []
+            changed = False
+            for item in child_value:
+                if isinstance(item, RhombusASTNode):
+                    resolved_item = resolve_ast(item)
+                    new_list.append(resolved_item)
+                    if resolved_item is not item:
+                        changed = True
+                else:
+                    new_list.append(item)
+            if changed:
+                changes[field_name] = new_list
+        elif isinstance(child_value, tuple):
+            new_tuple = []
+            changed = False
+            for item in child_value:
+                if isinstance(item, RhombusASTNode):
+                    resolved_item = resolve_ast(item)
+                    new_tuple.append(resolved_item)
+                    if resolved_item is not item:
+                        changed = True
+                else:
+                    new_tuple.append(item)
+            if changed:
+                changes[field_name] = tuple(new_tuple)
+                
+    if changes:
+        # Create a new instance with the resolved children
+        # We temporarily bypass the frozen check
+        import copy
+        new_node = copy.copy(node)
+        object.__setattr__(new_node, "_rhombus_frozen", False)
+        for k, v in changes.items():
+            object.__setattr__(new_node, k, v)
+        object.__setattr__(new_node, "_rhombus_frozen", True)
+        return new_node
+        
+    return node
+
+
+class MacroDispatcher:
+    def __init__(self, func: Callable):
+        self.func = _create_argument_resolver(func)
+        
+        from rhombus.core.environment import get_module_version_namespace
+        self.default_ns = get_module_version_namespace(func.__module__)
+        
+        functools.update_wrapper(self, func)
+        self.__signature__ = inspect.signature(func)
+        
+        # Determine if we should evaluate lazily based on return annotation
+        ret_anno = func.__annotations__.get("return")
+        if ret_anno is None:
+            self.returns_density = True
+        else:
+            ret_str = str(ret_anno)
+            if "Density" in ret_str or "RhombusASTNode" in ret_str or "Any" in ret_str:
+                self.returns_density = True
+            else:
+                self.returns_density = False
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        from rhombus.core.environment import env
-        logger = logging.getLogger(__name__)
+        if self.returns_density:
+            return Density(UnresolvedMacroNode(dispatcher=self, args=args, kwargs=kwargs))
+        else:
+            # If the macro explicitly returns something else (like an int or tuple),
+            # we cannot use a lazy AST node placeholder. We must evaluate it immediately.
+            return self._execute_for_version(*args, **kwargs)
+
+    def _execute_for_version(self, *args: Any, **kwargs: Any) -> Any:
+        global _macro_registrations
+        _macro_registrations = []
         
-        if env.datapack_version is None:
-            # If no target version is set, default to the main implementation.
-            return self.default_impl(*args, **kwargs)
+        # Execute the wrapper to resolve AnyDensity to Density and call the inner function.
+        # This will trigger the @implementation decorators and populate _macro_registrations.
+        self.func(*args, **kwargs)
+        
+        impls = list(_macro_registrations)
+        _macro_registrations = []
+        
+        from rhombus.core.environment import env, RhombusVersion
+        parsed_impls = []
+        default_impl = None
+        
+        for until_v, impl_func in impls:
+            if until_v is None:
+                if default_impl is not None:
+                    raise ValueError(f"Multiple default implementations (without 'until') found in macro '{self.__name__}'")
+                default_impl = impl_func
+            else:
+                parsed_impls.append((RhombusVersion(until_v, default_namespace=self.default_ns), impl_func))
+                    
+        parsed_impls.sort(key=lambda x: x[0])
+        
+        target_v = env.datapack_version
+        
+        def _invoke(impl_f: Callable) -> Any:
+            sig = inspect.signature(impl_f)
+            if not sig.parameters:
+                return impl_f()
+            return _create_argument_resolver(impl_f)(*args, **kwargs)
+
+        if target_v is None:
+            if default_impl is None:
+                raise ValueError(f"No default implementation found for macro '{self.__name__}' and no target version set.")
+            return _invoke(default_impl)
             
-        try:
-            target_v = float(env.datapack_version)
-        except Exception:
-            logger.warning(
-                f"Invalid target version in environment: {env.datapack_version}. "
-                f"Using default implementation for {self.__name__}."
-            )
-            return self.default_impl(*args, **kwargs)
-            
-        # self.registry is expected to be sorted by 'until' ascending
-        for until_v, impl in self.registry:
+        for until_v, impl_func in parsed_impls:
             if target_v < until_v:
-                if impl is NotImplemented:
-                    from rhombus.core.environment import RhombusVersionError
-                    raise RhombusVersionError(
-                        f"Macro '{self.__name__}' is not supported in datapack version {target_v} "
-                        f"(requires >= {until_v})"
-                    )
-                return impl(*args, **kwargs)
+                return _invoke(impl_func)
                 
-        # If no registered version matched (target_v >= all untils), fall back to the default implementation.
-        return self.default_impl(*args, **kwargs)
+        if default_impl is not None:
+            return _invoke(default_impl)
+            
+        from rhombus.core.environment import RhombusVersionError
+        raise RhombusVersionError(f"No valid implementation found for macro '{self.__name__}' at version {target_v}")
 
 @overload
 def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
 
-@overload
-def macro[**P, R](*versions: tuple[DatapackVersion, Callable | NotImplementedType]) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
-
-def macro(*args: Any) -> Any:
+def macro(func: Callable) -> Callable:
     """The **`macro`** decorator allows functions to use the `AnyDensity` type
     for annotation of its arguments to automatically resolve passed values to
     `Density` objects.
     
-    It also acts as a version dispatcher. Legacy implementations can be 
-    provided as positional tuples: `(until_version, implementation_func)`.
-    If an implementation is impossible for a given version, pass `NotImplemented`.
+    It acts as an organizer for `@implementation` decorated inner functions.
     """
-    if len(args) == 1 and callable(args[0]) and not isinstance(args[0], tuple):
-        return cast(Callable, MacroDispatcher(args[0]))
-    
-    def decorator(func: Callable) -> Callable:
-        dispatcher = MacroDispatcher(func)
-        
-        # Validate and sort versions by 'until' ascending
-        seen = set()
-        sorted_versions = sorted(args, key=lambda x: x[0])
-        
-        for until_v, impl in sorted_versions:
-            if until_v in seen:
-                raise ValueError(f"Duplicate 'until' version {until_v} in macro '{func.__name__}'")
-            seen.add(until_v)
-            
-            if impl is NotImplemented:
-                dispatcher.registry.append((until_v, NotImplemented))
-            else:
-                dispatcher.registry.append((until_v, _create_argument_resolver(impl)))
-                
-        return cast(Callable, dispatcher)
-    return decorator
+    return cast(Callable, MacroDispatcher(func))

@@ -1,8 +1,7 @@
 from typing import Literal, Optional, overload
 
-from rhombus.core import RhombusVersionError
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std.macros import macro, implementation
 from rhombus.std import math, caching
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
@@ -31,7 +30,7 @@ _coord_limit = 3 * 10**7
 
 # ======// Vanilla Coverage //====================================================================//
 
-
+@macro
 def gradient(
     axis: Literal["x", "y", "z"],
     from_coordinate: int,
@@ -59,21 +58,26 @@ def gradient(
         from_coordinate, to_coordinate = -_coord_limit, _coord_limit
         from_value, to_value = m * from_coordinate + b, m * to_coordinate + b
         tiling = "clamp_to_edge"
-    if env.datapack_version is not None and env.datapack_version < 113:
+        
+    @implementation(until=113)
+    def y_clamped_gradient():
         if axis != "y":
-            raise RhombusVersionError(
+            raise NotImplementedError(
                 "Cannot provide gradients for x- and z-axis in versions below 113"
             )
         if tiling != "clamp_to_edge":
-            raise RhombusVersionError(
+            raise NotImplementedError(
                 "Cannot provide gradients with tiling other than 'clamp_to_edge' in versions below 113"
             )
         return Density(
             lt.y_clamped_gradient(from_coordinate, to_coordinate, from_value, to_value)
         )
-    return Density(
-        vt.gradient(axis, tiling, from_coordinate, to_coordinate, from_value, to_value)
-    )
+        
+    @implementation
+    def gradient():
+        return Density(
+            vt.gradient(axis, tiling, from_coordinate, to_coordinate, from_value, to_value)
+        )
 
 
 def distance_to_point(
@@ -99,8 +103,8 @@ def distance_to_point(
 
 @macro
 def find_top_surface(
-    density: AnyDensity, start = 320: AnyDensity, stop: int = 0, step_size: int
-) -> Density[vt.find_top_surface]:
+    density: AnyDensity, start: AnyDensity = 320, stop: int = 0, step_size: int = 1
+) -> Density:
     """Returns the topmost Y-coordinate where the given `density` evaluates to a value greater than `0`.
 
     The search starts at the Y-coordinate evaluated by `start` (rounded down to the nearest
@@ -117,7 +121,7 @@ def find_top_surface(
 
 
 @macro
-def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density[vt.slice]:
+def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density:
     """Fixes the coordinate of one or more axes for the given density function.
 
     When evaluating the resulting density, the specified `x`, `y`, or `z` coordinates will be used

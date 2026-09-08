@@ -424,7 +424,7 @@ class when_finite:
         self._subject = subject.AST
 
     @macro
-    def otherwise(self, value: AnyDensity) -> Density[types.or_else]:
+    def otherwise(self, value: AnyDensity) -> Density:
         return or_else(self._subject, value.AST)
 
 

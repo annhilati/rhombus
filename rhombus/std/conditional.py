@@ -28,7 +28,7 @@ from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro; from rhombus.std import caching
+from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro, implementation; from rhombus.std import caching
 from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
@@ -48,7 +48,7 @@ def range_choice(
     max_exclusive: float,
     when_in_range: AnyDensity,
     when_out_of_range: AnyDensity,
-) -> Density[vt.range_choice]:
+) -> Density:
     """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
 
     **NOTE:** To create logic or conditional expressions, use `rhombus.macros.conditional`.
@@ -63,21 +63,21 @@ def range_choice(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
     """
-    return Density(
-        vt.range_choice(
+    @implementation()
+    def _impl():
+        return vt.range_choice(
             input.AST,
             min_inclusive,
             max_exclusive,
             when_in_range.AST,
             when_out_of_range.AST,
         )
-    )
 
 
 @macro
 def interval_select(
     input: AnyDensity, thresholds: list[float], functions: list[AnyDensity]
-):
+) -> Density:
     """Selects between a number of density functions based on an input density function and a set of threshold values.
 
     Parameters:
@@ -90,11 +90,17 @@ def interval_select(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interval_select)
     """
-    return Density(
-        vt.interval_select(
+    @implementation(until=104.0)
+    def _legacy():
+        if len(thresholds) == 1:
+            return vt.range_choice(input.AST, -OMEGA, thresholds[0], functions[0].AST, functions[1].AST)
+        raise NotImplementedError("interval_select with multiple thresholds cannot be evaluated natively in datapack versions below 104")
+
+    @implementation()
+    def _impl():
+        return vt.interval_select(
             input.AST, thresholds, [function.AST for function in functions]
         )
-    )
 
 
 # ======// Conditionality Fluent Interface //=====================================================//
@@ -199,7 +205,7 @@ class ComparisonCondition(Condition):
         self, when_true: DensityFunction, when_false: DensityFunction
     ) -> DensityFunction:
 
-        def ensure_pair(value: tuple[float, float]) -> tuple[float, float]:
+        def ensure_pair(value: float | tuple[float, float]) -> tuple[float, float]:
             if not isinstance(value, tuple) or len(value) != 2:
                 raise TypeError("expected tuple with two floats")
             a, b = float(value[0]), float(value[1])
@@ -210,13 +216,13 @@ class ComparisonCondition(Condition):
         # Primitive case
         if relation == Relation.ABOVE_BUT_UNDER:
             low, high = ensure_pair(self.value)
-            return vt.range_choice(
+            return range_choice(
                 input=self.input,
                 min_inclusive=max(low, -OMEGA),
                 max_exclusive=min(high, OMEGA),
                 when_in_range=when_true,
                 when_out_of_range=when_false,
-            )
+            ).AST
 
         # Other
         if relation == Relation.INSIDE:
@@ -225,42 +231,34 @@ class ComparisonCondition(Condition):
                 self.input, Relation.ABOVE_BUT_UNDER, (low, high + EPSILON)
             )._compile(when_true, when_false)
 
-        # Unbounded relations using interval_select or range_choice fallback
+        # Unbounded relations using interval_select macro
         if relation == Relation.LESS_THAN:
-            v = float(self.value)
-            if vt.interval_select.is_active(env):
-                return vt.interval_select(
-                    input=self.input, thresholds=[v], functions=[when_true, when_false]
-                )
-            return vt.range_choice(self.input, -OMEGA, v, when_true, when_false)
+            v = float(self.value) # type: ignore
+            return interval_select(
+                input=self.input, thresholds=[v], functions=[when_true, when_false]
+            ).AST
 
         if relation == Relation.LESS_OR_EQUAL:
-            v = float(self.value)
-            if vt.interval_select.is_active(env):
-                return vt.interval_select(
-                    input=self.input,
-                    thresholds=[v + EPSILON],
-                    functions=[when_true, when_false],
-                )
-            return vt.range_choice(self.input, -OMEGA, v + EPSILON, when_true, when_false)
+            v = float(self.value) # type: ignore
+            return interval_select(
+                input=self.input,
+                thresholds=[v + EPSILON],
+                functions=[when_true, when_false],
+            ).AST
 
         if relation == Relation.GREATER_THAN:
-            v = float(self.value)
-            if vt.interval_select.is_active(env):
-                return vt.interval_select(
-                    input=self.input,
-                    thresholds=[v + EPSILON],
-                    functions=[when_false, when_true],
-                )
-            return vt.range_choice(self.input, -OMEGA, v + EPSILON, when_false, when_true)
+            v = float(self.value) # type: ignore
+            return interval_select(
+                input=self.input,
+                thresholds=[v + EPSILON],
+                functions=[when_false, when_true],
+            ).AST
 
         if relation == Relation.GREATER_OR_EQUAL:
-            v = float(self.value)
-            if vt.interval_select.is_active(env):
-                return vt.interval_select(
-                    input=self.input, thresholds=[v], functions=[when_false, when_true]
-                )
-            return vt.range_choice(self.input, -OMEGA, v, when_false, when_true)
+            v = float(self.value) # type: ignore
+            return interval_select(
+                input=self.input, thresholds=[v], functions=[when_false, when_true]
+            ).AST
 
         # Derived relations
         if relation == Relation.EQUALS:
@@ -552,7 +550,7 @@ class Causality:
 
     def otherwise(
         self, value: AnyDensity | Itself = it
-    ) -> Density[vt.range_choice | vt.interval_select]:
+    ) -> Density:
         """Specified a fallback value that is returned if none of the conditions apply.
 
         Returns:

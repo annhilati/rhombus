@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=False)
-class Density[Function: DensityFunction = DensityFunction]:
+class Density:
     """The **`Density`** class is the main interface for writing density functions
     with Rhombus.
 
@@ -45,7 +45,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     ```
     """
 
-    AST: Function
+    AST: DensityFunction
     "The density function AST represented by this Density."
 
     @overload
@@ -53,7 +53,9 @@ class Density[Function: DensityFunction = DensityFunction]:
     @overload
     def __init__(self, value: int | float): ...
     @overload
-    def __init__(self, ast: Function | Density[Function]): ...
+    def __init__(self, ast: Density): ...
+    @overload
+    def __init__(self, ast: DensityFunction): ...
     @overload
     def __init__(self, arg: AnyDensity): ...
     def __init__(self, arg: AnyDensity):
@@ -65,7 +67,7 @@ class Density[Function: DensityFunction = DensityFunction]:
     # ======// Factories //=======================================================================//
 
     @classmethod
-    def partitioned(cls, value: AnyDensity) -> Density[Reference]:
+    def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
         value = Density(value)
         return ("rhombus:partitioned/" + uuid_hash(value.as_dict())) @ value
@@ -194,68 +196,58 @@ class Density[Function: DensityFunction = DensityFunction]:
 
     # ======// Arithmetic Magic //================================================================//
 
-    def __add__(self, other) -> Density["vt.add"]:
+    def __add__(self, other) -> Density:
         from rhombus.support import vanilla as vt
         return Density(vt.add(self.AST, Density(other).AST))
 
-    def __radd__(self, other) -> Density["vt.add"]:
+    def __radd__(self, other) -> Density:
         return self.__add__(other)
 
-    def __sub__(self, other) -> Density["vt.add"]:
+    def __sub__(self, other) -> Density:
         from rhombus.std.math import sub
-
         return sub(self, other)
 
-    def __rsub__(self, other) -> Density["vt.add"]:
+    def __rsub__(self, other) -> Density:
         from rhombus.std.math import sub
-
         return sub(other, self)
 
-    def __mul__(self, other) -> Density["vt.mul"]:
+    def __mul__(self, other) -> Density:
         from rhombus.support import vanilla as vt
         return Density(vt.mul(self.AST, Density(other).AST))
 
-    def __rmul__(self, other) -> Density["vt.mul"]:
+    def __rmul__(self, other) -> Density:
         return self.__mul__(other)
 
-    def __truediv__(self, other) -> Density["vt.mul"]:
+    def __truediv__(self, other) -> Density:
         from rhombus.std.math import div
-
         return div(self, other)
 
-    def __rtruediv__(self, other) -> Density[vt.mul]:
+    def __rtruediv__(self, other) -> Density:
         from rhombus.std.math import div
-
         return div(other, self)
 
     def __floordiv__(self, other):
         from rhombus.std.math import floordiv
-
         return floordiv(self, other)
 
     def __rfloordiv__(self, other):
         from rhombus.std.math import floordiv
-
         return floordiv(other, self)
 
     def __mod__(self, other):
         from rhombus.std.math import mod
-
         return mod(self, other)
 
     def __rmod__(self, other):
         from rhombus.std.math import mod
-
         return mod(other, self)
 
-    def __pow__(self, other) -> Density["vt.pow"]:
+    def __pow__(self, other) -> Density:
         from rhombus.std.math import pow
-
         return pow(self, other)
 
-    def __rpow__(self, other) -> Density["vt.pow"]:
+    def __rpow__(self, other) -> Density:
         from rhombus.std.math import pow
-
         return pow(other, self)
 
     def __and__(self, other):
@@ -266,15 +258,14 @@ class Density[Function: DensityFunction = DensityFunction]:
         from rhombus.support import vanilla as vt
         return Density(vt.min(self.AST, Density(other).AST))
 
-    def __abs__(self) -> Density["vt.abs"]:
+    def __abs__(self) -> Density:
         from rhombus.support import vanilla as vt
         return Density(vt.abs(self.AST))
 
-    def __neg__(self) -> Density["vt.mul"]:
-        from rhombus.support import vanilla as vt
-        if env.datapack_version is not None and env.datapack_version < 111:
-            return self * -1
-        return Density(vt.negate(self.AST))
+    def __neg__(self) -> Density:
+        from rhombus.std.math import neg
+        return neg(self)
+        
 
     def __pos__(self) -> Self:
         return self

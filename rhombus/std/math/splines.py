@@ -25,7 +25,7 @@ from rhombus.support import vanilla as vt
 @macro
 def erf(
     argument: AnyDensity, domain: tuple[float, float] = (-3, 3)
-) -> Density[vt.spline]:
+) -> Density:
     """Evaluates the value of the input on Gaussian error function."""
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
     return math.spline(
@@ -36,7 +36,7 @@ def erf(
 @macro
 def exp(
     argument: AnyDensity, domain: tuple[float, float] = (-1, 1), base: float = e
-) -> Density[vt.spline]:
+) -> Density:
     """Evaluates the value of the input on an exponential function."""
     func = lambda x: base**x
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
@@ -52,7 +52,7 @@ def logistic(
     growth_rate: float = 4,
     center: float = 0,
     domain: tuple[float, float] = (-1, 1),
-) -> Density[vt.spline]:
+) -> Density:
     """Evaluates the value of the input on a logistic function.
 
     Parameters:
@@ -74,7 +74,7 @@ def logistic(
 @macro
 def normalPDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
-) -> Density[vt.spline]:
+) -> Density:
     """Evaluates the value of the input on a normal distributed probability density function.
 
     Parameters:
@@ -100,7 +100,7 @@ def normalPDF(
 @macro
 def normalCDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
-) -> Density[vt.spline]:
+) -> Density:
     """Evaluates the value of the input on a normal distributed cumulative distribution function.
 
     Parameters:
@@ -126,7 +126,7 @@ def smoothstep(
     argument: AnyDensity,
     domain: tuple[float, float] = (-1, 1),
     range: tuple[float, float] = (-1, 1),
-) -> Density[vt.spline]:
+) -> Density:
     """Evaluates a smoothstep transition of the input.
 
     The smoothstep curve rises smoothly from `yRange[0]` to `yRange[1]` while the

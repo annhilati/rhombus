@@ -10,6 +10,7 @@ __all__ = [
     "sub",
     "mul",
     "div",
+    "neg",
     "square",
     "cube",
     "pow",
@@ -35,11 +36,9 @@ __all__ = [
 ]
 
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std.macros import macro, implementation
 from rhombus.std import conditional as cond, caching
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
-
-from rhombus.core.environment import env
 
 
 # ======// Constants //==========================================================================//
@@ -58,7 +57,7 @@ e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
 
 
-def constant(value: float) -> Density[vt.constant]:
+def constant(value: float) -> Density:
     """Declares a constant float value."""
     return Density(value)
 
@@ -67,50 +66,67 @@ def constant(value: float) -> Density[vt.constant]:
 
 
 @macro
-def add(df1: AnyDensity, df2: AnyDensity) -> Density[vt.add]:
+def add(df1: AnyDensity, df2: AnyDensity) -> Density:
     """Returns the sum of two inputs."""
     return Density(vt.add(df1.AST, df2.AST))
 
 
 @macro
-def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density[vt.add]:
+def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
     """Returns the difference of two inputs."""
-    if env.datapack_version is not None and env.datapack_version < 111:
+    @implementation(until=111)
+    def sub():
         return Density(vt.add(minuend.AST, vt.mul(-1, subtrahend.AST)))
-    else:
+    @implementation
+    def sub():
         return Density(vt.sub(minuend.AST, subtrahend.AST))
 
 
 @macro
-def mul(df1: AnyDensity, df2: AnyDensity) -> Density[vt.mul]:
+def mul(df1: AnyDensity, df2: AnyDensity) -> Density:
     """Returns the product of two inputs."""
     return Density(vt.mul(df1.AST, df2.AST))
 
 
 @macro
-def div(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.mul]:
+def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Returns the quotient of two inputs."""
-    if env.datapack_version is not None and env.datapack_version < 111:
+    @implementation(until=111)
+    def div():
         return Density(vt.mul(dividend.AST, vt.reciprocal(divisor.AST)))
-    else:
+    @implementation
+    def div():
         return Density(vt.div(dividend.AST, divisor.AST))
 
 
 @macro
-def square(df: AnyDensity) -> Density[vt.square]:
+def neg(df: AnyDensity) -> Density:
+    """Negates the values of the input."""
+    @implementation(until=111)
+    def neg():
+        return df * -1
+    
+    @implementation
+    def neg():
+        return Density(vt.negate(df.AST))
+
+
+@macro
+def square(df: AnyDensity) -> Density:
     """Raises the input to the power of 2."""
     return Density(vt.square(df.AST))
 
 
 @macro
-def cube(df: AnyDensity) -> Density[vt.cube]:
+def cube(df: AnyDensity) -> Density:
     """Raises the input to the power of 3."""
     return Density(vt.cube(df.AST))
 
 
 @macro
-def pow(base: AnyDensity, exponent: AnyDensity) -> Density[vt.pow]:
-    if env.datapack_version < 113:
+def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
+    @implementation(until=113)
+    def pow():
         if not isinstance(exponent, int):
             raise ValueError("Can only raise to integer powers in this version")
         if 0 <= abs(exponent) <= 3:
@@ -127,21 +143,23 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density[vt.pow]:
         if exponent < 0:
             result = Density(vt.reciprocal(result.AST))
         return result
-    if exponent == Density(0.5):
-        return Density(vt.sqrt(base.AST))
-    return Density(vt.pow(base.AST, exponent.AST))
+    
+    @implementation
+    def pow():
+        if exponent == Density(0.5):
+            return Density(vt.sqrt(base.AST))
+        return Density(vt.pow(base.AST, exponent.AST))
 
 
+@macro
 def log(df: AnyDensity, base: AnyDensity = e):
-    if env.datapack_version < 113:
-        raise NotImplementedError("Logarithm is not available in this version")
     if base == Density(e):
         return vt.log(df.AST)
     return vt.log(df.AST) / vt.log(base.AST)
 
 
 @macro
-def sum(*dfs: AnyDensity) -> Density[vt.add]:
+def sum(*dfs: AnyDensity) -> Density:
     "Returns the sum of any number of arguments."
     if len(dfs) == 0:
         return Density(0)
@@ -158,7 +176,7 @@ def sum(*dfs: AnyDensity) -> Density[vt.add]:
 
 
 @macro
-def prod(*dfs: AnyDensity) -> Density[vt.mul]:
+def prod(*dfs: AnyDensity) -> Density:
     "Returns the product of any number of arguments."
     if len(dfs) == 0:
         return Density(0)
@@ -179,13 +197,13 @@ def prod(*dfs: AnyDensity) -> Density[vt.mul]:
 
 
 @macro
-def clamp(df: AnyDensity, min: float, max: float) -> Density[vt.clamp]:
+def clamp(df: AnyDensity, min: float, max: float) -> Density:
     """Returns the larger value from the input and min, and the smaller value from that and max."""
     return Density(vt.clamp(df.AST, min, max))
 
 
 @macro
-def min(*dfs: AnyDensity) -> Density[vt.min]:
+def min(*dfs: AnyDensity) -> Density:
     "Returns the minimum of any number of arguments."
     if len(dfs) == 0:
         return Density(0)
@@ -202,7 +220,7 @@ def min(*dfs: AnyDensity) -> Density[vt.min]:
 
 
 @macro
-def max(*dfs: AnyDensity) -> Density[vt.max]:
+def max(*dfs: AnyDensity) -> Density:
     "Returns the maximum of any number of arguments."
     if len(dfs) == 0:
         return Density(0)
@@ -292,9 +310,10 @@ def smin(
 
 
 @macro
-def round(df: AnyDensity, decimals: int = 0) -> Density[vt.round]:
+def round(df: AnyDensity, decimals: int = 0) -> Density:
     """Rounds the input to the nearest integer or given decimal."""
-    if env.datapack_version is not None and env.datapack_version < 111:
+    @implementation(until=111)
+    def round():
         if decimals:
             return (
                 (df * 10**decimals)
@@ -304,47 +323,54 @@ def round(df: AnyDensity, decimals: int = 0) -> Density[vt.round]:
         return (
             df + constant(1.5) * constant(2**52) - constant(1.5) * constant(2**52)
         )
-    else:
+    
+    @implementation
+    def round():
         return Density(vt.round(df.AST, 10**-decimals))
 
 
 @macro
-def floor(df: AnyDensity, decimals: int = 0) -> Density[vt.floor]:
+def floor(df: AnyDensity, decimals: int = 0) -> Density:
     """Rounds the input down to the nearest integer or given decimal."""
-    if env.datapack_version is not None and env.datapack_version < 111:
+    @implementation(until=111)
+    def floor():
         if decimals:
             return round((df - 0.5) * 10**decimals) / 10**decimals
         return round(df - 0.5)
-    else:
+    
+    @implementation
+    def floor():
         return Density(vt.floor(df.AST, 10**-decimals))
 
 
 @macro
-def ceil(df: AnyDensity, decimals: int = 0) -> Density[vt.ceil]:
+def ceil(df: AnyDensity, decimals: int = 0) -> Density:
     """Rounds the input up to the nearest integer or given decimal."""
-    if env.datapack_version is not None and env.datapack_version < 111:
+    @implementation(until=111)
+    def floor():
         if decimals:
             return round((df + 0.5) * 10**decimals) / 10**decimals
         return round(df + 0.5)
-    else:
+    
+    @implementation
+    def floor():
         return Density(vt.ceil(df.AST, 10**-decimals))
 
 
-# TODO: Versionspezifizierung im decorator wieder entfernen?
-@macro((111, NotImplemented))
-def truncate(df: AnyDensity, decimals: int = 0) -> Density[vt.truncate]:
+@macro
+def truncate(df: AnyDensity, decimals: int = 0) -> Density:
     """Truncates the input to the nearest integer or given decimal."""
     return Density(vt.truncate(df.AST, 10**-decimals))
 
 
 @macro
-def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.floor]:
+def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Returns the floor division of two inputs (`argument1 // argument2`)."""
     return floor(dividend / divisor)
 
 
 @macro
-def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.sub]:
+def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Returns the modulo of two inputs (`argument1 % argument2`)."""
     return caching.specified_cache(
         dividend - divisor * floor(dividend / divisor), dividend, divisor
@@ -355,9 +381,10 @@ def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density[vt.sub]:
 
 
 @macro
-def sgn(df: AnyDensity) -> Density[vt.range_choice]:
+def sgn(df: AnyDensity) -> Density:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
-    if env.datapack_version is not None and env.datapack_version < 113:
+    @implementation(until=113)
+    def sgn():
         return (
             cond.when(df)
             .equals(0.0)
@@ -367,13 +394,14 @@ def sgn(df: AnyDensity) -> Density[vt.range_choice]:
             .then(-1.0)
             .otherwise(1.0)
         )
-    return Density(vt.sign(df.AST))
+        
+    @implementation
+    def sgn():
+        return Density(vt.sign(df.AST))
 
 
 @macro
-def heaviside(
-    df: AnyDensity, *, at_zero: AnyDensity = 0.5
-) -> Density[vt.range_choice]:
+def heaviside(df: AnyDensity, *, at_zero: AnyDensity = 0.5) -> Density:
     "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
     return (
         cond.when(df)
@@ -393,7 +421,7 @@ def monus(minuend: AnyDensity, subtrahend: AnyDensity):
 
 
 @macro
-def ramp(df: AnyDensity) -> Density[vt.max]:
+def ramp(df: AnyDensity) -> Density:
     """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
     return max(df, 0)
 
@@ -404,7 +432,7 @@ def ramp(df: AnyDensity) -> Density[vt.max]:
 @macro
 def spline(
     coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
-) -> Density[vt.spline]:
+) -> Density:
     """Computes the value of a cubic spline for the input.
 
     The values for the points represent in order: `location`, `value` and `derivative`.

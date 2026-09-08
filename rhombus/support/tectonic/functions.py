@@ -6,12 +6,12 @@ from . import types
 
 
 @macro
-def invert(argument: AnyDensity) -> Density[types.invert]:
+def invert(argument: AnyDensity) -> Density:
     """Calculates `1/x`."""
     return Density(types.invert(argument.AST))
 
 
-def config_constant(key: str) -> Density[types.config_constant]:
+def config_constant(key: str) -> Density:
     "References a constant from the Tectonic configuration."
     return Density(types.config_constant(key))
 
@@ -19,6 +19,6 @@ def config_constant(key: str) -> Density[types.config_constant]:
 @macro
 def config_noise(
     noise: Noise, key: str, shift_x: AnyDensity, shift_z: AnyDensity
-) -> Density[types.config_noise]:
+) -> Density:
     ""
     return Density(types.config_noise(noise, key, shift_x.AST, shift_z.AST))
