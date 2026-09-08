@@ -99,7 +99,7 @@ def distance_to_point(
 
 @macro
 def find_top_surface(
-    density: AnyDensity, start: AnyDensity, stop: int, step_size: int
+    density: AnyDensity, start = 320: AnyDensity, stop: int = 0, step_size: int
 ) -> Density[vt.find_top_surface]:
     """Returns the topmost Y-coordinate where the given `density` evaluates to a value greater than `0`.
 
