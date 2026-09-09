@@ -1,4 +1,4 @@
-from typing import overload, Callable, Iterable
+from typing import Callable, Iterable
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std.density import Density, AnyDensity, _unify
@@ -11,14 +11,6 @@ from rhombus.core.environment import env
 from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 
 
-# @overload
-# def cache_2d(
-#     df: AnyDensity, *, partition: bool = True
-# ) -> Density: ...
-# @overload
-# def cache_2d(
-#     df: AnyDensity, *, partition: bool = False
-# ) -> Density: ...
 # @macro
 # def cache_2d(df: AnyDensity, *, partition: bool = True):
 #     """Only computes the input density once per horizontal position.
@@ -35,14 +27,6 @@ from ._implementations.performance import count_node_values, cache_nodes, df_siz
 #     return Density(lt.cache_2d(df.AST))
 
 
-# @overload
-# def cache_all_in_cell(
-#     df: AnyDensity, *, partition: bool = True
-# ) -> Density: ...
-# @overload
-# def cache_all_in_cell(
-#     df: AnyDensity, *, partition: bool = False
-# ) -> Density: ...
 # @macro
 # def cache_all_in_cell(df: AnyDensity, partition: bool = True):
 #     """🚨 Should not be used in datapacks.
@@ -63,19 +47,9 @@ from ._implementations.performance import count_node_values, cache_nodes, df_siz
 #     return Density(lt.cache_all_in_cell(df.AST))
 
 
-@overload
-def cache(
-    df: AnyDensity, *, partition: bool = True
-) -> Density: ...
-@overload
-def cache(
-    df: AnyDensity, *, partition: bool = False
-) -> Density: ...
 @macro
-def cache(df: AnyDensity, *, partition: bool = True):
+def cache(df: AnyDensity, *, partition: bool = True) -> Density:
     """If this density function is referenced twice, it is only computed once per block position.
-
-    Does not affect the density value.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache)
@@ -89,16 +63,9 @@ def cache(df: AnyDensity, *, partition: bool = True):
     return Density(vt.cache(df.AST))
 
 
-@overload
-def flat_cache(
-    df: AnyDensity, *, partition: bool = True
-) -> Density: ...
-@overload
-def flat_cache(
-    df: AnyDensity, *, partition: bool = False
-) -> Density: ...
+# TODO: Move this to some kind of compatability module
 @macro
-def flat_cache(df: AnyDensity, *, partition: bool = True):
+def flat_cache(df: AnyDensity, *, partition: bool = True) -> Density:
     """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
 
     ---
@@ -173,7 +140,7 @@ def _get_identity_condition(
 def recurrence_cache(
     argument: AnyDensity,
     *,
-    caching_function: DensityFunction = cache,
+    caching_function: DensityFunction = vt.cache,
     max_nodes: int = 5,
 ) -> Density:
     """Applies caching to recurring parts of a density function by partitioning it and wrapping it

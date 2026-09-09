@@ -5,7 +5,7 @@ import dataclasses
 import copy
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
-from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionLike
+from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionLike, get_module_version_namespace
 
 __all__ = ["RhombusASTNode", "field", "FieldMeta"]
 
@@ -60,12 +60,10 @@ class NodeDataclassTransformer(type):
         **kwargs: Any
     ) -> type:
         module_name = ns.get("__module__", "")
-        from rhombus.core.environment import get_module_version_namespace
         default_ns = get_module_version_namespace(module_name)
 
         raw_versions = kwargs.pop("versions", dataclasses.MISSING)
         if raw_versions is not dataclasses.MISSING:
-            from rhombus.core.environment import RhombusVersion
             v1, v2 = raw_versions
             v1 = RhombusVersion(v1, default_namespace=default_ns) if v1 is not ... and v1 is not None else v1
             v2 = RhombusVersion(v2, default_namespace=default_ns) if v2 is not ... and v2 is not None else v2

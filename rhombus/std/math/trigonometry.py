@@ -1,8 +1,8 @@
 import math as py_math
 
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
-from rhombus.std.math import _splinelib, splines, math, e, NaN
+from rhombus.std.macros import macro, implementation
+from rhombus.std.math import _splinelib, math, e, NaN
 from rhombus.std import caching, conditional
 
 from rhombus.core.environment import env
@@ -99,15 +99,21 @@ def cosh(df: AnyDensity) -> Density:
 
 @macro
 def tanh(df: AnyDensity) -> Density:
-    if env.datapack_version < 113:
+    @implementation(until=113)
+    def tanh():
         return math.spline(df, _splinelib.sample_spline_points(py_math.tanh, (-3.5, 3.5), points=5))
-    return (e**df - e**(-df)) / (e**df + e**(-df))
+    @implementation
+    def tanh():
+        return (e**df - e**(-df)) / (e**df + e**(-df))
 
 @macro
 def coth(df: AnyDensity) -> Density:
-    if env.datapack_version < 113:
+    @implementation(until=113)
+    def coth():
         return 1 / tanh(df)
-    return (e**df + e**(-df)) / (e**df - e**(-df))
+    @implementation
+    def coth():
+        return (e**df + e**(-df)) / (e**df - e**(-df))
 
 @macro
 def sech(df: AnyDensity) -> Density:

@@ -1,4 +1,4 @@
-from typing import Literal, Optional, overload
+from typing import Literal, Optional
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
@@ -63,11 +63,11 @@ def gradient(
     def y_clamped_gradient():
         if axis != "y":
             raise NotImplementedError(
-                "Cannot provide gradients for x- and z-axis in versions below 113"
+                "Cannot provide gradients for the x- and z-axis in datapack versions below 113"
             )
         if tiling != "clamp_to_edge":
             raise NotImplementedError(
-                "Cannot provide gradients with tiling other than 'clamp_to_edge' in versions below 113"
+                "Cannot provide gradients with tiling other than 'clamp_to_edge' in datapack versions below 113"
             )
         return Density(
             lt.y_clamped_gradient(from_coordinate, to_coordinate, from_value, to_value)
@@ -116,7 +116,7 @@ def find_top_surface(
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#find_top_surface)
     """
     return Density(
-        vt.find_top_surface(density.AST, start.AST, stop, step_size)
+        vt.find_top_surface(density.AST, upper_bound=start.AST, lower_bound=stop, cell_height=step_size)
     )
 
 
@@ -146,23 +146,26 @@ def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: O
 
 def x():
     """Returns the X-coordinate of the current block."""
-    if env.datapack_version is not None and env.datapack_version < 113:
+    @implementation(until=113)
+    def x():
         return unicoords.coord_component(
             shift_x=0.99,
             shift_z=1.01,
             quad_shift_x=0.9821958456973294,
             quad_shift_z=0,
         )
-    return caching.cache(
-        gradient(
-            "x",
-            "clamp_to_edge",
-            -_coord_limit,
-            _coord_limit,
-            -_coord_limit,
-            _coord_limit,
+    @implementation
+    def x():
+        return caching.cache(
+            gradient(
+                "x",
+                "clamp_to_edge",
+                -_coord_limit,
+                _coord_limit,
+                -_coord_limit,
+                _coord_limit,
+            )
         )
-    )
 
 
 def y():
@@ -181,23 +184,27 @@ def y():
 
 def z():
     """Returns the Z-coordinate of the current block."""
-    if env.datapack_version is not None and env.datapack_version < 113:
+    @implementation(until=113)
+    def z():
         return unicoords.coord_component(
             shift_x=1.01,
             shift_z=0.99,
             quad_shift_x=0,
             quad_shift_z=0.9821958456973294,
         )
-    return caching.cache(
-        gradient(
-            "z",
-            "clamp_to_edge",
-            -_coord_limit,
-            _coord_limit,
-            -_coord_limit,
-            _coord_limit,
+
+    @implementation
+    def z():
+        return caching.cache(
+            gradient(
+                "z",
+                "clamp_to_edge",
+                -_coord_limit,
+                _coord_limit,
+                -_coord_limit,
+                _coord_limit,
+            )
         )
-    )
 
 
 # ======// Derived Coordinates //================================================================//

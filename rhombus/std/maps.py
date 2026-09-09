@@ -8,6 +8,7 @@ from rhombus.std.macros import macro
 from rhombus.std.coords import slice
 from rhombus.std import coords
 
+_ = slice
 
 @macro
 def extrude_heightmap(

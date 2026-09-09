@@ -20,12 +20,12 @@ if TYPE_CHECKING:
 from rhombus.core.utils import GlobalBinding
 
 
-
 # ======// Versioning //==========================================================================//
 
 type DatapackVersion = float | int
 type VersionString = str
 type VersionLike = DatapackVersion | VersionString | "RhombusVersion"
+# IDEA: Replace VersionString by n-tuple. Allow a str in the last element that will be ordered alphabetically/by numbers (not digits)
 
 def get_module_version_namespace(module_name: str, default: str = "datapack") -> str:
     parts = module_name.split('.')

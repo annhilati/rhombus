@@ -3,6 +3,9 @@ import dataclasses
 import json
 import sys
 
+# TODO: Does node counting work with the new unresolved nodes?
+
+
 # Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
 # We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
 if sys.getrecursionlimit() < 10000:

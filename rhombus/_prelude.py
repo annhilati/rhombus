@@ -1,7 +1,9 @@
 from rhombus.std import *
 from rhombus.std.math import (
     add,
+    sub,
     mul,
+    div,
     pow,
     Infinity,
     NaN,
@@ -14,21 +16,17 @@ from rhombus.std.math import (
     round,
     ceil,
     floor,
-    sgn,
+    sign,
 )
 from rhombus.std.noise import (
     Noise, 
     noise,
     old_blended_noise,
-    shifted_noise,
 )
 from rhombus.std.caching import (
-    flat_cache,
-    cache_2d,
-    interpolated,
     cache,
-    # recurrence_cache,
-    # specified_cache
+    # flat_cache,
+    interpolated,
 )
 from rhombus.std.conditional import when
 from rhombus.std.coords import x, y, z

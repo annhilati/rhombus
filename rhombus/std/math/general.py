@@ -30,7 +30,7 @@ __all__ = [
     "floordiv",
     "heaviside",
     "ramp",
-    "sgn",
+    "sign",
     "monus",
     "spline"
 ]
@@ -125,10 +125,14 @@ def cube(df: AnyDensity) -> Density:
 
 @macro
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
+    """Raises the input to an arbitrary power. Since the `exponent` can be a fraction, square roots are also possible.
+    
+    **NOTE:** In datapack versions below 113, only integer exponents are supported.
+    """
     @implementation(until=113)
     def pow():
         if not isinstance(exponent, int):
-            raise ValueError("Can only raise to integer powers in this version")
+            raise ValueError("Can only raise to integer powers in datapack versions below 113")
         if 0 <= abs(exponent) <= 3:
             result = {
                 0: Density(vt.constant(1)),
@@ -316,7 +320,7 @@ def round(df: AnyDensity, decimals: int = 0) -> Density:
     def round():
         if decimals:
             return (
-                (df * 10**decimals)
+                df * 10**decimals
                 + constant(1.5) * constant(2**52)
                 - constant(1.5) * constant(2**52)
             ) / 10**decimals
@@ -375,16 +379,17 @@ def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     return caching.specified_cache(
         dividend - divisor * floor(dividend / divisor), dividend, divisor
     )
+    # TODO: do not cache small functions
 
 
 # ======// Step Functions //======================================================================//
 
 
 @macro
-def sgn(df: AnyDensity) -> Density:
+def sign(df: AnyDensity) -> Density:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
     @implementation(until=113)
-    def sgn():
+    def sign():
         return (
             cond.when(df)
             .equals(0.0)
@@ -396,7 +401,7 @@ def sgn(df: AnyDensity) -> Density:
         )
         
     @implementation
-    def sgn():
+    def sign():
         return Density(vt.sign(df.AST))
 
 
@@ -431,7 +436,7 @@ def ramp(df: AnyDensity) -> Density:
 
 @macro
 def spline(
-    coordinate: AnyDensity, points: list[tuple[float, AnyDensity, float]]
+    input: AnyDensity, points: list[tuple[float, AnyDensity, float]]
 ) -> Density:
     """Computes the value of a cubic spline for the input.
 
@@ -443,12 +448,10 @@ def spline(
     location, values aproaching the first defined value will be returned. For
     inputs equal to or greather than the location, values leaving the second
     defined values will be returned. ("first" and "second" refer to the order
-    of definition in `points`).
-
-    **NOTE:** Approximations for various functions done by splines can be found in `rhombus.macros.smath`.
-
+    of **definition** in `points`).
+    
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
     """
     points = [(p[0], p[1].AST, p[2]) for p in points]
-    return Density(vt.spline(coordinate.AST, points))
+    return Density(vt.spline(input.AST, points))

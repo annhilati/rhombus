@@ -307,8 +307,7 @@ class MacroDispatcher:
         if default_impl is not None:
             return _invoke(default_impl)
             
-        from rhombus.core.environment import RhombusVersionError
-        raise RhombusVersionError(f"No valid implementation found for macro '{self.__name__}' at version {target_v}")
+        raise NotImplementedError(f"No valid implementation found for macro '{self.__name__}' at version {target_v}")
 
 @overload
 def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...

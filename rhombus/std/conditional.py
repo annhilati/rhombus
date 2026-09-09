@@ -95,6 +95,7 @@ def interval_select(
         if len(thresholds) == 1:
             return vt.range_choice(input.AST, -OMEGA, thresholds[0], functions[0].AST, functions[1].AST)
         raise NotImplementedError("interval_select with multiple thresholds cannot be evaluated natively in datapack versions below 104")
+        # TODO: Check that. Shouldn't this be possible when nesting range_choice
 
     @implementation()
     def _impl():
