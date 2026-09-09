@@ -55,39 +55,39 @@ def sample_spline_points(
         # 2nd derivative to estimate curvature
         return (f(x + step_size) - 2 * f(x) + f(x - step_size)) / (step_size**2)
 
-    # 1. Erstelle ein dichtes Raster zum Integrieren der "Fehler-Dichte"
+    # 1. Create a dense grid to integrate the "error density"
     resolution = max(1000, points * 10)
     dense_xs = np.linspace(domain[0], domain[1], resolution)
 
-    # 2. Berechne die Dichte D(x) = |f''(x)|^(1/4)
-    # (Der Exponent 1/4 ist theoretisch optimal für die Fehlerverteilung bei kubischen Splines)
+    # 2. Calculate the density D(x) = |f''(x)|^(1/4)
+    # (The exponent 1/4 is theoretically optimal for error distribution in cubic splines)
     density = np.zeros_like(dense_xs)
     for i, x in enumerate(dense_xs):
         density[i] = abs(d2f(x)) ** 0.25
 
-    # Füge eine minimale Basisdichte hinzu, damit rein lineare Bereiche (Dichte=0) nicht ignoriert werden
-    # Eine zu niedrige Basisdichte sorgt bei sehr großen Intervallen (z.B. -10 bis 10 bei Sigmoid)
-    # für Überschwinger in den flachen Bereichen (Runge-Phänomen).
+    # Add a minimum base density so purely linear regions (density=0) are not ignored
+    # Too low of a base density over very large intervals (e.g. -10 to 10 for Sigmoid)
+    # causes overshoots in the flat regions (Runge's phenomenon).
     base_density = np.mean(density) * 0.5
     if base_density == 0:
         base_density = 1.0
     density += base_density
 
-    # 3. Berechne die kumulative Verteilungsfunktion (CDF)
+    # 3. Calculate the cumulative distribution function (CDF)
     cdf = np.zeros_like(dense_xs)
     for i in range(1, resolution):
         cdf[i] = cdf[i - 1] + (density[i] + density[i - 1]) / 2 * (
             dense_xs[i] - dense_xs[i - 1]
         )
 
-    # Normalisiere auf den Bereich [0, 1]
+    # Normalize to the range [0, 1]
     cdf /= cdf[-1]
 
-    # 4. Verteile die Punkte gleichmäßig auf der Y-Achse der CDF und projiziere sie auf X zurück
+    # 4. Distribute points evenly along the Y-axis of the CDF and project them back to X
     target_cdfs = np.linspace(0, 1, points)
     optimal_xs = np.interp(target_cdfs, cdf, dense_xs)
 
-    # Punkte exakt berechnen (Tangenten etc.)
+    # Calculate points exactly (tangents etc.)
     return [get_point(x) for x in optimal_xs]
 
 

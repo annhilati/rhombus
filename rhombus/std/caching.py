@@ -3,7 +3,7 @@ from typing import Callable, Iterable
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std.density import Density, AnyDensity, _unify
 from rhombus.std.macros import macro, implementation
-from rhombus.std import coords
+
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 from rhombus.core.environment import env
@@ -83,6 +83,7 @@ def flat_cache(df: AnyDensity, *, partition: bool = True) -> Density:
     
     @implementation
     def flat_cache():
+        from rhombus.std import coords
         return cache(coords.slice(df, y=0))
 
 
@@ -171,7 +172,7 @@ def specified_cache(
     caching_function: DensityFunction = vt.cache,
 ) -> Density:
     """Applies cahing to specific parts of a density function. All subfunctions
-    that are equal to a node specified in `nodes` and occur multiple times
+    that are equal to a node specified in `functions` and occur multiple times
     are partitioned and wrapped in a caching function.
     
     Parameters:
@@ -182,13 +183,15 @@ def specified_cache(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
         definition=_unify(caching_function(node)),
     )
-    occurances = count_node_values(argument.AST)
-    identity_cond = _get_identity_condition([n.AST for n in functions if isinstance(n, Density)])
+    from rhombus.std.macros import resolve_ast
+    resolved_ast = resolve_ast(argument.AST)
+    occurances = count_node_values(resolved_ast)
+    identity_cond = _get_identity_condition([resolve_ast(n.AST) for n in functions if isinstance(n, Density)])
     condition = lambda node: (
         identity_cond(node) and occurances.get(node, 0) > 1
     )
     # Cache if node is one of specified and it occurs multiple times
-    return Density(cache_nodes(argument.AST, condition=condition, wrapper=wrapper)[0])
+    return Density(cache_nodes(resolved_ast, condition=condition, wrapper=wrapper)[0])
 
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:

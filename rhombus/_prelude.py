@@ -32,7 +32,5 @@ from rhombus.std.conditional import when
 from rhombus.std.coords import x, y, z
 from rhombus.std.maps import extrude_heightmap
 from rhombus.support import *
-from rhombus import (
-    splines,
-    preview,
-)
+from rhombus.std.math import splines
+from rhombus import preview

@@ -55,8 +55,8 @@ def _create_argument_resolver(func: Callable) -> Callable:
         args = get_args(hint)
 
         # Leaf: AnyDensity -> Density(...)
-        if is_anydensity_hint(hint):
-            return val if isinstance(val, Density) else Density(val)
+        if is_anydensity_hint(hint) or hint is __import__("rhombus.std.density", fromlist=["Density"]).Density or str(hint) == "Density" or str(hint) == "~Density":
+            return val if isinstance(val, __import__("rhombus.std.density", fromlist=["Density"]).Density) else __import__("rhombus.std.density", fromlist=["Density"]).Density(val)
 
         # Union / |: try the first matching branch
         if origin is Union or isinstance(hint, UnionType):
@@ -110,9 +110,7 @@ def _create_argument_resolver(func: Callable) -> Callable:
             if hint is not None:
                 param = sig.parameters[name]
                 if param.kind == inspect.Parameter.VAR_POSITIONAL:
-                    bound.arguments[name] = tuple(
-                        resolve_value(v, hint) for v in value
-                    )
+                    bound.arguments[name] = tuple(resolve_value(v, hint) for v in value)
                 elif param.kind == inspect.Parameter.VAR_KEYWORD:
                     bound.arguments[name] = {
                         k: resolve_value(v, hint) for k, v in value.items()
@@ -128,42 +126,54 @@ def _create_argument_resolver(func: Callable) -> Callable:
 
 _macro_registrations: list[tuple[Any, Callable]] = []
 
-def implementation(*, until: VersionLike | None = None):
+
+def implementation(func: Callable | None = None, *, until: VersionLike | None = None):
     """Decorator for inner functions inside a macro to register them as implementations.
     If 'until' is None, it acts as the default fallback implementation.
     """
-    def decorator(func: Callable):
-        _macro_registrations.append((until, func))
-        return func
+
+    def decorator(f: Callable):
+        _macro_registrations.append((until, f))
+        return f
+
+    if func is not None:
+        return decorator(func)
     return decorator
 
 
-@dataclass(repr=False, eq=False)
-class UnresolvedMacroNode(RhombusASTNode):
+from rhombus.core.density_function import DensityFunction
+
+
+class UnresolvedMacroNode(DensityFunction):
     dispatcher: "MacroDispatcher" = field(repr=False, compare=False)
     args: tuple[Any, ...] = field(repr=False, compare=False)
     kwargs: dict[str, Any] = field(repr=False, compare=False)
-    
+
     _cached_version: Any = field(init=False, default=None, repr=False, compare=False)
-    _cached_node: RhombusASTNode | None = field(init=False, default=None, repr=False, compare=False)
+    _cached_node: RhombusASTNode | None = field(
+        init=False, default=None, repr=False, compare=False
+    )
 
     def resolve(self) -> RhombusASTNode:
         from rhombus.core.environment import env
+
         current_version = env.datapack_version
-        
+
         if self._cached_version == current_version and self._cached_node is not None:
             return self._cached_node
-            
+
         density_result = self.dispatcher._execute_for_version(*self.args, **self.kwargs)
-        self._cached_version = current_version
-        
+        object.__setattr__(self, "_cached_version", current_version)
+
         if isinstance(density_result, Density):
-            self._cached_node = density_result.AST
+            object.__setattr__(self, "_cached_node", density_result.AST)
         elif isinstance(density_result, RhombusASTNode):
-            self._cached_node = density_result
+            object.__setattr__(self, "_cached_node", density_result)
         else:
-            raise TypeError(f"Macro implementation returned invalid type: {type(density_result)}")
-            
+            raise TypeError(
+                f"Macro implementation returned invalid type: {type(density_result)}"
+            )
+
         return self._cached_node
 
     # Pass through standard methods to the resolved node
@@ -176,7 +186,7 @@ class UnresolvedMacroNode(RhombusASTNode):
     @property
     def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
         return self.resolve().inscribed_toplevel_nodes
-        
+
     def get_size(self) -> int:
         return self.resolve().get_size()
 
@@ -185,7 +195,7 @@ def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
     """Recursively traverses the AST and resolves all UnresolvedMacroNodes."""
     if isinstance(node, UnresolvedMacroNode):
         return resolve_ast(node.resolve())
-        
+
     changes = {}
     for field_name, child_value in node.fields.items():
         if isinstance(child_value, RhombusASTNode):
@@ -218,31 +228,33 @@ def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
                     new_tuple.append(item)
             if changed:
                 changes[field_name] = tuple(new_tuple)
-                
+
     if changes:
         # Create a new instance with the resolved children
         # We temporarily bypass the frozen check
         import copy
+
         new_node = copy.copy(node)
         object.__setattr__(new_node, "_rhombus_frozen", False)
         for k, v in changes.items():
             object.__setattr__(new_node, k, v)
         object.__setattr__(new_node, "_rhombus_frozen", True)
         return new_node
-        
+
     return node
 
 
 class MacroDispatcher:
     def __init__(self, func: Callable):
         self.func = _create_argument_resolver(func)
-        
+
         from rhombus.core.environment import get_module_version_namespace
+
         self.default_ns = get_module_version_namespace(func.__module__)
-        
+
         functools.update_wrapper(self, func)
         self.__signature__ = inspect.signature(func)
-        
+
         # Determine if we should evaluate lazily based on return annotation
         ret_anno = func.__annotations__.get("return")
         if ret_anno is None:
@@ -256,7 +268,9 @@ class MacroDispatcher:
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         if self.returns_density:
-            return Density(UnresolvedMacroNode(dispatcher=self, args=args, kwargs=kwargs))
+            return Density(
+                UnresolvedMacroNode(dispatcher=self, args=args, kwargs=kwargs)
+            )
         else:
             # If the macro explicitly returns something else (like an int or tuple),
             # we cannot use a lazy AST node placeholder. We must evaluate it immediately.
@@ -265,30 +279,41 @@ class MacroDispatcher:
     def _execute_for_version(self, *args: Any, **kwargs: Any) -> Any:
         global _macro_registrations
         _macro_registrations = []
-        
+
         # Execute the wrapper to resolve AnyDensity to Density and call the inner function.
         # This will trigger the @implementation decorators and populate _macro_registrations.
-        self.func(*args, **kwargs)
-        
+        result = self.func(*args, **kwargs)
+
         impls = list(_macro_registrations)
         _macro_registrations = []
-        
+
+        if not impls:
+            return result
+
         from rhombus.core.environment import env, RhombusVersion
+
         parsed_impls = []
         default_impl = None
-        
+
         for until_v, impl_func in impls:
             if until_v is None:
                 if default_impl is not None:
-                    raise ValueError(f"Multiple default implementations (without 'until') found in macro '{self.__name__}'")
+                    raise ValueError(
+                        f"Multiple default implementations (without 'until') found in macro '{self.__name__}'"
+                    )
                 default_impl = impl_func
             else:
-                parsed_impls.append((RhombusVersion(until_v, default_namespace=self.default_ns), impl_func))
-                    
+                parsed_impls.append(
+                    (
+                        RhombusVersion(until_v, default_namespace=self.default_ns),
+                        impl_func,
+                    )
+                )
+
         parsed_impls.sort(key=lambda x: x[0])
-        
+
         target_v = env.datapack_version
-        
+
         def _invoke(impl_f: Callable) -> Any:
             sig = inspect.signature(impl_f)
             if not sig.parameters:
@@ -297,26 +322,30 @@ class MacroDispatcher:
 
         if target_v is None:
             if default_impl is None:
-                raise ValueError(f"No default implementation found for macro '{self.__name__}' and no target version set.")
+                raise ValueError(
+                    f"No default implementation found for macro '{self.__name__}' and no target version set."
+                )
             return _invoke(default_impl)
-            
+
         for until_v, impl_func in parsed_impls:
             if target_v < until_v:
                 return _invoke(impl_func)
-                
+
         if default_impl is not None:
             return _invoke(default_impl)
-            
-        raise NotImplementedError(f"No valid implementation found for macro '{self.__name__}' at version {target_v}")
+
+        raise NotImplementedError(
+            f"No valid implementation found for macro '{self.__name__}' at version {target_v}"
+        )
+
 
 @overload
 def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
-
 def macro(func: Callable) -> Callable:
     """The **`macro`** decorator allows functions to use the `AnyDensity` type
     for annotation of its arguments to automatically resolve passed values to
     `Density` objects.
-    
+
     It acts as an organizer for `@implementation` decorated inner functions.
     """
     return cast(Callable, MacroDispatcher(func))

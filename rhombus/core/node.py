@@ -71,7 +71,7 @@ class NodeDataclassTransformer(type):
         else:
             versions = dataclasses.MISSING
         
-        for name, field_obj in ns.items():
+        for field_name, field_obj in ns.items():
             if isinstance(field_obj, dataclasses.Field) and "rhombus_meta" in field_obj.metadata:
                 meta: FieldMeta = field_obj.metadata["rhombus_meta"]
                 if meta.added_with is not ... and meta.added_with is not None:
@@ -93,14 +93,14 @@ class NodeDataclassTransformer(type):
 
         legacy_values_map = {}
         annotations = ns.get("__annotations__", {})
-        for name, annotation in annotations.items():
+        for field_name, annotation in annotations.items():
             if "ClassVar" in str(annotation):
-                field_obj = ns.get(name)
+                field_obj = ns.get(field_name)
                 if isinstance(field_obj, dataclasses.Field) and "rhombus_meta" in field_obj.metadata:
                     meta: FieldMeta = field_obj.metadata["rhombus_meta"]
-                    ns[name] = field_obj.default
+                    ns[field_name] = field_obj.default
                     if meta.legacy_values:
-                        legacy_values_map[name] = meta.legacy_values
+                        legacy_values_map[field_name] = meta.legacy_values
 
         user_post_init = ns.get("__post_init__")
 
@@ -199,25 +199,27 @@ class NodeDataclassTransformer(type):
                 # 4. Construct the final kwargs dict for the static original_init call
                 final_kwargs = {}
                 for f in all_fields:
-                    if f.init:
-                        if f.name in new_kwargs:
-                            # Value was provided via args or kwargs
-                            final_kwargs[f.name] = new_kwargs[f.name]
-                        else:
-                            # User did not provide the value. Check if it was required.
-                            is_active = f in active_fields
-                            has_default = (f.default is not dataclasses.MISSING) or (f.default_factory is not dataclasses.MISSING)
+                    if not f.init:
+                        continue
+                        
+                    if f.name in new_kwargs:
+                        # Value was provided via args or kwargs
+                        final_kwargs[f.name] = new_kwargs[f.name]
+                    else:
+                        # User did not provide the value. Check if it was required.
+                        is_active = f in active_fields
+                        has_default = (f.default is not dataclasses.MISSING) or (f.default_factory is not dataclasses.MISSING)
+                        
+                        if is_active and not has_default:
+                            raise TypeError(f"{self.__class__.__name__}.__init__() missing required argument '{f.name}'")
                             
-                            if is_active and not has_default:
-                                raise TypeError(f"{self.__class__.__name__}.__init__() missing required argument '{f.name}'")
-                                
-                            # If it is inactive or has a default, fill it in
-                            if has_default:
-                                final_kwargs[f.name] = f.default if f.default is not dataclasses.MISSING else f.default_factory()
-                            else:
-                                # Inactive arguments without a default are filled with None 
-                                # to prevent the static dataclass __init__ from failing
-                                final_kwargs[f.name] = None
+                        # If it is inactive or has a default, fill it in
+                        if has_default:
+                            final_kwargs[f.name] = f.default if f.default is not dataclasses.MISSING else f.default_factory()
+                        else:
+                            # Inactive arguments without a default are filled with None 
+                            # to prevent the static dataclass __init__ from failing
+                            final_kwargs[f.name] = None
                 
                 original_init(self, **final_kwargs)
                 

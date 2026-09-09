@@ -330,11 +330,206 @@ def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
     if isinstance(v, (int, float)):
         return constant(float(v))
 
+        "Creates a `Density` object from a noise router entry of a noise settings file in a Beet datapack."
+
+        identifier = (
+            "minecraft:" + noise_settings
+            if ":" not in noise_settings
+            else noise_settings
+        )
+
+        file = dp[beet_worldgen.WorldgenNoiseSettings].get(identifier)
+        if file is None:
+            return None
+
+        if (
+            file.data.get("noise_router") is None
+            or file.data.get("noise_router").get(noise_router) is None
+        ):
+            return None
+
+        return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
+
+    def compile(self, identifier: str = "main", /) -> set[tuple[str, BeetFile]]:
+        "Compiles the Density into Beet file class instances."
+        files: set[tuple[str, BeetFile]] = set()
+
+        if ":" not in identifier:
+            identifier = "minecraft:" + identifier
+
+        for node in self.AST.inscribed_toplevel_nodes:
+            id = node.identifier
+            if id != identifier:
+                if node.fileclass is None:
+                    raise TypeError(
+                        f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'"
+                    )
+                files.add((id, node.fileclass(node.serialize_toplevel())))
+
+        files.add(
+            (
+                identifier,
+                beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel()),
+            )
+        )
+
+        return files
+
+    def implement(self, dp: beet.DataPack, identifier: str) -> None:
+        """Implements the Density and all additionally required files in a datapack."""
+
+        files = self.compile(identifier)
+        for id, file in files:
+            dp[id] = file
+
+    # ======// Debug //===========================================================================//
+
+    def as_dict(self) -> JSONDict:
+        """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>
+        The dictionary will not be fully inline. References that require separate files will be references."""
+        return self.AST.serialize_toplevel()
+
+    # ======// Arithmetic Magic //================================================================//
+
+    def __add__(self, other) -> Density:
+        from rhombus.support import vanilla as vt
+        return Density(vt.add(self.AST, Density(other).AST))
+
+    def __radd__(self, other) -> Density:
+        return self.__add__(other)
+
+    def __sub__(self, other) -> Density:
+        from rhombus.std.math import sub
+        return sub(self, other)
+
+    def __rsub__(self, other) -> Density:
+        from rhombus.std.math import sub
+        return sub(other, self)
+
+    def __mul__(self, other) -> Density:
+        from rhombus.support import vanilla as vt
+        return Density(vt.mul(self.AST, Density(other).AST))
+
+    def __rmul__(self, other) -> Density:
+        return self.__mul__(other)
+
+    def __truediv__(self, other) -> Density:
+        from rhombus.std.math import div
+        return div(self, other)
+
+    def __rtruediv__(self, other) -> Density:
+        from rhombus.std.math import div
+        return div(other, self)
+
+    def __floordiv__(self, other):
+        from rhombus.std.math import floordiv
+        return floordiv(self, other)
+
+    def __rfloordiv__(self, other):
+        from rhombus.std.math import floordiv
+        return floordiv(other, self)
+
+    def __mod__(self, other):
+        from rhombus.std.math import mod
+        return mod(self, other)
+
+    def __rmod__(self, other):
+        from rhombus.std.math import mod
+        return mod(other, self)
+
+    def __pow__(self, other) -> Density:
+        from rhombus.std.math import pow
+        return pow(self, other)
+
+    def __rpow__(self, other) -> Density:
+        from rhombus.std.math import pow
+        return pow(other, self)
+
+    def __and__(self, other):
+        from rhombus.support import vanilla as vt
+        return Density(vt.max(self.AST, Density(other).AST))
+
+    def __or__(self, other):
+        from rhombus.support import vanilla as vt
+        return Density(vt.min(self.AST, Density(other).AST))
+
+    def __abs__(self) -> Density:
+        from rhombus.support import vanilla as vt
+        return Density(vt.abs(self.AST))
+
+    def __neg__(self) -> Density:
+        from rhombus.std.math import neg
+        return neg(self)
+        
+
+    def __pos__(self) -> Self:
+        return self
+
+    # ======// Logical Magic //===================================================================//
+
+    def __eq__(self, other):
+        if not isinstance(other, Density):
+            return False
+        return self.AST == other.AST
+
+    def __ne__(self, other):
+        if not isinstance(other, Density):
+            return False
+        return self.AST != other.AST
+
+    # IDEA: Allow building Conditions here -> when needs to become a function to allow conditions and subjects
+    def __gt__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __lt__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __ge__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __le__(self, other):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+    def __bool__(self):
+        raise NotImplementedError(
+            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+        )
+
+
+# ======// AnyDensity //==========================================================================//
+
+type AnyDensity = Density | float | int | str
+"Type for denoting that any straightforward Density shorthand can be used."
+
+
+def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
+    """Interprets a QoL argument input and returns a DensityFunction object.
+    Applies logic like splitting large literal constants into calculations
+    before constructing constant AST nodes.
+    """
+
+    if isinstance(v, Density):
+        return v.AST
+
+    if isinstance(v, DensityFunction):
+        return v
+
+    if isinstance(v, (int, float)):
+        return constant(float(v))
+
     if isinstance(v, str):
         if ":" not in v:
             v = "minecraft:" + v
         return Reference(v)
 
     raise ValueError(
-        f"Cannot resolve object of type '{v.__class__.__name__}' to a density function AST"
+        f"Cannot resolve object of type {type(v).__name__!r} to a density function AST"
     )

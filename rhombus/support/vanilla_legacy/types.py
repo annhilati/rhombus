@@ -1,4 +1,5 @@
-from typing import ClassVar, Literal
+from __future__ import annotations
+from typing import ClassVar, Literal, TYPE_CHECKING
 
 from rhombus.core import (
     DensityFunction,
@@ -6,7 +7,9 @@ from rhombus.core import (
     SimpleDensityFunction,
     field
 )
-from rhombus.std.noise import Noise
+
+if TYPE_CHECKING:
+    from rhombus.std.noise import Noise
 
 class end_islands(SimpleDensityFunction, versions=(9, 113)):
     id: ClassVar[str] = "minecraft:end_islands"

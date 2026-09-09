@@ -106,6 +106,7 @@ class Noise(DatapackResource):
     def __call__(self, xz_scale: float = 1, y_scale: float = 1):
         return noise(self, xz_scale=xz_scale, y_scale=y_scale)
 
+
 @macro
 def noise(
     noise: Noise,
@@ -204,6 +205,6 @@ def end_outer_islands() -> Density:
     the maximum value to `0.5625`.
 
     ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands) -
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands)
     """
     return Density(vt.end_outer_islands())

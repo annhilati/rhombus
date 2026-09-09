@@ -134,7 +134,7 @@ class interval_select(DensityFunction, versions=(104, ...)):
     id: ClassVar[str] = "minecraft:interval_select"
     input: DensityFunction
     thresholds: list[float] = field(validate=lambda x: len(x) > 1)
-    functions: list[DensityFunction] = field(validate=lambda x, df: len(x) == len(df.thresholds) + 1) # one Element more than thresholds
+    functions: list[DensityFunction] = field(validate=lambda x, df: len(x) == len(df.thresholds) + 1)
 
 
 class lerp(DensityFunction, versions=(111, ...)):
@@ -180,7 +180,7 @@ class noise(DensityFunction):
     shift_z: DensityFunction = field(added_with=118, default=constant(0))
 
 
-class old_blended_noise(DensityFunction):
+class old_blended_noise(DensityFunction, versions=(9, ...)):
     id: ClassVar[str] = "minecraft:old_blended_noise"
     xz_scale: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)
     y_scale: float = field(added_with=10, validate=lambda x: 0.001 <= x <= 1000)

@@ -3,7 +3,6 @@ import dataclasses
 import json
 import sys
 
-# TODO: Does node counting work with the new unresolved nodes?
 
 
 # Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
@@ -35,6 +34,8 @@ def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
+    from rhombus.std.macros import resolve_ast
+    node = resolve_ast(node)
 
     counts_by_key: dict[str, int] = {}
     example_node_by_key: dict[str, RhombusASTNode] = {}
@@ -222,6 +223,8 @@ def cache_nodes(
         definition=cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
+    from rhombus.std.macros import resolve_ast
+    root = resolve_ast(root)
     replacement_info: dict[DensityFunction, int] = {}
 
     def visit_and_replace_if_needed(

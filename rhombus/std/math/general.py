@@ -3,7 +3,6 @@
 __all__ = [
     "Infinity",
     "NaN",
-    "pi",
     "e",
     "constant",
     "add",
@@ -43,17 +42,37 @@ from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
 # ======// Constants //==========================================================================//
 
-Infinity = Density(1) / 0
-"Density equivalent to Java's `Float.POSITIVE_INFINITY`"
-NaN = Density(0) / 0
-"""Density equivalent to Java's `Float.NaN`
+# TODO: Check whether we can make the UnresolvedMacroNode API more open and define one here instead of using a complete macro definition
+@macro
+def _infinity() -> Density:
+    @implementation(until=111)
+    def _legacy():
+        return Density(vt.mul(1, vt.reciprocal(0)))
+    @implementation
+    def _modern():
+        return Density(vt.div(1, 0))
+
+Infinity = _infinity()
+"Density equivalent to Java's `Float.POSITIVE_INFINITY`."
+
+@macro
+def _nan() -> Density:
+    @implementation(until=111)
+    def _legacy():
+        return Density(vt.mul(0, vt.reciprocal(0)))
+    @implementation
+    def _modern():
+        return Density(vt.div(0, 0))
+
+NaN = _nan()
+"""Density equivalent to Java's `Float.NaN`.
 
 **NOTE:** All arithmetic operations with `NaN` will result in `NaN`. Before
 chunk generation, `NaN` will be casted to `0.0` thus it will be interpreted 
 as air.
 """
 
-e = Density(2.7182818284590452)  # 35360287471352662497757247093699959574966
+e = 2.7182818284590452 # 35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
 
 
@@ -63,6 +82,8 @@ def constant(value: float) -> Density:
 
 
 # ======// Arithmetic //==========================================================================//
+# NOTE: The selection of functions here may not seem optimal, but some functions yield the
+#       implementations for the operators of the Density class, which I figured are in good hands here.
 
 
 @macro
@@ -363,7 +384,7 @@ def ceil(df: AnyDensity, decimals: int = 0) -> Density:
 
 @macro
 def truncate(df: AnyDensity, decimals: int = 0) -> Density:
-    """Truncates the input to the nearest integer or given decimal."""
+    """Truncates the input to the nearest integer or given decimal. This is equivalent to rounding towards to zero."""
     return Density(vt.truncate(df.AST, 10**-decimals))
 
 

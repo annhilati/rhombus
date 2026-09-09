@@ -58,8 +58,24 @@ class RhombusVersion:
             self.namespace = default_namespace
             parts = re.findall(r"\d+", spec)
             self.version = tuple(int(p) for p in parts)
+        elif isinstance(spec, tuple) and len(spec) == 2 and isinstance(spec[0], str):
+            self.namespace = spec[0]
+            inner = spec[1]
+            if isinstance(inner, str):
+                parts = re.findall(r"\d+", inner)
+                self.version = tuple(int(p) for p in parts)
+            elif isinstance(inner, tuple):
+                self.version = tuple(int(p) for p in inner)
+            else:
+                raise TypeError(f"Invalid inner version spec in tuple: {inner}")
         else:
             raise TypeError(f"Invalid version spec: {spec}")
+
+    def __hash__(self):
+        v = list(self.version)
+        while v and v[-1] == 0:
+            v.pop()
+        return hash((self.namespace, tuple(v)))
 
     def __eq__(self, other):
         if not isinstance(other, RhombusVersion):
