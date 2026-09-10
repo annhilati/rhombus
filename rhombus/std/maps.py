@@ -1,14 +1,23 @@
 """Macros for working with 2-dimensional density functions."""
 
-__all__ = ["extrude_heightmap"]
+__all__ = ["extrude_heightmap", "flatten"]
 
 
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
-from rhombus.std.coords import slice
+from rhombus.std.macros import macro, implementation
 from rhombus.std import coords
+from rhombus.support import vanilla_legacy as lt
 
-_ = slice
+
+@macro
+def flatten(df: AnyDensity) -> Density:
+    """Flattens a density function to 2 dimensions by ignoring the Y-coordinate."""
+    @implementation(until=118)
+    def flatten():
+        return lt.flat_cache(df.AST)
+    @implementation
+    def flatten():
+        return coords.slice(df, y=0)
 
 @macro
 def extrude_heightmap(

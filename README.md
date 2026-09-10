@@ -34,6 +34,8 @@ Functions and classes provide docstrings describing behavior, parameters, and us
 Recurring expressions and resource intense operations can be cached automatically.
 - 🗄️ **Macro Library**<br>
 Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
+- **Multi-Version Compilation**<br>
+While Rhombus follows an up-to-date-first approach, density functions can be compiled to older versions too. The most optimal implementation for each version is chosen automatically.
 
 ## Features
 <details>

@@ -17,6 +17,7 @@ from rhombus.support import vanilla as vt, vanilla_legacy as lt
 from rhombus.core.environment import env
 
 
+# TODO: Use field() architecture here
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
@@ -200,8 +201,8 @@ def shift_b(argument: Noise) -> Density:
 
 def end_outer_islands() -> Density:
     """Returns a value using a
-    [special noise](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
-    algorithm used for outer end islands. The minimum value is set to `-0.84375`,
+    [special noise algorithm](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
+    used for the outer end islands. The minimum value is set to `-0.84375`,
     the maximum value to `0.5625`.
 
     ---

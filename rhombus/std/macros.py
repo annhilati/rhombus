@@ -13,17 +13,30 @@ from typing import (
     get_origin,
     overload,
 )
-from dataclasses import dataclass, field
 from types import UnionType
+import dataclasses
 import inspect
 import functools
 import sys
 
 from rhombus.core.node import RhombusASTNode
-from rhombus.core.environment import VersionLike
+from rhombus.core.environment import VersionLike, get_module_version_namespace, env
 from rhombus.core.utils import Annotation
+from rhombus.core.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 
+# TODO: Add good representation to UnresolvedMacroNode instead of resolving
+# TODO: below: I don't understand the warnings. I assume that they are instanciated always and then it warns because one ist in the wromg version
+# I guess we should remove runtime errors and just warn while compiling. That would make way more sense
+# x = Infinity
+
+# env.datapack_version = 80
+
+# print(x.as_dict())
+
+# env.datapack_version = 118
+
+# print(x.as_dict())
 
 def _create_argument_resolver(func: Callable) -> Callable:
     """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
@@ -141,21 +154,19 @@ def implementation(func: Callable | None = None, *, until: VersionLike | None = 
     return decorator
 
 
-from rhombus.core.density_function import DensityFunction
 
 
 class UnresolvedMacroNode(DensityFunction):
-    dispatcher: "MacroDispatcher" = field(repr=False, compare=False)
-    args: tuple[Any, ...] = field(repr=False, compare=False)
-    kwargs: dict[str, Any] = field(repr=False, compare=False)
+    dispatcher: "MacroDispatcher" = dataclasses.field(repr=False, compare=False)
+    args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
+    kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
 
-    _cached_version: Any = field(init=False, default=None, repr=False, compare=False)
-    _cached_node: RhombusASTNode | None = field(
+    _cached_version: Any = dataclasses.field(init=False, default=None, repr=False, compare=False)
+    _cached_node: RhombusASTNode | None = dataclasses.field(
         init=False, default=None, repr=False, compare=False
     )
 
     def resolve(self) -> RhombusASTNode:
-        from rhombus.core.environment import env
 
         current_version = env.datapack_version
 
@@ -189,6 +200,9 @@ class UnresolvedMacroNode(DensityFunction):
 
     def get_size(self) -> int:
         return self.resolve().get_size()
+
+    def __repr__(self) -> str:
+        return self.resolve().__repr__()
 
 
 def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
@@ -248,7 +262,6 @@ class MacroDispatcher:
     def __init__(self, func: Callable):
         self.func = _create_argument_resolver(func)
 
-        from rhombus.core.environment import get_module_version_namespace
 
         self.default_ns = get_module_version_namespace(func.__module__)
 

@@ -2,7 +2,7 @@ from typing import Callable, Iterable
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std.density import Density, AnyDensity, _unify
-from rhombus.std.macros import macro, implementation
+from rhombus.std.macros import macro
 
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
@@ -10,6 +10,7 @@ from rhombus.core.environment import env
 
 from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 
+__all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 
 # @macro
 # def cache_2d(df: AnyDensity, *, partition: bool = True):
@@ -63,36 +64,12 @@ def cache(df: AnyDensity, *, partition: bool = True) -> Density:
     return Density(vt.cache(df.AST))
 
 
-# TODO: Move this to some kind of compatability module
-@macro
-def flat_cache(df: AnyDensity, *, partition: bool = True) -> Density:
-    """Calculate the value per 4x4 column (Value at each block in one column is the same). And it is calculated only once per column, at Y=0. Used often in combination with `interpolated`.
-
-    ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
-    """
-    @implementation(until=118)
-    def flat_cache():
-        if partition:
-            if isinstance(df.AST, vt.Reference) and isinstance(
-                df.AST.definition, tuple(env.caching_function_types)
-            ):
-                df = Density(df.AST.definition)
-            return Density.partitioned(lt.flat_cache(df.AST))
-        return Density(lt.flat_cache(df.AST))
-    
-    @implementation
-    def flat_cache():
-        from rhombus.std import coords
-        return cache(coords.slice(df, y=0))
-
-
 @macro
 def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) -> Density:
     """Interpolates at each block in one cell based on the input density function
     value of some cells around. The size of each cell is 4 by 4.
 
-    It is used in combination with `flat_cache` to compensate for its 4x4 averaging.
+    **NOTE** `cell_size_xz` and `cell_size_y` only take effect starting with datapack version 118.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
@@ -194,14 +171,14 @@ def specified_cache(
     return Density(cache_nodes(resolved_ast, condition=condition, wrapper=wrapper)[0])
 
 
-def get_size(df: Density) -> DensityFunctionSizeInfo:
-    """Returns information about the size of a density function.
+# def get_size(df: Density) -> DensityFunctionSizeInfo:
+#     """Returns information about the size of a density function.
 
-    Returns:
-        DensityFunctionSizeInfo
-            - `~.nodes_uncached`: Number of nodes that are not part of a unique cached subtree
-            - `~.nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
-            - `~.unique_unknown_references`: Number of unique references with unknown definition
-            - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
-    """
-    return df_size_info(df.AST)
+#     Returns:
+#         DensityFunctionSizeInfo
+#             - `~.nodes_uncached`: Number of nodes that are not part of a unique cached subtree
+#             - `~.nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
+#             - `~.unique_unknown_references`: Number of unique references with unknown definition
+#             - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
+#     """
+#     return df_size_info(df.AST)
