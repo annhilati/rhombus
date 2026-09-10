@@ -116,7 +116,7 @@ def _get_identity_condition(
 
 @macro
 def recurrence_cache(
-    argument: AnyDensity,
+    df: AnyDensity,
     *,
     caching_function: DensityFunction = vt.cache,
     max_nodes: int = 5,
@@ -132,10 +132,10 @@ def recurrence_cache(
         "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
         definition=caching_function(value),
     )
-    occurances = count_node_values(argument.AST)
+    occurances = count_node_values(df.AST)
     return Density(
         cache_nodes(
-            argument.AST,
+            df.AST,
             condition=_get_occurance_and_size_condition(max_nodes, occurances),
             wrapper=wrapper,
         )[0]
@@ -144,7 +144,7 @@ def recurrence_cache(
 
 @macro
 def specified_cache(
-    argument: AnyDensity,
+    df: AnyDensity,
     *functions: Density,
     caching_function: DensityFunction = vt.cache,
 ) -> Density:
@@ -161,7 +161,7 @@ def specified_cache(
         definition=_unify(caching_function(node)),
     )
     from rhombus.std.macros import resolve_ast
-    resolved_ast = resolve_ast(argument.AST)
+    resolved_ast = resolve_ast(df.AST)
     occurances = count_node_values(resolved_ast)
     identity_cond = _get_identity_condition([resolve_ast(n.AST) for n in functions if isinstance(n, Density)])
     condition = lambda node: (

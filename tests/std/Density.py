@@ -10,12 +10,12 @@ def test_partitioning():
     assert Density.partitioned(1.0) == Density(
         types.Reference(
             "rhombus:partitioned/d0ff5974b6aa52cf562bea5921840c03",
-            definition=types.constant(argument=1.0),
+            definition=types.constant(value=1.0),
         )
     )
 
     assert "test" @ Density(1.0) == Density(
-        types.Reference("minecraft:test", definition=types.constant(argument=1.0))
+        types.Reference("minecraft:test", definition=types.constant(value=1.0))
     )
 
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:

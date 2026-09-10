@@ -48,17 +48,18 @@ conditional composition, this macro reconstructs the coordinates using only vani
 density functions.
 """
 
+from rhombus.std.density import Density
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
-from rhombus.std.caching import flat_cache, interpolated, recurrence_cache
+from rhombus.std.caching import interpolated, recurrence_cache
 
 from rhombus.support import vanilla_legacy as lt
 
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
-_coord_base = flat_cache(
+_coord_base = Density(lt.flat_cache(
     lt.cache_2d((
         -1
         * noise(
@@ -70,7 +71,7 @@ _coord_base = flat_cache(
             shift_z=1.01,
         )
     ).AST)
-)
+))
 
 
 # ======// Additional Information about the Implementation //=====================================//
@@ -147,4 +148,4 @@ def coord_component(
         argument2=value,
     )
 
-    return recurrence_cache(interpolated(flat_cache(lt.cache_2d(outermost_mul.AST))), max_nodes=4)
+    return recurrence_cache(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.AST))), max_nodes=4)

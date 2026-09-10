@@ -265,7 +265,7 @@ class Reference(DensityFunction):
 
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
-    argument: float = field()
+    value: float = field(legacy_keys={111: "argument"})
 
     @classmethod
     def deserialize_toplevel(cls, data: dict | int | float):
@@ -277,8 +277,7 @@ class constant(DensityFunction):
         from rhombus.support import vanilla as vt 
 
         def ensure_not_exceeding_limit(value: float) -> JSONValue:
-
-            if abs(value) < vt.literal_number_limit:
+            if abs(value) <= vt.literal_number_limit:
                 return value
 
             return vt.mul(
@@ -286,10 +285,10 @@ class constant(DensityFunction):
                 vt.literal_number_limit,
             ).serialize_inline()
 
-        return ensure_not_exceeding_limit(self.argument)
+        return ensure_not_exceeding_limit(self.value)
 
     def __repr__(self) -> str:
-        return str(self.argument)
+        return str(self.value)
 
 
 class Unknown(DensityFunction):

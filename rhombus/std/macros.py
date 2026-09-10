@@ -166,6 +166,11 @@ class UnresolvedMacroNode(DensityFunction):
         init=False, default=None, repr=False, compare=False
     )
 
+    def __repr__(self) -> str:
+        parts = [repr(arg) for arg in self.args]
+        parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
+        return f"{self.dispatcher.__name__}({', '.join(parts)})"
+
     def resolve(self) -> RhombusASTNode:
 
         current_version = env.datapack_version
@@ -200,9 +205,6 @@ class UnresolvedMacroNode(DensityFunction):
 
     def get_size(self) -> int:
         return self.resolve().get_size()
-
-    def __repr__(self) -> str:
-        return self.resolve().__repr__()
 
 
 def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
