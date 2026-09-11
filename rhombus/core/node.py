@@ -1,3 +1,6 @@
+__all__ = ["RhombusASTNode", "field", "FieldMeta"]
+
+
 from typing import Self, Any, ClassVar, dataclass_transform, Callable
 from types import EllipsisType
 from functools import cached_property
@@ -7,7 +10,6 @@ import copy
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
 from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionLike, get_module_version_namespace
 
-__all__ = ["RhombusASTNode", "field", "FieldMeta"]
 
 @dataclasses.dataclass
 class FieldMeta:
@@ -16,13 +18,6 @@ class FieldMeta:
     legacy_keys: dict[VersionLike, str] = {},
     legacy_values: dict[VersionLike, Any] = {},
     validate: Callable[[Any], bool] | Callable[[Any, Any], bool] | None = None
-
-    def is_active(self, env: RhombusEnvironment) -> bool:
-        if env.check_version(self.added_with) is False:
-            return False
-        if env.check_version(self.removed_with) is True:
-            return False
-        return True
 
     def get_json_key(self, env: RhombusEnvironment, default: str) -> str:
         for threshold, key in sorted(self.legacy_keys.items(), reverse=False):
@@ -62,14 +57,7 @@ class NodeDataclassTransformer(type):
         module_name = ns.get("__module__", "")
         default_ns = get_module_version_namespace(module_name)
 
-        raw_versions = kwargs.pop("versions", dataclasses.MISSING)
-        if raw_versions is not dataclasses.MISSING:
-            v1, v2 = raw_versions
-            v1 = RhombusVersion(v1, default_namespace=default_ns) if v1 is not ... and v1 is not None else v1
-            v2 = RhombusVersion(v2, default_namespace=default_ns) if v2 is not ... and v2 is not None else v2
-            versions = (v1, v2)
-        else:
-            versions = dataclasses.MISSING
+        kwargs.pop("versions", None)
         
         for field_name, field_obj in ns.items():
             if isinstance(field_obj, dataclasses.Field) and "rhombus_meta" in field_obj.metadata:
@@ -118,11 +106,8 @@ class NodeDataclassTransformer(type):
                     
                     if "rhombus_meta" in field.metadata:
                         meta: FieldMeta = field.metadata["rhombus_meta"]
-                        from rhombus.core.environment import env
                         
-                        # Only validate the field if it is currently active in the environment.
-                        # Inactive fields are filled with None in __init__, which would fail validation here.
-                        if meta.is_active(env) and meta.validate is not None:
+                        if val is not None and meta.validate is not None:
                             import inspect
                             sig = inspect.signature(meta.validate)
                             if len(sig.parameters) == 1:
@@ -149,87 +134,14 @@ class NodeDataclassTransformer(type):
                 # Temporarily disable freezing so original_init can set attributes
                 object.__setattr__(self, "_rhombus_frozen", False)
                 
-                from rhombus.core.environment import env
-                
-                if not self.__class__.is_active(env):
-                    import warnings
-                    warnings.warn(
-                        f"Node '{self.__class__.__name__}' is being instantiated but is not supported in the target environment version ({env.datapack_version}).",
-                        UserWarning,
-                        stacklevel=2
-                    )
-                
-                all_fields = dataclasses.fields(self.__class__)
-                active_fields: list[dataclasses.Field] = []
-                
-                # 1. Dynamically evaluate which fields are active in the current environment
-                for f in all_fields:
-                    if f.init:
-                        if "rhombus_meta" in f.metadata:
-                            meta: FieldMeta = f.metadata["rhombus_meta"]
-                            if meta.is_active(env):
-                                active_fields.append(f)
-                        else:
-                            active_fields.append(f)
-                            
-                active_positional = [f for f in active_fields if not getattr(f, 'kw_only', False)]
-                
-                # 2. Map provided positional arguments exclusively to ACTIVE fields
-                if len(args) > len(active_positional):
-                    raise TypeError(f"{self.__class__.__name__}.__init__() takes {len(active_positional)} positional arguments but {len(args)} were given")
-                    
-                new_kwargs = {}
-                for i, arg in enumerate(args):
-                    new_kwargs[active_positional[i].name] = arg
-                    
-                # 3. Process provided keyword arguments
-                active_names = {f.name for f in active_fields}
-                for k, v in kwargs.items():
-                    if k not in active_names:
-                        is_inactive = any(f.name == k for f in all_fields)
-                        # If the field exists but is currently inactive, provide a specific error message
-                        if is_inactive:
-                            raise TypeError(f"{self.__class__.__name__}.__init__() got unexpected keyword argument '{k}' (field is inactive in this version)")
-                        else:
-                            raise TypeError(f"{self.__class__.__name__}.__init__() got an unexpected keyword argument '{k}'")
-                    if k in new_kwargs:
-                        raise TypeError(f"{self.__class__.__name__}.__init__() got multiple values for argument '{k}'")
-                    new_kwargs[k] = v
-                    
-                # 4. Construct the final kwargs dict for the static original_init call
-                final_kwargs = {}
-                for f in all_fields:
-                    if not f.init:
-                        continue
-                        
-                    if f.name in new_kwargs:
-                        # Value was provided via args or kwargs
-                        final_kwargs[f.name] = new_kwargs[f.name]
-                    else:
-                        # User did not provide the value. Check if it was required.
-                        is_active = f in active_fields
-                        has_default = (f.default is not dataclasses.MISSING) or (f.default_factory is not dataclasses.MISSING)
-                        
-                        if is_active and not has_default:
-                            raise TypeError(f"{self.__class__.__name__}.__init__() missing required argument '{f.name}'")
-                            
-                        # If it is inactive or has a default, fill it in
-                        if has_default:
-                            final_kwargs[f.name] = f.default if f.default is not dataclasses.MISSING else f.default_factory()
-                        else:
-                            # Inactive arguments without a default are filled with None 
-                            # to prevent the static dataclass __init__ from failing
-                            final_kwargs[f.name] = None
-                
-                original_init(self, **final_kwargs)
+                original_init(self, *args, **kwargs)
                 
                 # Freeze the object again after initialization
                 object.__setattr__(self, "_rhombus_frozen", True)
 
             cls.__init__ = __init__
 
-        if versions is not dataclasses.MISSING:
-            cls.__rhombus_versions__ = versions
+
         cls.__rhombus_legacy_values__ = legacy_values_map
         
         rhombus_fields = {}
@@ -295,7 +207,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
 
     def __repr__(self) -> str:
         return (
-            self.__class__.__name__
+            type(self).__name__
             + "("
             + ", ".join(
                 [
@@ -338,19 +250,6 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
             ids.extend(cls.__rhombus_legacy_values__["id"].values())
         return ids
 
-    @classmethod
-    def is_active(cls, env: RhombusEnvironment) -> bool:
-        versions = getattr(cls, "__rhombus_versions__", None)
-        if versions:
-            added, removed = versions
-            if added is not None and added is not ...:
-                if env.check_version(added) is False:
-                    return False
-            if removed is not None and removed is not ...:
-                if env.check_version(removed) is True:
-                    return False
-        return True
-
     # ======// Serialization //===================================================================//
 
     @property
@@ -391,7 +290,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
         dictionary), like it would be used at the top of a file structure.
         """
         raise NotImplementedError(
-            f"Class {self.__class__.__name__} is missing implementation of serialize_toplevel()"
+            f"Class {type(self).__name__} is missing implementation of serialize_toplevel()"
         )
 
     def serialize_inline(self):

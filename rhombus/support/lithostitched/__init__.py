@@ -9,6 +9,7 @@ This module enables finer control over terrain shaping and noise manipulation wi
 """
 
 __version__ = "1.6.0"
+__version_namespace__ = "lithostitched"
 
 from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig

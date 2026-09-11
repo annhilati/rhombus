@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["RhombusVersion", "DatapackVersion", "VersionString", "VersionLike", "RhombusEnvironment", "RhombusAddon", "env", "get_module_version_namespace"]
+__all__ = ["RhombusVersion", "DatapackVersion", "VersionString", "VersionLike", "RhombusEnvironment", "RhombusAddon", "env", "get_module_version_namespace", "FROM_CONTEXT", "datapack_handler"]
 
 from typing import Callable, Any, Optional, TYPE_CHECKING
 from types import ModuleType, EllipsisType
@@ -10,6 +10,10 @@ from pathlib import Path
 import threading
 import re
 import sys
+import functools
+import inspect
+import copy
+from typing import Final
 
 import beet
 
@@ -19,13 +23,14 @@ if TYPE_CHECKING:
 
 from rhombus.core.utils import GlobalBinding
 
+# TODO refine default versions (e.g. Node versions parameter): (9, ...) is stupid for mod-related stuff
 
 # ======// Versioning //==========================================================================//
 
 type DatapackVersion = float | int
 type VersionString = str
 type VersionLike = DatapackVersion | VersionString | "RhombusVersion"
-# IDEA: Replace VersionString by n-tuple. Allow a str in the last element that will be ordered alphabetically/by numbers (not digits)
+# TODO: Replace VersionString by n-tuple. Allow a str in the last element that will be ordered alphabetically/by numbers (not digits)
 
 def get_module_version_namespace(module_name: str, default: str = "datapack") -> str:
     parts = module_name.split('.')
@@ -145,6 +150,7 @@ class RhombusEnvironment:
         self._addons: list[RhombusAddon] = []
 
         self._reg_lock = threading.RLock()
+
 
     @property
     def datapack_version(self) -> RhombusVersion | None:
@@ -313,7 +319,7 @@ class RhombusAddon:
         env.preview_beet_file_extensions.update(self.preview_beet_file_extensions)
 
 
-# NOTE: rhombus.core should not include runtime relevant symbols.
+# TODO: rhombus.core should not include runtime relevant symbols.
 # Thus 'env' should be moved somewhere else in the future.
 env: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
 """The default global Rhombus environment.
@@ -321,3 +327,45 @@ env: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
 For more information on how to use environments see
 [`RhombusEnvironment`](https://annhilati.github.io/rhombus/reference/rhombus/core/environment/RhombusEnvironment/).
 """
+
+FROM_CONTEXT: Final = object()
+"Typing sentinel to denote that a value will be adopted from the environment."
+
+def datapack_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+    """Decorator that handles the 'dp' parameter for datapack contexts.
+    If 'dp' is FROM_CONTEXT, it injects the current env.datapack.
+    If 'dp' is provided explicitly, it temporarily overrides env.datapack 
+    for the duration of the function call, restoring it afterwards.
+    """
+    sig = inspect.signature(func)
+
+    @functools.wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        bound = sig.bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+
+        if "dp" in bound.arguments:
+            value = bound.arguments["dp"]
+
+            if value is FROM_CONTEXT:
+                bound.arguments["dp"] = env.datapack
+                return func(*bound.args, **bound.kwargs)  # type: ignore
+            elif value is not env.datapack:
+                # Temporarily override the environment with the new datapack
+                current_env_obj = env._get_instance()
+                new_env = copy.copy(current_env_obj)
+                new_env.datapack = value
+
+                token = env._ctxvar.set(new_env)
+                try:
+                    return func(*bound.args, **bound.kwargs)  # type: ignore
+                finally:
+                    env._ctxvar.reset(token)
+            else:
+                # Value is already the current environment datapack
+                return func(*bound.args, **bound.kwargs)  # type: ignore
+        else:
+            return func(*bound.args, **bound.kwargs)  # type: ignore
+
+    wrapper.__signature__ = sig  # type: ignore
+    return wrapper

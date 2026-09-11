@@ -8,6 +8,7 @@ This module significantly expands the flexibility of terrain generation by addin
 """
 
 __version__ = "2.2.1"
+__version_namespace__ = "moredfs"
 
 from .functions import *
 from .sub_parameters import (

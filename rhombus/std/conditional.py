@@ -28,7 +28,9 @@ from typing import Any, Never
 from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro, implementation; from rhombus.std import caching
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro, implementation
+from rhombus.std import caching
 from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
@@ -49,10 +51,9 @@ def range_choice(
     when_in_range: AnyDensity,
     when_out_of_range: AnyDensity,
 ) -> Density:
-    """Computes the input value, and depending on that result returns one of two other density functions. Basically an if-then-else statement.
-
-    **NOTE:** To create logic or conditional expressions, use `rhombus.macros.conditional`.
-
+    """Computes the input value, and depending on that result returns one of two other density functions.
+    
+    `range_choice` can be used like if-else-statements, but to build large conditionality trees use `~.when` instead.    
     ```
     if input >= min_inclucive:
         if input < max_exclusive:
@@ -493,32 +494,6 @@ class Causality:
         """Specifies a fallback option for the conditionality if none of the
         preceding conditions apply. When called without arguments, the input
         of the initial condition is used.
-
-        ## Continuation
-
-            **`~.equals(float)`**
-                `self == other`
-            **`~.unequals(float)`**
-                `self != other`
-            **`~.greater(float)`**
-                `self > other`
-            **`~.less(float)`**
-                `self < other`
-            **`~.atleast(float)`**
-                `self >= other`
-            **`~.atmost(float)`**
-                `self <= other`
-            **`~.inside(float, float)`**
-                `low <= self <= high`
-            **`~.outside(float, float)`**
-                `self < low` or `self > high`
-            **`~.atleast_but_less(float, float)`**
-                `low <= self < high`
-                This is the standard case for `range_choice`.
-            **`~.is_nan()`**
-                `self == NaN`
-            **`~.is_infinite()`**
-                `self == +Infinity` or `self == -Infinity`
         """
 
         _chain: Causality
@@ -575,33 +550,6 @@ class Causality:
 
 class when(_ConditionBuilder[Condition]):
     """Opens a new conditionality fluent interface.
-
-    To continue, use one  of the following methods to specify the condition:
-    ## Continuation
-
-        **`~.equals(float)`**
-            `self == other`
-        **`~.unequals(float)`**
-            `self != other`
-        **`~.greater(float)`**
-            `self > other`
-        **`~.less(float)`**
-            `self < other`
-        **`~.atleast(float)`**
-            `self >= other`
-        **`~.atmost(float)`**
-            `self <= other`
-        **`~.inside(float, float)`**
-            `low <= self <= high`
-        **`~.outside(float, float)`**
-            `self < low` or `self > high`
-        **`~.atleast_but_less(float, float)`**
-            `low <= self < high`
-            This is the standard case for `range_choice`.
-        **`~.is_nan()`**
-            `self == NaN`
-        **`~.is_infinite()`**
-            `self == +Infinity` or `self == -Infinity`
     """
 
     _subject: DensityFunction

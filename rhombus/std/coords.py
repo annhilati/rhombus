@@ -5,8 +5,6 @@ from rhombus.std.macros import macro, implementation
 from rhombus.std import math, caching
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
-from rhombus.core.environment import env
-
 from ._implementations import unicoords
 
 __all__ = [
@@ -42,6 +40,8 @@ def gradient(
     ] = "extrapolate",
 ):
     """Creates a gradient between two coordinates along a given axis.
+    
+    **NOTE**: In datapack versions before 113 only the Y-axis and the `clamp_to_edge` and `extrapolate` tiling modes can be used.
 
     Parameters:
         axis (Literal["x", "y", "z"]): The axis along which the gradient is defined.
@@ -103,7 +103,7 @@ def distance_to_point(
 
 @macro
 def find_top_surface(
-    density: AnyDensity, start: AnyDensity = 320, stop: int = 0, step_size: int = 1
+    density: AnyDensity, start: AnyDensity = 320, stop: int = -64, step_size: int = 1
 ) -> Density:
     """Returns the topmost Y-coordinate where the given `density` evaluates to a value greater than `0`.
 

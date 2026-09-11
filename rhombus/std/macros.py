@@ -18,6 +18,7 @@ import dataclasses
 import inspect
 import functools
 import sys
+import copy
 
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.environment import VersionLike, get_module_version_namespace, env
@@ -25,18 +26,6 @@ from rhombus.core.utils import Annotation
 from rhombus.core.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 
-# TODO: Add good representation to UnresolvedMacroNode instead of resolving
-# TODO: below: I don't understand the warnings. I assume that they are instanciated always and then it warns because one ist in the wromg version
-# I guess we should remove runtime errors and just warn while compiling. That would make way more sense
-# x = Infinity
-
-# env.datapack_version = 80
-
-# print(x.as_dict())
-
-# env.datapack_version = 118
-
-# print(x.as_dict())
 
 def _create_argument_resolver(func: Callable) -> Callable:
     """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
@@ -154,8 +143,6 @@ def implementation(func: Callable | None = None, *, until: VersionLike | None = 
     return decorator
 
 
-
-
 class UnresolvedMacroNode(DensityFunction):
     dispatcher: "MacroDispatcher" = dataclasses.field(repr=False, compare=False)
     args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
@@ -203,9 +190,6 @@ class UnresolvedMacroNode(DensityFunction):
     def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
         return self.resolve().inscribed_toplevel_nodes
 
-    def get_size(self) -> int:
-        return self.resolve().get_size()
-
 
 def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
     """Recursively traverses the AST and resolves all UnresolvedMacroNodes."""
@@ -248,7 +232,6 @@ def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
     if changes:
         # Create a new instance with the resolved children
         # We temporarily bypass the frozen check
-        import copy
 
         new_node = copy.copy(node)
         object.__setattr__(new_node, "_rhombus_frozen", False)

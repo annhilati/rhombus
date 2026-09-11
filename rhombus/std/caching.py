@@ -2,52 +2,16 @@ from typing import Callable, Iterable
 
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.std.density import Density, AnyDensity, _unify
-from rhombus.std.macros import macro
+from rhombus.std.macros import macro, resolve_ast
 
-from rhombus.support import vanilla as vt, vanilla_legacy as lt
-
-from rhombus.core.environment import env
+from rhombus.support import vanilla as vt
 
 from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 
 __all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 
-# @macro
-# def cache_2d(df: AnyDensity, *, partition: bool = True):
-#     """Only computes the input density once per horizontal position.
 
-#     ---
-#     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
-#     """
-#     if partition:
-#         if isinstance(df.AST, vt.Reference) and isinstance(
-#             df.AST.definition, tuple(env.caching_function_types)
-#         ):
-#             df = Density(df.AST.definition)
-#         return Density.partitioned(lt.cache_2d(df.AST))
-#     return Density(lt.cache_2d(df.AST))
-
-
-# @macro
-# def cache_all_in_cell(df: AnyDensity, partition: bool = True):
-#     """🚨 Should not be used in datapacks.
-
-#     ---
-
-#     Used by the game onto `final_density`.
-
-#     ---
-#     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
-#     """
-#     if partition:
-#         if isinstance(df.AST, vt.Reference) and isinstance(
-#             df.AST.definition, tuple(env.caching_function_types)
-#         ):
-#             df = Density(df.AST.definition)
-#         return Density.partitioned(lt.cache_all_in_cell(df.AST))
-#     return Density(lt.cache_all_in_cell(df.AST))
-
-
+# NOTE: multiple nested caching functions are no longer auto-inlined. When adding compatability with older versions again, implement it again
 @macro
 def cache(df: AnyDensity, *, partition: bool = True) -> Density:
     """If this density function is referenced twice, it is only computed once per block position.
@@ -56,10 +20,6 @@ def cache(df: AnyDensity, *, partition: bool = True) -> Density:
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache)
     """
     if partition:
-        if isinstance(df.AST, vt.Reference) and isinstance(
-            df.AST.definition, tuple(env.caching_function_types)
-        ):
-            df = Density(df.AST.definition)
         return Density.partitioned(vt.cache(df.AST))
     return Density(vt.cache(df.AST))
 
@@ -171,14 +131,15 @@ def specified_cache(
     return Density(cache_nodes(resolved_ast, condition=condition, wrapper=wrapper)[0])
 
 
-# def get_size(df: Density) -> DensityFunctionSizeInfo:
-#     """Returns information about the size of a density function.
+def get_size(df: Density) -> DensityFunctionSizeInfo:
+    """Returns information about the size of a density function.
 
-#     Returns:
-#         DensityFunctionSizeInfo
-#             - `~.nodes_uncached`: Number of nodes that are not part of a unique cached subtree
-#             - `~.nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
-#             - `~.unique_unknown_references`: Number of unique references with unknown definition
-#             - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
-#     """
-#     return df_size_info(df.AST)
+    Returns:
+        DensityFunctionSizeInfo
+            - `~.nodes_uncached`: Number of nodes that are not part of a unique cached subtree
+            - `~.nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
+            - `~.unique_unknown_references`: Number of unique references with unknown definition
+            - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
+    """
+    resolved = resolve_ast(df.AST)
+    return df_size_info(resolved)

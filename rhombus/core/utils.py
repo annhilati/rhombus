@@ -1,9 +1,21 @@
-from typing import Callable, Final, Any, get_type_hints
+__all__ = [
+    "JSONValue",
+    "JSONDict",
+    "BeetFile",
+    "Annotation",
+    "Decorator",
+    "Dataclass",
+    "DataclassInstance",
+    "uuid_hash",
+    "fields",
+    "annotated_fields",
+    "GlobalBinding"
+]
+
+from typing import Callable, Any, get_type_hints
 import hashlib
 import uuid
 import json
-import functools
-import inspect
 import dataclasses
 import contextvars
 
@@ -53,62 +65,6 @@ def uuid_hash(data: JSONDict) -> str:
     ).encode("utf-8")
     hash_digest = hashlib.sha256(encoded_str).digest()
     return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
-
-
-# ======// Context //=============================================================================//
-
-FROM_CONTEXT: Final = object()
-"Typing sentinel to denote that a value will be adopted from the environment."
-
-
-def contextfunction[**P, R](**envparams: str) -> Decorator[P, R]:
-    """Decorator for automatic context handling for parameters."""
-
-    def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        sig = inspect.signature(func)
-
-        @functools.wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            bound = sig.bind_partial(*args, **kwargs)
-            bound.apply_defaults()
-
-            # Import here to avoid circular imports if any
-            from rhombus.core import environment
-            import copy
-
-            needs_new_context = False
-            overrides = {}
-
-            for param, env_attr in envparams.items():
-                value = bound.arguments.get(param)
-
-                if value is FROM_CONTEXT:
-                    bound.arguments[param] = getattr(environment.env, env_attr)
-                else:
-                    needs_new_context = True
-                    overrides[env_attr] = value
-
-            if needs_new_context:
-                # Get the actual environment object (the proxy exposes it via _get_instance)
-                # and create a shallow copy so we can override attributes safely
-                current_env_obj = environment.env._get_instance()
-                new_env = copy.copy(current_env_obj)
-
-                for attr, val in overrides.items():
-                    setattr(new_env, attr, val)
-
-                token = environment.env._ctxvar.set(new_env)
-                try:
-                    return func(*bound.args, **bound.kwargs)  # type: ignore
-                finally:
-                    environment.env._ctxvar.reset(token)
-            else:
-                return func(*bound.args, **bound.kwargs)  # type: ignore
-
-        wrapper.__signature__ = sig  # type: ignore
-        return wrapper
-
-    return decorator
 
 
 # ======// Dataclasses //=========================================================================//

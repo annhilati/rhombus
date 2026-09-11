@@ -1,15 +1,16 @@
-from typing import Union, TypeAliasType, Literal, Any, get_origin, get_args
-from types import UnionType
-
-from rhombus.core.utils import JSONValue
-from rhombus.core.node import RhombusASTNode
-
 __all__ = [
     "serialize_any_toplevel",
     "serialize_any_inline",
     "deserialize_any_toplevel",
     "deserialize_any_inline",
 ]
+
+
+from typing import Union, TypeAliasType, Literal, Any, get_origin, get_args
+from types import UnionType
+
+from rhombus.core.utils import JSONValue
+from rhombus.core.node import RhombusASTNode
 
 
 def serialize_any_toplevel[T](o: T) -> JSONValue:

@@ -1,10 +1,11 @@
+__all__ = ["SubParameters"]
+
+
 from typing import Self, ClassVar
 
 from rhombus.core.utils import JSONDict, annotated_fields
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-
-__all__ = ["SubParameters"]
 
 
 class SubParameters(RhombusASTNode):

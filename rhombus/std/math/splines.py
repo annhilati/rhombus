@@ -1,13 +1,7 @@
 __all__ = [
-    "atan",
-    "cos",
-    "coth",
     "normalCDF",
     "normalPDF",
-    "sin",
     "smoothstep",
-    "tan",
-    "tanh",
     "erf",
     "logistic",
 ]
@@ -19,7 +13,6 @@ from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro
 from rhombus.std.math import _splinelib
 from rhombus.std import math
-from rhombus.support import vanilla as vt
 
 
 @macro
@@ -30,18 +23,6 @@ def erf(
     points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
     return math.spline(
         argument, _splinelib.sample_spline_points(py_math.erf, domain, points)
-    )
-
-
-@macro
-def exp(
-    argument: AnyDensity, domain: tuple[float, float] = (-1, 1), base: float = e
-) -> Density:
-    """Evaluates the value of the input on an exponential function."""
-    func = lambda x: base**x
-    points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
-    return math.spline(
-        argument, _splinelib.sample_spline_points(func, domain, points)
     )
 
 

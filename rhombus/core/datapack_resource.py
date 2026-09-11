@@ -1,21 +1,21 @@
+__all__ = ["DatapackResource"]
+
+
 from typing import ClassVar, Self, Any
 from dataclasses import field
 import copy
 
 import beet
 
+from rhombus.core.node import RhombusASTNode
+from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
+from rhombus.core.environment import env, FROM_CONTEXT, datapack_handler
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
     uuid_hash,
     annotated_fields,
-    contextfunction,
 )
-from rhombus.core.node import RhombusASTNode
-from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.core.environment import env
-
-__all__ = ["DatapackResource"]
 
 
 class DatapackResource(RhombusASTNode):
@@ -57,7 +57,7 @@ class DatapackResource(RhombusASTNode):
 
     def __repr__(self) -> str:
         if self.is_reference and self._reference is not None:
-            return self.__class__.__name__ + '.refer("' + self.identifier + '")'
+            return type(self).__name__ + '.refer("' + self.identifier + '")'
         return super().__repr__()
 
     def __hash__(self):
@@ -125,7 +125,7 @@ class DatapackResource(RhombusASTNode):
         return cls.deserialize_toplevel(data)
 
     @classmethod
-    @contextfunction(dp="datapack")
+    @datapack_handler
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
         """Extracts an instance of this datapack resource node class from a Beet datapack."""
 
@@ -140,9 +140,7 @@ class DatapackResource(RhombusASTNode):
 
     @classmethod
     def refer(cls, identifier: str, /) -> Self:
-        """Creates an instance of this datapack resource node class that
-        references an externally provided resource.
-        """
+        "Creates an instance of this datapack resource node class that references an externally provided resource."
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         instance = cls(**{param: None for param in annotated_fields(cls)})
         object.__setattr__(instance, "_reference", identifier)

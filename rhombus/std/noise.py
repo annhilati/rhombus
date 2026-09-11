@@ -10,14 +10,13 @@ from typing import ClassVar, Literal
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
+from rhombus.core.environment import env
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
 
-from rhombus.core.environment import env
 
 
-# TODO: Use field() architecture here
 class Noise(DatapackResource):
     """Defines a perlin noise.
 
@@ -57,6 +56,7 @@ class Noise(DatapackResource):
 
     fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
 
+    # We are not using the field versioning here to keep the API clean
     base_octave: int
     amplitudes: list[float]
     base_amplitude: float = 1.0
@@ -138,7 +138,7 @@ def noise(
         return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
     
     @implementation
-    def noise_legacy():
+    def noise_modern():
         return Density(vt.noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
 
 

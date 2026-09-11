@@ -1,14 +1,3 @@
-from typing import ClassVar, Self
-import warnings
-
-from beet.contrib.worldgen import WorldgenDensityFunction
-
-from rhombus.core.node import RhombusASTNode, field, FieldMeta
-from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
-
-from rhombus.core.environment import env
-
 __all__ = [
     "DensityFunction",
     "SimpleDensityFunction",
@@ -20,8 +9,19 @@ __all__ = [
 ]
 
 
-# ======// DensityFunction Base Class //==========================================================//
+from typing import ClassVar, Self
+import warnings
 
+from beet.contrib.worldgen import WorldgenDensityFunction
+
+from rhombus.core.node import RhombusASTNode, field, FieldMeta
+from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
+from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
+
+from rhombus.core.environment import env
+
+
+# ======// DensityFunction Base Class //==========================================================//
 
 class DensityFunction(RhombusASTNode):
     """The **`DensityFunction`** base class implements functionality for nodes
@@ -38,23 +38,6 @@ class DensityFunction(RhombusASTNode):
 
     def serialize_toplevel(self) -> JSONDict:
         active_env = env
-        if not self.is_active(env):
-            import warnings
-            
-            fallback_version = 9.0
-            versions = getattr(self.__class__, "__rhombus_versions__", None)
-            if versions is not None and versions[0] is not ...:
-                fallback_version = versions[0]
-
-            warnings.warn(
-                f"DensityFunction '{self.id}' is not supported in the current environment. "
-                f"Falling back to serialization rules of version {fallback_version}.",
-                UserWarning,
-                stacklevel=2
-            )
-            from rhombus.core.environment import RhombusEnvironment
-            active_env = RhombusEnvironment()
-            active_env.datapack_version = fallback_version
 
         result = {"type": self.id}
         
@@ -67,8 +50,6 @@ class DensityFunction(RhombusASTNode):
             meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
-                if not meta.is_active(active_env):
-                    continue
                 json_key = meta.get_json_key(active_env, default=parameter)
                 if meta.validate and not meta.validate(value):
                     raise ValueError(f"Validation failed for field '{parameter}' of '{self.id}'")
@@ -112,7 +93,7 @@ class DensityFunction(RhombusASTNode):
                 return constant(float(data))
             else:
                 raise TypeError(
-                    f"Cannot deserialize density function from type '{data.__class__.__name__}' at top level"
+                    f"Cannot deserialize density function from type '{type(data).__name__}' at top level"
                 )
 
         fields = annotated_fields(cls)
@@ -123,12 +104,21 @@ class DensityFunction(RhombusASTNode):
             meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
-                if not meta.is_active(env):
-                    continue
                 json_key = meta.get_json_key(env, default=parameter)
             
+            # Check the expected json_key first
+            found_key = None
             if json_key in data:
-                val = deserialize_any_inline(data[json_key], tp)
+                found_key = json_key
+            elif meta and meta.legacy_keys:
+                # If not found, try any legacy keys (allows deserializing old JSON in new environments)
+                for legacy_key in meta.legacy_keys.values():
+                    if legacy_key in data:
+                        found_key = legacy_key
+                        break
+            
+            if found_key:
+                val = deserialize_any_inline(data[found_key], tp)
                 if meta and meta.validate and not meta.validate(val):
                     raise ValueError(f"Validation failed for field '{parameter}' of '{cls.id}'")
                 kwargs[parameter] = val
@@ -145,7 +135,7 @@ class DensityFunction(RhombusASTNode):
             return cls.deserialize_toplevel(data)
         else:
             raise TypeError(
-                f"Cannot deserialize inline density function from type '{data.__class__.__name__}'"
+                f"Cannot deserialize inline density function from type '{type(data).__name__}'"
             )
 
 
@@ -173,7 +163,7 @@ class MappedDensityFunction(DensityFunction):
     input: DensityFunction = field(legacy_keys={111.0: "argument"})
 
     def __repr__(self) -> str:
-        return self.__class__.__name__ + "(" + self.input.__repr__() + ")"
+        return type(self).__name__ + "(" + self.input.__repr__() + ")"
         
 
 class DoubleArgumentDensityFunction(DensityFunction):
@@ -186,14 +176,13 @@ class DoubleArgumentDensityFunction(DensityFunction):
 
     def __repr__(self) -> str:
         return (
-            self.__class__.__name__
+            type(self).__name__
             + "("
             + self.left.__repr__()
             + ", "
             + self.right.__repr__()
             + ")"
         )
-
 
 
 # ======// Primitives //==========================================================================//
@@ -210,7 +199,7 @@ class Reference(DensityFunction):
             self.definition, DensityFunction
         ):
             raise ValueError(
-                f"Cannot initialize Reference object with default of type {self.definition.__class__.__name__}"
+                f"Cannot initialize Reference object with default of type {type(self.definition).__name__}"
             )
 
     @property

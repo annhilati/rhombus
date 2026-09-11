@@ -10,8 +10,9 @@ __all__ = [
     "mul",
     "div",
     "neg",
-    "square",
-    "cube",
+    "abs",
+    # "square",
+    # "cube",
     "pow",
     "log",
     "sum",
@@ -33,6 +34,8 @@ __all__ = [
     "monus",
     "spline"
 ]
+
+import builtins as py_builtins
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
@@ -121,6 +124,12 @@ def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
 
 
 @macro
+def abs(df: AnyDensity) -> Density:
+    """Returns the absolute value of the input."""
+    return Density(vt.abs(df.AST))
+
+
+@macro
 def neg(df: AnyDensity) -> Density:
     """Negates the values of the input."""
     @implementation(until=111)
@@ -132,16 +141,16 @@ def neg(df: AnyDensity) -> Density:
         return Density(vt.negate(df.AST))
 
 
-@macro
-def square(df: AnyDensity) -> Density:
-    """Raises the input to the power of 2."""
-    return Density(vt.square(df.AST))
+# @macro
+# def square(df: AnyDensity) -> Density:
+#     """Raises the input to the power of 2."""
+#     return Density(vt.square(df.AST))
 
 
-@macro
-def cube(df: AnyDensity) -> Density:
-    """Raises the input to the power of 3."""
-    return Density(vt.cube(df.AST))
+# @macro
+# def cube(df: AnyDensity) -> Density:
+#     """Raises the input to the power of 3."""
+#     return Density(vt.cube(df.AST))
 
 
 @macro
@@ -154,7 +163,7 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     def pow():
         if not isinstance(exponent, int):
             raise ValueError("Can only raise to integer powers in datapack versions below 113")
-        if 0 <= abs(exponent) <= 3:
+        if 0 <= py_builtins.abs(exponent) <= 3:
             result = {
                 0: Density(vt.constant(1)),
                 1: base,
@@ -163,7 +172,7 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
             }[exponent]
         else:
             result = base
-            for _ in range(abs(exponent) - 1):
+            for _ in range(py_builtins.abs(exponent) - 1):
                 result = Density(vt.mul(result.AST, base.AST))
         if exponent < 0:
             result = Density(vt.reciprocal(result.AST))
@@ -177,7 +186,7 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
 
 
 @macro
-def log(df: AnyDensity, base: AnyDensity = e):
+def log(df: AnyDensity, *, base: AnyDensity = e):
     if base == Density(e):
         return vt.log(df.AST)
     return vt.log(df.AST) / vt.log(base.AST)
@@ -215,7 +224,6 @@ def prod(*dfs: AnyDensity) -> Density:
         result = result * x
 
     return result
-
 
 
 # ======// Ordering //===========================================================================//
@@ -287,7 +295,7 @@ def smax(
     result = next(it)
 
     for x in it:
-        diff_clamped = max(smoothing_factor - abs(result - x), 0.0)
+        diff_clamped = max(smoothing_factor - py_builtins.abs(result - x), 0.0)
         power = diff_clamped**degree
         denominator = (2 * degree) * (smoothing_factor ** (degree - 1))
 
@@ -322,7 +330,7 @@ def smin(
     result = next(it)
 
     for x in it:
-        diff_clamped = max(smoothing_factor - abs(result - x), 0.0)
+        diff_clamped = max(smoothing_factor - py_builtins.abs(result - x), 0.0)
         power = diff_clamped**degree
         denominator = (2 * degree) * (smoothing_factor ** (degree - 1))
 
