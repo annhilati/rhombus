@@ -124,7 +124,7 @@ class RhombusEnvironment:
         self.datapack: beet.DataPack | None = None
 
         # Configuration
-        self._datapack_version: RhombusVersion | None = None
+        self._datapack_version: RhombusVersion = RhombusVersion(118)
         self.strict_versioning: bool = True
         """If True, throws errors when macros/functions are not supported in the target version. If False, warns and tries to use a default."""
         self.deserialize_references_directly: bool = False
@@ -153,15 +153,14 @@ class RhombusEnvironment:
 
 
     @property
-    def datapack_version(self) -> RhombusVersion | None:
+    def datapack_version(self) -> RhombusVersion:
         return self._datapack_version
 
     @datapack_version.setter
-    def datapack_version(self, value: float | tuple | str | RhombusVersion | None):
+    def datapack_version(self, value: float | tuple | str | RhombusVersion):
         if value is None:
-            self._datapack_version = None
-        else:
-            self._datapack_version = RhombusVersion(value)
+            raise ValueError("datapack_version cannot be None.")
+        self._datapack_version = RhombusVersion(value)
 
     def set_version(self, version: str | DatapackVersion) -> None:
         """Sets the datapack version. If a string is provided (e.g. '1.21.4'), it is resolved to a datapack version using Misode's data."""
@@ -352,7 +351,7 @@ def datapack_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
                 return func(*bound.args, **bound.kwargs)  # type: ignore
             elif value is not env.datapack:
                 # Temporarily override the environment with the new datapack
-                current_env_obj = env._get_instance()
+                current_env_obj: RhombusEnvironment = env._get_instance()
                 new_env = copy.copy(current_env_obj)
                 new_env.datapack = value
 

@@ -1,12 +1,3 @@
-from typing import Literal, Optional
-
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
-from rhombus.std import math, caching
-from rhombus.support import vanilla as vt, vanilla_legacy as lt
-
-from ._implementations import unicoords
-
 __all__ = [
     "gradient",
     "distance_to_point",
@@ -22,6 +13,15 @@ __all__ = [
     "chunk_relative_y",
     "chunk_relative_z",
 ]
+
+from typing import Literal, Optional
+
+from rhombus.std.density import Density, AnyDensity
+from rhombus.std.macros import macro, implementation
+from rhombus.std import math, caching
+from rhombus.support import vanilla as vt, vanilla_legacy as lt
+
+from ._implementations import unicoords
 
 _coord_limit = 3 * 10**7
 

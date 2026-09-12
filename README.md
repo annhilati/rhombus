@@ -50,12 +50,13 @@ While Rhombus follows an up-to-date-first approach, density functions can be com
   - File Explorer & Viewer (built on monaco)
   - Spline Visualization
 - **Macro Library**
-  - [General Math](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/math.py)
+  <!-- - [General Math](https://github.com/annhilati/rhombus/blob/main/rhombus/std/math)
     - sum, prod
     - smax, smin
     - Infinity, NaN
     - round, floor, ceil, mod
     - sgn, heaviside, monus, ramp
+    - trigonometric functions
   - [Spline approximations](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/smath.py)
     - [Sampler for any Python function](https://github.com/annhilati/rhombus/blob/main/rhombus/splines.py)
     - sin, cos, tan, atan, tanh, coth
@@ -72,7 +73,7 @@ While Rhombus follows an up-to-date-first approach, density functions can be com
   - [Working with Maps](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/maps.py)
     - extrude_heightmap
   - [Fluent Interface for conditionality](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/conditional.py)
-  - [Coordinate reconstruction](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/coords.py)
+  - [Coordinate reconstruction](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/coords.py) -->
 - **Mod Support**
   - More Density Functions
   - Lithostitched

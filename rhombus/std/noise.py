@@ -4,7 +4,6 @@ For more information on the use and parameters, see `~.Noise`.
 
 __all__ = ["Noise", "noise", "old_blended_noise", "shifted_noise", "shift", "shift_a", "shift_b"]
 
-
 from typing import ClassVar, Literal
 
 from beet.contrib.worldgen import WorldgenNoise
@@ -14,7 +13,6 @@ from rhombus.core.environment import env
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
-
 
 
 class Noise(DatapackResource):

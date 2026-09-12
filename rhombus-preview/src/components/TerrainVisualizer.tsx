@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react'
 import { NoiseGeneratorSettings, RandomState, FixedBiomeSource, Identifier, NoiseChunkGenerator, Chunk, ChunkPos, WorldgenRegistries } from 'deepslate'
 import CanvasVisualizer, { ViewState } from './CanvasVisualizer'
-import { patchState } from '../lib/deepslate-patch'
+
 import type { RhombusContextFile } from '../types'
 import { normalizeRegistryName } from '../lib/registry'
 
@@ -87,22 +87,7 @@ class ChunkCache {
                 const t0 = performance.now()
                 try {
                     const newChunk = new Chunk(minY, height, ChunkPos.create(cx, cz))
-                    // Inject patch state to only compute the visible 2D slice
-                    if (this.viewMode === 'top') {
-                        patchState.targetY = Math.floor(this.yLevel)
-                        patchState.targetZ = undefined
-                    } else {
-                        patchState.targetY = undefined
-                        patchState.targetZ = Math.floor(this.zLevel) & 0xF
-                    }
-                    
-                    this.generator.fill(this.state, newChunk, false)
-                    if ('buildSurface' in this.generator) {
-                        (this.generator as any).buildSurface(this.state, newChunk, 'minecraft:plains')
-                    }
-                    
-                    patchState.targetY = undefined
-                    patchState.targetZ = undefined
+                    this.generator.buildTerrain(this.state, newChunk, false, Identifier.create('minecraft:plains'))
                     
                     this.cache.set(key, newChunk)
                     const t1 = performance.now()

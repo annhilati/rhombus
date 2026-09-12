@@ -268,9 +268,9 @@ def cache_nodes(
             # If the current node is already a caching reference (e.g., set by the user or in a previous step),
             # then we add the inner argument to the “blacklist” (nodes_being_cached).
             # This prevents us from accidentally caching this argument again when traversing down into the children.
-            if is_already_cached_ref and hasattr(value.definition, "argument"):
+            if is_already_cached_ref and hasattr(value.definition, "input"):
                 new_nodes_being_cached = nodes_being_cached | frozenset(
-                    [value.definition.argument]
+                    [value.definition.input]
                 )
 
             # The current node is not cached (here). Either the condition did not match,

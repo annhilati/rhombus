@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react'
-import { DensityFunction, NoiseGeneratorSettings, NoiseParameters, NoiseRouter, NormalNoise, RandomState, XoroshiroRandom, clampedMap } from 'deepslate'
+import { DensityFunction, NoiseGeneratorSettings, NoiseRouter, NormalNoise, RandomState, XoroshiroRandom, clampedMap } from 'deepslate'
 import CanvasVisualizer, { ViewState } from './CanvasVisualizer'
 import type { RhombusContextFile } from '../types'
 import { viridis } from '../lib/colormap'
@@ -22,7 +22,7 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
                     type: 'density',
                     factory: (seed: bigint) => {
                         const settings = NoiseGeneratorSettings.create({
-                            noise: { minY: 0, height: 256, xzSize: 1, ySize: 1 },
+                            noise: { minY: 0, height: 256 },
                             noiseRouter: NoiseRouter.create({ finalDensity: df }),
                         })
                         const state = new RandomState(settings, seed)
@@ -35,14 +35,14 @@ export default function DensityVisualizer({ file, contextFiles }: DensityVisuali
                     }
                 }
             } else if (registry === 'worldgen/noise') {
-                const params = NoiseParameters.fromJson(file.content)
+                const noiseSettings = NormalNoise.fromJson(file.content)
 
                 return {
                     type: 'noise',
                     factory: (seed: bigint) => {
                         const random = XoroshiroRandom.create(seed)
-                        const noise = new NormalNoise(random, params)
-                        return (x: number, y: number, z: number) => noise.sample(x, y, z)
+                        const noise = noiseSettings.create(random)
+                        return (x: number, y: number, z: number) => noise.get3D(x, y, z)
                     },
                     asColor: (n: number) => {
                         const col = viridis(clampedMap(n, -1, 1, 0, 1))

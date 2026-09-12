@@ -11,8 +11,7 @@ __all__ = [
     "div",
     "neg",
     "abs",
-    # "square",
-    # "cube",
+    "sqrt",
     "pow",
     "log",
     "sum",
@@ -141,18 +140,6 @@ def neg(df: AnyDensity) -> Density:
         return Density(vt.negate(df.AST))
 
 
-# @macro
-# def square(df: AnyDensity) -> Density:
-#     """Raises the input to the power of 2."""
-#     return Density(vt.square(df.AST))
-
-
-# @macro
-# def cube(df: AnyDensity) -> Density:
-#     """Raises the input to the power of 3."""
-#     return Density(vt.cube(df.AST))
-
-
 @macro
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     """Raises the input to an arbitrary power. Since the `exponent` can be a fraction, square roots are also possible.
@@ -184,6 +171,9 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
             return Density(vt.sqrt(base.AST))
         return Density(vt.pow(base.AST, exponent.AST))
 
+
+def sqrt(df: AnyDensity) -> Density:
+    return pow(df, 0.5)
 
 @macro
 def log(df: AnyDensity, *, base: AnyDensity = e):

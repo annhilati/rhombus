@@ -129,12 +129,25 @@ class NodeDataclassTransformer(type):
             cls = dataclasses.dataclass(cls, init=True, repr=False, eq=False)
 
             original_init = cls.__init__
+            import inspect
+            sig = inspect.signature(original_init)
 
             def __init__(self, *args, **kwargs):
+                bound = sig.bind_partial(self, *args, **kwargs)
+                bound.apply_defaults()
+                
+                final_kwargs = bound.arguments
+                final_kwargs.pop("self", None)
+                
+                # Fill missing arguments with None so original_init doesn't crash
+                for param_name in list(sig.parameters.keys())[1:]:
+                    if param_name not in final_kwargs:
+                        final_kwargs[param_name] = None
+                
                 # Temporarily disable freezing so original_init can set attributes
                 object.__setattr__(self, "_rhombus_frozen", False)
                 
-                original_init(self, *args, **kwargs)
+                original_init(self, **final_kwargs)
                 
                 # Freeze the object again after initialization
                 object.__setattr__(self, "_rhombus_frozen", True)

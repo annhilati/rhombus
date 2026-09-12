@@ -1,14 +1,14 @@
+__all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
+
 from typing import Callable, Iterable
 
-from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash
 from rhombus.std.density import Density, AnyDensity, _unify
 from rhombus.std.macros import macro, resolve_ast
 
 from rhombus.support import vanilla as vt
 
 from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
-
-__all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 
 
 # NOTE: multiple nested caching functions are no longer auto-inlined. When adding compatability with older versions again, implement it again

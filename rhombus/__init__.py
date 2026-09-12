@@ -20,7 +20,6 @@ from rhombus.core.environment import env
 from rhombus.support import vanilla as _vanilla
 
 env.load_addons(_vanilla)
-env.datapack_version = 113
 
 # Convenience when importing *
 from rich import print

@@ -21,7 +21,7 @@ import sys
 import copy
 
 from rhombus.core.node import RhombusASTNode
-from rhombus.core.environment import VersionLike, get_module_version_namespace, env
+from rhombus.core.environment import RhombusVersion, VersionLike, get_module_version_namespace, env
 from rhombus.core.utils import Annotation
 from rhombus.core.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
@@ -265,6 +265,9 @@ class MacroDispatcher:
                 self.returns_density = False
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        # Pre-validate arguments so we throw early if they are invalid
+        self.__signature__.bind(*args, **kwargs)
+
         if self.returns_density:
             return Density(
                 UnresolvedMacroNode(dispatcher=self, args=args, kwargs=kwargs)
@@ -287,8 +290,6 @@ class MacroDispatcher:
 
         if not impls:
             return result
-
-        from rhombus.core.environment import env, RhombusVersion
 
         parsed_impls = []
         default_impl = None

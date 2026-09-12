@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { DensityFunction, NoiseGeneratorSettings, NoiseRouter, RandomState, Registry, Identifier } from 'deepslate';
+import { DensityFunction, NoiseGeneratorSettings, NoiseRouter, RandomState, Registry, Identifier, Interval } from 'deepslate';
 import { loadDeepslateRuntime } from '../lib/deepslate';
 import type { RhombusContextFile } from '../types';
 
@@ -116,9 +116,9 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
       let currentX = 0;
       class MockInputFunction extends DensityFunction {
           compute() { return currentX; }
-          minValue() { return -Infinity; }
-          maxValue() { return Infinity; }
-          mapAll(v: any) { return v.map(this); }
+          mapChildren() { return this; }
+          range() { return Interval.INFINITE; }
+          mapAll(v: any) { return v.apply(this); }
       }
       
       if (dfRegistry) {
@@ -132,7 +132,7 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
       
       const df = DensityFunction.fromJson(file.content);
       const settings = NoiseGeneratorSettings.create({
-          noise: { minY: 0, height: 256, xzSize: 1, ySize: 1 },
+          noise: { minY: 0, height: 256 },
           noiseRouter: NoiseRouter.create({ finalDensity: df }),
       });
 
@@ -254,7 +254,7 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
           {svgContent || (
             <div className="no-data">
                 {errorMsg ? (
-                    <div style={{color: '#ff6b6b', whiteSpace: 'pre-wrap', textAlign: 'left', background: '#333', padding: '10px', borderRadius: '4px'}}>
+                    <div className="selectable" style={{color: '#ff6b6b', whiteSpace: 'pre-wrap', textAlign: 'left', background: '#333', padding: '10px', borderRadius: '4px'}}>
                         <strong>Error:</strong><br/>{errorMsg}
                     </div>
                 ) : (
