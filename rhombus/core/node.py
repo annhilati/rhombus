@@ -4,6 +4,7 @@ __all__ = ["RhombusASTNode", "field", "FieldMeta", "UnresolvedVersionedNode", "r
 from typing import Self, Any, ClassVar, dataclass_transform, Callable
 from types import EllipsisType
 from functools import cached_property
+from collections.abc import Iterator
 import dataclasses
 import copy
 
@@ -256,14 +257,6 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
         "The fields of this node as a dictionary."
         return fields(self)
 
-    @classmethod
-    def get_all_known_ids(cls) -> list[str]:
-        if not hasattr(cls, "id"):
-            return []
-        ids = [cls.id]
-        if hasattr(cls, "__rhombus_legacy_values__") and "id" in cls.__rhombus_legacy_values__:
-            ids.extend(cls.__rhombus_legacy_values__["id"].values())
-        return ids
 
     # ======// Serialization //===================================================================//
 
@@ -385,54 +378,76 @@ class UnresolvedVersionedNode(RhombusASTNode):
         return self.resolve().inscribed_toplevel_nodes
 
 
-def resolve_ast_versioning(node: RhombusASTNode) -> RhombusASTNode:
-    """Recursively traverses the AST and resolves all UnresolvedVersionNodes."""
-    if isinstance(node, UnresolvedVersionedNode):
-        return resolve_ast_versioning(node.resolve())
+def walk(node: RhombusASTNode | Any) -> Iterator[RhombusASTNode]:
+    """Yields all RhombusASTNodes in the tree recursively (top-down)."""
 
-    changes = {}
-    for field_name, child_value in node.fields.items():
-        if isinstance(child_value, RhombusASTNode):
-            resolved_child = resolve_ast_versioning(child_value)
-            if resolved_child is not child_value:
-                changes[field_name] = resolved_child
-        elif isinstance(child_value, list):
-            new_list = []
-            changed = False
-            for item in child_value:
-                if isinstance(item, RhombusASTNode):
-                    resolved_item = resolve_ast_versioning(item)
-                    new_list.append(resolved_item)
-                    if resolved_item is not item:
-                        changed = True
-                else:
-                    new_list.append(item)
-            if changed:
-                changes[field_name] = new_list
-        elif isinstance(child_value, tuple):
-            new_tuple = []
-            changed = False
-            for item in child_value:
-                if isinstance(item, RhombusASTNode):
-                    resolved_item = resolve_ast_versioning(item)
-                    new_tuple.append(resolved_item)
-                    if resolved_item is not item:
-                        changed = True
-                else:
-                    new_tuple.append(item)
-            if changed:
-                changes[field_name] = tuple(new_tuple)
+    if isinstance(node, RhombusASTNode):
+        yield node
+        for value in node.fields.values():
+            yield from walk(value)
+    elif isinstance(node, (list, tuple, set, frozenset)):
+        for item in node:
+            yield from walk(item)
+    elif isinstance(node, dict):
+        for k, v in node.items():
+            yield from walk(k)
+            yield from walk(v)
 
-    if changes:
-        # Create a new instance with the resolved children
-        # We temporarily bypass the frozen check
 
-        new_node = copy.copy(node)
-        object.__setattr__(new_node, "_rhombus_frozen", False)
-        for k, v in changes.items():
-            object.__setattr__(new_node, k, v)
-        object.__setattr__(new_node, "_rhombus_frozen", True)
-        return new_node
+def transform(node: RhombusASTNode | Any, func: Callable[[RhombusASTNode], RhombusASTNode]) -> Any:
+    """Traverses the AST and applies the given function to each RhombusASTNode.
+    This creates a new tree if any child node is modified, while preserving nodes that are unchanged.
+    """
+    if isinstance(node, RhombusASTNode):
+        changes = {}
+        for field_name, child_value in node.fields.items():
+            new_child_value = transform(child_value, func)
+            if new_child_value is not child_value:
+                changes[field_name] = new_child_value
+
+        if changes:
+            # Create a new instance with the transformed children
+            new_node = copy.copy(node)
+            object.__setattr__(new_node, "_rhombus_frozen", False)
+            for k, v in changes.items():
+                object.__setattr__(new_node, k, v)
+            object.__setattr__(new_node, "_rhombus_frozen", True)
+            node = new_node
+            
+        return func(node)
+
+    elif isinstance(node, list):
+        new_list = [transform(item, func) for item in node]
+        return new_list if new_list != node else node
+
+    elif isinstance(node, tuple):
+        new_tuple = tuple(transform(item, func) for item in node)
+        return new_tuple if new_tuple != node else node
+        
+    elif isinstance(node, set):
+        new_set = {transform(item, func) for item in node}
+        return new_set if new_set != node else node
+        
+    elif isinstance(node, frozenset):
+        new_frozenset = frozenset(transform(item, func) for item in node)
+        return new_frozenset if new_frozenset != node else node
+
+    elif isinstance(node, dict):
+        new_dict = {transform(k, func): transform(v, func) for k, v in node.items()}
+        return new_dict if new_dict != node else node
 
     return node
+
+
+def resolve_ast_versioning(node: RhombusASTNode) -> RhombusASTNode:
+    """Recursively traverses the AST and resolves all UnresolvedVersionedNodes."""
+    
+    def _resolver(n: RhombusASTNode) -> RhombusASTNode:
+        if isinstance(n, UnresolvedVersionedNode):
+            # Since UnresolvedVersionedNode might return a node that itself needs resolving/transforming,
+            # we need to transform the newly resolved branch as well.
+            return resolve_ast_versioning(n.resolve())
+        return n
+
+    return transform(node, _resolver)
 

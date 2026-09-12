@@ -308,8 +308,17 @@ class RhombusAddon:
         if isinstance(self.density_functions, dict):
             env.density_function_type_deserialization_register.update(self.density_functions)
         else:
+            def _extract_all_known_ids(cls: type) -> list[str]:
+                if not hasattr(cls, "id"):
+                    return []
+                ids = [getattr(cls, "id")]
+                legacy = getattr(cls, "__rhombus_legacy_values__", {})
+                if "id" in legacy:
+                    ids.extend(legacy["id"].values())
+                return ids
+
             for cls in self.density_functions:
-                for fid in getattr(cls, "get_all_known_ids", lambda: [getattr(cls, "id", "")])():
+                for fid in _extract_all_known_ids(cls):
                     if fid:
                         env.density_function_type_deserialization_register[fid] = cls
                         
