@@ -133,7 +133,7 @@ class RhombusEnvironment:
         # Registries
         self.density_function_type_deserialization_register: dict[str, type["DensityFunction"]] = {}
         "Mapping of all `DensityFunction` subclasses that are used for deserialization, with their ids as the keys."
-        self.caching_function_types: set[type["DensityFunction"]] = set()
+        self.caching_function_types: set[type["DensityFunction"]] = set() # TODO: remove?
         "Set of `DensityFunction` subclasses that apply structuring logic for enabling caching"
         self.preview_beet_file_extensions: set[type["BeetFile"]] = set()
         "Set of `BeetFile` representing datapack files to include when previewing a datapack."  # This was introduces for the CLI, so addons can be stated

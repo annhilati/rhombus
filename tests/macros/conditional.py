@@ -9,9 +9,9 @@ EPS = env.infinitesimal
 
 
 def test_logic():
-    from rhombus.std.macros import resolve_ast
+    from rhombus.std.macros import resolve_ast_versioning
 
-    assert resolve_ast((when("in1").equals(0) & when("in2").equals(1)).then(10).otherwise(
+    assert resolve_ast_versioning((when("in1").equals(0) & when("in2").equals(1)).then(10).otherwise(
         -10
     ).AST) == range_choice(
         "minecraft:in1",
@@ -21,7 +21,7 @@ def test_logic():
         -10.0,
     )
 
-    assert resolve_ast((when("in1").equals(0) | when("in2").equals(1)).then(10).otherwise(
+    assert resolve_ast_versioning((when("in1").equals(0) | when("in2").equals(1)).then(10).otherwise(
         -10
     ).AST) == range_choice(
         "minecraft:in1",
@@ -33,14 +33,14 @@ def test_logic():
 
 
 def test_alternatives():
-    from rhombus.std.macros import resolve_ast
+    from rhombus.std.macros import resolve_ast_versioning
 
     value = Density("minecraft:in").AST
     inp = Reference(
         "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
         definition=types.cache(value),
     )
-    assert resolve_ast(when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(
+    assert resolve_ast_versioning(when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(
         0
     ).AST) == range_choice(
         inp,

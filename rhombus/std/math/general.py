@@ -39,7 +39,7 @@ import builtins as py_builtins
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.std import conditional as cond, caching
-from rhombus.support import vanilla as vt, vanilla_legacy as lt
+from rhombus.support import vanilla as vt
 
 
 # ======// Constants //==========================================================================//

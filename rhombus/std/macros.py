@@ -1,6 +1,6 @@
 """The macro infrastructure of Rhombus."""
 
-__all__ = ["macro", "implementation", "resolve_ast"]
+__all__ = ["macro", "implementation", "resolve_ast_versioning"]
 
 from typing import (
     Callable,
@@ -14,16 +14,13 @@ from typing import (
     overload,
 )
 from types import UnionType
-import dataclasses
 import inspect
 import functools
 import sys
-import copy
 
-from rhombus.core.node import RhombusASTNode
+from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
 from rhombus.core.environment import RhombusVersion, VersionLike, get_module_version_namespace, env
 from rhombus.core.utils import Annotation
-from rhombus.core.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 
 
@@ -143,106 +140,6 @@ def implementation(func: Callable | None = None, *, until: VersionLike | None = 
     return decorator
 
 
-class UnresolvedMacroNode(DensityFunction):
-    dispatcher: "MacroDispatcher" = dataclasses.field(repr=False, compare=False)
-    args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
-    kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
-
-    _cached_version: Any = dataclasses.field(init=False, default=None, repr=False, compare=False)
-    _cached_node: RhombusASTNode | None = dataclasses.field(
-        init=False, default=None, repr=False, compare=False
-    )
-
-    def __repr__(self) -> str:
-        parts = [repr(arg) for arg in self.args]
-        parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
-        return f"{self.dispatcher.__name__}({', '.join(parts)})"
-
-    def resolve(self) -> RhombusASTNode:
-
-        current_version = env.datapack_version
-
-        if self._cached_version == current_version and self._cached_node is not None:
-            return self._cached_node
-
-        density_result = self.dispatcher._execute_for_version(*self.args, **self.kwargs)
-        object.__setattr__(self, "_cached_version", current_version)
-
-        if isinstance(density_result, Density):
-            object.__setattr__(self, "_cached_node", density_result.AST)
-        elif isinstance(density_result, RhombusASTNode):
-            object.__setattr__(self, "_cached_node", density_result)
-        else:
-            raise TypeError(
-                f"Macro implementation returned invalid type: {type(density_result)}"
-            )
-
-        return self._cached_node
-
-    # Pass through standard methods to the resolved node
-    def serialize_inline(self) -> Any:
-        return self.resolve().serialize_inline()
-
-    def serialize_toplevel(self) -> Any:
-        return self.resolve().serialize_toplevel()
-
-    @property
-    def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
-        return self.resolve().inscribed_toplevel_nodes
-
-
-def resolve_ast(node: RhombusASTNode) -> RhombusASTNode:
-    """Recursively traverses the AST and resolves all UnresolvedMacroNodes."""
-    if isinstance(node, UnresolvedMacroNode):
-        return resolve_ast(node.resolve())
-
-    changes = {}
-    for field_name, child_value in node.fields.items():
-        if isinstance(child_value, RhombusASTNode):
-            resolved_child = resolve_ast(child_value)
-            if resolved_child is not child_value:
-                changes[field_name] = resolved_child
-        elif isinstance(child_value, list):
-            new_list = []
-            changed = False
-            for item in child_value:
-                if isinstance(item, RhombusASTNode):
-                    resolved_item = resolve_ast(item)
-                    new_list.append(resolved_item)
-                    if resolved_item is not item:
-                        changed = True
-                else:
-                    new_list.append(item)
-            if changed:
-                changes[field_name] = new_list
-        elif isinstance(child_value, tuple):
-            new_tuple = []
-            changed = False
-            for item in child_value:
-                if isinstance(item, RhombusASTNode):
-                    resolved_item = resolve_ast(item)
-                    new_tuple.append(resolved_item)
-                    if resolved_item is not item:
-                        changed = True
-                else:
-                    new_tuple.append(item)
-            if changed:
-                changes[field_name] = tuple(new_tuple)
-
-    if changes:
-        # Create a new instance with the resolved children
-        # We temporarily bypass the frozen check
-
-        new_node = copy.copy(node)
-        object.__setattr__(new_node, "_rhombus_frozen", False)
-        for k, v in changes.items():
-            object.__setattr__(new_node, k, v)
-        object.__setattr__(new_node, "_rhombus_frozen", True)
-        return new_node
-
-    return node
-
-
 class MacroDispatcher:
     def __init__(self, func: Callable):
         self.func = _create_argument_resolver(func)
@@ -270,7 +167,7 @@ class MacroDispatcher:
 
         if self.returns_density:
             return Density(
-                UnresolvedMacroNode(dispatcher=self, args=args, kwargs=kwargs)
+                UnresolvedVersionedNode(dispatcher=self, args=args, kwargs=kwargs)
             )
         else:
             # If the macro explicitly returns something else (like an int or tuple),

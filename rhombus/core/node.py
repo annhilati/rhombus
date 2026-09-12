@@ -1,4 +1,4 @@
-__all__ = ["RhombusASTNode", "field", "FieldMeta"]
+__all__ = ["RhombusASTNode", "field", "FieldMeta", "UnresolvedVersionedNode", "resolve_ast_versioning"]
 
 
 from typing import Self, Any, ClassVar, dataclass_transform, Callable
@@ -8,7 +8,7 @@ import dataclasses
 import copy
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
-from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionLike, get_module_version_namespace
+from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionLike, get_module_version_namespace, env
 
 
 @dataclasses.dataclass
@@ -24,6 +24,7 @@ class FieldMeta:
             if env.check_version(threshold) is False:
                 return key
         return default
+
 
 def field[Node, Value](
     default: Value=...,
@@ -91,6 +92,27 @@ class NodeDataclassTransformer(type):
                         legacy_values_map[field_name] = meta.legacy_values
 
         user_post_init = ns.get("__post_init__")
+        
+        def _freeze_field_value(value: Any) -> Any:
+            # Unwrap Density wrapper objects if they are passed in!
+            from rhombus.std.density import Density
+            if isinstance(value, Density):
+                value = value.AST
+
+            if isinstance(value, list):
+                return tuple(_freeze_field_value(v) for v in value)
+            if isinstance(value, tuple):
+                return tuple(_freeze_field_value(v) for v in value)
+            if isinstance(value, set):
+                return frozenset(_freeze_field_value(v) for v in value)
+            if isinstance(value, dict):
+                return {
+                    _freeze_field_value(
+                        k
+                    ): _freeze_field_value(v)
+                    for k, v in value.items()
+                }
+            return value
 
         def __post_init__(self):
             if user_post_init is not None:
@@ -168,26 +190,6 @@ class NodeDataclassTransformer(type):
 
         return cls
 
-def _freeze_field_value(value: Any) -> Any:
-    # Unwrap Density wrapper objects if they are passed in!
-    from rhombus.std.density import Density
-    if isinstance(value, Density):
-        value = value.AST
-
-    if isinstance(value, list):
-        return tuple(_freeze_field_value(v) for v in value)
-    if isinstance(value, tuple):
-        return tuple(_freeze_field_value(v) for v in value)
-    if isinstance(value, set):
-        return frozenset(_freeze_field_value(v) for v in value)
-    if isinstance(value, dict):
-        return {
-            _freeze_field_value(
-                k
-            ): _freeze_field_value(v)
-            for k, v in value.items()
-        }
-    return value
 
 class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
     """The **`RhombusASTNode`** class defines the common behaviour for all nodes
@@ -332,3 +334,105 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
         dictionary) like it would be found within a nested file structure.
         """
         return cls.deserialize_toplevel(data)
+
+
+class UnresolvedVersionedNode(RhombusASTNode):
+    dispatcher: Callable = dataclasses.field(repr=False, compare=False)
+    args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
+    kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
+
+    _cached_version: Any = dataclasses.field(init=False, default=None, repr=False, compare=False)
+    _cached_node: RhombusASTNode | None = dataclasses.field(
+        init=False, default=None, repr=False, compare=False
+    )
+
+    def __repr__(self) -> str:
+        parts = [repr(arg) for arg in self.args]
+        parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
+        return f"{self.dispatcher.__name__}({', '.join(parts)})"
+
+    def resolve(self) -> RhombusASTNode:
+        from rhombus.std.density import Density
+        
+        current_version = env.datapack_version
+
+        if self._cached_version == current_version and self._cached_node is not None:
+            return self._cached_node
+
+        result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
+        object.__setattr__(self, "_cached_version", current_version)
+
+        if isinstance(result, Density):
+            object.__setattr__(self, "_cached_node", result.AST)
+        elif isinstance(result, RhombusASTNode):
+            object.__setattr__(self, "_cached_node", result)
+        else:
+            raise TypeError(
+                f"Version node dispatcher returned invalid type: {type(result)}"
+            )
+
+        return self._cached_node
+
+    # Pass through standard methods to the resolved node
+    def serialize_inline(self) -> Any:
+        return self.resolve().serialize_inline()
+
+    def serialize_toplevel(self) -> Any:
+        return self.resolve().serialize_toplevel()
+
+    @property
+    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+        return self.resolve().inscribed_toplevel_nodes
+
+
+def resolve_ast_versioning(node: RhombusASTNode) -> RhombusASTNode:
+    """Recursively traverses the AST and resolves all UnresolvedVersionNodes."""
+    if isinstance(node, UnresolvedVersionedNode):
+        return resolve_ast_versioning(node.resolve())
+
+    changes = {}
+    for field_name, child_value in node.fields.items():
+        if isinstance(child_value, RhombusASTNode):
+            resolved_child = resolve_ast_versioning(child_value)
+            if resolved_child is not child_value:
+                changes[field_name] = resolved_child
+        elif isinstance(child_value, list):
+            new_list = []
+            changed = False
+            for item in child_value:
+                if isinstance(item, RhombusASTNode):
+                    resolved_item = resolve_ast_versioning(item)
+                    new_list.append(resolved_item)
+                    if resolved_item is not item:
+                        changed = True
+                else:
+                    new_list.append(item)
+            if changed:
+                changes[field_name] = new_list
+        elif isinstance(child_value, tuple):
+            new_tuple = []
+            changed = False
+            for item in child_value:
+                if isinstance(item, RhombusASTNode):
+                    resolved_item = resolve_ast_versioning(item)
+                    new_tuple.append(resolved_item)
+                    if resolved_item is not item:
+                        changed = True
+                else:
+                    new_tuple.append(item)
+            if changed:
+                changes[field_name] = tuple(new_tuple)
+
+    if changes:
+        # Create a new instance with the resolved children
+        # We temporarily bypass the frozen check
+
+        new_node = copy.copy(node)
+        object.__setattr__(new_node, "_rhombus_frozen", False)
+        for k, v in changes.items():
+            object.__setattr__(new_node, k, v)
+        object.__setattr__(new_node, "_rhombus_frozen", True)
+        return new_node
+
+    return node
+

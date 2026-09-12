@@ -37,7 +37,7 @@ class Density:
     ```
     """
 
-    AST: DensityFunction
+    AST: DensityFunction | Any
     "The density function AST represented by this Density."
 
     @overload
@@ -306,7 +306,9 @@ type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
 
-def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
+from rhombus.core.node import UnresolvedVersionedNode
+
+def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersionedNode) -> DensityFunction | UnresolvedVersionedNode:
     """Interprets a QoL argument input and returns a DensityFunction object.
     Applies logic like splitting large literal constants into calculations
     before constructing constant AST nodes.
@@ -315,7 +317,7 @@ def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
     if isinstance(v, Density):
         return v.AST
 
-    if isinstance(v, DensityFunction):
+    if isinstance(v, (DensityFunction, UnresolvedVersionedNode)):
         return v
 
     if isinstance(v, (int, float)):

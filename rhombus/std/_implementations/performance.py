@@ -34,8 +34,8 @@ def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
-    from rhombus.std.macros import resolve_ast
-    node = resolve_ast(node)
+    from rhombus.std.macros import resolve_ast_versioning
+    node = resolve_ast_versioning(node)
 
     counts_by_key: dict[str, int] = {}
     example_node_by_key: dict[str, RhombusASTNode] = {}
@@ -223,8 +223,8 @@ def cache_nodes(
         definition=cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
-    from rhombus.std.macros import resolve_ast
-    root = resolve_ast(root)
+    from rhombus.std.macros import resolve_ast_versioning
+    root = resolve_ast_versioning(root)
     replacement_info: dict[DensityFunction, int] = {}
 
     def visit_and_replace_if_needed(

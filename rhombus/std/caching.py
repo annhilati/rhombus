@@ -4,7 +4,7 @@ from typing import Callable, Iterable
 
 from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash
 from rhombus.std.density import Density, AnyDensity, _unify
-from rhombus.std.macros import macro, resolve_ast
+from rhombus.std.macros import macro, resolve_ast_versioning
 
 from rhombus.support import vanilla as vt
 
@@ -120,10 +120,10 @@ def specified_cache(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
         definition=_unify(caching_function(node)),
     )
-    from rhombus.std.macros import resolve_ast
-    resolved_ast = resolve_ast(df.AST)
+    from rhombus.std.macros import resolve_ast_versioning
+    resolved_ast = resolve_ast_versioning(df.AST)
     occurances = count_node_values(resolved_ast)
-    identity_cond = _get_identity_condition([resolve_ast(n.AST) for n in functions if isinstance(n, Density)])
+    identity_cond = _get_identity_condition([resolve_ast_versioning(n.AST) for n in functions if isinstance(n, Density)])
     condition = lambda node: (
         identity_cond(node) and occurances.get(node, 0) > 1
     )
@@ -141,5 +141,5 @@ def get_size(df: Density) -> DensityFunctionSizeInfo:
             - `~.unique_unknown_references`: Number of unique references with unknown definition
             - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
     """
-    resolved = resolve_ast(df.AST)
+    resolved = resolve_ast_versioning(df.AST)
     return df_size_info(resolved)
