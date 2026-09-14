@@ -7,7 +7,6 @@ This allows for seamless integration and modification of Tectonic's distinctive 
 from .functions import invert, config_noise, config_constant
 
 __version__ = "3.0.19"
-__version_namespace__ = "tectonic"
 
 from importlib.resources import files as _files
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
@@ -15,7 +14,8 @@ from rhombus.core.density_function import DensityFunction as _DensityFunction
 from . import types as _types
 
 __addon__ = _RhombusAddon(
-    name="Tectonic",
+    namespace="tectonic",
+    default_version=(3, 0, 19),
     preview_scripts=[_files("rhombus.support.tectonic").joinpath("deepslate.ts")],
     density_functions={
         cls.id: cls

@@ -5,7 +5,7 @@ from rhombus.core.density_function import Reference
 from rhombus.core.utils import uuid_hash
 
 when = conditional.when
-EPS = env.infinitesimal
+EPS = 1e-16
 
 
 def test_logic():

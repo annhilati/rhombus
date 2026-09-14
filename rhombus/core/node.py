@@ -59,8 +59,20 @@ class NodeDataclassTransformer(type):
         module_name = ns.get("__module__", "")
         default_ns = get_module_version_namespace(module_name)
 
-        kwargs.pop("versions", None)
-        
+        versions_kwarg = kwargs.pop("versions", None)
+        if versions_kwarg is not None:
+            if versions_kwarg is ...:
+                versions_kwarg = (..., ...)
+            elif isinstance(versions_kwarg, (int, float, str, tuple)) and not (isinstance(versions_kwarg, tuple) and len(versions_kwarg) == 2 and (versions_kwarg[1] is ... or isinstance(versions_kwarg[1], (int, float, str, tuple)))):
+                versions_kwarg = (versions_kwarg, ...)
+                
+            parsed_versions = []
+            for v in versions_kwarg:
+                if v is not ... and v is not None:
+                    parsed_versions.append(RhombusVersion(v, default_namespace=default_ns))
+                else:
+                    parsed_versions.append(...)
+            ns["__rhombus_versions__"] = tuple(parsed_versions)        
         for field_name, field_obj in ns.items():
             if isinstance(field_obj, dataclasses.Field) and "rhombus_meta" in field_obj.metadata:
                 meta: FieldMeta = field_obj.metadata["rhombus_meta"]
@@ -192,7 +204,7 @@ class NodeDataclassTransformer(type):
         return cls
 
 
-class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(9.0, ...)):
+class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     """The **`RhombusASTNode`** class defines the common behaviour for all nodes
     in the abstract syntax tree of Rhombus. It thus can be called the base class
     for all nodes.

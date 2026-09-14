@@ -35,7 +35,7 @@ from rhombus.support import vanilla as vt
 
 from rhombus.core.environment import env
 
-EPSILON = env.infinitesimal
+EPSILON = 1e-16
 OMEGA = vt.literal_number_limit
 
 

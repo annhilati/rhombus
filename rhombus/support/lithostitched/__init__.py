@@ -9,7 +9,6 @@ This module enables finer control over terrain shaping and noise manipulation wi
 """
 
 __version__ = "1.6.0"
-__version_namespace__ = "lithostitched"
 
 from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
@@ -20,7 +19,8 @@ from rhombus.core.density_function import DensityFunction as _DensityFunction
 from . import types as _types
 
 __addon__ = _RhombusAddon(
-    name="Lithostitched",
+    namespace="lithostitched",
+    default_version=(1, 6, 0),
     preview_scripts=[
         _files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
         _files("rhombus.support.lithostitched").joinpath("deepslate.ts"),

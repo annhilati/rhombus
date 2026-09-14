@@ -8,7 +8,6 @@ This module significantly expands the flexibility of terrain generation by addin
 """
 
 __version__ = "2.2.1"
-__version_namespace__ = "moredfs"
 
 from .functions import *
 from .sub_parameters import (
@@ -24,7 +23,8 @@ from rhombus.core.density_function import DensityFunction as _DensityFunction
 from . import types as _types
 
 __addon__ = _RhombusAddon(
-    name="MoreDfsAddon",
+    namespace="moredfs",
+    default_version=(2, 2, 1),
     preview_scripts=[_files("rhombus.support.moredfs").joinpath("deepslate.ts")],
     density_functions={
         cls.id: cls

@@ -7,7 +7,8 @@ from .types import *
 __version__ = "26.3"
 
 __addon__ = _RhombusAddon(
-    name="VanillaLegacy",
+    namespace="vanilla_legacy",
+    default_version=(26, 3),
     density_functions=[
         cls
         for name, cls in _types.__dict__.items()

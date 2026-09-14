@@ -6,7 +6,6 @@ such as isolating the main central island from the surrounding outer islands.
 """
 
 __version__ = "0.1.2"
-__version_namespace__ = "ensity"
 
 from .functions import floating_islands, lonely_island
 
@@ -16,7 +15,8 @@ from rhombus.core.density_function import DensityFunction as _DensityFunction
 from . import types as _types
 
 __addon__ = _RhombusAddon(
-    name="Ensity",
+    namespace="ensity",
+    default_version=(0, 1, 2),
     preview_scripts=[_files("rhombus.support.ensity").joinpath("deepslate.ts")],
     density_functions={
         cls.id: cls

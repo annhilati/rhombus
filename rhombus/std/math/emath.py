@@ -54,7 +54,7 @@ def floor(
     Values outside this range's rounding intervals will be left unrounded."""
     from rhombus.core import environment
 
-    EPS = environment.env.infinitesimal
+    EPS = 1e-16
 
     start_int = py_math.floor(range[0])
     end_int = py_math.floor(range[1])
@@ -84,7 +84,7 @@ def ceil(
     Values outside this range's rounding intervals will be left unrounded."""
     from rhombus.core import environment
 
-    EPS = environment.env.infinitesimal
+    EPS = 1e-16
 
     start_int = py_math.ceil(range[0])
     end_int = py_math.ceil(range[1])
