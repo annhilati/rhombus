@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-__all__ = ["RhombusVersion", "DatapackVersion", "VersionTuple", "VersionLike", "RhombusEnvironment", "RhombusAddon", "env", "get_module_version_namespace", "FROM_CONTEXT", "datapack_handler"]
+__all__ = ["RhombusVersion", "DatapackVersion", "VersionTuple", "VersionSpecifier", "RhombusEnvironment", "RhombusAddon", "rho", "get_module_addon_namespace", "FROM_CONTEXT", "datapack_handler"]
 
-from typing import Callable, Any, Optional, Final, TYPE_CHECKING
+from typing import Callable, Any, Optional, Final, overload, TYPE_CHECKING
 from types import ModuleType, EllipsisType
 from dataclasses import dataclass, field
 from functools import total_ordering
@@ -13,8 +13,6 @@ import sys
 import functools
 import inspect
 import copy
-import urllib.request
-import json
 
 import beet
 
@@ -22,25 +20,27 @@ if TYPE_CHECKING:
     from rhombus.core import DensityFunction
     from rhombus.core.utils import BeetFile
 
-from rhombus.core.utils import GlobalBinding
+from rhombus.core.utils import GlobalBinding, get_Minecraft_datapack_version
 
-# TODO refine default versions (e.g. Node versions parameter): (9, ...) is stupid for mod-related stuff
 
 # ======// Versioning //==========================================================================//
 
 type DatapackVersion = float | int
-type VersionTuple = tuple[int | str, ...]
-type VersionLike = DatapackVersion | VersionTuple | "RhombusVersion"
+type VersionString = str
+type VersionTuple = tuple[int | str, ...] | tuple[str, tuple[int | str, ...]]
+type VersionSpecifier = DatapackVersion | VersionTuple | VersionString
 
-def get_module_version_namespace(module_name: str, default: str = "datapack") -> str:
-    parts = module_name.split('.')
+
+def get_module_addon_namespace(module_path: str) -> str | None:
+    "Recursively searches in a module and its parents for the `__addon__` declaration and returns the addons namespace."
+    parts = module_path.split('.')
     while parts:
         current_module_name = '.'.join(parts)
         module = sys.modules.get(current_module_name)
         if module and hasattr(module, "__addon__"):
             return getattr(module, "__addon__").namespace
         parts.pop()
-    return default
+    return None
 
 @total_ordering
 class _VersionPart:
@@ -66,12 +66,28 @@ class _VersionPart:
 
 @total_ordering
 class RhombusVersion:
+    """Internal representation of a version for Rhombus, capable of natural sorting and parsing.
+    
+    This class is primarily used internally to normalize and compare version specifiers.
+    
+    Supported formats for VersionSpecifier (and what they parse to):
+    - Float/Int: `1.20` -> namespace="datapack", version=(1, 20)
+                 `118`  -> namespace="datapack", version=(118, 0)
+                 `9.0`  -> namespace="datapack", version=(9, 0)
+    - String:    `"1.20.4"`   -> namespace="datapack", version=(1, 20, 4)
+                 `"1.20-rc1"` -> namespace="datapack", version=(1, 20, "rc1")
+    - Tuple:     `(1, 20)`          -> namespace="datapack", version=(1, 20)
+                 `(1, 20, "rc1")`   -> namespace="datapack", version=(1, 20, "rc1")
+    - Namespaced Tuple:
+                 `("my_mod", (1, 20))`       -> namespace="my_mod", version=(1, 20)
+                 `("my_mod", "1.20-rc1")`    -> namespace="my_mod", version=(1, 20, "rc1")
+    """
     namespace: str
     version: tuple[int | str, ...]
 
     def __init__(
         self,
-        spec: VersionLike,
+        spec: VersionSpecifier | "RhombusVersion",
         default_namespace: str = "datapack",
     ):
         if isinstance(spec, RhombusVersion):
@@ -81,6 +97,11 @@ class RhombusVersion:
             self.namespace = default_namespace
             parts = str(float(spec)).split(".")
             self.version = tuple(int(p) for p in parts)
+        elif isinstance(spec, str):
+            self.namespace = default_namespace
+            # Extracts words (rc, beta) and numbers, ignoring dots/hyphens
+            parts = [int(p) if p.isdigit() else p for p in re.findall(r'[a-zA-Z]+|\d+', spec)]
+            self.version = tuple(parts)
         elif isinstance(spec, tuple):
             if len(spec) >= 2 and isinstance(spec[0], str):
                 self.namespace = spec[0]
@@ -90,13 +111,16 @@ class RhombusVersion:
                 elif isinstance(inner, (float, int)):
                     parts = str(float(inner)).split(".")
                     self.version = tuple(int(p) for p in parts)
+                elif isinstance(inner, str):
+                    parts = [int(p) if p.isdigit() else p for p in re.findall(r'[a-zA-Z]+|\d+', inner)]
+                    self.version = tuple(parts)
                 else:
                     self.version = (inner,)
             else:
                 self.namespace = default_namespace
                 self.version = spec
         else:
-            raise TypeError(f"Invalid version spec (str is no longer allowed, use float or tuple): {spec}")
+            raise TypeError(f"Invalid version specifier: {spec}")
 
     def __hash__(self):
         v = list(self.version)
@@ -150,8 +174,23 @@ class RhombusVersion:
 # ======// Environment //=========================================================================//
 
 
+class VersionsDict(dict[str, VersionSpecifier]):
+    def __setitem__(self, key: str, value: VersionSpecifier):
+        rv = RhombusVersion(value, default_namespace=key)
+        super().__setitem__(key, rv.version)
+        
+    def update(self, other=(), **kwargs):
+        if hasattr(other, "keys"):
+            for k in other.keys():
+                self[k] = other[k]
+        else:
+            for k, v in other:
+                self[k] = v
+        for k, v in kwargs.items():
+            self[k] = v
+
+
 class RhombusEnvironment:
-    _MISODE_VERSIONS_CACHE: list[dict] | None = None
 
     def __init__(self):
 
@@ -159,7 +198,7 @@ class RhombusEnvironment:
         self.datapack: beet.DataPack | None = None
 
         # Configuration
-        self.versions: dict[str, RhombusVersion] = {}
+        self.versions: VersionsDict = VersionsDict()
         self.deserialize_references_inline: bool = False
         """When `deserialize_references_inline` is `True`, references to density
         functions in other files will be inlined, such that they are no longer
@@ -185,51 +224,77 @@ class RhombusEnvironment:
         decoding register or providing visualization patches for the preview.
         """
 
-        self._addons: set[RhombusAddon] = set()
-
+        # State
+        self._addons: set["RhombusAddon"] = set()
+        self._id_counter: int = 0
         self._reg_lock = threading.RLock()
 
 
     @property
-    def datapack_version(self) -> RhombusVersion:
-        return self.versions.get("datapack", RhombusVersion(118))
+    def datapack_version(self) -> float:
+        val = self.versions.get("datapack", (118, 0))
+        if isinstance(val, (int, float)):
+            return float(val)
+        if isinstance(val, tuple) and len(val) >= 1:
+            if len(val) == 1:
+                return float(val[0])
+            else:
+                # To handle cases like (41, 0) or (1, 18)
+                if val[0] == 1:
+                    return float(f"1.{val[1]}")
+                return float(val[0] + (val[1] * 0.1 if val[1] < 10 else val[1] * 0.01))
+        return 0.0
 
     @datapack_version.setter
-    def datapack_version(self, value: float | tuple | str | RhombusVersion):
+    def datapack_version(self, value: DatapackVersion | tuple[int | str] | tuple[int | str, int | str]):
         if value is None:
             raise ValueError("datapack_version cannot be None.")
-        self.versions["datapack"] = RhombusVersion(value)
+        if not isinstance(value, (int, float, tuple)):
+            raise TypeError("datapack_version must be a float, int, or a 1-/2-tuple.")
+        if isinstance(value, tuple) and len(value) not in (1, 2):
+            raise ValueError("datapack_version tuple must have 1 or 2 elements.")
+        self.versions["datapack"] = value
 
-    def set_version(self, version: str | DatapackVersion) -> None:
-        """Sets the datapack version. If a string is provided (e.g. '1.21.4'), it is resolved to a datapack version using Misode's data."""
-        if isinstance(version, (int, float)):
-            self.datapack_version = float(version)
-            return
+    # TODO: Remove mod versioning here again, because we have them in load_addons?
+    @overload
+    def set_version(self, *, datapack: DatapackVersion, **mods: VersionTuple | VersionString) -> None: ...
+    @overload
+    def set_version(self, *, minecraft: str, **mods: VersionTuple | VersionString) -> None: ...
+    @overload
+    def set_version(self, **mods: VersionTuple | VersionString) -> None: ...
 
-        if RhombusEnvironment._MISODE_VERSIONS_CACHE is None:
-            try:
-                with urllib.request.urlopen('https://raw.githubusercontent.com/misode/mcmeta/summary/versions/data.json') as response:
-                    RhombusEnvironment._MISODE_VERSIONS_CACHE = json.loads(response.read().decode('utf-8'))
-            except Exception as e:
-                raise RuntimeError(f"Failed to fetch version mapping from Misode: {e}")
+    def set_version(self, **kwargs) -> None:
+        """Sets the datapack version and/or addon versions.
+        If a Minecraft version string (e.g. '1.21.4') is provided, it is resolved to a datapack version using Misode's data.
+        """
+        if kwargs.get("datapack") is not None and kwargs.get("minecraft") is not None:
+            raise ValueError("Cannot accept both 'datapack' and 'minecraft' arguments")
 
-        for v in RhombusEnvironment._MISODE_VERSIONS_CACHE:
-            if v.get('id') == version:
-                if 'data_pack_version' in v:
-                    self.datapack_version = float(v['data_pack_version'])
-                    return
-                else:
-                    raise ValueError(f"Version '{version}' does not have a data_pack_version.")
-        
-        raise ValueError(f"Minecraft version '{version}' not found in Misode data.")
+        if (minecraft_arg := kwargs.pop("minecraft", None)) is not None:
+            if isinstance(minecraft_arg, (float, int)):
+                raise TypeError("Please provide Minecraft game versions only as strings")
+            if isinstance(minecraft_arg, str) and minecraft_arg.count('.') == 1:
+                try:
+                    self.datapack_version = get_Minecraft_datapack_version(minecraft_arg, use_cache=True)
+                except ValueError:
+                    # Try appending '0'
+                    self.datapack_version = get_Minecraft_datapack_version(minecraft_arg + "0", use_cache=True)
+            else:
+                self.datapack_version = get_Minecraft_datapack_version(minecraft_arg, use_cache=True)
 
-    def load_addons(self, *addons: ModuleType | "RhombusAddon") -> None:
+        elif (datapack_arg := kwargs.pop("datapack", None)) is not None:
+            self.datapack_version = datapack_arg
+            
+        for mod, ver in kwargs.items():
+            self.versions[mod] = ver
+
+    def load_addons(self, addons: dict[ModuleType | "RhombusAddon", VersionString | EllipsisType]) -> None:
         """Loads addons for Rhombus and calls their individual registration procedures.
 
         Addon registration typically includes adding custom density function types to the
         decoding register or providing visualization patches for the preview.
         """
-        for addon_target in addons:
+        for addon_target, version in addons.items():
             if isinstance(addon_target, ModuleType):
                 if not hasattr(addon_target, "__addon__"):
                     raise ValueError(
@@ -251,8 +316,12 @@ class RhombusEnvironment:
 
             addon_obj.apply_to_rhombus_env(self)
             self._addons.add(addon_obj)
+            
+            # Write the specified version to the environment's active versions dict
+            self.versions[addon_obj.namespace] = version
 
-    def check_version(self, spec: VersionLike | EllipsisType) -> bool | None:
+    # TODO: Does this implementation make sense?
+    def _check_version(self, spec: VersionSpecifier | EllipsisType) -> bool | None:
         """Prüft, ob die Version der Umgebung den Anforderungen entspricht.
         Gibt None zurück, wenn die Version der Umgebung unbekannt ist."""
         if spec is ...:
@@ -262,7 +331,7 @@ class RhombusEnvironment:
         current_v = self.versions.get(req.namespace)
         if current_v is None:
             return None
-        return current_v >= req
+        return RhombusVersion((req.namespace, current_v)) >= req
 
 
 
@@ -324,7 +393,7 @@ class RhombusAddon:
     """
 
     namespace: str
-    default_version: VersionLike | None = None
+    default_version: VersionSpecifier | None = None
     density_functions: dict[str, type["DensityFunction"]] | list[type["DensityFunction"]] = field(default_factory=dict)
     caching_functions: set[type["DensityFunction"]] = field(default_factory=set)
     preview_scripts: list[str | Path] = field(default_factory=list)
@@ -342,7 +411,7 @@ class RhombusAddon:
             self.on_apply(env)
             
         if self.default_version is not None and self.namespace not in env.versions:
-            env.versions[self.namespace] = RhombusVersion((self.namespace, self.default_version))
+            env.versions[self.namespace] = self.default_version
         if isinstance(self.density_functions, dict):
             env.density_function_type_deserialization_register.update(self.density_functions)
         else:
@@ -367,7 +436,7 @@ class RhombusAddon:
 
 # TODO: rhombus.core should not include runtime relevant symbols.
 # Thus 'env' should be moved somewhere else in the future.
-env: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
+rho: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
 """The default global Rhombus environment.
 
 For more information on how to use environments see
@@ -394,19 +463,19 @@ def datapack_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
             value = bound.arguments["dp"]
 
             if value is FROM_CONTEXT:
-                bound.arguments["dp"] = env.datapack
+                bound.arguments["dp"] = rho.datapack
                 return func(*bound.args, **bound.kwargs)  # type: ignore
-            elif value is not env.datapack:
+            elif value is not rho.datapack:
                 # Temporarily override the environment with the new datapack
-                current_env_obj: RhombusEnvironment = env._get_instance()
+                current_env_obj: RhombusEnvironment = rho._get_instance()
                 new_env = copy.copy(current_env_obj)
                 new_env.datapack = value
 
-                token = env._ctxvar.set(new_env)
+                token = rho._ctxvar.set(new_env)
                 try:
                     return func(*bound.args, **bound.kwargs)  # type: ignore
                 finally:
-                    env._ctxvar.reset(token)
+                    rho._ctxvar.reset(token)
             else:
                 # Value is already the current environment datapack
                 return func(*bound.args, **bound.kwargs)  # type: ignore

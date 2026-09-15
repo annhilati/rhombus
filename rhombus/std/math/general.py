@@ -41,30 +41,30 @@ from rhombus.std.macros import macro, implementation
 from rhombus.std import conditional as cond, caching
 from rhombus.support import vanilla as vt
 
+# TODO: for macros with no implementations for certain versions, add an until-implementation that raises? Or warn and fallback to newest
 
 # ======// Constants //==========================================================================//
 
-# TODO: Check whether we can make the UnresolvedMacroNode API more open and define one here instead of using a complete macro definition
-@macro
+@macro(repr=lambda n: "Infinity")
 def _infinity() -> Density:
     @implementation(until=111)
     def _legacy():
-        return Density(vt.mul(1, vt.reciprocal(0)))
+        return Density(vt.mul(vt.constant(1), vt.reciprocal(vt.constant(0))))
     @implementation
     def _modern():
-        return Density(vt.div(1, 0))
+        return Density(vt.div(vt.constant(1), vt.constant(0)))
 
 Infinity = _infinity()
 "Density equivalent to Java's `Float.POSITIVE_INFINITY`."
 
-@macro
+@macro(repr=lambda n: "NaN")
 def _nan() -> Density:
     @implementation(until=111)
     def _legacy():
-        return Density(vt.mul(0, vt.reciprocal(0)))
+        return Density(vt.mul(vt.constant(0), vt.reciprocal(vt.constant(0))))
     @implementation
     def _modern():
-        return Density(vt.div(0, 0))
+        return Density(vt.sqrt(vt.constant(-1)))
 
 NaN = _nan()
 """Density equivalent to Java's `Float.NaN`.
@@ -89,9 +89,42 @@ def constant(value: float) -> Density:
 
 
 @macro
-def add(df1: AnyDensity, df2: AnyDensity) -> Density:
-    """Returns the sum of two inputs."""
-    return Density(vt.add(df1.AST, df2.AST))
+def sum(*dfs: AnyDensity) -> Density:
+    "Returns the sum of any number of arguments."
+    if len(dfs) == 0:
+        return Density(0)
+    if len(dfs) == 1:
+        return dfs[0]
+
+    it = iter(dfs)
+    result = vt.add(next(it).AST, next(it).AST)
+
+    for x in it:
+        result = vt.add(result, x.AST)
+
+    return Density(result)
+
+
+@macro
+def prod(*dfs: AnyDensity) -> Density:
+    "Returns the product of any number of arguments."
+    if len(dfs) == 0:
+        return Density(0)
+    if len(dfs) == 1:
+        return dfs[0]
+
+    it = iter(dfs)
+    result = vt.mul(next(it).AST, next(it).AST)
+
+    for x in it:
+        result = vt.mul(result, x.AST)
+
+    return Density(result)
+
+
+def add(*dfs: AnyDensity) -> Density:
+    """Returns the sum of any number of arguments."""
+    return sum(*dfs)
 
 
 @macro
@@ -105,10 +138,9 @@ def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
         return Density(vt.sub(minuend.AST, subtrahend.AST))
 
 
-@macro
-def mul(df1: AnyDensity, df2: AnyDensity) -> Density:
-    """Returns the product of two inputs."""
-    return Density(vt.mul(df1.AST, df2.AST))
+def mul(*dfs: AnyDensity) -> Density:
+    """Returns the product of any number of arguments."""
+    return prod(*dfs)
 
 
 @macro
@@ -142,7 +174,7 @@ def neg(df: AnyDensity) -> Density:
 
 @macro
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
-    """Raises the input to an arbitrary power. Since the `exponent` can be a fraction, square roots are also possible.
+    """Raises the input to an arbitrary power. Since the `exponent` can be a fraction, roots can also be realized.
     
     **NOTE:** In datapack versions below 113, only integer exponents are supported.
     """
@@ -172,48 +204,17 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
         return Density(vt.pow(base.AST, exponent.AST))
 
 
+@macro
 def sqrt(df: AnyDensity) -> Density:
-    return pow(df, 0.5)
+    return Density(vt.sqrt(df.AST))
 
 @macro
 def log(df: AnyDensity, *, base: AnyDensity = e):
-    if base == Density(e):
-        return vt.log(df.AST)
-    return vt.log(df.AST) / vt.log(base.AST)
-
-
-@macro
-def sum(*dfs: AnyDensity) -> Density:
-    "Returns the sum of any number of arguments."
-    if len(dfs) == 0:
-        return Density(0)
-    if len(dfs) == 1:
-        return dfs[0]
-
-    it = iter(dfs)
-    result = next(it) + next(it)
-
-    for x in it:
-        result = result + x
-
-    return result
-
-
-@macro
-def prod(*dfs: AnyDensity) -> Density:
-    "Returns the product of any number of arguments."
-    if len(dfs) == 0:
-        return Density(0)
-    if len(dfs) == 1:
-        return dfs[0]
-
-    it = iter(dfs)
-    result = next(it) * next(it)
-
-    for x in it:
-        result = result * x
-
-    return result
+    @implementation
+    def log():
+        if base == Density(e):
+            return vt.log(df.AST)
+        return vt.log(df.AST) / vt.log(base.AST)
 
 
 # ======// Ordering //===========================================================================//
@@ -234,7 +235,7 @@ def min(*dfs: AnyDensity) -> Density:
         return dfs[0]
 
     it = iter(dfs)
-    result = vt.min(next(it.AST), next(it.AST))
+    result = vt.min(next(it).AST, next(it).AST)
 
     for x in it:
         result = vt.min(result, x.AST)
@@ -251,7 +252,7 @@ def max(*dfs: AnyDensity) -> Density:
         return dfs[0]
 
     it = iter(dfs)
-    result = vt.max(next(it.AST), next(it.AST))
+    result = vt.max(next(it).AST, next(it).AST)
 
     for x in it:
         result = vt.max(result, x.AST)

@@ -93,18 +93,18 @@ def preview(
 ):
     """Start the Rhombus preview service."""
 
-    from rhombus import preview, env
+    from rhombus import preview, rho
 
     try:
         addons = [resolve_object_path(e) for e in addons]
-        env.load_addons(*addons)
+        rho.load_addons(*addons)
     except Exception as e:
         raise typer.BadParameter(e)
 
     preview.serve(
         *preview.resources_from_datapack(
             path,
-            additional_registries=env.preview_beet_file_extensions,
+            additional_registries=rho.preview_beet_file_extensions,
             overlays=overlays,
         ),
         watch_path=path if not no_watch else None,

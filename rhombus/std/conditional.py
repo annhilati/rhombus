@@ -33,7 +33,7 @@ from rhombus.std.macros import macro, implementation
 from rhombus.std import caching
 from rhombus.support import vanilla as vt
 
-from rhombus.core.environment import env
+from rhombus.core.environment import rho
 
 EPSILON = 1e-16
 OMEGA = vt.literal_number_limit

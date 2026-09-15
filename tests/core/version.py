@@ -21,9 +21,14 @@ def test_rhombus_version_tuple_of_ints():
     assert v.namespace == "my_mod"
     assert v.version == (1, 20)
 
-def test_rhombus_version_string_fails():
-    with pytest.raises(TypeError):
-        RhombusVersion("1.19.2")
+def test_rhombus_version_string_allowed():
+    v = RhombusVersion("1.19.2")
+    assert v.namespace == "datapack"
+    assert v.version == (1, 19, 2)
+    
+    v = RhombusVersion(("mod", "1.19-rc1"))
+    assert v.namespace == "mod"
+    assert v.version == (1, 19, "rc", 1)
 
 def test_rhombus_version_equality():
     assert RhombusVersion(41.0) == RhombusVersion(41)

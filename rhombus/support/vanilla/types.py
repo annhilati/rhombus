@@ -14,7 +14,7 @@ from rhombus.core import (
     JSONDict,
     field
 )
-from rhombus.core.environment import env
+from rhombus.core.environment import rho
 
 if TYPE_CHECKING:
     from rhombus.std.noise import Noise
@@ -72,7 +72,7 @@ class ceil(RoundingDensityFunction, versions=(111, ...)):
 
 class clamp(DensityFunction):
     id: ClassVar[str] = "minecraft:clamp"
-    input: DensityFunction = field(validate=lambda x: not isinstance(x, Reference) if env.datapack_version < 101.2 else True)
+    input: DensityFunction = field(validate=lambda x: not isinstance(x, Reference) if rho.datapack_version < 101.2 else True)
     min: float
     max: float
 
@@ -297,7 +297,7 @@ class spline(DensityFunction):
             **({
                 "min_value": self.min_value,
                 "max_value": self.max_value,
-            } if env.datapack_version < 10.0 else {})
+            } if rho.datapack_version < 10.0 else {})
         }
 
 

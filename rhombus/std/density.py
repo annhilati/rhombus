@@ -4,13 +4,14 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Self, Literal, overload
+from typing import Any, Self, Literal, overload
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
+from rhombus.core.node import UnresolvedVersionedNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash
-from rhombus.core.environment import datapack_handler, env, FROM_CONTEXT
+from rhombus.core.environment import DatapackVersion, datapack_handler, rho, FROM_CONTEXT
 
 
 # ======// Density Type //========================================================================//
@@ -37,7 +38,7 @@ class Density:
     ```
     """
 
-    AST: DensityFunction | Any
+    AST: DensityFunction | UnresolvedVersionedNode
     "The density function AST represented by this Density."
 
     @overload
@@ -71,7 +72,7 @@ class Density:
         default = self.AST
         from rhombus.support import vanilla as vt
         if isinstance(default, vt.Reference) and isinstance(
-            default.definition, tuple(env.caching_function_types)
+            default.definition, tuple(rho.caching_function_types)
         ):
             default = default.definition
         return Density(Reference(identifier, default))
@@ -147,8 +148,12 @@ class Density:
 
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
 
-    def compile(self, identifier: str = "main", /) -> set[tuple[str, BeetFile]]:
+    def compile(self, identifier: str = "main", /, *, version: DatapackVersion = ...) -> set[tuple[str, BeetFile]]:
         "Compiles the Density into Beet file class instances."
+        old_datapack_version = rho.datapack_version
+        if version is not ...:
+            rho.datapack_version = version
+
         files: set[tuple[str, BeetFile]] = set()
 
         if ":" not in identifier:
@@ -170,6 +175,8 @@ class Density:
             )
         )
 
+        rho.datapack_version = old_datapack_version
+
         return files
 
     def implement(self, dp: beet.DataPack, identifier: str) -> None:
@@ -178,6 +185,7 @@ class Density:
         files = self.compile(identifier)
         for id, file in files:
             dp[id] = file
+
 
     # ======// Debug //===========================================================================//
 

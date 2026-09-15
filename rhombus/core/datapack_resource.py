@@ -9,7 +9,7 @@ import beet
 
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.core.environment import env, FROM_CONTEXT, datapack_handler
+from rhombus.core.environment import rho, FROM_CONTEXT, datapack_handler
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
@@ -112,7 +112,7 @@ class DatapackResource(RhombusASTNode):
     @classmethod
     def deserialize_inline(cls, data: str):
         id = "minecraft:" + data if ":" not in data else data
-        dp = env.datapack
+        dp = rho.datapack
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
         return cls.refer(id)

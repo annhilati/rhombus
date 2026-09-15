@@ -1,5 +1,4 @@
 """
-For more information on the use and parameters, see `~.Noise`.
 """
 
 __all__ = ["Noise", "noise", "old_blended_noise", "shifted_noise", "shift", "shift_a", "shift_b"]
@@ -9,7 +8,7 @@ from typing import ClassVar, Literal
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
-from rhombus.core.environment import env
+from rhombus.core.environment import rho
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.support import vanilla as vt, vanilla_legacy as lt
@@ -61,7 +60,7 @@ class Noise(DatapackResource):
     normalize: bool | Literal["legacy"] = True
 
     def serialize_toplevel(self) -> JSONDict:
-        if env.datapack_version is not None and env.datapack_version < 113:
+        if rho.datapack_version is not None and rho.datapack_version < 113:
             return {
                 "firstOctave": self.base_octave,
                 "amplitudes": self.amplitudes

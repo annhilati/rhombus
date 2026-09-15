@@ -16,7 +16,7 @@ from rhombus.std.density import Density
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
 from rhombus.support.vanilla import cache
 
-from rhombus.core.environment import env
+from rhombus.core.environment import rho
 
 
 class DensityFunctionSizeInfo(NamedTuple):
@@ -190,7 +190,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                     count_total_unknown_references += 1
                 return
 
-            if isinstance(value, tuple(env.caching_function_types)):
+            if isinstance(value, tuple(rho.caching_function_types)):
                 we_are_in_cached = True
             for node in value.fields.values():
                 visit(node, we_are_in_cached=we_are_in_cached)
@@ -234,7 +234,7 @@ def cache_nodes(
         # Check if the current value is a DensityFunction node.
         if isinstance(value, DensityFunction):
             is_already_cached_ref = isinstance(value, Reference) and isinstance(
-                value.definition, tuple(env.caching_function_types)
+                value.definition, tuple(rho.caching_function_types)
             )
 
             # If the node has NOT already been manually wrapped in a cache wrapper,

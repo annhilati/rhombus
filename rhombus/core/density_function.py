@@ -18,7 +18,7 @@ from rhombus.core.node import RhombusASTNode, field, FieldMeta
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 
-from rhombus.core.environment import env
+from rhombus.core.environment import rho
 
 
 # ======// DensityFunction Base Class //==========================================================//
@@ -37,7 +37,7 @@ class DensityFunction(RhombusASTNode):
     # ======// Serialization //===================================================================//
 
     def serialize_toplevel(self) -> JSONDict:
-        active_env = env
+        active_env = rho
 
         result = {"type": self.id}
         
@@ -75,7 +75,7 @@ class DensityFunction(RhombusASTNode):
                 if ":" not in type_field:
                     type_field = "minecraft:" + type_field
 
-                target_class = env.density_function_type_deserialization_register.get(
+                target_class = rho.density_function_type_deserialization_register.get(
                     type_field
                 )
                 if target_class is None:
@@ -104,7 +104,7 @@ class DensityFunction(RhombusASTNode):
             meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
-                json_key = meta.get_json_key(env, default=parameter)
+                json_key = meta.get_json_key(rho, default=parameter)
             
             # Check the expected json_key first
             found_key = None
@@ -210,9 +210,9 @@ class Reference(DensityFunction):
     def deserialize_inline(cls, data: str):
         data = "minecraft:" + data if ":" not in data else data
 
-        dp = env.datapack
+        dp = rho.datapack
         if dp is not None and (f := dp[WorldgenDensityFunction].get(data)) is not None:
-            if env.deserialize_references_inline:
+            if rho.deserialize_references_inline:
                 return DensityFunction.deserialize_toplevel(f.data)
             return Reference(data, DensityFunction.deserialize_toplevel(f.data))
 

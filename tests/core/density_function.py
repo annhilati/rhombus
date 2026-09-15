@@ -6,7 +6,7 @@ import beet.contrib.worldgen as worldgen
 from rhombus.core import DensityFunction, constant, Reference, Unknown
 
 # only core Modules
-from rhombus import env
+from rhombus import rho
 
 
 def test_deserialize_dicts_with_type_key():
@@ -28,8 +28,8 @@ def test_deserialize_literals():
 
     # References with available context
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
-        old_dp = env.datapack
-        env.datapack = dp
+        old_dp = rho.datapack
+        rho.datapack = dp
 
         dp.clear()
 
@@ -41,7 +41,7 @@ def test_deserialize_literals():
             "some:function", constant(3.14)
         )
 
-        env.datapack = old_dp
+        rho.datapack = old_dp
 
 
 def test_serialize_literals():

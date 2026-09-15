@@ -312,20 +312,20 @@ class RhombusPreviewService:
         )
 
     def get_scripts(self):
-        from rhombus.core.environment import env
+        from rhombus.core.environment import rho
         from pathlib import Path
 
         return [
             {"name": Path(p).name, "url": f"/addons/scripts/{i}"}
-            for i, p in enumerate(env.preview_scripts)
+            for i, p in enumerate(rho.preview_scripts)
         ]
 
     def get_script_file(self, index: int):
-        from rhombus.core.environment import env
+        from rhombus.core.environment import rho
         from pathlib import Path
 
         try:
-            p = Path(env.preview_scripts[index])
+            p = Path(rho.preview_scripts[index])
             if not p.is_file():
                 return fastapi.responses.Response(status_code=404)
             mtype = "text/typescript" if p.suffix == ".ts" else "application/javascript"

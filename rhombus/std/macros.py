@@ -19,7 +19,7 @@ import functools
 import sys
 
 from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
-from rhombus.core.environment import RhombusVersion, VersionLike, get_module_version_namespace, env
+from rhombus.core.environment import RhombusVersion, VersionSpecifier, get_module_addon_namespace, rho
 from rhombus.core.utils import Annotation
 from rhombus.std.density import Density, AnyDensity
 
@@ -126,7 +126,7 @@ def _create_argument_resolver(func: Callable) -> Callable:
 _macro_registrations: list[tuple[Any, Callable]] = []
 
 
-def implementation(func: Callable | None = None, *, until: VersionLike | None = None):
+def implementation(func: Callable | None = None, *, until: VersionSpecifier | None = None):
     """Decorator for inner functions inside a macro to register them as implementations.
     If 'until' is None, it acts as the default fallback implementation.
     """
@@ -141,11 +141,12 @@ def implementation(func: Callable | None = None, *, until: VersionLike | None = 
 
 
 class MacroDispatcher:
-    def __init__(self, func: Callable):
+    def __init__(self, func: Callable, repr_func: Callable | None = None):
         self.func = _create_argument_resolver(func)
+        self.repr_func = repr_func
 
 
-        self.default_ns = get_module_version_namespace(func.__module__)
+        self.default_ns = get_module_addon_namespace(func.__module__) or "datapack"
 
         functools.update_wrapper(self, func)
         self.__signature__ = inspect.signature(func)
@@ -167,7 +168,12 @@ class MacroDispatcher:
 
         if self.returns_density:
             return Density(
-                UnresolvedVersionedNode(dispatcher=self, args=args, kwargs=kwargs)
+                UnresolvedVersionedNode(
+                    dispatcher=self,
+                    args=args,
+                    kwargs=kwargs,
+                    repr_func=self.repr_func
+                )
             )
         else:
             # If the macro explicitly returns something else (like an int or tuple),
@@ -208,7 +214,7 @@ class MacroDispatcher:
 
         parsed_impls.sort(key=lambda x: x[0])
 
-        target_v = env.datapack_version
+        target_v = rho.datapack_version
 
         def _invoke(impl_f: Callable) -> Any:
             sig = inspect.signature(impl_f)
@@ -237,11 +243,22 @@ class MacroDispatcher:
 
 @overload
 def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
-def macro(func: Callable) -> Callable:
+@overload
+def macro[**P, R](*, repr: Callable[["UnresolvedVersionedNode"], str] | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+def macro(
+    func: Callable | None = None,
+    *,
+    repr: Callable[["UnresolvedVersionedNode"], str] | None = None
+) -> Callable:
     """The **`macro`** decorator allows functions to use the `AnyDensity` type
     for annotation of its arguments to automatically resolve passed values to
     `Density` objects.
 
     It acts as an organizer for `@implementation` decorated inner functions.
     """
-    return cast(Callable, MacroDispatcher(func))
+    def decorator(f: Callable) -> Callable:
+        return cast(Callable, MacroDispatcher(f, repr_func=repr))
+    
+    if func is not None:
+        return decorator(func)
+    return decorator

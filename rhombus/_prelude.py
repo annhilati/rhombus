@@ -7,6 +7,7 @@ from rhombus.std.math import (
     pow,
     Infinity,
     NaN,
+    clamp,
     max,
     min,
     smax,
@@ -17,6 +18,7 @@ from rhombus.std.math import (
     ceil,
     floor,
     sign,
+    spline
 )
 from rhombus.std.noise import (
     Noise, 
@@ -30,6 +32,8 @@ from rhombus.std.caching import (
 from rhombus.std.conditional import when
 from rhombus.std.coords import x, y, z
 from rhombus.std.maps import extrude_heightmap
-from rhombus.support import *
+
+from rhombus.std import math, coords, caching, blending, maps, noise as noises
 from rhombus.std.math import splines
-from . import preview as preview
+
+from . import preview as preview, support as support

@@ -16,18 +16,21 @@ from builtins import abs as python_abs
 
 from rhombus._prelude import *
 
-from rhombus.core.environment import env
-from rhombus.support import vanilla as _vanilla
+from rhombus.core.environment import rho
 
-env.load_addons(_vanilla)
+from rhombus.support import vanilla as _vanilla
+rho.load_addons({_vanilla: ...})
+
 
 # Convenience when importing *
 from rich import print
 from rich.traceback import install as _install
 _install(width=120, show_locals=True)
 
+
+import warnings as _warnings
+
 def _warn(message, category, filename, lineno, file=None, line=None):
     print(f"[bold #dc9650]Rhombus Warning\n╰─×[/] {message}\n")
 
-import warnings as _warnings
 _warnings.showwarning = _warn

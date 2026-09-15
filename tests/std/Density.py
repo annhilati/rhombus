@@ -19,8 +19,8 @@ def test_partitioning():
     )
 
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
-        old_dp = environment.env.datapack
-        environment.env.datapack = dp
+        old_dp = environment.rho.datapack
+        environment.rho.datapack = dp
 
         dp.clear()
 
@@ -29,7 +29,7 @@ def test_partitioning():
             "a:config"
         ] == worldgen.WorldgenDensityFunction(3.14)
 
-        environment.env.datapack = old_dp
+        environment.rho.datapack = old_dp
 
 
 def test_unify_values():

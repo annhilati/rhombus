@@ -9,7 +9,8 @@ __all__ = [
     "uuid_hash",
     "fields",
     "annotated_fields",
-    "GlobalBinding"
+    "GlobalBinding",
+    "get_Minecraft_datapack_version"
 ]
 
 from typing import Callable, Any, get_type_hints
@@ -18,6 +19,7 @@ import uuid
 import json
 import dataclasses
 import contextvars
+import urllib.request
 
 import beet
 import beet.library.base
@@ -160,3 +162,28 @@ class GlobalBinding[T]:
                 *args, **kwargs
             )
         return value
+
+_MISODE_VERSIONS_CACHE: list[dict] | None = None
+
+def get_Minecraft_datapack_version(version: str, *, use_cache: bool = True) -> float:
+    global _MISODE_VERSIONS_CACHE
+    if _MISODE_VERSIONS_CACHE is None or not use_cache:
+
+        with urllib.request.urlopen(
+            "https://raw.githubusercontent.com/misode/mcmeta/summary/versions/data.json"
+        ) as url:
+            data = json.load(url)
+            _MISODE_VERSIONS_CACHE = data
+
+    for v in _MISODE_VERSIONS_CACHE:
+        if v["id"] == version:
+            if 'data_pack_version' in v:
+                major = int(v["data_pack_version"])
+                minor = 0
+                if "data_pack_version_minor" in v:
+                    minor = int(v["data_pack_version_minor"])
+                return float(str(major) + "." + str(minor))
+            else:
+                raise ValueError(f"Version '{version}' does not have a data_pack_version.")
+                
+    raise ValueError(f"Version '{version}' not found in the misode/mcmeta data.")

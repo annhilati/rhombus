@@ -1,28 +1,29 @@
 __all__ = ["RhombusASTNode", "field", "FieldMeta", "UnresolvedVersionedNode", "resolve_ast_versioning"]
 
 
-from typing import Self, Any, ClassVar, dataclass_transform, Callable
+from typing import Self, Any, ClassVar, Callable, dataclass_transform 
 from types import EllipsisType
 from functools import cached_property
 from collections.abc import Iterator
 import dataclasses
+import inspect
 import copy
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
-from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionLike, get_module_version_namespace, env
+from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionSpecifier, get_module_addon_namespace, rho
 
 
 @dataclasses.dataclass
 class FieldMeta:
-    added_with: VersionLike = 9.0,
-    removed_with: VersionLike | EllipsisType = ...,
-    legacy_keys: dict[VersionLike, str] = {},
-    legacy_values: dict[VersionLike, Any] = {},
+    added_with: VersionSpecifier = ...,
+    removed_with: VersionSpecifier | EllipsisType = ...,
+    legacy_keys: dict[VersionSpecifier, str] = {},
+    legacy_values: dict[VersionSpecifier, Any] = {},
     validate: Callable[[Any], bool] | Callable[[Any, Any], bool] | None = None
 
     def get_json_key(self, env: RhombusEnvironment, default: str) -> str:
         for threshold, key in sorted(self.legacy_keys.items(), reverse=False):
-            if env.check_version(threshold) is False:
+            if env._check_version(threshold) is False:
                 return key
         return default
 
@@ -30,10 +31,10 @@ class FieldMeta:
 def field[Node, Value](
     default: Value=...,
     *,
-    added_with: VersionLike = 9.0,
-    removed_with: VersionLike = ...,
-    legacy_keys: dict[VersionLike, str] = {},
-    legacy_values: dict[VersionLike, Value] = {},
+    added_with: VersionSpecifier = ...,
+    removed_with: VersionSpecifier = ...,
+    legacy_keys: dict[VersionSpecifier, str] = {},
+    legacy_values: dict[VersionSpecifier, Value] = {},
     validate: Callable[[Value], bool] | Callable[[Value, Node], bool] | None = None,
     **kwargs
 ) -> dataclasses.Field:
@@ -57,7 +58,7 @@ class NodeDataclassTransformer(type):
         **kwargs: Any
     ) -> type:
         module_name = ns.get("__module__", "")
-        default_ns = get_module_version_namespace(module_name)
+        default_ns = get_module_addon_namespace(module_name) or "datapack"
 
         versions_kwarg = kwargs.pop("versions", None)
         if versions_kwarg is not None:
@@ -164,7 +165,7 @@ class NodeDataclassTransformer(type):
             cls = dataclasses.dataclass(cls, init=True, repr=False, eq=False)
 
             original_init = cls.__init__
-            import inspect
+            
             sig = inspect.signature(original_init)
 
             def __init__(self, *args, **kwargs):
@@ -215,8 +216,8 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     __dataclass_fields__: ClassVar[dict[str, dataclasses.Field]]
     __dataclass_params__: ClassVar[Any]
     __match_args__: ClassVar[tuple[str, ...]]
-    __rhombus_versions__: ClassVar[tuple[VersionLike, VersionLike | EllipsisType] | None]
-    __rhombus_legacy_values__: ClassVar[dict[str, dict[VersionLike, Any]]]
+    __rhombus_versions__: ClassVar[tuple[VersionSpecifier, VersionSpecifier | EllipsisType] | None]
+    __rhombus_legacy_values__: ClassVar[dict[str, dict[VersionSpecifier, Any]]]
     __rhombus_fields__: ClassVar[dict[str, FieldMeta]]
     _rhombus_frozen: ClassVar[bool]
 
@@ -297,7 +298,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
             nodes |= _collect_inscribed_toplevel_nodes(value)
         return nodes
 
-    # TODO: Should this be a field instead that gets automatically set on initialization?
+    # IDEA: Should this be a field instead that gets automatically set on initialization?
     @cached_property
     def identifier(self) -> str:
         """The namespaced resource identifier of this node. This can be a fixed
@@ -345,6 +346,9 @@ class UnresolvedVersionedNode(RhombusASTNode):
     dispatcher: Callable = dataclasses.field(repr=False, compare=False)
     args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
     kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
+    repr_func: Callable[["UnresolvedVersionedNode"], str] | None = dataclasses.field(
+        default=None, repr=False, compare=False
+    )
 
     _cached_version: Any = dataclasses.field(init=False, default=None, repr=False, compare=False)
     _cached_node: RhombusASTNode | None = dataclasses.field(
@@ -352,14 +356,17 @@ class UnresolvedVersionedNode(RhombusASTNode):
     )
 
     def __repr__(self) -> str:
+        if self.repr_func is not None:
+            return self.repr_func(self)
         parts = [repr(arg) for arg in self.args]
         parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
         return f"{self.dispatcher.__name__}({', '.join(parts)})"
 
     def resolve(self) -> RhombusASTNode:
         from rhombus.std.density import Density
+        # TODO: Is this only for Density? Should be generic
         
-        current_version = env.datapack_version
+        current_version = rho.datapack_version
 
         if self._cached_version == current_version and self._cached_node is not None:
             return self._cached_node
@@ -379,10 +386,10 @@ class UnresolvedVersionedNode(RhombusASTNode):
         return self._cached_node
 
     # Pass through standard methods to the resolved node
-    def serialize_inline(self) -> Any:
+    def serialize_inline(self):
         return self.resolve().serialize_inline()
 
-    def serialize_toplevel(self) -> Any:
+    def serialize_toplevel(self):
         return self.resolve().serialize_toplevel()
 
     @property
