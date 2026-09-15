@@ -6,7 +6,7 @@ __all__ = ["extrude_heightmap", "flatten"]
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.std import coords
-from rhombus.support import vanilla_legacy as lt
+import rhombus.support.vanilla.legacy_types as lt
 
 
 @macro

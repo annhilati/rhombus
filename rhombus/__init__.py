@@ -19,7 +19,7 @@ from rhombus._prelude import *
 from rhombus.core.environment import rho
 
 from rhombus.support import vanilla as _vanilla
-rho.load_addons({_vanilla: ...})
+rho.require({_vanilla: ...})
 
 
 # Convenience when importing *

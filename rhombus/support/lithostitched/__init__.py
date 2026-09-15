@@ -8,19 +8,17 @@ This module enables finer control over terrain shaping and noise manipulation wi
 ([Density Function Types](https://github.com/Apollounknowndev/lithostitched/wiki/Density-Function-Types), [Fast Noise Configs](https://github.com/Apollounknowndev/lithostitched/wiki/Fast-Noise-Configs))
 """
 
-__version__ = "1.6.0"
-
 from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
+from . import types
 
 from importlib.resources import files as _files
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
-from . import types as _types
 
 __addon__ = _RhombusAddon(
     namespace="lithostitched",
-    default_version=(1, 6, 0),
+    version=(1, 6, 0),
     preview_scripts=[
         _files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
         _files("rhombus.support.lithostitched").joinpath("deepslate.ts"),
@@ -28,7 +26,7 @@ __addon__ = _RhombusAddon(
     preview_beet_file_extensions={LithostitchedFastNoiseConfig},
     density_functions={
         cls.id: cls
-        for name, cls in _types.__dict__.items()
+        for name, cls in types.__dict__.items()
         if isinstance(cls, type)
         and issubclass(cls, _DensityFunction)
         and hasattr(cls, "id")

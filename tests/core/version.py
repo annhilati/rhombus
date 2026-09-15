@@ -1,52 +1,14 @@
 import pytest
-from rhombus.core.environment import RhombusVersion
+from rhombus.core.environment import parseVersionString, _parse_version_specifier
 
-def test_rhombus_version_float():
-    v = RhombusVersion(41.0)
-    assert v.namespace == "datapack"
-    assert v.version == (41, 0)
+def test_parse_version_string():
+    assert parseVersionString("1.20") == (1, 20)
+    assert parseVersionString("1.20.4") == (1, 20, 4)
 
-def test_rhombus_version_int():
-    v = RhombusVersion(41)
-    assert v.namespace == "datapack"
-    assert v.version == (41, 0)
+def test_parse_version_specifier_float():
+    assert _parse_version_specifier(41.0) == ("datapack", (41, 0))
+    assert _parse_version_specifier(41) == ("datapack", (41, 0))
 
-def test_rhombus_version_tuple_string_parts():
-    v = RhombusVersion(("my_mod", (1, 20, "rc4")))
-    assert v.namespace == "my_mod"
-    assert v.version == (1, 20, "rc4")
-
-def test_rhombus_version_tuple_of_ints():
-    v = RhombusVersion(("my_mod", (1, 20)))
-    assert v.namespace == "my_mod"
-    assert v.version == (1, 20)
-
-def test_rhombus_version_string_allowed():
-    v = RhombusVersion("1.19.2")
-    assert v.namespace == "datapack"
-    assert v.version == (1, 19, 2)
-    
-    v = RhombusVersion(("mod", "1.19-rc1"))
-    assert v.namespace == "mod"
-    assert v.version == (1, 19, "rc", 1)
-
-def test_rhombus_version_equality():
-    assert RhombusVersion(41.0) == RhombusVersion(41)
-    assert RhombusVersion(41.0) == RhombusVersion(("datapack", (41,)))
-    assert RhombusVersion(("mod", (1, 0))) == RhombusVersion(("mod", (1,)))
-
-def test_rhombus_version_comparison():
-    assert RhombusVersion(41.0) < RhombusVersion(42.0)
-    assert RhombusVersion(("mod", (1,))) < RhombusVersion(("mod", (1, 1)))
-    assert RhombusVersion(("mod", (1, 19, 2))) >= RhombusVersion(("mod", (1, 19)))
-    assert RhombusVersion(111.0) >= RhombusVersion(111)
-
-def test_rhombus_version_natural_sorting():
-    assert RhombusVersion(("mod", (1, 20, "rc1"))) < RhombusVersion(("mod", (1, 20, "rc10")))
-    assert RhombusVersion(("mod", (1, 20, "rc2"))) > RhombusVersion(("mod", (1, 20, "rc1")))
-    
-def test_rhombus_version_string_vs_int():
-    # Pre-release (string) should be considered less than final (int) if the int is 0 (omitted padding).
-    # e.g., 1.20.rc1 is smaller than 1.20.0
-    assert RhombusVersion(("mod", (1, 20, "rc1"))) < RhombusVersion(("mod", (1, 20)))
-    assert RhombusVersion(("mod", (1, 20, "rc1"))) < RhombusVersion(("mod", (1, 20, 0)))
+def test_parse_version_specifier_tuple():
+    assert _parse_version_specifier(("my_mod", (1, 20))) == ("my_mod", (1, 20))
+    assert _parse_version_specifier(("my_mod", "1.19.2")) == ("my_mod", (1, 19, 2))

@@ -31,7 +31,7 @@ from rhombus.core.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.std import caching
-from rhombus.support import vanilla as vt
+import rhombus.support.vanilla.types as vt
 
 from rhombus.core.environment import rho
 

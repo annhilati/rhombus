@@ -97,7 +97,7 @@ def preview(
 
     try:
         addons = [resolve_object_path(e) for e in addons]
-        rho.load_addons(*addons)
+        rho.require(*addons)
     except Exception as e:
         raise typer.BadParameter(e)
 

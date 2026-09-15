@@ -7,8 +7,6 @@ This module significantly expands the flexibility of terrain generation by addin
 [Wiki](https://github.com/klinbee/More-Density-Functions/wiki)
 """
 
-__version__ = "2.2.1"
-
 from .functions import *
 from .sub_parameters import (
     DerivativeComponent,
@@ -16,19 +14,19 @@ from .sub_parameters import (
     ExtraOctaves,
     RandomSampler,
 )
+from . import types
 
 from importlib.resources import files as _files
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
-from . import types as _types
 
 __addon__ = _RhombusAddon(
     namespace="moredfs",
-    default_version=(2, 2, 1),
+    version=(2, 2, 1),
     preview_scripts=[_files("rhombus.support.moredfs").joinpath("deepslate.ts")],
     density_functions={
         cls.id: cls
-        for name, cls in _types.__dict__.items()
+        for name, cls in types.__dict__.items()
         if isinstance(cls, type)
         and issubclass(cls, _DensityFunction)
         and hasattr(cls, "id")

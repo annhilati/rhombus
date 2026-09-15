@@ -50,7 +50,7 @@ class DensityFunction(RhombusASTNode):
             meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
-                json_key = meta.get_json_key(active_env, default=parameter)
+                json_key = meta.get_appropriate_key(active_env, default=parameter)
                 if meta.validate and not meta.validate(value):
                     raise ValueError(f"Validation failed for field '{parameter}' of '{self.id}'")
             
@@ -104,7 +104,7 @@ class DensityFunction(RhombusASTNode):
             meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
-                json_key = meta.get_json_key(rho, default=parameter)
+                json_key = meta.get_appropriate_key(rho, default=parameter)
             
             # Check the expected json_key first
             found_key = None
@@ -223,7 +223,7 @@ class Reference(DensityFunction):
     def serialize_toplevel(self) -> JSONDict:
         if self.definition is not None:
             return self.definition.serialize_toplevel()
-        from rhombus.support import vanilla as vt
+        import rhombus.support.vanilla.types as vt
 
         return vt.add(self, constant(0.0)).serialize_toplevel()
 
@@ -263,7 +263,7 @@ class constant(DensityFunction):
         return cls(float(data))
 
     def serialize_toplevel(self) -> float | JSONDict:
-        from rhombus.support import vanilla as vt 
+        import rhombus.support.vanilla.types as vt 
 
         def ensure_not_exceeding_limit(value: float) -> JSONValue:
             if abs(value) <= vt.literal_number_limit:

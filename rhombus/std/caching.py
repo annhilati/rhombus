@@ -6,7 +6,7 @@ from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash
 from rhombus.std.density import Density, AnyDensity, _unify
 from rhombus.std.macros import macro, resolve_ast_versioning
 
-from rhombus.support import vanilla as vt
+import rhombus.support.vanilla.types as vt
 
 from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
 

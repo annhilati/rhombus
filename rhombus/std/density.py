@@ -70,7 +70,7 @@ class Density:
             raise TypeError("Density can only be assigned to a string identifier")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
-        from rhombus.support import vanilla as vt
+        import rhombus.support.vanilla.types as vt
         if isinstance(default, vt.Reference) and isinstance(
             default.definition, tuple(rho.caching_function_types)
         ):

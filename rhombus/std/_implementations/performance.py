@@ -14,7 +14,7 @@ from beet.contrib import worldgen as beet_worldgen
 
 from rhombus.std.density import Density
 from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.support.vanilla import cache
+from rhombus.support.vanilla.types import cache
 
 from rhombus.core.environment import rho
 

@@ -54,7 +54,7 @@ from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
 from rhombus.std.caching import interpolated, recurrence_cache
 
-from rhombus.support import vanilla_legacy as lt
+import rhombus.support.vanilla.legacy_types as lt
 
 
 _coord_stripe_noise = Noise(78, [1])

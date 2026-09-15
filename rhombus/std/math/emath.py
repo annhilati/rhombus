@@ -14,7 +14,7 @@ import math as py_math
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro
 from rhombus.std import math, caching, conditional as cond
-from rhombus.support import vanilla as vt
+import rhombus.support.vanilla.types as vt
 
 
 # ======// Arithmetic //==========================================================================//

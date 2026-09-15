@@ -10,18 +10,18 @@ import inspect
 import copy
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
-from rhombus.core.environment import RhombusEnvironment, RhombusVersion, VersionSpecifier, get_module_addon_namespace, rho
+from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace, rho
 
 
 @dataclasses.dataclass
 class FieldMeta:
-    added_with: VersionSpecifier = ...,
-    removed_with: VersionSpecifier | EllipsisType = ...,
-    legacy_keys: dict[VersionSpecifier, str] = {},
-    legacy_values: dict[VersionSpecifier, Any] = {},
+    added_with: DatapackVersion | VersionString | VersionTuple = ...,
+    removed_with: DatapackVersion | VersionString | VersionTuple | EllipsisType = ...,
+    legacy_keys: dict[DatapackVersion | VersionString | VersionTuple, str] = {},
+    legacy_values: dict[DatapackVersion | VersionString | VersionTuple, Any] = {},
     validate: Callable[[Any], bool] | Callable[[Any, Any], bool] | None = None
 
-    def get_json_key(self, env: RhombusEnvironment, default: str) -> str:
+    def get_appropriate_key(self, env: RhombusEnvironment, default: str) -> str:
         for threshold, key in sorted(self.legacy_keys.items(), reverse=False):
             if env._check_version(threshold) is False:
                 return key
@@ -31,10 +31,10 @@ class FieldMeta:
 def field[Node, Value](
     default: Value=...,
     *,
-    added_with: VersionSpecifier = ...,
-    removed_with: VersionSpecifier = ...,
-    legacy_keys: dict[VersionSpecifier, str] = {},
-    legacy_values: dict[VersionSpecifier, Value] = {},
+    added_with: DatapackVersion | VersionString | VersionTuple = ...,
+    removed_with: DatapackVersion | VersionString | VersionTuple = ...,
+    legacy_keys: dict[DatapackVersion | VersionString | VersionTuple, str] = {},
+    legacy_values: dict[DatapackVersion | VersionString | VersionTuple, Value] = {},
     validate: Callable[[Value], bool] | Callable[[Value, Node], bool] | None = None,
     **kwargs
 ) -> dataclasses.Field:
@@ -70,7 +70,7 @@ class NodeDataclassTransformer(type):
             parsed_versions = []
             for v in versions_kwarg:
                 if v is not ... and v is not None:
-                    parsed_versions.append(RhombusVersion(v, default_namespace=default_ns))
+                    parsed_versions.append(_parse_version_specifier(v, default_namespace=default_ns))
                 else:
                     parsed_versions.append(...)
             ns["__rhombus_versions__"] = tuple(parsed_versions)        
@@ -78,19 +78,19 @@ class NodeDataclassTransformer(type):
             if isinstance(field_obj, dataclasses.Field) and "rhombus_meta" in field_obj.metadata:
                 meta: FieldMeta = field_obj.metadata["rhombus_meta"]
                 if meta.added_with is not ... and meta.added_with is not None:
-                    meta.added_with = RhombusVersion(meta.added_with, default_namespace=default_ns)
+                    meta.added_with = _parse_version_specifier(meta.added_with, default_namespace=default_ns)
                 if meta.removed_with is not ... and meta.removed_with is not None:
-                    meta.removed_with = RhombusVersion(meta.removed_with, default_namespace=default_ns)
+                    meta.removed_with = _parse_version_specifier(meta.removed_with, default_namespace=default_ns)
                 
                 new_legacy_keys = {}
                 for k, v in meta.legacy_keys.items():
-                    k_norm = RhombusVersion(k, default_namespace=default_ns) if k is not ... else k
+                    k_norm = _parse_version_specifier(k, default_namespace=default_ns) if k is not ... else k
                     new_legacy_keys[k_norm] = v
                 meta.legacy_keys = new_legacy_keys
                 
                 new_legacy_values = {}
                 for k, v in meta.legacy_values.items():
-                    k_norm = RhombusVersion(k, default_namespace=default_ns) if k is not ... else k
+                    k_norm = _parse_version_specifier(k, default_namespace=default_ns) if k is not ... else k
                     new_legacy_values[k_norm] = v
                 meta.legacy_values = new_legacy_values
 
@@ -216,8 +216,8 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     __dataclass_fields__: ClassVar[dict[str, dataclasses.Field]]
     __dataclass_params__: ClassVar[Any]
     __match_args__: ClassVar[tuple[str, ...]]
-    __rhombus_versions__: ClassVar[tuple[VersionSpecifier, VersionSpecifier | EllipsisType] | None]
-    __rhombus_legacy_values__: ClassVar[dict[str, dict[VersionSpecifier, Any]]]
+    __rhombus_versions__: ClassVar[tuple[DatapackVersion | VersionString | VersionTuple, DatapackVersion | VersionString | VersionTuple | EllipsisType] | None]
+    __rhombus_legacy_values__: ClassVar[dict[str, dict[DatapackVersion | VersionString | VersionTuple, Any]]]
     __rhombus_fields__: ClassVar[dict[str, FieldMeta]]
     _rhombus_frozen: ClassVar[bool]
 

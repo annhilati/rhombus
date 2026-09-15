@@ -39,7 +39,7 @@ import builtins as py_builtins
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 from rhombus.std import conditional as cond, caching
-from rhombus.support import vanilla as vt
+import rhombus.support.vanilla.types as vt
 
 # TODO: for macros with no implementations for certain versions, add an until-implementation that raises? Or warn and fallback to newest
 

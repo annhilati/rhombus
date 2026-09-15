@@ -11,7 +11,8 @@ from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.core.environment import rho
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
-from rhombus.support import vanilla as vt, vanilla_legacy as lt
+import rhombus.support.vanilla.types as vt
+import rhombus.support.vanilla.legacy_types as lt
 
 
 class Noise(DatapackResource):

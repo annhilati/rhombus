@@ -19,7 +19,7 @@ import functools
 import sys
 
 from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
-from rhombus.core.environment import RhombusVersion, VersionSpecifier, get_module_addon_namespace, rho
+from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace, rho
 from rhombus.core.utils import Annotation
 from rhombus.std.density import Density, AnyDensity
 
@@ -126,7 +126,7 @@ def _create_argument_resolver(func: Callable) -> Callable:
 _macro_registrations: list[tuple[Any, Callable]] = []
 
 
-def implementation(func: Callable | None = None, *, until: VersionSpecifier | None = None):
+def implementation(func: Callable | None = None, *, until: DatapackVersion | VersionString | VersionTuple | None = None):
     """Decorator for inner functions inside a macro to register them as implementations.
     If 'until' is None, it acts as the default fallback implementation.
     """
@@ -207,7 +207,7 @@ class MacroDispatcher:
             else:
                 parsed_impls.append(
                     (
-                        RhombusVersion(until_v, default_namespace=self.default_ns),
+                        _parse_version_specifier(until_v, default_namespace=self.default_ns),
                         impl_func,
                     )
                 )
