@@ -47,12 +47,7 @@ import rhombus.support.vanilla.types as vt
 
 @macro(repr=lambda n: "Infinity")
 def _infinity() -> Density:
-    @implementation(until=111)
-    def _legacy():
-        return Density(vt.mul(vt.constant(1), vt.reciprocal(vt.constant(0))))
-    @implementation
-    def _modern():
-        return Density(vt.div(vt.constant(1), vt.constant(0)))
+    return Density(1) / 0
 
 Infinity = _infinity()
 "Density equivalent to Java's `Float.POSITIVE_INFINITY`."

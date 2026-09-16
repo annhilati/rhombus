@@ -55,6 +55,7 @@ __all__ = [
 
 # For more detailed information about specific parameters, please refer to the MoreDFs documentation:
 # https://github.com/TheDeathlyCow/more-density-functions/wiki
+
 import base64
 from typing import Literal
 

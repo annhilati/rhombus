@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
+dev = [
   "pytest>=9.0",
   "pytest-spec>=6.0.0",
 ]

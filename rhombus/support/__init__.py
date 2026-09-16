@@ -12,4 +12,4 @@ env.load_addons(support.lithostitched)
 ```
 """
 
-from rhombus.support import tectonic, lithostitched, moredfs, ensity, vanilla
+from . import vanilla, ensity, lithostitched, tectonic, moredfs

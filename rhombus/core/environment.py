@@ -96,8 +96,6 @@ class RhombusEnvironment:
         # Registries
         self.density_function_type_deserialization_register: dict[str, type["DensityFunction"]] = {}
         "Mapping of all `DensityFunction` subclasses that are used for deserialization, with their ids as the keys."
-        self.caching_function_types: set[type["DensityFunction"]] = set() # TODO: remove?
-        "Set of `DensityFunction` subclasses that apply structuring logic for enabling caching"
 
         # Preview
         self.preview_beet_file_extensions: set[type["BeetFile"]] = set()
@@ -142,13 +140,10 @@ class RhombusEnvironment:
         _, parsed = _parse_version_specifier(value, default_namespace="datapack")
         self.versions["datapack"] = parsed
 
-    # TODO: Remove mod versioning here again, because we have them in load_addons?
     @overload
-    def set_version(self, **mods: VersionTuple | VersionString) -> None: ...
+    def set_version(self, *, datapack: DatapackVersion) -> None: ...
     @overload
-    def set_version(self, *, datapack: DatapackVersion, **mods: VersionTuple | VersionString) -> None: ...
-    @overload
-    def set_version(self, *, minecraft: VersionString, **mods: VersionTuple | VersionString) -> None: ...
+    def set_version(self, *, minecraft: VersionString) -> None: ...
 
     def set_version(self, **kwargs) -> None:
         """Sets the datapack version and/or addon versions.
@@ -175,9 +170,9 @@ class RhombusEnvironment:
         elif datapack_arg is not None:
             self.datapack_version = datapack_arg
             
-        for mod, ver in kwargs.items():
-            _, parsed = _parse_version_specifier(ver, default_namespace=mod)
-            self.versions[mod] = parsed
+        # for mod, ver in kwargs.items():
+        #     _, parsed = _parse_version_specifier(ver, default_namespace=mod)
+        #     self.versions[mod] = parsed
 
     def require(self, addons: dict[ModuleType | "RhombusAddon", VersionString | EllipsisType]) -> None:
         """Loads addons for Rhombus and calls their individual registration procedures.
@@ -282,8 +277,6 @@ class RhombusAddon:
         default_version (VersionLike | None): The default version to set in the environment when the addon is loaded.
         density_functions (dict[str, DensityFunction]): Mapping of additional density function types
             (their identifiers) as the keys. This is mainly used for deserializing density function from JSON dictionaries.
-        caching_functions (set[DensityFunction]): Density function types to which
-            a specific treatment is applied to ensure efficient caching.
         preview_scripts (list[str | Path]): Paths of JavaScript or TypeScript files that will be provided
             by the Rhombus Preview service, such that they are available in the previewing frontend.
             It is recommended to provide these paths with the `files().joinpath()` method from `importlib.resources`.
@@ -295,7 +288,6 @@ class RhombusAddon:
     namespace: str
     version: DatapackVersion | VersionString | VersionTuple | None = None
     density_functions: dict[str, type["DensityFunction"]] | list[type["DensityFunction"]] = field(default_factory=dict)
-    caching_functions: set[type["DensityFunction"]] = field(default_factory=set)
     preview_scripts: list[str | Path] = field(default_factory=list)
     preview_beet_file_extensions: set[type["BeetFile"]] = field(default_factory=set)
     on_apply: Optional[Callable[["RhombusEnvironment"], Any]] = None
@@ -330,7 +322,6 @@ class RhombusAddon:
                     if fid:
                         env.density_function_type_deserialization_register[fid] = cls
                         
-        env.caching_function_types.update(self.caching_functions)
         env.preview_scripts.extend(self.preview_scripts)
         env.preview_beet_file_extensions.update(self.preview_beet_file_extensions)
 

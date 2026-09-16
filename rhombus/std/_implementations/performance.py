@@ -3,20 +3,17 @@ import dataclasses
 import json
 import sys
 
+from beet.contrib import worldgen as beet_worldgen
 
+from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
+from rhombus.std.density import Density
+from rhombus.std.macros import resolve_ast_versioning
+import rhombus.support.vanilla.types as vt
 
 # Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
 # We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
 if sys.getrecursionlimit() < 10000:
     sys.setrecursionlimit(10000)
-
-from beet.contrib import worldgen as beet_worldgen
-
-from rhombus.std.density import Density
-from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
-from rhombus.support.vanilla.types import cache
-
-from rhombus.core.environment import rho
 
 
 class DensityFunctionSizeInfo(NamedTuple):
@@ -34,7 +31,6 @@ def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
-    from rhombus.std.macros import resolve_ast_versioning
     node = resolve_ast_versioning(node)
 
     counts_by_key: dict[str, int] = {}
@@ -190,7 +186,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                     count_total_unknown_references += 1
                 return
 
-            if isinstance(value, tuple(rho.caching_function_types)):
+            if isinstance(value, vt.cache):
                 we_are_in_cached = True
             for node in value.fields.values():
                 visit(node, we_are_in_cached=we_are_in_cached)
@@ -220,10 +216,9 @@ def cache_nodes(
     condition: Callable[[DensityFunction], bool],
     wrapper: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
         "rhombus:partitioned/" + uuid_hash(df.serialize_toplevel()),
-        definition=cache(df),
+        definition=vt.cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
-    from rhombus.std.macros import resolve_ast_versioning
     root = resolve_ast_versioning(root)
     replacement_info: dict[DensityFunction, int] = {}
 
@@ -234,7 +229,7 @@ def cache_nodes(
         # Check if the current value is a DensityFunction node.
         if isinstance(value, DensityFunction):
             is_already_cached_ref = isinstance(value, Reference) and isinstance(
-                value.definition, tuple(rho.caching_function_types)
+                value.definition, vt.cache
             )
 
             # If the node has NOT already been manually wrapped in a cache wrapper,

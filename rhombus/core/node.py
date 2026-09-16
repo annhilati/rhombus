@@ -108,10 +108,11 @@ class NodeDataclassTransformer(type):
         user_post_init = ns.get("__post_init__")
         
         def _freeze_field_value(value: Any) -> Any:
-            # Unwrap Density wrapper objects if they are passed in!
-            from rhombus.std.density import Density
-            if isinstance(value, Density):
-                value = value.AST
+            # Unwrap wrapper objects if they are passed in!
+            if hasattr(value, "AST"):
+                from rhombus.core.node import RhombusASTNode
+                if isinstance(value.AST, RhombusASTNode):
+                    value = value.AST
 
             if isinstance(value, list):
                 return tuple(_freeze_field_value(v) for v in value)
@@ -363,9 +364,6 @@ class UnresolvedVersionedNode(RhombusASTNode):
         return f"{self.dispatcher.__name__}({', '.join(parts)})"
 
     def resolve(self) -> RhombusASTNode:
-        from rhombus.std.density import Density
-        # TODO: Is this only for Density? Should be generic
-        
         current_version = rho.datapack_version
 
         if self._cached_version == current_version and self._cached_node is not None:
@@ -374,7 +372,7 @@ class UnresolvedVersionedNode(RhombusASTNode):
         result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
         object.__setattr__(self, "_cached_version", current_version)
 
-        if isinstance(result, Density):
+        if hasattr(result, "AST") and isinstance(result.AST, RhombusASTNode):
             object.__setattr__(self, "_cached_node", result.AST)
         elif isinstance(result, RhombusASTNode):
             object.__setattr__(self, "_cached_node", result)

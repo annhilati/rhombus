@@ -12,6 +12,7 @@ from rhombus.core.node import UnresolvedVersionedNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash
 from rhombus.core.environment import DatapackVersion, datapack_handler, rho, FROM_CONTEXT
+import rhombus.support.vanilla.types as vt
 
 
 # ======// Density Type //========================================================================//
@@ -70,10 +71,8 @@ class Density:
             raise TypeError("Density can only be assigned to a string identifier")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
-        import rhombus.support.vanilla.types as vt
-        if isinstance(default, vt.Reference) and isinstance(
-            default.definition, tuple(rho.caching_function_types)
-        ):
+        
+        if isinstance(self.AST, vt.Reference) and isinstance(self.AST.definition, vt.cache):
             default = default.definition
         return Density(Reference(identifier, default))
 
@@ -197,33 +196,33 @@ class Density:
     # ======// Arithmetic Magic //================================================================//
 
     def __add__(self, other) -> Density:
-        from rhombus.std.math import add
+        from rhombus.std.math.general import add
         return add(self, other)
 
     def __radd__(self, other) -> Density:
         return self.__add__(other)
 
     def __sub__(self, other) -> Density:
-        from rhombus.std.math import sub
+        from rhombus.std.math.general import sub
         return sub(self, other)
 
     def __rsub__(self, other) -> Density:
-        from rhombus.std.math import sub
+        from rhombus.std.math.general import sub
         return sub(other, self)
 
     def __mul__(self, other) -> Density:
-        from rhombus.std.math import mul
+        from rhombus.std.math.general import mul
         return mul(self, other)  
 
     def __rmul__(self, other) -> Density:
         return self.__mul__(other)
 
     def __truediv__(self, other) -> Density:
-        from rhombus.std.math import div
+        from rhombus.std.math.general import div
         return div(self, other)
 
     def __rtruediv__(self, other) -> Density:
-        from rhombus.std.math import div
+        from rhombus.std.math.general import div
         return div(other, self)
 
     def __floordiv__(self, other):

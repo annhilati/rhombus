@@ -8,6 +8,7 @@ from rhombus.std.math import (
     mul,
     div,
     pow,
+    sqrt,
     Infinity,
     NaN,
     clamp,

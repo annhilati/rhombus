@@ -36,6 +36,7 @@ def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) ->
     """
     return Density(vt.interpolated(df.AST, cell_size_xz, cell_size_y))
 
+# TODO: Refractor the infrastructure for caching conditions
 
 def _get_occurance_and_size_condition(
     max_nodes: int,
@@ -120,7 +121,6 @@ def specified_cache(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
         definition=_unify(caching_function(node)),
     )
-    from rhombus.std.macros import resolve_ast_versioning
     resolved_ast = resolve_ast_versioning(df.AST)
     occurances = count_node_values(resolved_ast)
     identity_cond = _get_identity_condition([resolve_ast_versioning(n.AST) for n in functions if isinstance(n, Density)])

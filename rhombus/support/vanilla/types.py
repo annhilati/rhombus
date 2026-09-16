@@ -1,5 +1,3 @@
-"""Module with definitions of density function types in the newest version. For legacy functions see `rhombus.support.vanilla_legacy`."""
-
 from __future__ import annotations
 
 from typing import ClassVar, Literal, TYPE_CHECKING

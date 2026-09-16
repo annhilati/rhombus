@@ -7,7 +7,7 @@ __all__ = [
 ]
 
 import math as py_math
-from math import sqrt, pi, e
+from math import sqrt, pi
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro

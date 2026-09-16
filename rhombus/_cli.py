@@ -1,10 +1,13 @@
 from pathlib import Path
 from types import ModuleType
 from typing import Any
+from importlib import import_module
+from importlib.util import spec_from_file_location, module_from_spec
 import sys
 
 import typer
 
+# TODO: Add rhombus.toml definition where more complex workflows can be stated. Or: make it a hooked python script
 
 cli = typer.Typer(
     help="The Rhombus CLI",
@@ -16,7 +19,6 @@ class RhombusCLIProblem(Exception): ...
 
 
 def resolve_object_path(path: str) -> Any:
-    from importlib import import_module
 
     parts = path.split(".")
 
@@ -38,7 +40,6 @@ def resolve_object_path(path: str) -> Any:
 
 
 def resolve_path_to_module(p: Path) -> ModuleType | None:
-    from importlib.util import spec_from_file_location, module_from_spec
 
     if not p.is_file() or p.suffix != ".py":
         return None

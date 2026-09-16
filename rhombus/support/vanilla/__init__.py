@@ -14,6 +14,5 @@ __addon__ = _RhombusAddon(
         and isinstance(cls, type)
         and issubclass(cls, _DensityFunction)
         and hasattr(cls, "id")
-    ],
-    caching_functions={types.cache},
+    ]
 )
