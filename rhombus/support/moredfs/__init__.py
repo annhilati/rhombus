@@ -13,6 +13,7 @@ from .sub_parameters import (
     DistanceMetric,
     ExtraOctaves,
     RandomSampler,
+    JitterSampler,
 )
 from . import types
 

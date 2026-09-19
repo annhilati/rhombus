@@ -468,5 +468,15 @@ def spline(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
     """
-    points = [(p[0], p[1].AST, p[2]) for p in points]
-    return Density(vt.spline(input.AST, points))
+    # Recursive helper to convert tuple points to AST nodes
+    def convert_point(p):
+        location, value, derivative = p
+        ast_value = value.AST
+        
+        if isinstance(ast_value, vt.spline):
+            ast_value = ast_value.spline
+            
+        return vt.SplinePoint(location, ast_value, derivative)
+
+    ast_points = [convert_point(p) for p in points]
+    return Density(vt.spline(vt.SplineConfig(input.AST, ast_points)))

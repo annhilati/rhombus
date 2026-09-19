@@ -9,8 +9,8 @@ from rhombus.core import (
     DoubleArgumentDensityFunction,
     Reference,
     constant,
-    JSONDict,
-    field
+    field,
+    SubParameters
 )
 from rhombus.core.environment import rho
 
@@ -243,69 +243,28 @@ class slice(DensityFunction, versions=(113, ...)):
     coordinate: int
 
 
+class SplinePoint(SubParameters):
+    location: float
+    value: DensityFunction | SplineConfig
+    derivative: float
+
+class SplineConfig(SubParameters):
+    coordinate: DensityFunction
+    points: list[SplinePoint]
+
 class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
-    coordinate: DensityFunction
-    points: list[tuple[float, DensityFunction, float]]
-    min_value: float = field(removed_with=10.0)
-    max_value: float = field(removed_with=10.0)
-
-    @classmethod
-    def deserialize_toplevel(cls, data: JSONDict) -> "spline":
-        kwargs = {}
-        if "min_value" in data:
-            kwargs["min_value"] = data["min_value"]
-        if "max_value" in data:
-            kwargs["max_value"] = data["max_value"]
-
-        return cls(
-            DensityFunction.deserialize_inline(data["spline"]["coordinate"]),
-            [
-                (
-                    point["location"],
-                    DensityFunction.deserialize_inline(
-                        {"type": "minecraft:spline", "spline": point["value"]}
-                    )
-                    if isinstance(point["value"], dict)
-                    and point["value"].get("type") is None
-                    else DensityFunction.deserialize_inline(point["value"]),
-                    point["derivative"],
-                )
-                for point in data["spline"]["points"]
-            ],
-            **kwargs
-        )
-
-    def serialize_toplevel(self) -> JSONDict:
-        return {
-            "type": self.id,
-            "spline": {
-                "coordinate": self.coordinate.serialize_inline(),
-                "points": [
-                    {
-                        "location": point[0],
-                        "value": point[1].serialize_inline()["spline"]
-                        if isinstance(point[1], type(self))
-                        else point[1].serialize_inline(),
-                        "derivative": point[2],
-                    }
-                    for point in self.points
-                ],
-            },
-            **({
-                "min_value": self.min_value,
-                "max_value": self.max_value,
-            } if rho.datapack_version < 10.0 else {})
-        }
-
+    spline: SplineConfig
+    min_value: float = field(removed_with=10.0, default=0.0)
+    max_value: float = field(removed_with=10.0, default=0.0)
 
     def show(self):
         "Only for debugging. Opens the spline in a pyplot."
         from rhombus.std.math._splinelib import show_spline
 
-        if any((not isinstance(p[1], constant) for p in self.points)):
+        if any((not isinstance(p.value, constant) for p in self.spline.points)):
             raise ValueError("Can only show splines with numeric values")
-        show_spline([(p[0], p[1].argument, p[2]) for p in self.points])
+        show_spline([(p.location, p.value.argument, p.derivative) for p in self.spline.points])
 
 
 class square(MappedDensityFunction):

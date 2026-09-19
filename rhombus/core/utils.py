@@ -92,6 +92,61 @@ def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
     return {f.name: get_type_hints(o)[f.name] for f in flds if f.init}
 
 
+def check_type(value: Any, annotation: Any) -> bool:
+    import typing
+    import types
+    
+    if value is None:
+        return True
+    if annotation is typing.Any:
+        return True
+        
+    origin = typing.get_origin(annotation)
+    args = typing.get_args(annotation)
+    
+    # Union types (e.g. A | B or Union[A, B])
+    if origin is typing.Union or type(annotation) is getattr(types, "UnionType", type(None)):
+        return any(check_type(value, arg) for arg in args)
+        
+    if origin is typing.Literal:
+        return value in args
+        
+    if origin is list:
+        if not isinstance(value, (list, tuple)):
+            return False
+        if not args:
+            return True
+        return all(check_type(v, args[0]) for v in value)
+        
+    if origin is dict:
+        if not isinstance(value, dict):
+            return False
+        if not args:
+            return True
+        return all(check_type(k, args[0]) and check_type(v, args[1]) for k, v in value.items())
+
+    if origin is tuple:
+        if not isinstance(value, (list, tuple)):
+            return False
+        if not args:
+            return True
+        if len(args) == 2 and args[1] is ...:
+            return all(check_type(v, args[0]) for v in value)
+        if len(args) != len(value):
+            return False
+        return all(check_type(v, arg) for v, arg in zip(value, args))
+        
+    if isinstance(annotation, type):
+        if annotation is float and isinstance(value, int):
+            return True
+        import enum
+        if issubclass(annotation, enum.Enum):
+            return isinstance(value, annotation) or value in [e.value for e in annotation]
+        return isinstance(value, annotation)
+        
+    return True
+
+
 # ======// Global Bindings //=====================================================================//
 
 

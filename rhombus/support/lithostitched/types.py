@@ -13,20 +13,20 @@ from .fast_noise_config import FastNoiseConfig
 # ======// Density Function Classes //============================================================//
 
 
-class axis(DensityFunction):
+class axis(DensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:axis"
     axis: Literal["x", "y", "z"]
 
 
-class ceil(MappedDensityFunction):
+class ceil(MappedDensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:ceil"
 
 
-class cos(MappedDensityFunction):
+class cos(MappedDensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:cos"
 
 
-class fast_noise(DensityFunction):
+class fast_noise(DensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:fast_noise"
     config: FastNoiseConfig
     xz_scale: float
@@ -36,22 +36,22 @@ class fast_noise(DensityFunction):
     shift_z: DensityFunction
 
 
-class floor(MappedDensityFunction):
+class floor(MappedDensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:floor"
 
 
-class mix(DensityFunction):
+class mix(DensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:mix"
     input: DensityFunction
     argument1: DensityFunction
     argument2: DensityFunction
 
 
-class original_marker(SimpleDensityFunction):
+class original_marker(SimpleDensityFunction, versions=("1.3.1", ...)):
     id: ClassVar[str] = "lithostitched:original_marker"
 
 
-class select(DensityFunction):
+class select(DensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:select"
 
     input: DensityFunction
@@ -102,7 +102,7 @@ class select(DensityFunction):
         }
 
 
-class shift(DensityFunction):
+class shift(DensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:shift"
     input: DensityFunction
     shift_x: DensityFunction
@@ -110,13 +110,13 @@ class shift(DensityFunction):
     shift_z: DensityFunction
 
 
-class sin(MappedDensityFunction):
+class sin(MappedDensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:sin"
 
 
-class sqrt(MappedDensityFunction):
+class sqrt(MappedDensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:sqrt"
 
 
-class wrapped_marker(SimpleDensityFunction):
+class wrapped_marker(SimpleDensityFunction, versions=("1.3.1", ...)):
     id: ClassVar[str] = "lithostitched:wrapped_marker"

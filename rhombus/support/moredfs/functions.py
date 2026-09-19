@@ -51,6 +51,8 @@ __all__ = [
     "y",
     "z",
     "z_clamped_gradient",
+    "voronoi_cells",
+    "worley_noise",
 ]
 
 # For more detailed information about specific parameters, please refer to the MoreDFs documentation:
@@ -68,6 +70,7 @@ from .sub_parameters import (
     RandomSampler,
     ExtraOctaves,
     DerivativeComponent,
+    JitterSampler,
 )
 
 
@@ -475,3 +478,63 @@ def single_channel_image_tessellation(image: str | Image.Image, size: tuple[int,
         image = image.convert("L")
         image = base64.b64encode(zlib.compress(image.tobytes())).decode("utf-8")
     return Density(types.single_channel_image_tessellation(size[0], size[1], image))
+
+
+@macro
+def voronoi_cells(
+    value_sampler: RandomSampler,
+    size_x: int,
+    size_y: int,
+    size_z: int,
+    jitter_sampler: JitterSampler,
+    distance_metric: DistanceMetric,
+    distance_type: Literal["f1", "f2", "f3"],
+    exact: bool,
+    extra_octaves: ExtraOctaves,
+    salt: int,
+):
+    """Generates Voronoi cells/cellular noise."""
+    return Density(
+        types.voronoi_cells(
+            value_sampler,
+            size_x,
+            size_y,
+            size_z,
+            jitter_sampler,
+            distance_metric,
+            distance_type,
+            exact,
+            extra_octaves,
+            salt,
+        )
+    )
+
+
+@macro
+def worley_noise(
+    size_x: int,
+    size_y: int,
+    size_z: int,
+    jitter_sampler: JitterSampler,
+    distance_metric: DistanceMetric,
+    distance_type: Literal["f1", "f2", "f3"],
+    exact: bool,
+    invertValue: bool,
+    extra_octaves: ExtraOctaves,
+    salt: int,
+):
+    """Generates Worley noise."""
+    return Density(
+        types.worley_noise(
+            size_x,
+            size_y,
+            size_z,
+            jitter_sampler,
+            distance_metric,
+            distance_type,
+            exact,
+            invertValue,
+            extra_octaves,
+            salt,
+        )
+    )

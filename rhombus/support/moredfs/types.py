@@ -1,10 +1,11 @@
 from typing import ClassVar, Self, Literal, Optional
 
-from rhombus.core.density_function import (
+from rhombus.core import (
     DensityFunction,
     MappedDensityFunction,
     SimpleDensityFunction,
     DoubleArgumentDensityFunction,
+    field
 )
 
 from .sub_parameters import (
@@ -12,6 +13,7 @@ from .sub_parameters import (
     RandomSampler,
     ExtraOctaves,
     DerivativeComponent,
+    JitterSampler,
 )
 
 # ======// Density Function Base Classes //=======================================================//
@@ -20,22 +22,6 @@ from .sub_parameters import (
 class DivisionFunctionBase(DensityFunction):
     numerator: DensityFunction
     denominator: DensityFunction
-
-    @classmethod
-    def deserialize(cls, data: dict) -> Self:
-        numerator = data["argument1"]
-        denominator = data["argument2"]
-        return cls(
-            DensityFunction.deserialize_inline(numerator),
-            DensityFunction.deserialize_inline(denominator),
-        )
-
-    def serialize(self) -> dict:
-        return {
-            "type": self.id,
-            "numerator": self.numerator.serialize_inline(),
-            "denominator": self.denominator.serialize_inline(),
-        }
 
 
 # ======// Function Type Classes //===============================================================//
@@ -53,7 +39,11 @@ class atan(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:atan"
 
 
-class cbrt(MappedDensityFunction):
+class cache(MappedDensityFunction, versions=(..., "2.2.0")):
+    id: ClassVar[str] = "moredfs:cache"
+
+
+class cbrt(MappedDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:cbrt"
 
 
@@ -72,20 +62,19 @@ class cos(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:cos"
 
 
-class cosh(MappedDensityFunction):
+class cosh(MappedDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:cosh"
 
 
 class derivative:
     id: ClassVar[str] = "moredfs:derivative"
     argument: DensityFunction
-    component_x: Optional[DerivativeComponent] = None
-    component_y: Optional[DerivativeComponent] = None
-    component_z: Optional[DerivativeComponent] = None
-    # One of the components must be defined at least
+    component_x: Optional[DerivativeComponent] = field(None, validate=lambda x, df: len([v for v in [df.component_x, df.component_y, df.component_z] if v is None]) < 3)
+    component_y: Optional[DerivativeComponent] = field(None, validate=lambda x, df: len([v for v in [df.component_x, df.component_y, df.component_z] if v is None]) < 3)
+    component_z: Optional[DerivativeComponent] = field(None, validate=lambda x, df: len([v for v in [df.component_x, df.component_y, df.component_z] if v is None]) < 3)
 
 
-class distance(DensityFunction):
+class distance(DensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:distance"
     distance_metric: DistanceMetric
     point1: Optional[list[DensityFunction]] = None
@@ -96,7 +85,7 @@ class div(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:div"
 
 
-class dot_product(DensityFunction):
+class dot_product(DensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:dot_product"
     argument1: DensityFunction
     argument2: DensityFunction
@@ -117,11 +106,11 @@ class floor_mod(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:floor_mod"
 
 
-class gapped_grid_square_spiral(DensityFunction):
+class gapped_grid_square_spiral(DensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:gapped_grid_square_spiral"
-    x_size: int  # > 0
-    z_size: int  # > 0
-    spacing: int  # > 0
+    x_size: int = field(validate=lambda x: x > 0)
+    z_size: int = field(validate=lambda x: x > 0)
+    spacing: int = field(validate=lambda x: x > 0)
     grid_cell_args: list[DensityFunction]
     out_of_bounds_argument: DensityFunction
 
@@ -152,7 +141,7 @@ class log2_floor(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:log2_floor"
 
 
-class mod(DivisionFunctionBase):
+class mod(DivisionFunctionBase, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:mod"
 
 
@@ -164,7 +153,7 @@ class negate(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:negate"
 
 
-class or_else(DensityFunction):
+class or_else(DensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:or_else"
     argument: DensityFunction
     fallback: DensityFunction
@@ -187,11 +176,11 @@ class profiler(DensityFunction):
     iterations: int
 
 
-class radius(SimpleDensityFunction):
+class radius(SimpleDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:radius"
 
 
-class radius_3d(SimpleDensityFunction):
+class radius_3d(SimpleDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:radius_3d"
 
 
@@ -204,7 +193,7 @@ class remainder(DivisionFunctionBase):
     id: ClassVar[str] = "moredfs:remainder"
 
 
-class resolver(MappedDensityFunction):
+class resolver(MappedDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:resolver"
 
 
@@ -229,14 +218,14 @@ class signum(MappedDensityFunction):
 
 
 class sin(MappedDensityFunction):
-    id: ClassVar[str] = "moredfs:sin"
+    id: ClassVar[str] = field("moredfs:sin", legacy_values={"2.1.2": "moredfs:sine"})
 
 
-class sinh(MappedDensityFunction):
+class sinh(MappedDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:sinh"
 
 
-class single_channel_image_tessellation(DensityFunction):
+class single_channel_image_tessellation(DensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:single_channel_image_tessellation"
     x_size: int
     z_size: int
@@ -255,16 +244,16 @@ class tan(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:tan"
 
 
-class tanh(MappedDensityFunction):
+class tanh(MappedDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:tanh"
 
 
 class value_noise(DensityFunction):
     id: ClassVar[str] = "moredfs:value_noise"
     sampler: RandomSampler
-    size_x: int  # >= 0
-    size_y: int  # >= 0
-    size_z: int  # >= 0
+    size_x: int = field(validate=lambda x: x >= 0)
+    size_y: int = field(validate=lambda x: x >= 0)
+    size_z: int = field(validate=lambda x: x >= 0)
     interpolation: Literal["none", "lerp", "smoothstep"]
     salt: Optional[int] = None
     extra_octaves: Optional[ExtraOctaves] = None
@@ -300,3 +289,33 @@ class z_clamped_gradient(DensityFunction):
     to_z: int
     from_value: float
     to_value: float
+
+
+class voronoi_cells(DensityFunction):
+    id: ClassVar[str] = "moredfs:voronoi_cells"
+    
+    value_sampler: RandomSampler
+    size_x: int
+    size_y: int
+    size_z: int
+    jitter_sampler: JitterSampler
+    distance_metric: DistanceMetric
+    distance_type: Literal["f1", "f2", "f3"]
+    exact: bool
+    extra_octaves: ExtraOctaves
+    salt: int
+
+
+class worley_noise(DensityFunction):
+    id: ClassVar[str] = "moredfs:worley_noise"
+    
+    size_x: int
+    size_y: int
+    size_z: int
+    jitter_sampler: JitterSampler
+    distance_metric: DistanceMetric
+    distance_type: Literal["f1", "f2", "f3"]
+    exact: bool
+    invertValue: bool
+    extra_octaves: ExtraOctaves
+    salt: int

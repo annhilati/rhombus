@@ -154,6 +154,18 @@ class NodeDataclassTransformer(type):
                                 if not meta.validate(val, self):
                                     raise ValueError(f"Validation failed for field '{field.name}' with value {val!r} against node {self!r}")
 
+                    # Type checking
+                    from rhombus.core.utils import check_type, annotated_fields
+                    hints = getattr(self.__class__, "__rhombus_type_hints__", None)
+                    if hints is None:
+                        hints = annotated_fields(self.__class__)
+                        self.__class__.__rhombus_type_hints__ = hints
+                        
+                    if field.name in hints:
+                        import warnings
+                        if not check_type(val, hints[field.name]):
+                            warnings.warn(f"Type mismatch in '{self.__class__.__name__}.{field.name}': Expected {hints[field.name]}, got {type(val).__name__} ({val!r})")
+
                     # Freeze the node value (e.g. lists/dicts) to ensure immutability
                     object.__setattr__(self, field.name, _freeze_field_value(val))
 

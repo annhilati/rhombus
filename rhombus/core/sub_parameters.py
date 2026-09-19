@@ -22,20 +22,50 @@ class SubParameters(RhombusASTNode):
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> Self:
+        from rhombus.core.environment import rho
         fields = annotated_fields(cls)
+        rhombus_fields = getattr(cls, "__rhombus_fields__", {})
 
-        return cls(
-            **{
-                parameter: deserialize_any_inline(value, tp)
-                for parameter, value in data.items()
-                if parameter in fields
-                for tp in (fields[parameter],)
-            }
-        )
+        kwargs = {}
+        for parameter, tp in fields.items():
+            meta = rhombus_fields.get(parameter)
+            json_key = parameter
+            if meta:
+                json_key = meta.get_appropriate_key(rho, default=parameter)
+            
+            found_key = None
+            if json_key in data:
+                found_key = json_key
+            elif meta and meta.legacy_keys:
+                for legacy_key in meta.legacy_keys.values():
+                    if legacy_key in data:
+                        found_key = legacy_key
+                        break
+            
+            if found_key:
+                val = deserialize_any_inline(data[found_key], tp)
+                if meta and meta.validate and val is not None and not meta.validate(val):
+                    raise ValueError(f"Validation failed for field '{parameter}' of '{cls.__name__}'")
+                kwargs[parameter] = val
+                
+        return cls(**kwargs)
 
     def serialize_toplevel(self) -> JSONDict:
-        return {
-            parameter: serialize_any_inline(value)
-            for parameter, value in self.fields.items()
-            if value is not None
-        }
+        from rhombus.core.environment import rho
+        result = {}
+        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
+        
+        for parameter, value in self.fields.items():
+            if value is None:
+                continue
+            
+            meta = rhombus_fields.get(parameter)
+            json_key = parameter
+            if meta:
+                json_key = meta.get_appropriate_key(rho, default=parameter)
+                if meta.validate and not meta.validate(value):
+                    raise ValueError(f"Validation failed for field '{parameter}' of '{self.__class__.__name__}'")
+            
+            result[json_key] = serialize_any_inline(value)
+            
+        return result

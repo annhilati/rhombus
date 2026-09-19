@@ -3,10 +3,6 @@ from typing import Literal
 from rhombus.core import (
     SubParameters,
     DensityFunction,
-    JSONDict,
-    annotated_fields,
-    serialize_any_inline,
-    deserialize_any_inline,
     field
 )
 from rhombus.std.density import Density, AnyDensity
@@ -37,26 +33,37 @@ class RandomSampler(SubParameters):
         "normal",
         "poisson",
         "uniform",
-    ]
+    ] = field(legacy_values={
+        "2.1.2": {
+            "beta": "moredfs:beta",
+            "binomial": "moredfs:binomial",
+            "exponential": "moredfs:exponential",
+            "gamma": "moredfs:gamma",
+            "geometric": "moredfs:geometric",
+            "normal": "moredfs:normal",
+            "poisson": "moredfs:poisson",
+            "uniform": "moredfs:uniform",
+        }
+    })
 
     # beta
-    alpha: float = None  # > 0
-    beta: float = None  # > 0
+    alpha: float = field(None, validate=lambda x: x > 0)
+    beta: float = field(None, validate=lambda x: x > 0)
     # binomial
-    trials: int = None  # 0 < x < 1000000
+    trials: int = field(None, validate=lambda x: 0 < x < 1000000) # Check whether < or <=
     # binomial / geometric
-    probability: float = None  # 0 <= x <= 1
+    probability: float = field(None, validate=lambda x: 0 <= x <= 1)
     # exponential / poisson
-    Lambda: float = None  # > 0
+    Lambda: float = field(None, legacy_keys={1000000: "lambda"}, validate=lambda x: x > 0)
     # gamma
-    shape: float = None  # > 0
+    shape: float = field(None, validate=lambda x: x > 0)
     scale: float = None
     # normal
     mean: float = None
-    std_dev: float = None  # > 0
+    std_dev: float = field(None, validate=lambda x: x > 0)
     # uniform
     min: float = None
-    max: float = None  # >= min
+    max: float = field(None, validate=lambda x, s: x > s.min)
 
     @classmethod
     def Beta(cls, alpha: float, beta: float):
@@ -89,35 +96,6 @@ class RandomSampler(SubParameters):
     @classmethod
     def Uniform(cls, min: float, max: float):
         return cls(type="uniform", min=min, max=max)
-
-    @classmethod
-    def deserialize_toplevel(cls, data: JSONDict) -> "RandomSampler":
-        fields = annotated_fields(cls)
-
-        return cls(
-            **{
-                parameter: deserialize_any_inline(value, tp)
-                for parameter, value in data.items()
-                if parameter in fields
-                for tp in (fields[parameter],)
-                if parameter != "lambda"
-            },
-            **(
-                {"Lambda": data["lambda"]}
-                if data.get("lambda", None) is not None
-                else {}
-            ),
-        )
-
-    def serialize_toplevel(self) -> JSONDict:
-        return {
-            **{
-                parameter: serialize_any_inline(value)
-                for parameter, value in self.fields.items()
-                if value is not None and parameter != "Lambda"
-            },
-            **({"lambda": self.Lambda} if self.Lambda is not None else {}),
-        }
 
 
 class DistanceMetric(SubParameters):
@@ -175,3 +153,10 @@ class DerivativeComponent(SubParameters):
     def __init__(self, step: int, direction: AnyDensity):
         self.step = step
         self.direction = Density(direction).AST
+
+
+class JitterSampler(SubParameters):
+    """Sampler for adding positional jitter, e.g. in voronoi cells."""
+    x: RandomSampler
+    y: RandomSampler
+    z: RandomSampler

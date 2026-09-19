@@ -119,7 +119,7 @@ class DensityFunction(RhombusASTNode):
             
             if found_key:
                 val = deserialize_any_inline(data[found_key], tp)
-                if meta and meta.validate and not meta.validate(val):
+                if meta and meta.validate and val is not None and not meta.validate(val):
                     raise ValueError(f"Validation failed for field '{parameter}' of '{cls.id}'")
                 kwargs[parameter] = val
                 

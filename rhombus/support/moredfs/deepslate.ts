@@ -459,3 +459,5 @@ class MoredfsClampedGradient extends deepslate.DensityFunction {
 }
 densityFunctions.set('moredfs:x_clamped_gradient', (obj: any, parser: any) => new MoredfsClampedGradient('x', obj.from_x, obj.to_x, obj.from_value, obj.to_value));
 densityFunctions.set('moredfs:z_clamped_gradient', (obj: any, parser: any) => new MoredfsClampedGradient('z', obj.from_z, obj.to_z, obj.from_value, obj.to_value));
+
+// TODO: moredfs:voronoi_cells, moredfs:worley_noise
