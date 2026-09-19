@@ -25,8 +25,10 @@ import asyncio
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus.std.density import Density
 from rhombus.core import BeetFile, RhombusASTNode
+from rhombus.std.density import Density
+
+from rhombus.core.environment import rho
 
 
 def _get_relaunch_cmd():
@@ -312,8 +314,6 @@ class RhombusPreviewService:
         )
 
     def get_scripts(self):
-        from rhombus.core.environment import rho
-        from pathlib import Path
 
         return [
             {"name": Path(p).name, "url": f"/addons/scripts/{i}"}
@@ -321,8 +321,6 @@ class RhombusPreviewService:
         ]
 
     def get_script_file(self, index: int):
-        from rhombus.core.environment import rho
-        from pathlib import Path
 
         try:
             p = Path(rho.preview_scripts[index])
@@ -340,9 +338,11 @@ def serve(
     **uvicorn_args: Any,
 ) -> None:
     """Starts the Rhombus Preview service ASGI application.
+    
+    **NOTE**: The Rhombus Preview is still experimental.
 
-    This includes the frontend and a file-watching backend. One can be used
-    without the other or with another instance of the other.
+    The Preview service includes the frontend and a file-watching backend.
+    One can be used without the other or with another instance of the other.
     """
     if os.environ.get("RHOMBUS_CHECK_ONLY") == "1":
         return

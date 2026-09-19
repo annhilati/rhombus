@@ -356,6 +356,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
 
 
 class UnresolvedVersionedNode(RhombusASTNode):
+    # TODO: don't be so fixed on versioning
     dispatcher: Callable = dataclasses.field(repr=False, compare=False)
     args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
     kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)

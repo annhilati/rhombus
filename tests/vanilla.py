@@ -1,7 +1,6 @@
 from rhombus import *
-from rhombus.std.types_legacy.vanilla_legacy import weird_scaled_sampler
 
-register(support.vanilla_legacy.weird_scaled_sampler)
+rho.set_version(104)
 
 noise_jagged = Noise(
     -16,

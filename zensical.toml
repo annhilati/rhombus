@@ -14,11 +14,12 @@ nav = [
             # "datapack_development.md",
             "mod_development.md",
         ]},
-        {"Examples" = [
-            "examples/conditionality.md"
-        ]},
+        # {"Examples" = [
+        #     "examples/conditionality.md"
+        # ]},
         {"Reference" = [
-            "reference/rhombus/index.md",
+            {"Standard Library" = "reference/rhombus/std/"},
+            {"Rhombus" = "reference/rhombus/index.md"},
         ]}
     ]},
     {"Rhombus Developers" = [

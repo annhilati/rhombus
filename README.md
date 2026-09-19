@@ -21,7 +21,6 @@
 
 Rhombus is an eDSL delivered as a Python package that allows worldgen developers to comfortably write expressions resembling the abstract syntax trees of density functions for Minecraft while benefiting from Python's forgiving syntax.
 
-<!--h6><sub>This project is pretty similar to <a href="https://github.com/misode/gaia-beet">misode/gaia-beet</a>, which you might also find useful. Know that I started developing Rhombus before I knew about it, the similarities in concept are quite frightening though. The biggest difference to Misode's gaia-beet is that Rhombus does not see itself as a mere Beet plugin — although we heavily rely on it — but rather as a coherent, mostly separated language and it will be further developed and improved in exactly this sense.</sub></h6-->
 
 ## Key Advantages
 - 📦 **Object-oriented Design**<br>
@@ -114,17 +113,17 @@ FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 
 ## Spread the Word
 
-The easiest way to support the Rhombus project is to propagate its use in your projects. You can use our custom [devins-badges](https://github.com/intergrav/devins-badges):
+The easiest way to support the Rhombus project is to propagate its use in your projects. You can use our custom [Devin's Badges](https://github.com/intergrav/devins-badges):
 
 <p align=center>
   <a href="https://github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a>
   <br>
-  <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/></a></code>
+  <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy.svg"/>&lt;/a></code>
   <br>
   <br>
   <a href="https://github.com/annhilati/rhombus"><img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a>
   <br>
-  <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/></a></code>
+  <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/>&lt;/a></code>
 </p>
 
 

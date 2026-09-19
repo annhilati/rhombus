@@ -102,8 +102,15 @@ class Noise(DatapackResource):
             
         return cls(**kwargs)
 
-    def __call__(self, xz_scale: float = 1, y_scale: float = 1):
-        return noise(self, xz_scale=xz_scale, y_scale=y_scale)
+    def __call__(
+        self,
+        xz_scale: float = 1,
+        y_scale: float = 1,
+        shift_x: AnyDensity = 0,
+        shift_y: AnyDensity = 0,
+        shift_z: AnyDensity = 0,
+    ) -> Density:
+        return noise(self, xz_scale=xz_scale, y_scale=y_scale, shift_x=shift_x, shift_y=shift_y, shift_z=shift_z)
 
 
 @macro

@@ -20,7 +20,7 @@ def beardifier() -> Density:
 def blend_alpha() -> Density:
     """Used for smooth transition to chunks generated in old versions.
 
-    Returns a constant value of `1.0`.
+    Produces a constant value of `1.0`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_alpha)
@@ -43,7 +43,7 @@ def blend_density(df: AnyDensity) -> Density:
 def blend_offset() -> Density:
     """Used for smooth transition to chunks generated in old versions.
 
-    Returns a constant value of `1.0`.
+    Produces a constant value of `1.0`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_offset)

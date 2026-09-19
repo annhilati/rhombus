@@ -22,7 +22,7 @@ from rhombus.std.math import (
     ceil,
     floor,
     sign,
-    spline
+    spline,
 )
 from rhombus.std.noise import (
     Noise, 
@@ -34,7 +34,7 @@ from rhombus.std.caching import (
     interpolated,
 )
 from rhombus.std.conditional import when
-from rhombus.std.coords import x, y, z
+from rhombus.std.coords import x, y, z, gradient
 from rhombus.std.maps import extrude_heightmap
 
 # Standard Library Modules

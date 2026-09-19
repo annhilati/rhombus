@@ -14,7 +14,7 @@ def flatten(df: AnyDensity) -> Density:
     """Flattens a density function to 2 dimensions by ignoring the Y-coordinate."""
     @implementation(until=118)
     def flatten():
-        return lt.flat_cache(df.AST)
+        return Density(lt.flat_cache(df.AST))
     @implementation
     def flatten():
         return coords.slice(df, y=0)
