@@ -28,7 +28,7 @@ import beet.contrib.worldgen as beet_worldgen
 from rhombus.core import BeetFile, RhombusASTNode
 from rhombus.std.density import Density
 
-from rhombus.core.environment import rho
+from rhombus.runtime import rho
 
 
 def _get_relaunch_cmd():
@@ -415,3 +415,4 @@ def resources_from_datapack(
                 raise KeyError(f"Overlay '{overlay_name}' not found in datapack.")
 
     return [(id, file) for (typ, id), file in files_dict.items()]
+

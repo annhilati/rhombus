@@ -10,7 +10,8 @@ import inspect
 import copy
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
-from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace, rho
+from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
+from rhombus.runtime import rho
 
 
 @dataclasses.dataclass
@@ -480,4 +481,5 @@ def resolve_ast_versioning(node: RhombusASTNode) -> RhombusASTNode:
         return n
 
     return transform(node, _resolver)
+
 

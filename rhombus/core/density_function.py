@@ -18,7 +18,7 @@ from rhombus.core.node import RhombusASTNode, field, FieldMeta
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 
-from rhombus.core.environment import rho
+from rhombus.runtime import rho
 
 
 # ======// DensityFunction Base Class //==========================================================//
@@ -297,3 +297,4 @@ class Unknown(DensityFunction):
 
     def serialize_inline(self) -> JSONDict:
         return self.data | {"type": self.id}
+

@@ -8,7 +8,7 @@ from typing import ClassVar, Literal
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
-from rhombus.core.environment import rho
+from rhombus.runtime import rho
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
@@ -216,3 +216,4 @@ def end_outer_islands() -> Density:
     @implementation(since=113)
     def end_outer_islands():
         return Density(vt.end_outer_islands())
+

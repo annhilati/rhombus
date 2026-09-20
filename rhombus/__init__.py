@@ -16,7 +16,7 @@ from builtins import abs as python_abs
 
 from rhombus._prelude import *
 
-from rhombus.core.environment import rho
+from rhombus.runtime import rho
 
 from rhombus.support import vanilla as _vanilla
 rho.require({_vanilla: ...})
@@ -34,3 +34,4 @@ def _warn(message, category, filename, lineno, file=None, line=None):
     print(f"[bold #dc9650]Rhombus Warning\n╰─×[/] {message}\n")
 
 _warnings.showwarning = _warn
+

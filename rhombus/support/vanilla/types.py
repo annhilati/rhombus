@@ -12,7 +12,7 @@ from rhombus.core import (
     field,
     SubParameters
 )
-from rhombus.core.environment import rho
+from rhombus.runtime import rho
 
 if TYPE_CHECKING:
     from rhombus.std.noise import Noise
@@ -291,3 +291,4 @@ class sub(DoubleArgumentDensityFunction, versions=(111, ...)):
 
 class truncate(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:truncate"
+

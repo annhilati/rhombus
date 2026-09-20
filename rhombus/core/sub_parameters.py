@@ -22,7 +22,7 @@ class SubParameters(RhombusASTNode):
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> Self:
-        from rhombus.core.environment import rho
+        from rhombus.runtime import rho
         fields = annotated_fields(cls)
         rhombus_fields = getattr(cls, "__rhombus_fields__", {})
 
@@ -58,7 +58,7 @@ class SubParameters(RhombusASTNode):
         return cls(**kwargs)
 
     def serialize_toplevel(self) -> JSONDict:
-        from rhombus.core.environment import rho
+        from rhombus.runtime import rho
         result = {}
         rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
         
@@ -76,4 +76,5 @@ class SubParameters(RhombusASTNode):
             result[json_key] = serialize_any_inline(value)
             
         return result
+
 

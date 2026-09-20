@@ -11,7 +11,8 @@ import beet.contrib.worldgen as beet_worldgen
 from rhombus.core.node import UnresolvedVersionedNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash
-from rhombus.core.environment import DatapackVersion, datapack_handler, rho, FROM_CONTEXT
+from rhombus.core.environment import DatapackVersion
+from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
 
 
 # ======// Density Type //========================================================================//
@@ -336,3 +337,4 @@ def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersione
     raise ValueError(
         f"Cannot resolve object of type {type(v).__name__!r} to a density function AST"
     )
+

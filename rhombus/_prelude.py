@@ -43,4 +43,5 @@ from rhombus.std.math import splines
 from rhombus.support import *
 
 # Workflow
-from . import preview as preview, support as support
+import rhombus.preview as preview
+import rhombus.support as support

@@ -25,7 +25,6 @@ noise_cave_layer = Noise(-8, [1.0])
 
 shift_z = flat_cache(cache_2d(noises.shift_b(argument=noise_offset)))
 shift_x = flat_cache(cache_2d(noises.shift_a(argument=noise_offset)))
-y = coords.y()
 
 overworld_erosion = flat_cache(
     noise(
@@ -771,9 +770,11 @@ overworld_offset = flat_cache(
         )
     )
 )
+
 overworld_depth = gradient(
     axis="y", from_value=1.5, from_coordinate=-64, to_value=-1.5, to_coordinate=320
 ) + (overworld_offset)
+
 overworld_jaggedness = flat_cache(
     cache_2d(
         (
@@ -955,6 +956,7 @@ overworld_jaggedness = flat_cache(
         )
     )
 )
+
 overworld_base_3d_noise = old_blended_noise(
     smear_scale_multiplier=8.0,
     xz_factor=80.0,
@@ -962,6 +964,7 @@ overworld_base_3d_noise = old_blended_noise(
     y_factor=160.0,
     y_scale=0.125,
 )
+
 overworld_factor = flat_cache(
     (
         cache_2d(
@@ -1532,10 +1535,11 @@ overworld_caves_pillars = cache(
         ) ** 3
     )
 )
+
 overworld_caves_noodles = range_choice(
     input=interpolated(
         range_choice(
-            input=y,
+            input=y(),
             max_exclusive=321.0,
             min_inclusive=-60.0,
             when_in_range=noise(noise=Noise(-8, [1.0]), xz_scale=1.0, y_scale=1.0),
@@ -1548,7 +1552,7 @@ overworld_caves_noodles = range_choice(
     when_out_of_range=(
         interpolated(
             range_choice(
-                input=y,
+                input=y(),
                 max_exclusive=321.0,
                 min_inclusive=-60.0,
                 when_in_range=(
@@ -1567,7 +1571,7 @@ overworld_caves_noodles = range_choice(
                 abs(
                     interpolated(
                         range_choice(
-                            input=y,
+                            input=y(),
                             max_exclusive=321.0,
                             min_inclusive=-60.0,
                             when_in_range=noise(
@@ -1582,7 +1586,7 @@ overworld_caves_noodles = range_choice(
                 abs(
                     interpolated(
                         range_choice(
-                            input=y,
+                            input=y(),
                             max_exclusive=321.0,
                             min_inclusive=-60.0,
                             when_in_range=noise(
@@ -1598,12 +1602,14 @@ overworld_caves_noodles = range_choice(
         )
     ),
 )
+
 overworld_caves_spaghetti_roughness_function = cache(
     (
         (-0.05 + (-0.05 * noise(noise=Noise(-8, [1.0]), xz_scale=1.0, y_scale=1.0)))
         * (-0.4 + abs(noise(noise=Noise(-5, [1.0]), xz_scale=1.0, y_scale=1.0)))
     )
 )
+
 overworld_caves_entrances = cache(
     min(
         (
@@ -1648,9 +1654,11 @@ overworld_caves_entrances = cache(
         ),
     )
 )
+
 overworld_caves_spaghetti_2d_thickness_modulator = cache(
     (-0.95 + (-0.35 * noise(noise=Noise(-11, [1.0]), xz_scale=2.0, y_scale=1.0)))
 )
+
 overworld_caves_spaghetti_2d = clamp(
     df=max(
         (
@@ -1791,5 +1799,5 @@ final_destiny = min(
 )
 
 
-
+# TODO: Reset-Method needed?
 rho.set_version(datapack=118)

@@ -19,7 +19,8 @@ import functools
 import sys
 
 from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
-from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace, rho
+from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
+from rhombus.runtime import rho
 from rhombus.core.utils import Annotation
 from rhombus.std.density import Density, AnyDensity
 
@@ -274,3 +275,4 @@ def macro(
     if func is not None:
         return decorator(func)
     return decorator
+

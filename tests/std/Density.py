@@ -1,3 +1,4 @@
+from rhombus.runtime import rho
 from rhombus import Density
 from rhombus.support.vanilla import types
 from rhombus.core import environment
@@ -19,8 +20,8 @@ def test_partitioning():
     )
 
     with beet.DataPack(path="test_pack_hfcbsjfi4") as dp:
-        old_dp = environment.rho.datapack
-        environment.rho.datapack = dp
+        old_dp = rho.datapack
+        rho.datapack = dp
 
         dp.clear()
 
@@ -29,7 +30,7 @@ def test_partitioning():
             "a:config"
         ] == worldgen.WorldgenDensityFunction(3.14)
 
-        environment.rho.datapack = old_dp
+        rho.datapack = old_dp
 
 
 def test_unify_values():
@@ -45,3 +46,4 @@ def test_unify_values():
 
     # DensityFunction
     assert Density(types.constant(1.0)) == Density(types.constant(1.0))
+

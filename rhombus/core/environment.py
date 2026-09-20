@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-__all__ = ["DatapackVersion", "VersionTuple", "RhombusEnvironment", "RhombusAddon", "rho", "get_module_addon_namespace", "FROM_CONTEXT", "datapack_handler"]
+__all__ = ["DatapackVersion", "VersionTuple", "RhombusEnvironment", "RhombusAddon", "get_module_addon_namespace"]
 
-from typing import Callable, Any, Optional, Final, overload, TYPE_CHECKING
+from typing import Callable, Any, Optional, overload, TYPE_CHECKING
 from types import ModuleType, EllipsisType
 from dataclasses import dataclass, field
-from functools import total_ordering
 from pathlib import Path
 import threading
-import re
 import sys
-import functools
-import inspect
-import copy
 
 import beet
 
@@ -20,7 +15,7 @@ if TYPE_CHECKING:
     from rhombus.core import DensityFunction
     from rhombus.core.utils import BeetFile
 
-from rhombus.core.utils import GlobalBinding, get_Minecraft_datapack_version
+from rhombus.core.utils import get_Minecraft_datapack_version
 
 
 # ======// Versioning //==========================================================================//
@@ -169,10 +164,6 @@ class RhombusEnvironment:
                 self.datapack_version = get_Minecraft_datapack_version(minecraft_arg, use_cache=True)
         elif datapack_arg is not None:
             self.datapack_version = datapack_arg
-            
-        # for mod, ver in kwargs.items():
-        #     _, parsed = _parse_version_specifier(ver, default_namespace=mod)
-        #     self.versions[mod] = parsed
 
     def require(self, addons: dict[ModuleType | "RhombusAddon", VersionString | EllipsisType]) -> None:
         """Loads addons for Rhombus and calls their individual registration procedures.
@@ -324,55 +315,3 @@ class RhombusAddon:
                         
         env.preview_scripts.extend(self.preview_scripts)
         env.preview_beet_file_extensions.update(self.preview_beet_file_extensions)
-
-
-# TODO: rhombus.core should not include runtime relevant symbols.
-# Thus 'env' should be moved somewhere else in the future.
-rho: RhombusEnvironment = GlobalBinding(RhombusEnvironment)
-"""The default global Rhombus environment.
-
-For more information on how to use environments see
-[`RhombusEnvironment`](https://annhilati.github.io/rhombus/reference/rhombus/core/environment/RhombusEnvironment/).
-"""
-
-FROM_CONTEXT: Final = object()
-"Typing sentinel to denote that a value will be adopted from the environment."
-
-def datapack_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
-    """Decorator that handles the 'dp' parameter for datapack contexts.
-    If 'dp' is FROM_CONTEXT, it injects the current env.datapack.
-    If 'dp' is provided explicitly, it temporarily overrides env.datapack 
-    for the duration of the function call, restoring it afterwards.
-    """
-    sig = inspect.signature(func)
-
-    @functools.wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        bound = sig.bind_partial(*args, **kwargs)
-        bound.apply_defaults()
-
-        if "dp" in bound.arguments:
-            value = bound.arguments["dp"]
-
-            if value is FROM_CONTEXT:
-                bound.arguments["dp"] = rho.datapack
-                return func(*bound.args, **bound.kwargs)  # type: ignore
-            elif value is not rho.datapack:
-                # Temporarily override the environment with the new datapack
-                current_env_obj: RhombusEnvironment = rho._get_instance()
-                new_env = copy.copy(current_env_obj)
-                new_env.datapack = value
-
-                token = rho._ctxvar.set(new_env)
-                try:
-                    return func(*bound.args, **bound.kwargs)  # type: ignore
-                finally:
-                    rho._ctxvar.reset(token)
-            else:
-                # Value is already the current environment datapack
-                return func(*bound.args, **bound.kwargs)  # type: ignore
-        else:
-            return func(*bound.args, **bound.kwargs)  # type: ignore
-
-    wrapper.__signature__ = sig  # type: ignore
-    return wrapper

@@ -9,7 +9,7 @@ import beet
 
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.core.environment import rho, FROM_CONTEXT, datapack_handler
+from rhombus.runtime import rho, datapack_handler
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
@@ -163,3 +163,4 @@ class DatapackResource(RhombusASTNode):
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."
         return self.serialize_toplevel()
+

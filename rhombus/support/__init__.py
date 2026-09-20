@@ -2,14 +2,6 @@
 
 This package serves as a central hub for third-party mod support,
 exposing their custom density functions and node types for native use within Rhombus.
-
-When decoding density functions from datapacks while they are using function types from
-mods or such from old Minecraft versions, make sure to load the respective modules in
-the environment like in this idiom:
-```
-from rhombus import *
-env.load_addons(support.lithostitched)
-```
 """
 
 from . import vanilla, ensity, lithostitched, tectonic, moredfs
