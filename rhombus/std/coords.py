@@ -99,7 +99,9 @@ def distance_to_point(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#distance_to_point)
     """
-    return Density(vt.distance_to_point(point, metric))
+    @implementation(since=113)
+    def distance_to_point():
+        return Density(vt.distance_to_point(point, metric))
 
 
 @macro
@@ -116,9 +118,11 @@ def find_top_surface(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#find_top_surface)
     """
-    return Density(
-        vt.find_top_surface(density.AST, upper_bound=start.AST, lower_bound=stop, cell_height=step_size)
-    )
+    @implementation(since=82)
+    def find_top_surface():
+        return Density(
+            vt.find_top_surface(density.AST, upper_bound=start.AST, lower_bound=stop, cell_height=step_size)
+        )
 
 
 @macro
@@ -132,14 +136,16 @@ def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: O
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#slice)
     """
-    out = df.AST
-    if x:
-        out = vt.slice(input=out, axis="x", coordinate=x)
-    if y:
-        out = vt.slice(input=out, axis="y", coordinate=y)
-    if z:
-        out = vt.slice(input=out, axis="z", coordinate=z)
-    return Density(out)
+    @implementation(since=113)
+    def slice():
+        out = df.AST
+        if x:
+            out = vt.slice(input=out, axis="x", coordinate=x)
+        if y:
+            out = vt.slice(input=out, axis="y", coordinate=y)
+        if z:
+            out = vt.slice(input=out, axis="z", coordinate=z)
+        return Density(out)
 
 
 # ======// Coordinates //=========================================================================//

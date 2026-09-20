@@ -5,14 +5,13 @@ import beet.contrib.worldgen as worldgen
 
 from rhombus.core import DensityFunction, constant, Reference, Unknown
 
-# only core Modules
 from rhombus import rho
 
 
 def test_deserialize_dicts_with_type_key():
 
     assert DensityFunction.deserialize_toplevel(
-        {"type": "minecraft:constant", "argument": 3.14}
+        {"type": "minecraft:constant", "value": 3.14}
     ) == constant(3.14)
 
 
@@ -34,7 +33,7 @@ def test_deserialize_literals():
         dp.clear()
 
         dp["some:function"] = worldgen.WorldgenDensityFunction(
-            {"type": "minecraft:constant", "argument": 3.14}
+            {"type": "minecraft:constant", "value": 3.14}
         )
 
         assert DensityFunction.deserialize_inline("some:function") == Reference(

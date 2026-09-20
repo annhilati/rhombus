@@ -91,11 +91,15 @@ def acsc(df: AnyDensity) -> Density:
 
 @macro
 def sinh(df: AnyDensity) -> Density:
-    return (e**df - e**(-df)) / 2
+    @implementation(since=113)
+    def sinh():
+        return (e**df - e**(-df)) / 2
 
 @macro
 def cosh(df: AnyDensity) -> Density:
-    return (e**df + e**(-df)) / 2
+    @implementation(since=113)
+    def cosh():
+        return (e**df + e**(-df)) / 2
 
 @macro
 def tanh(df: AnyDensity) -> Density:
@@ -117,8 +121,12 @@ def coth(df: AnyDensity) -> Density:
 
 @macro
 def sech(df: AnyDensity) -> Density:
-    return 2 / (e**df + e**(-df))
+    @implementation(since=113)
+    def sech():
+        return 2 / (e**df + e**(-df))
 
 @macro
 def csch(df: AnyDensity) -> Density:
-    return 2 / (e**df - e**(-df))
+    @implementation(since=113)
+    def csch():
+        return 2 / (e**df - e**(-df))

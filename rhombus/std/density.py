@@ -4,7 +4,7 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Any, Self, Literal, overload
+from typing import Self, Literal, overload
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
@@ -12,7 +12,6 @@ from rhombus.core.node import UnresolvedVersionedNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, uuid_hash
 from rhombus.core.environment import DatapackVersion, datapack_handler, rho, FROM_CONTEXT
-import rhombus.support.vanilla.types as vt
 
 
 # ======// Density Type //========================================================================//
@@ -72,7 +71,8 @@ class Density:
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
         
-        if isinstance(self.AST, vt.Reference) and isinstance(self.AST.definition, vt.cache):
+        import rhombus.support.vanilla.types as vt
+        if isinstance(self.AST, Reference) and isinstance(self.AST.definition, vt.cache):
             default = default.definition
         return Density(Reference(identifier, default))
 
@@ -312,8 +312,6 @@ class Density:
 type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
-
-from rhombus.core.node import UnresolvedVersionedNode
 
 def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersionedNode) -> DensityFunction | UnresolvedVersionedNode:
     """Interprets a QoL argument input and returns a DensityFunction object.

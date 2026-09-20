@@ -201,11 +201,13 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
 
 @macro
 def sqrt(df: AnyDensity) -> Density:
-    return Density(vt.sqrt(df.AST))
+    @implementation(since=111)
+    def sqrt():
+        return Density(vt.sqrt(df.AST))
 
 @macro
 def log(df: AnyDensity, *, base: AnyDensity = e):
-    @implementation
+    @implementation(since=111)
     def log():
         if base == Density(e):
             return vt.log(df.AST)
@@ -379,7 +381,9 @@ def ceil(df: AnyDensity, decimals: int = 0) -> Density:
 @macro
 def truncate(df: AnyDensity, decimals: int = 0) -> Density:
     """Truncates the input to the nearest integer or given decimal. This is equivalent to rounding towards to zero."""
-    return Density(vt.truncate(df.AST, 10**-decimals))
+    @implementation(since=111)
+    def truncate():
+        return Density(vt.truncate(df.AST, 10**-decimals))
 
 
 @macro

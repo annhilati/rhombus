@@ -183,7 +183,7 @@ def shift(argument: Noise) -> Density:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift)
     """
-    return Density(vt.shift(argument.AST))
+    return Density(vt.shift(argument))
 
 
 def shift_a(argument: Noise) -> Density:
@@ -192,7 +192,7 @@ def shift_a(argument: Noise) -> Density:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_a)
     """
-    return Density(vt.shift_a(argument.AST))
+    return Density(vt.shift_a(argument))
 
 
 def shift_b(argument: Noise) -> Density:
@@ -201,7 +201,7 @@ def shift_b(argument: Noise) -> Density:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_b)
     """
-    return Density(vt.shift_b(argument.AST))
+    return Density(vt.shift_b(argument))
 
 
 def end_outer_islands() -> Density:
@@ -213,4 +213,6 @@ def end_outer_islands() -> Density:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands)
     """
-    return Density(vt.end_outer_islands())
+    @implementation(since=113)
+    def end_outer_islands():
+        return Density(vt.end_outer_islands())

@@ -110,11 +110,18 @@ class DensityFunction(RhombusASTNode):
             found_key = None
             if json_key in data:
                 found_key = json_key
-            elif meta and meta.legacy_keys:
-                # If not found, try any legacy keys (allows deserializing old JSON in new environments)
-                for legacy_key in meta.legacy_keys.values():
-                    if legacy_key in data:
-                        found_key = legacy_key
+            else:
+                # If not found, try all other possible keys (allows deserializing JSON from any version)
+                possible_keys = [parameter]
+                if meta and meta.legacy_keys:
+                    possible_keys.extend(meta.legacy_keys.values())
+                for pk in possible_keys:
+                    if pk in data:
+                        found_key = pk
+                        warnings.warn(
+                            f"Expected key '{json_key}' not found in JSON for '{cls.id}'. "
+                            f"Falling back to alternative key '{pk}'."
+                        )
                         break
             
             if found_key:

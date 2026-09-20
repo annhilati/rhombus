@@ -123,16 +123,21 @@ def _create_argument_resolver(func: Callable) -> Callable:
     return wrapper
 
 
-_macro_registrations: list[tuple[Any, Callable]] = []
+_macro_registrations: list[tuple[Any, Any, Callable]] = []
 
 
-def implementation(func: Callable | None = None, *, until: DatapackVersion | VersionString | VersionTuple | None = None):
+def implementation(
+    func: Callable | None = None, 
+    *, 
+    since: DatapackVersion | VersionString | VersionTuple | None = None,
+    until: DatapackVersion | VersionString | VersionTuple | None = None
+):
     """Decorator for inner functions inside a macro to register them as implementations.
     If 'until' is None, it acts as the default fallback implementation.
     """
 
     def decorator(f: Callable):
-        _macro_registrations.append((until, f))
+        _macro_registrations.append((since, until, f))
         return f
 
     if func is not None:
@@ -197,24 +202,18 @@ class MacroDispatcher:
         parsed_impls = []
         default_impl = None
 
-        for until_v, impl_func in impls:
-            if until_v is None:
+        for since_v, until_v, impl_func in impls:
+            p_since = _parse_version_specifier(since_v, default_namespace=self.default_ns) if since_v is not None else None
+            p_until = _parse_version_specifier(until_v, default_namespace=self.default_ns) if until_v is not None else None
+            
+            if p_since is None and p_until is None:
                 if default_impl is not None:
                     raise ValueError(
-                        f"Multiple default implementations (without 'until') found in macro '{self.__name__}'"
+                        f"Multiple default implementations (without 'since' or 'until') found in macro '{self.__name__}'"
                     )
                 default_impl = impl_func
             else:
-                parsed_impls.append(
-                    (
-                        _parse_version_specifier(until_v, default_namespace=self.default_ns),
-                        impl_func,
-                    )
-                )
-
-        parsed_impls.sort(key=lambda x: x[0])
-
-        target_v = rho.datapack_version
+                parsed_impls.append((p_since, p_until, impl_func))
 
         def _invoke(impl_f: Callable) -> Any:
             sig = inspect.signature(impl_f)
@@ -222,22 +221,35 @@ class MacroDispatcher:
                 return impl_f()
             return _create_argument_resolver(impl_f)(*args, **kwargs)
 
-        if target_v is None:
-            if default_impl is None:
-                raise ValueError(
-                    f"No default implementation found for macro '{self.__name__}' and no target version set."
-                )
-            return _invoke(default_impl)
+        def _check(req_tuple: tuple[str, tuple[int, ...]]) -> bool:
+            ns, req_v = req_tuple
+            current_v = rho.versions.get(ns)
+            if current_v is None:
+                return False
+            
+            length = max(len(current_v), len(req_v))
+            current_padded = tuple(list(current_v) + [0] * (length - len(current_v)))
+            req_padded = tuple(list(req_v) + [0] * (length - len(req_v)))
+            
+            return current_padded >= req_padded
 
-        for until_v, impl_func in parsed_impls:
-            if target_v < until_v:
-                return _invoke(impl_func)
+        valid_impls = []
+        for p_since, p_until, impl_func in parsed_impls:
+            if p_since is not None and not _check(p_since):
+                continue
+            if p_until is not None and _check(p_until):
+                continue
+            valid_impls.append(impl_func)
+            
+        if valid_impls:
+            # If multiple valid implementations match, we use the last defined one
+            return _invoke(valid_impls[-1])
 
         if default_impl is not None:
             return _invoke(default_impl)
 
         raise NotImplementedError(
-            f"No valid implementation found for macro '{self.__name__}' at version {target_v}"
+            f"No valid implementation found for macro '{self.__name__}' at current environment versions."
         )
 
 

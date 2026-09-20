@@ -89,7 +89,13 @@ def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
         flds = dataclasses.fields(o)
     except TypeError:
         raise TypeError(f"must be called with a dataclass type or instance, not: {o}")
-    return {f.name: get_type_hints(o)[f.name] for f in flds if f.init}
+    try:
+        hints = get_type_hints(o)
+        return {f.name: hints[f.name] for f in flds if f.init and f.name in hints}
+    except (NameError, TypeError):
+        import typing, inspect
+        hints = inspect.get_annotations(o if isinstance(o, type) else type(o), eval_str=False)
+        return {f.name: hints.get(f.name, typing.Any) for f in flds if f.init}
 
 
 def check_type(value: Any, annotation: Any) -> bool:
@@ -142,6 +148,12 @@ def check_type(value: Any, annotation: Any) -> bool:
         import enum
         if issubclass(annotation, enum.Enum):
             return isinstance(value, annotation) or value in [e.value for e in annotation]
+            
+        if type(value).__name__ == "UnresolvedVersionedNode":
+            # UnresolvedVersionedNodes are placeholders for any RhombusASTNode subclass.
+            # We skip strict validation since the actual type isn't known until resolution.
+            return True
+            
         return isinstance(value, annotation)
         
     return True

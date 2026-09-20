@@ -36,10 +36,17 @@ class SubParameters(RhombusASTNode):
             found_key = None
             if json_key in data:
                 found_key = json_key
-            elif meta and meta.legacy_keys:
-                for legacy_key in meta.legacy_keys.values():
-                    if legacy_key in data:
-                        found_key = legacy_key
+            else:
+                possible_keys = [parameter]
+                if meta and meta.legacy_keys:
+                    possible_keys.extend(meta.legacy_keys.values())
+                for pk in possible_keys:
+                    if pk in data:
+                        found_key = pk
+                        warnings.warn(
+                            f"Expected key '{json_key}' not found in JSON for '{cls.__name__}'. "
+                            f"Falling back to alternative key '{pk}'."
+                        )
                         break
             
             if found_key:
@@ -69,3 +76,4 @@ class SubParameters(RhombusASTNode):
             result[json_key] = serialize_any_inline(value)
             
         return result
+

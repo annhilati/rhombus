@@ -1,8 +1,8 @@
-name: Request Mod Support
+name: Mod Support Request
 description: Request adding support for content from a mod or request an update to existing mod support.
 labels: ["+ Support Request"]
-projects: []
-assignees: []
+# projects: []
+# assignees: []
 
 title: "[Mod Support]: "
 body:

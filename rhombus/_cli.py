@@ -97,8 +97,9 @@ def preview(
     from rhombus import preview, rho
 
     try:
-        addons = [resolve_object_path(e) for e in addons]
-        rho.require(*addons)
+        addon_objects = [resolve_object_path(e) for e in addons]
+        if addon_objects:
+            rho.require({addon: ... for addon in addon_objects})
     except Exception as e:
         raise typer.BadParameter(e)
 
