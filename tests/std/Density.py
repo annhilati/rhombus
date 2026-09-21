@@ -1,7 +1,7 @@
-from rhombus.runtime import rho
 from rhombus import Density
 from rhombus.support.vanilla import types
-from rhombus.core import environment
+from rhombus.runtime import rho
+
 import beet
 import beet.contrib.worldgen as worldgen
 

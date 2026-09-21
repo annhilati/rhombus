@@ -12,7 +12,7 @@ from . import (
     density,
     macros,
     maps,
-    noise,
+    noise as noises,
     math
 )
 

@@ -1,18 +1,18 @@
 """
 """
 
-__all__ = ["Noise", "noise", "old_blended_noise", "shifted_noise", "shift", "shift_a", "shift_b"]
+__all__ = ["Noise", "noise", "blended_noise", "shifted_noise", "shift", "shift_a", "shift_b"]
 
 from typing import ClassVar, Literal
 
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
-from rhombus.runtime import rho
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
 import rhombus.support.vanilla.legacy_types as lt
+from rhombus.runtime import rho
 
 
 class Noise(DatapackResource):
@@ -147,7 +147,7 @@ def noise(
         return Density(vt.noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
 
 
-def old_blended_noise(
+def blended_noise(
     xz_scale: float,
     y_scale: float,
     xz_factor: float,
@@ -204,10 +204,11 @@ def shift_b(argument: Noise) -> Density:
     return Density(vt.shift_b(argument))
 
 
+@macro
 def end_outer_islands() -> Density:
-    """Returns a value using a
-    [special noise algorithm](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
-    used for the outer end islands. The minimum value is set to `-0.84375`,
+    """Samples a noise using a
+    [special algorithm](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
+    that is used for the outer end islands. The minimum value is set to `-0.84375`,
     the maximum value to `0.5625`.
 
     ---

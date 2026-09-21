@@ -70,7 +70,10 @@ as air.
 
 e = 2.7182818284590452 # 35360287471352662497757247093699959574966
 "Euler's number `e` to 16 decimals."
-
+sqrt2 = 1.4142135623730950 # 48801688724209
+"The square root of 2 to 16 decimals."
+phi = 1.6180339887498948 # 4820458683436563811772030917980576
+"The golden ratio to 16 decimals."
 
 def constant(value: float) -> Density:
     """Declares a constant float value."""

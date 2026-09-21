@@ -5,6 +5,7 @@ __all__ = ["Density", "AnyDensity"]
 
 from dataclasses import dataclass
 from typing import Self, Literal, overload
+
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
@@ -222,7 +223,7 @@ class Density:
         from rhombus.std.math.general import div
         return div(self, other)
 
-    def __rtruediv__(self, other) -> Density:
+    def __rtruediv__(self, other):
         from rhombus.std.math.general import div
         return div(other, self)
 
@@ -242,11 +243,11 @@ class Density:
         from rhombus.std.math import mod
         return mod(other, self)
 
-    def __pow__(self, other) -> Density:
+    def __pow__(self, other):
         from rhombus.std.math import pow
         return pow(self, other)
 
-    def __rpow__(self, other) -> Density:
+    def __rpow__(self, other):
         from rhombus.std.math import pow
         return pow(other, self)
 
@@ -272,12 +273,12 @@ class Density:
     # ======// Logical Magic //===================================================================//
 
     def __eq__(self, other):
-        # ATTENTION: This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime.
+        "**ATTENTION:** This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime."
         from rhombus.std.conditional.fluent import when
         return when(self).equals(other)
 
     def __ne__(self, other):
-        # ATTENTION: This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime.
+        "**ATTENTION:** This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime."
         from rhombus.std.conditional.fluent import when
         return when(self).unequals(other)
 
@@ -338,4 +339,3 @@ def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersione
     raise ValueError(
         f"Cannot resolve object of type {type(v).__name__!r} to a density function"
     )
-

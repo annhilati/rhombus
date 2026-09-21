@@ -957,7 +957,7 @@ overworld_jaggedness = flat_cache(
     )
 )
 
-overworld_base_3d_noise = old_blended_noise(
+overworld_base_3d_noise = blended_noise(
     smear_scale_multiplier=8.0,
     xz_factor=80.0,
     xz_scale=0.25,

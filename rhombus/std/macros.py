@@ -20,9 +20,10 @@ import sys
 
 from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
-from rhombus.runtime import rho
 from rhombus.core.utils import Annotation
 from rhombus.std.density import Density, AnyDensity
+from rhombus.std.conditional.ast_parser import transform_ast
+from rhombus.runtime import rho
 
 
 def _create_argument_resolver(func: Callable) -> Callable:
@@ -148,7 +149,6 @@ def implementation(
 
 class MacroDispatcher:
     def __init__(self, func: Callable, repr_func: Callable | None = None):
-        from rhombus.std.conditional.ast_parser import transform_ast
         func = transform_ast(func)
         self.func = _create_argument_resolver(func)
         self.repr_func = repr_func

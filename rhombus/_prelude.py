@@ -27,7 +27,7 @@ from rhombus.std.math import (
 from rhombus.std.noise import (
     Noise, 
     noise,
-    old_blended_noise,
+    blended_noise,
 )
 from rhombus.std.caching import (
     cache,
@@ -37,15 +37,7 @@ from rhombus.std.conditional import when
 from rhombus.std.coords import x, y, z, gradient
 from rhombus.std.maps import extrude_heightmap
 
-# Standard Library Modules
-from rhombus.std import (
-    math,
-    coords,
-    caching,
-    blending, 
-    maps, 
-    noise as noises
-)
+# Extended Library Modules
 from rhombus.std.math import splines
 from rhombus.support import *
 

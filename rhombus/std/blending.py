@@ -8,7 +8,7 @@ import rhombus.support.vanilla.types as vt
 
 def beardifier() -> Density:
     """Adds [beards](https://minecraft.wiki/w/Structure_definition) for structures.
-    Its value is added to `final_density` in the noise settings by the game.
+    Its value is already added to `final_density` in the noise settings by the game.
     Adding more instances manually increases the beards' size.
 
     ---
@@ -18,9 +18,11 @@ def beardifier() -> Density:
 
 
 def blend_alpha() -> Density:
-    """Used for smooth transition to chunks generated in old versions.
+    """Gets the alpha (weight) value used for blending old and new chunks.
 
-    Produces a constant value of `1.0`.
+    Returns the blending weight dynamically based on the current position relative to chunks generated in older versions. 
+    The value lies within the range `[0.0, 1.0]` and determines how strongly the terrain should interpolate. 
+    Far away from old chunk borders, this produces a constant value of `1.0`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_alpha)
@@ -30,9 +32,11 @@ def blend_alpha() -> Density:
 
 @macro
 def blend_density(df: AnyDensity) -> Density:
-    """Used for smooth transition to chunks generated in old versions.
+    """Applies terrain blending transformations to an underlying density function.
 
-    Does not affect the density value.
+    Takes a target density function `df` and modifies its output near the borders of chunks generated in older versions.
+    This ensures that terrain features like caves or mountains smoothly transition and stitch together with the old terrain.
+    If the current block is not near an old chunk border, this simply returns the unmodified value of the input density function.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_density)
@@ -41,9 +45,11 @@ def blend_density(df: AnyDensity) -> Density:
 
 
 def blend_offset() -> Density:
-    """Used for smooth transition to chunks generated in old versions.
+    """Gets the height offset used for blending old and new terrain.
 
-    Produces a constant value of `1.0`.
+    Calculates the positional shift necessary to align new terrain generation with the height of bordering chunks from older versions. 
+    This prevents sharp, unnatural cliffs at chunk borders by raising or lowering the terrain appropriately. 
+    Far away from old chunk borders, this produces a constant value of `0.0`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_offset)

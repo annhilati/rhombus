@@ -1,11 +1,13 @@
 __all__ = ["SubParameters"]
 
 
+import warnings
 from typing import Self, ClassVar
 
 from rhombus.core.utils import JSONDict, annotated_fields
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
+from rhombus.runtime import rho
 
 
 class SubParameters(RhombusASTNode):
@@ -22,7 +24,6 @@ class SubParameters(RhombusASTNode):
 
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> Self:
-        from rhombus.runtime import rho
         fields = annotated_fields(cls)
         rhombus_fields = getattr(cls, "__rhombus_fields__", {})
 
@@ -62,7 +63,6 @@ class SubParameters(RhombusASTNode):
         return cls(**kwargs)
 
     def serialize_toplevel(self) -> JSONDict:
-        from rhombus.runtime import rho
         result = {}
         rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
         

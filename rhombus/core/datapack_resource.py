@@ -9,13 +9,13 @@ import beet
 
 from rhombus.core.node import RhombusASTNode
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
-from rhombus.runtime import rho, datapack_handler
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
     uuid_hash,
     annotated_fields,
 )
+from rhombus.runtime import rho, datapack_handler
 
 
 class DatapackResource(RhombusASTNode):
