@@ -1,4 +1,4 @@
-__all__ = ["RhombusASTNode", "field", "FieldMeta", "UnresolvedVersionedNode", "resolve_ast_versioning"]
+__all__ = ["RhombusASTNode", "field", "FieldMeta", "UnresolvedVersionedNode", "walk", "transform", "resolve_ast_versioning"]
 
 
 from typing import Self, Any, ClassVar, Callable, dataclass_transform 
@@ -263,9 +263,9 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
         )
 
     def __eq__(self, other) -> bool:
-        if type(self) is not type(other):
-            return False
-        return self.fields == other.fields
+        if isinstance(other, type(self)):
+            return self.fields == other.fields
+        return False
 
     def __hash__(self) -> int:
         return hash(self.identifier)

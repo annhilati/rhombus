@@ -34,4 +34,3 @@ def _warn(message, category, filename, lineno, file=None, line=None):
     print(f"[bold #dc9650]Rhombus Warning\n╰─×[/] {message}\n")
 
 _warnings.showwarning = _warn
-

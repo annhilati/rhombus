@@ -1,11 +1,10 @@
 from typing import NamedTuple, Any, Callable
 import dataclasses
-import json
 import sys
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.core import DensityFunction, Reference, uuid_hash, RhombusASTNode
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash,walk
 from rhombus.std.density import Density
 from rhombus.std.macros import resolve_ast_versioning
 import rhombus.support.vanilla.types as vt
@@ -28,96 +27,16 @@ def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     Nodes that are equal are grouped.
     """
+    from rhombus.core.node import walk
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
-    node = resolve_ast_versioning(node)
 
-    counts_by_key: dict[str, int] = {}
-    example_node_by_key: dict[str, RhombusASTNode] = {}
+    counts: dict[RhombusASTNode, int] = {}
+    for n in walk(node):
+        counts[n] = counts.get(n, 0) + 1
 
-    node_keys: dict[int, Any] = {}  # id -> canonical form
-
-    def get_canonical(value: Any, seen: set[int] | None = None):
-        """Create a deterministic, fully expanded representation for grouping."""
-        if isinstance(value, (str, int, float, bool)) or value is None:
-            return ("lit", value)
-
-        val_id = id(value)
-        if val_id in node_keys:
-            return node_keys[val_id]
-
-        if seen is None:
-            seen = set()
-
-        if val_id in seen:
-            return ("cycle", val_id)
-
-        new_seen = seen | {val_id}
-
-        if isinstance(value, RhombusASTNode):
-            res = (
-                type(value).__name__,
-                tuple(
-                    (fname, get_canonical(fval, new_seen))
-                    for fname, fval in value.fields.items()
-                ),
-            )
-        elif isinstance(value, dict):
-            res = (
-                "dict",
-                tuple(
-                    sorted(
-                        (get_canonical(k, new_seen), get_canonical(v, new_seen))
-                        for k, v in value.items()
-                    )
-                ),
-            )
-        elif isinstance(value, (list, tuple, set)):
-            res = ("seq", tuple(get_canonical(v, new_seen) for v in value))
-        else:
-            res = ("other", repr(value))
-
-        node_keys[val_id] = res
-        return res
-
-    def visit(value: Any, path_seen: set[int]) -> None:
-        val_id = id(value)
-        if val_id in path_seen:
-            return
-
-        new_path = path_seen | {val_id}
-
-        # Visit children first (post-order traversal).
-        # This ensures get_canonical only needs 1 level of recursion for already visited children!
-        if isinstance(value, RhombusASTNode):
-            for child in value.fields.values():
-                visit(child, new_path)
-
-            form = get_canonical(value)
-            k = json.dumps(
-                form, sort_keys=True, ensure_ascii=True, separators=(",", ":")
-            )
-            counts_by_key[k] = counts_by_key.get(k, 0) + 1
-            example_node_by_key.setdefault(k, value)
-
-        elif isinstance(value, dict):
-            for k, v in value.items():
-                visit(k, new_path)
-                visit(v, new_path)
-
-        elif isinstance(value, (list, tuple, set)):
-            for item in value:
-                visit(item, new_path)
-
-    visit(node, set())
-
-    # convert back to mapping node -> count using one representative node per key
-    result: dict[RhombusASTNode, int] = {}
-    for k, cnt in counts_by_key.items():
-        result[example_node_by_key[k]] = cnt
-
-    return result
+    return counts
 
 
 def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
@@ -188,8 +107,8 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
             if isinstance(value, vt.cache):
                 we_are_in_cached = True
-            for node in value.fields.values():
-                visit(node, we_are_in_cached=we_are_in_cached)
+            for child_node in value.fields.values():
+                visit(child_node, we_are_in_cached=we_are_in_cached)
 
         elif isinstance(value, dict):
             for item in value.keys():
@@ -197,7 +116,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
             for item in value.values():
                 visit(item, we_are_in_cached)
 
-        elif isinstance(value, (list, tuple, set)):
+        elif isinstance(value, (list, tuple, set, frozenset)):
             for item in value:
                 visit(item, we_are_in_cached)
 
@@ -213,72 +132,50 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
 def cache_nodes(
     root: DensityFunction,
-    condition: Callable[[DensityFunction], bool],
-    wrapper: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
+    *conditions: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
+    transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
         "rhombus:partitioned/" + uuid_hash(df.serialize_toplevel()),
         definition=vt.cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
-    root = resolve_ast_versioning(root)
+    occurrences = count_node_values(root)
     replacement_info: dict[DensityFunction, int] = {}
 
     def visit_and_replace_if_needed(
         value: DensityFunction | Any,
         nodes_being_cached: frozenset[DensityFunction] = frozenset(),
     ) -> DensityFunction | Any:
-        # Check if the current value is a DensityFunction node.
         if isinstance(value, DensityFunction):
             is_already_cached_ref = isinstance(value, Reference) and isinstance(
                 value.definition, vt.cache
             )
 
-            # If the node has NOT already been manually wrapped in a cache wrapper,
-            # AND the specified condition is met (e.g., because it occurs frequently or is the target of `cacheall`),
-            # AND it is not already cached by a wrapper higher up in the tree (to prevent double caching):
-            if (
-                not is_already_cached_ref
-                and condition(value)
-                and value not in nodes_being_cached
-            ):
-                # First, recursively optimize the node's inner children
-                # before caching the entire node.
-                new_nodes_being_cached = nodes_being_cached | frozenset([value])
-                optimized_value = dataclasses.replace(
-                    value,
-                    **{
-                        field_name: visit_and_replace_if_needed(
-                            field_value, new_nodes_being_cached
-                        )
-                        for field_name, field_value in value.fields.items()
-                    },
-                )
-
-                replacement_info[value] = replacement_info.get(value, 0) + 1
-
-                # Place the optimized node in the caching wrapper and return it.
-                return wrapper(optimized_value)
-
             new_nodes_being_cached = nodes_being_cached
+            should_cache = (
+                not is_already_cached_ref
+                and value not in nodes_being_cached
+                and all(cond(value, occurrences) for cond in conditions)
+            )
 
-            # If the current node is already a caching reference (e.g., set by the user or in a previous step),
-            # then we add the inner argument to the “blacklist” (nodes_being_cached).
-            # This prevents us from accidentally caching this argument again when traversing down into the children.
-            if is_already_cached_ref and hasattr(value.definition, "input"):
-                new_nodes_being_cached = nodes_being_cached | frozenset(
-                    [value.definition.input]
-                )
+            if should_cache:
+                new_nodes_being_cached = nodes_being_cached | frozenset([value])
+            elif is_already_cached_ref and hasattr(value.definition, "input"):
+                new_nodes_being_cached = nodes_being_cached | frozenset([value.definition.input])
 
-            # The current node is not cached (here). Either the condition did not match,
-            # or it was already cached. Build a new node with recursively optimized fields.
-            return dataclasses.replace(
+            # Recursively optimize children
+            optimized_value = dataclasses.replace(
                 value,
                 **{
-                    field_name: visit_and_replace_if_needed(
-                        field_value, new_nodes_being_cached
-                    )
+                    field_name: visit_and_replace_if_needed(field_value, new_nodes_being_cached)
                     for field_name, field_value in value.fields.items()
                 },
             )
+
+            if should_cache:
+                replacement_info[value] = replacement_info.get(value, 0) + 1
+                return transformer(optimized_value)
+
+            return optimized_value
 
         # If the value is a standard Python collection, we simply traverse the elements recursively.
         elif isinstance(value, dict):
@@ -300,5 +197,3 @@ def cache_nodes(
         return value
 
     return visit_and_replace_if_needed(root), replacement_info
-
-

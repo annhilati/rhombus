@@ -140,10 +140,16 @@ class RhombusEnvironment:
     @overload
     def set_version(self, *, minecraft: VersionString) -> None: ...
 
-    def set_version(self, **kwargs) -> None:
+    def set_version(self, *args, **kwargs) -> None:
         """Sets the datapack version and/or addon versions.
         If a Minecraft version string (e.g. '1.21.4') is provided, it is resolved to a datapack version using Misode's data.
         """
+        if args:
+            raise TypeError(
+                f"set_version() only accepts keyword arguments. Please specify the target, "
+                f"e.g., rho.set_version(datapack={args[0]!r})."
+            )
+            
         datapack_arg = kwargs.pop("datapack", None)
         minecraft_arg = kwargs.pop("minecraft", None)
 

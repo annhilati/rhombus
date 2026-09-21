@@ -3,28 +3,31 @@
 .venv/
 .env
 
-# Indev Testing
-beet.*
-.beet_cache/
 test*
 .test*
 _test*
 
-# pytest
-!tests/
+.beet_cache/
+beet.*
+
+# Test Suite
 .pytest_cache/
-test_pack/
+!tests/
+!tests/**/test_**
 
 # Zensical
 .cache/
 site/
 docs/reference
 
-# Distribution & Packaging
+# Build & Packaging
 build/
-node_modules/
-*.tsbuildinfo
-rhombus/preview/dist/
 **/__pycache__/
 **.egg-info
+
+rhombus/preview/dist/
+
+node_modules/
+*.tsbuildinfo
+
 .ruff_cache/

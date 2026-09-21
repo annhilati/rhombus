@@ -14,7 +14,7 @@ import warnings
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-from rhombus.core.node import RhombusASTNode, field, FieldMeta
+from rhombus.core.node import RhombusASTNode, FieldMeta, field 
 from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 

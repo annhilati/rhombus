@@ -38,7 +38,14 @@ from rhombus.std.coords import x, y, z, gradient
 from rhombus.std.maps import extrude_heightmap
 
 # Standard Library Modules
-from rhombus.std import math, coords, caching, blending, maps, noise as noises
+from rhombus.std import (
+    math,
+    coords,
+    caching,
+    blending, 
+    maps, 
+    noise as noises
+)
 from rhombus.std.math import splines
 from rhombus.support import *
 

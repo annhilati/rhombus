@@ -8,7 +8,7 @@ from rhombus.std.macros import macro, resolve_ast_versioning
 
 import rhombus.support.vanilla.types as vt
 
-from ._implementations.performance import count_node_values, cache_nodes, df_size_info, DensityFunctionSizeInfo
+from ._implementations.performance import cache_nodes, df_size_info, DensityFunctionSizeInfo
 
 
 # NOTE: multiple nested caching functions are no longer auto-inlined. When adding compatability with older versions again, implement it again
@@ -36,43 +36,45 @@ def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) ->
     """
     return Density(vt.interpolated(df.AST, cell_size_xz, cell_size_y))
 
-# TODO: Refractor the infrastructure for caching conditions
-
-def _get_occurance_and_size_condition(
-    max_nodes: int,
-    occurances: dict[RhombusASTNode, int],
-) -> Callable[[DensityFunction], bool]:
-    "Applies if the node exceeds a specified size and occurs multiple times."
-
-    def condition(node: DensityFunction) -> bool:
-        return (
-            occurances.get(node, 0) > 1
-            and df_size_info(node).toplevel_nodes > max_nodes
-        )
-
-    return condition
 
 
-def _get_identity_condition(
-    target_nodes: Iterable[RhombusASTNode],
-) -> Callable[[DensityFunction], bool]:
-    "Applies if the node is one of the specified target nodes."
-    targets = []
-    for n in target_nodes:
-        if isinstance(n, Density):
-            targets.append(n.AST)
-        else:
-            targets.append(n)
+class Conditions:
+    
+    @staticmethod
+    def is_one_of(
+        target_nodes: Iterable[RhombusASTNode],
+    ) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+        """Applies if the node is one of the specified target nodes."""
+        targets = []
+        for n in target_nodes:
+            if isinstance(n, Density):
+                targets.append(n.AST)
+            else:
+                targets.append(n)
 
-    def condition(node: DensityFunction) -> bool:
-        for target in targets:
-            if isinstance(target, type) and isinstance(node, target):
-                return True
-            if node == target:
-                return True
-        return False
+        def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
+            for target in targets:
+                if isinstance(target, type) and isinstance(node, target):
+                    return True
+                if node == target:
+                    return True
+            return False
 
-    return condition
+        return condition
+    
+    @staticmethod
+    def min_occurrences(count: int) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+        """Applies if the node occurs at least a specified number of times."""
+        def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
+            return occurrences.get(node, 0) >= count
+        return condition
+    
+    @staticmethod
+    def min_size(nodes_count: int) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+        """Applies if the node has at least a specified number of toplevel nodes."""
+        def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
+            return df_size_info(node).toplevel_nodes >= nodes_count
+        return condition
 
 
 @macro
@@ -89,16 +91,16 @@ def recurrence_cache(
         caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
         max_nodes (int): Number of nodes a recurring function part must have to get partitioned.
     """
-    wrapper = lambda value: Reference(
-        "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
-        definition=caching_function(value),
+    transformer = lambda dfnode: Reference(
+        "rhombus:partitioned/" + uuid_hash(dfnode.serialize_toplevel()),
+        definition=caching_function(dfnode),
     )
-    occurances = count_node_values(df.AST)
     return Density(
         cache_nodes(
-            df.AST,
-            condition=_get_occurance_and_size_condition(max_nodes, occurances),
-            wrapper=wrapper,
+            resolve_ast_versioning(df.AST),
+            Conditions.min_occurrences(2),
+            Conditions.min_size(max_nodes + 1),
+            transformer=transformer,
         )[0]
     )
 
@@ -117,18 +119,21 @@ def specified_cache(
         *functions (Density): Subfunctions to cache. (Values not of type `Density` are ignored)
         caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
     """
-    wrapper = lambda node: Reference(
+    transformer = lambda node: Reference(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
         definition=_unify(caching_function(node)),
     )
-    resolved_ast = resolve_ast_versioning(df.AST)
-    occurances = count_node_values(resolved_ast)
-    identity_cond = _get_identity_condition([resolve_ast_versioning(n.AST) for n in functions if isinstance(n, Density)])
-    condition = lambda node: (
-        identity_cond(node) and occurances.get(node, 0) > 1
+    
+    identity_cond = Conditions.is_one_of([n.AST for n in functions if isinstance(n, Density)])
+    
+    return Density(
+        cache_nodes(
+            df.AST,
+            identity_cond,
+            Conditions.min_occurrences(2),
+            transformer=transformer
+        )[0]
     )
-    # Cache if node is one of specified and it occurs multiple times
-    return Density(cache_nodes(resolved_ast, condition=condition, wrapper=wrapper)[0])
 
 
 def get_size(df: Density) -> DensityFunctionSizeInfo:
