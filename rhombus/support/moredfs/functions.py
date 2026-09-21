@@ -1,5 +1,4 @@
 __all__ = [
-    "when_finite",
     "acos",
     "asin",
     "atan",
@@ -25,6 +24,7 @@ __all__ = [
     "mod",
     "negate",
     "or_else",
+    "fallback",
     "polar_coords",
     "power",
     "profiler",
@@ -63,7 +63,6 @@ from typing import Literal
 
 from PIL import Image
 from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
-from rhombus.core import DensityFunction
 from . import types
 from .sub_parameters import (
     DistanceMetric,
@@ -411,26 +410,32 @@ def or_else(argument: AnyDensity, fallback: AnyDensity):
     "Returns `argument` unless it's non-finite (NaN/Inf), then returns `fallback`."
     return Density(types.or_else(argument.AST, fallback.AST))
 
+class or_else_fallback_handler:
+    def __init__(self, fallback_value: AnyDensity):
+        self.fallback_value = fallback_value
+        
+    def wrap_density(self, node: AnyDensity) -> Density:
+        return or_else(node, self.fallback_value)
 
-class when_finite:
-    """Opens a new `or_else` fluent interface.
+    def __enter__(self):
+        raise RuntimeError("Syntactic context managers like 'fallback' can only be used inside functions decorated with '@macro'")
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
-    ## Continuation
-
-        **Declare a fallback value**
-            `~.otherwise(AnyDensity)`
+@macro
+def fallback(df: AnyDensity) -> or_else_fallback_handler:
+    """Opens a new `or_else` context block.
+    All modified variables and return values within the block will be automatically
+    wrapped with `or_else(..., df)`.
+    
+    Usage:
+    ```
+    with fallback(0):
+        x = x / y
+    ```
     """
-
-    _subject: DensityFunction
-
-    @macro
-    def __init__(self, subject: AnyDensity):
-        self._subject = subject.AST
-
-    @macro
-    def otherwise(self, value: AnyDensity) -> Density:
-        return or_else(self._subject, value.AST)
-
+    return or_else_fallback_handler(df)
 
 @macro
 def resolver(argument: AnyDensity):
