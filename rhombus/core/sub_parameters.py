@@ -51,8 +51,12 @@ class SubParameters(RhombusASTNode):
             
             if found_key:
                 val = deserialize_any_inline(data[found_key], tp)
-                if meta and meta.validate and val is not None and not meta.validate(val):
-                    raise ValueError(f"Validation failed for field '{parameter}' of '{cls.__name__}'")
+                if meta and meta.validate and val is not None:
+                    import inspect
+                    sig = inspect.signature(meta.validate)
+                    if len(sig.parameters) == 1:
+                        if not meta.validate(val):
+                            warnings.warn(f"Validation failed for field '{parameter}' of '{cls.__name__}'")
                 kwargs[parameter] = val
                 
         return cls(**kwargs)
@@ -70,8 +74,15 @@ class SubParameters(RhombusASTNode):
             json_key = parameter
             if meta:
                 json_key = meta.get_appropriate_key(rho, default=parameter)
-                if meta.validate and not meta.validate(value):
-                    raise ValueError(f"Validation failed for field '{parameter}' of '{self.__class__.__name__}'")
+                if meta.validate:
+                    import inspect
+                    sig = inspect.signature(meta.validate)
+                    if len(sig.parameters) == 1:
+                        if not meta.validate(value):
+                            warnings.warn(f"Validation failed for field '{parameter}' of '{self.__class__.__name__}'")
+                    elif len(sig.parameters) == 2:
+                        if not meta.validate(value, self):
+                            warnings.warn(f"Validation failed for field '{parameter}' of '{self.__class__.__name__}'")
             
             result[json_key] = serialize_any_inline(value)
             

@@ -147,13 +147,14 @@ class NodeDataclassTransformer(type):
                         
                         if val is not None and meta.validate is not None:
                             import inspect
+                            import warnings
                             sig = inspect.signature(meta.validate)
                             if len(sig.parameters) == 1:
                                 if not meta.validate(val):
-                                    raise ValueError(f"Validation failed for field '{field.name}' with value {val!r}")
+                                    warnings.warn(f"Validation failed for field '{field.name}' with value {val!r}")
                             elif len(sig.parameters) == 2:
                                 if not meta.validate(val, self):
-                                    raise ValueError(f"Validation failed for field '{field.name}' with value {val!r} against node {self!r}")
+                                    warnings.warn(f"Validation failed for field '{field.name}' with value {val!r} against node {self!r}")
 
                     # Type checking
                     from rhombus.core.utils import check_type, annotated_fields

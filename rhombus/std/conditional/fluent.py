@@ -1,24 +1,3 @@
-"""
-This module provides a fluent interface for realising conditionality by
-constructing nested expressions with `range_choice` and `interval_select`.
-
-**IMPORTANT** If the conditionality produces a density function with recurring parts,
-they will automatically be cached.
-
-The syntax goes like this:
-```
-from rhombus.std.conditional import *
-
-out = (
-    when(input).equals(1.0)
-        .then(10.0)
-    .elsewhen(it).equals(2.0)
-        .then(20.0)
-    .otherwise(0.0)
-)
-```
-"""
-
 from __future__ import annotations
 
 __all__ = ["when", "NOT", "ALL", "ANY", "it"]
@@ -29,82 +8,13 @@ from enum import Enum
 
 from rhombus.core.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
 from rhombus.std import caching
 import rhombus.support.vanilla.types as vt
 
-EPSILON = 1e-16
+from .macros import range_choice, interval_select
+
+EPSILON = 1e-7
 OMEGA = vt.literal_number_limit
-
-
-# ======// Vanilla Coverage //====================================================================//
-
-
-# IDEA: Move this
-@macro
-def range_choice(
-    input: AnyDensity,
-    min_inclusive: float,
-    max_exclusive: float,
-    when_in_range: AnyDensity,
-    when_out_of_range: AnyDensity,
-) -> Density:
-    """Computes the input value, and depending on that result returns one of two other density functions.
-    
-    `range_choice` can be used like if-else-statements, but to build large conditionality trees use `~.when` instead.    
-    ```
-    if input >= min_inclucive:
-        if input < max_exclusive:
-            return when_in_range
-    return when_out_of_range
-    ```
-
-    ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
-    """
-    @implementation()
-    def _impl():
-        return vt.range_choice(
-            input.AST,
-            min_inclusive,
-            max_exclusive,
-            when_in_range.AST,
-            when_out_of_range.AST,
-        )
-
-
-@macro
-def interval_select(
-    input: AnyDensity, thresholds: list[float], functions: list[AnyDensity]
-) -> Density:
-    """Selects between a number of density functions based on an input density function and a set of threshold values.
-
-    Parameters:
-        input (density function): Density Function, to be compared with given thresholds.
-        thresholds (list[float]):  Threshold values to compare input with. Must be non-empty.
-            If `input < thresholds[i]`, `functions[i]` will be selected. If the input is greater than the last threshold value, the last function will be selected.
-            Must be one fewer thresholds than functions.
-        functions (list[density function]): List of density functions to be selected from. Must be one more element in functions than in thresholds.
-
-    ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interval_select)
-    """
-    @implementation(until=104.0)
-    def _legacy():
-        result = functions[-1].AST
-        for i in range(len(thresholds) - 1, -1, -1):
-            result = vt.range_choice(input.AST, -OMEGA, thresholds[i], functions[i].AST, result)
-        return result
-
-    @implementation()
-    def _impl():
-        return vt.interval_select(
-            input.AST, thresholds, [function.AST for function in functions]
-        )
-
-
-# ======// Conditionality Fluent Interface //=====================================================//
-
 
 class Itself:
     _instance = None
@@ -155,9 +65,8 @@ class Condition:
 
     def __bool__(self) -> Never:
         raise TypeError(
-            "Condition object cannot be used as bool. "
-            "If you tried using Conditions with the 'and', 'or' or 'not' operator, "
-            "use the bitwise '&', '|' or '~' operator instead"
+            "Conditions can not be evaluated as a normal boolean value on the top level of a file. "
+            "To use if/else syntax directly, make sure to only use it inside a function decorated with @macro."
         )
 
     @property
@@ -485,42 +394,19 @@ class Causality:
     _cases: list[tuple[Condition, DensityFunction]] = field(default_factory=list)
     _default_input: DensityFunction | None = None
 
-    def __post_init__(self):
-        self.elsewhen = type(self).elsewhen()._bind(self)
-
-    class elsewhen(_ConditionBuilder[OtherPendingCondition]):
+    def elsewhen(self, subject: AnyDensity | Itself = it) -> "_ConditionBuilder[OtherPendingCondition]":
         """Specifies a fallback option for the conditionality if none of the
         preceding conditions apply. When called without arguments, the input
         of the initial condition is used.
         """
+        if subject is it:
+            if self._default_input is None:
+                raise TypeError(
+                    "elsewhen(it) is undefined because the initial condition was not composed of a condition with input"
+                )
+            subject = self._default_input
 
-        _chain: Causality
-        _subject: DensityFunction | None = None
-
-        def __init__(self, subject: AnyDensity | Itself = it):
-            self._subject = None
-            self._pending_subject = subject
-
-        def _bind(self, chain: Causality):
-            self._chain = chain
-
-            subject = self._pending_subject
-            if subject is it:
-                if self._chain._default_input is None:
-                    raise TypeError(
-                        "elsewhen(it) is undefined because the initial condition was not composed of a condition with input"
-                    )
-                subject = self._chain._default_input
-
-            self._subject = Density(subject).AST
-            del self._pending_subject
-            return self
-
-        def __call__(self, subject: AnyDensity | Itself = it):
-            return type(self)(subject)._bind(self._chain)
-
-        def _wrap(self, cond: Condition) -> OtherPendingCondition:
-            return OtherPendingCondition(self._chain, cond)
+        return _ElseWhenBuilder(self, Density(subject).AST)
 
     def otherwise(
         self, value: AnyDensity | Itself = it
@@ -543,17 +429,26 @@ class Causality:
         return caching.specified_cache(Density(result), default_input)
 
 
+class _ElseWhenBuilder(_ConditionBuilder[OtherPendingCondition]):
+    def __init__(self, chain: Causality, subject: DensityFunction):
+        self._chain = chain
+        self._subject = subject
+
+    def _wrap(self, cond: Condition) -> OtherPendingCondition:
+        return OtherPendingCondition(self._chain, cond)
+
+
 # ======// Condition Fabric //====================================================================//
 
 
-class when(_ConditionBuilder[Condition]):
-    """Opens a new conditionality fluent interface.
-    """
-
-    _subject: DensityFunction
-
-    def __init__(self, subject: AnyDensity):
-        self._subject = Density(subject).AST
+class _WhenBuilder(_ConditionBuilder[Condition]):
+    def __init__(self, subject: DensityFunction):
+        self._subject = subject
 
     def _wrap(self, cond: Condition) -> Condition:
         return cond
+
+
+def when(subject: AnyDensity) -> _ConditionBuilder[Condition]:
+    """Opens a new conditionality fluent interface."""
+    return _WhenBuilder(Density(subject).AST)

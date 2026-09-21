@@ -131,7 +131,7 @@ class interpolated(MappedDensityFunction):
 class interval_select(DensityFunction, versions=(104, ...)):
     id: ClassVar[str] = "minecraft:interval_select"
     input: DensityFunction
-    thresholds: list[float] = field(validate=lambda x: len(x) > 1)
+    thresholds: list[float] = field(validate=lambda x: len(x) > 0)
     functions: list[DensityFunction] = field(validate=lambda x, df: len(x) == len(df.thresholds) + 1)
 
 

@@ -3,7 +3,7 @@ __all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 from typing import Callable, Iterable
 
 from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash
-from rhombus.std.density import Density, AnyDensity, _unify
+from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, resolve_ast_versioning
 
 import rhombus.support.vanilla.types as vt
@@ -63,10 +63,10 @@ class Conditions:
         return condition
     
     @staticmethod
-    def min_occurrences(count: int) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    def occurrences_satisfy(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
         """Applies if the node occurs at least a specified number of times."""
         def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
-            return occurrences.get(node, 0) >= count
+            return validator(occurrences.get(node, 0))
         return condition
     
     @staticmethod
@@ -89,7 +89,7 @@ def recurrence_cache(
     
     Parameters:
         caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
-        max_nodes (int): Number of nodes a recurring function part must have to get partitioned.
+        max_nodes (int): Number of nodes a recurring function part must surpass to get partitioned.
     """
     transformer = lambda dfnode: Reference(
         "rhombus:partitioned/" + uuid_hash(dfnode.serialize_toplevel()),
@@ -98,7 +98,7 @@ def recurrence_cache(
     return Density(
         cache_nodes(
             resolve_ast_versioning(df.AST),
-            Conditions.min_occurrences(2),
+            Conditions.occurrences_satisfy(lambda n: n > 1),
             Conditions.min_size(max_nodes + 1),
             transformer=transformer,
         )[0]
@@ -109,7 +109,7 @@ def recurrence_cache(
 def specified_cache(
     df: AnyDensity,
     *functions: Density,
-    caching_function: DensityFunction = vt.cache,
+    caching_function: type[DensityFunction] = vt.cache,
 ) -> Density:
     """Applies cahing to specific parts of a density function. All subfunctions
     that are equal to a node specified in `functions` and occur multiple times
@@ -121,16 +121,14 @@ def specified_cache(
     """
     transformer = lambda node: Reference(
         "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
-        definition=_unify(caching_function(node)),
+        definition=Density(caching_function(node)).AST,
     )
-    
-    identity_cond = Conditions.is_one_of([n.AST for n in functions if isinstance(n, Density)])
-    
+        
     return Density(
         cache_nodes(
             df.AST,
-            identity_cond,
-            Conditions.min_occurrences(2),
+            Conditions.is_one_of([n.AST for n in functions if isinstance(n, Density)]),
+            Conditions.occurrences_satisfy(lambda n: n > 1),
             transformer=transformer
         )[0]
     )

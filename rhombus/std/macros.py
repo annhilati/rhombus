@@ -148,6 +148,8 @@ def implementation(
 
 class MacroDispatcher:
     def __init__(self, func: Callable, repr_func: Callable | None = None):
+        from rhombus.std.conditional.ast_parser import transform_ast
+        func = transform_ast(func)
         self.func = _create_argument_resolver(func)
         self.repr_func = repr_func
 
@@ -254,10 +256,14 @@ class MacroDispatcher:
         )
 
 
+from typing import ParamSpec, TypeVar
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
 @overload
-def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
+def macro(func: Callable[_P, _R]) -> Callable[_P, _R]: ...
 @overload
-def macro[**P, R](*, repr: Callable[["UnresolvedVersionedNode"], str] | None = None) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+def macro(*, repr: Callable[["UnresolvedVersionedNode"], str] | None = None) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]: ...
 def macro(
     func: Callable | None = None,
     *,

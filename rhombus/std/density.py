@@ -272,40 +272,41 @@ class Density:
     # ======// Logical Magic //===================================================================//
 
     def __eq__(self, other):
+        # ATTENTION: This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime.
+        from rhombus.std.conditional.fluent import when
+        return when(self).equals(other)
+
+    def __ne__(self, other):
+        # ATTENTION: This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime.
+        from rhombus.std.conditional.fluent import when
+        return when(self).unequals(other)
+
+    def is_identical(self, other) -> bool:
+        """Returns True if the AST of this Density is identical to the AST of the other Density."""
         if not isinstance(other, Density):
             return False
         return self.AST == other.AST
 
-    def __ne__(self, other):
-        if not isinstance(other, Density):
-            return False
-        return self.AST != other.AST
-
-    # IDEA: Allow building Conditions here -> when needs to become a function to allow conditions and subjects
     def __gt__(self, other):
-        raise NotImplementedError(
-            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
-        )
+        from rhombus.std.conditional.fluent import when
+        return when(self).greater(other)
 
     def __lt__(self, other):
-        raise NotImplementedError(
-            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
-        )
+        from rhombus.std.conditional.fluent import when
+        return when(self).less(other)
 
     def __ge__(self, other):
-        raise NotImplementedError(
-            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
-        )
+        from rhombus.std.conditional.fluent import when
+        return when(self).atleast(other)
 
     def __le__(self, other):
-        raise NotImplementedError(
-            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
-        )
+        from rhombus.std.conditional.fluent import when
+        return when(self).atmost(other)
 
-    def __bool__(self):
-        raise NotImplementedError(
-            "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
-        )
+    # def __bool__(self):
+    #     raise NotImplementedError(
+    #         "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
+    #     )
 
 
 # ======// AnyDensity //==========================================================================//
@@ -335,6 +336,6 @@ def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersione
         return Reference(v)
 
     raise ValueError(
-        f"Cannot resolve object of type {type(v).__name__!r} to a density function AST"
+        f"Cannot resolve object of type {type(v).__name__!r} to a density function"
     )
 
