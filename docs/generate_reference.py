@@ -115,7 +115,7 @@ def render_docstring(docstring: Docstring) -> str:
                     return f"!!! {keyword}\n    {indented}"
 
                 out = re.sub(
-                    r"^\*\*(?P<keyword>[A-Za-z]+):\*\*(?P<content>.*?)(?=\n\n|\Z)",
+                    r"^\*\*(?P<keyword>[A-Za-z]+):\*\*(?P<content>.*?)(?=^\*\*[A-Za-z]+:\*\*|\Z)",
                     admonition_repl,
                     out,
                     flags=re.DOTALL | re.MULTILINE,
@@ -239,29 +239,29 @@ def render_function(func: Function) -> str:
 
     sig_block = format_python_code("\n".join(signatures))
 
-    return dedent(f"""
-        ### {escape_markdown(func.name)}
+    return f"""
+### {escape_markdown(func.name)}
 
-        ```python
-        {sig_block}
-        ```
+```python
+{sig_block}
+```
 
-        {render_docstring(func.docstring)}
-    """)
+{render_docstring(func.docstring)}
+    """
 
 
 def render_property(attr: Attribute) -> str:
     annotation = f" -> {attr.annotation}" if attr.annotation else ""
-    return dedent(f"""
-        ### {escape_markdown(attr.name)}
+    return f"""
+### {escape_markdown(attr.name)}
 
-        ```python
-        @property
-        def {attr.name}(self){annotation}: ...
-        ```
+```python
+@property
+def {attr.name}(self){annotation}: ...
+```
 
-        {render_docstring(attr.docstring)}
-    """)
+{render_docstring(attr.docstring)}
+    """
 
 
 def render_constant(attr: Attribute) -> str:
@@ -276,27 +276,27 @@ def render_constant(attr: Attribute) -> str:
 
     sig = format_python_code("\n".join(parts))
     
-    return dedent(f"""
-        ### {escape_markdown(attr.name)}
+    return f"""
+### {escape_markdown(attr.name)}
 
-        ```python
-        {sig}
-        ```
+```python
+{sig}
+```
 
-        {render_docstring(attr.docstring)}
-    """)
+{render_docstring(attr.docstring)}
+    """
 
 
 def render_typealias(obj: TypeAlias) -> str:
-    return dedent(f"""
-        ### {escape_markdown(obj.name)}
+    return f"""
+### {escape_markdown(obj.name)}
 
-        ```python
-        type {obj.name} = {obj.value}
-        ```
+```python
+type {obj.name} = {obj.value}
+```
 
-        {render_docstring(obj.docstring)}
-    """)
+{render_docstring(obj.docstring)}
+    """
 
 
 def render_class_members(obj: Class) -> str:
@@ -348,27 +348,27 @@ def render_class_members(obj: Class) -> str:
     if not (constructors or constants or properties or methods or static_methods):
         return ""
 
-    return dedent(f"""
-        {"## Constructors" if constructors else ""}
-        
-        {"\n\n---\n".join([render_function(f) for f in constructors])}
+    return f"""
+{"## Constructors" if constructors else ""}
 
-        {"\n---\n## Constants" if constants else ""}
-        
-        {"\n\n---\n".join([render_constant(c) for c in constants])}
+{"\n\n---\n".join([render_function(f) for f in constructors])}
 
-        {"\n---\n## Properties" if properties else ""}
-        
-        {"\n\n---\n".join([render_property(p) for p in properties])}
+{"\n---\n## Constants" if constants else ""}
 
-        {"\n---\n## Methods" if methods else ""}
-        
-        {"\n\n---\n".join([render_function(f) for f in methods])}
+{"\n\n---\n".join([render_constant(c) for c in constants])}
 
-        {"\n---\n## Static & Class Methods" if static_methods else ""}
-        
-        {"\n\n---\n".join([render_function(f) for f in static_methods])}
-    """)
+{"\n---\n## Properties" if properties else ""}
+
+{"\n\n---\n".join([render_property(p) for p in properties])}
+
+{"\n---\n## Methods" if methods else ""}
+
+{"\n\n---\n".join([render_function(f) for f in methods])}
+
+{"\n---\n## Static & Class Methods" if static_methods else ""}
+
+{"\n\n---\n".join([render_function(f) for f in static_methods])}
+    """
 
 
 def render_module_functions(obj: Module) -> str:
@@ -384,11 +384,11 @@ def render_module_functions(obj: Module) -> str:
     if not regular_functions:
         return ""
 
-    return dedent(f"""
-        ## Functions
-        
-        {"\n\n---\n".join([render_function(f) for f in regular_functions])}
-    """)
+    return f"""
+## Functions
+
+{"\n\n---\n".join([render_function(f) for f in regular_functions])}
+    """
 
 
 def format_class_signature(obj: Class) -> str:
@@ -482,35 +482,34 @@ def render_module_or_class(
             line_suffix = f"#L{obj.lineno}-L{obj.endlineno}"
         source_url = f"{base_repo_url}/{rel_path_str}{line_suffix}"
 
-    root = dedent(f"""
-        ---
-        title: {obj.name}
-        ---
+    root = f"""---
+title: {obj.name}
+---
 
-        <h6>{obj_type_name} <code>{obj.path}</code> • <a href="{source_url}">View Source</a> {'• <a href="..">Go back</a>' if obj.parent else ""}</h6>
-        {"# " + escape_markdown(obj.name) if not obj.docstring or (not obj.docstring.value.startswith("# ") and "\n# " not in obj.docstring.value) else ""}
+<h6>{obj_type_name} <code>{obj.path}</code> • <a href="{source_url}">View Source</a> {'• <a href="..">Go back</a>' if obj.parent else ""}</h6>
+{"# " + escape_markdown(obj.name) if not obj.docstring or (not obj.docstring.value.startswith("# ") and "\n# " not in obj.docstring.value) else ""}
 
-        {class_signature}
-        {render_docstring(obj.docstring)}
+{class_signature}
+{render_docstring(obj.docstring)}
 
-        {"## Modules" if submodules else ""}
+{"## Modules" if submodules else ""}
 
-        {"\n".join([f"- [`{module.name}`]({module.name})" for module in submodules])}
+{"\n".join([f"- [`{module.name}`]({module.name})" for module in submodules])}
 
-        {"## Classes" if classes else ""}
+{"## Classes" if classes else ""}
 
-        {"\n".join([f"- [`{c.name}`]({c.name})" for c in classes])}
+{"\n".join([f"- [`{c.name}`]({c.name})" for c in classes])}
 
-        {"## Types" if typealiases else ""}
-        
-        {"\n\n".join([render_typealias(t) for t in typealiases])}
-        
-        {"## Constants" if constants else ""}
-        
-        {"\n\n".join([render_constant(c) for c in constants])}
-        
-        {functions_block}
-    """)
+{"## Types" if typealiases else ""}
+
+{"\n\n".join([render_typealias(t) for t in typealiases])}
+
+{"## Constants" if constants else ""}
+
+{"\n\n".join([render_constant(c) for c in constants])}
+
+{functions_block}
+"""
 
     for m in submodules:
         files.update(render_module_or_class(m, parent_path / obj.name))

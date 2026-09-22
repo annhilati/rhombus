@@ -113,7 +113,7 @@ class gradient(DensityFunction, versions=(113, ...)):
     axis: Literal["x", "y", "z"]
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
     from_coordinate: int
-    to_coordinate: int = field(validate=lambda x, df: x == df.from_coordinate)
+    to_coordinate: int = field(validate=lambda x, df: x != df.from_coordinate)
     from_value: float
     to_value: float
 

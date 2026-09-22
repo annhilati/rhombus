@@ -87,7 +87,7 @@ def distance_to_point(
         "euclidean", "euclidean_squared", "manhattan", "chebyshev"
     ] = "euclidean",
 ):
-    """Returns the distance from the current evaluation context to the specified 3D point.
+    """Returns the distance between the current coordinates and given point coordinates.
 
     Parameters:
         point (tuple[int, int, int]): The absolute (X, Y, Z) coordinates of the target point.
@@ -108,7 +108,8 @@ def distance_to_point(
 def find_top_surface(
     density: AnyDensity, start: AnyDensity = 320, stop: int = -64, step_size: int = 1
 ) -> Density:
-    """Returns the topmost Y-coordinate where the given `density` evaluates to a value greater than `0`.
+    """Returns the topmost Y-coordinate in the column with the current X and Z-coordinates
+    where the given `density` evaluates to a value greater than `0`.
 
     The search starts at the Y-coordinate evaluated by `start` (rounded down to the nearest
     multiple of `step_size`) and steps downwards by `step_size` until it reaches `stop`.
@@ -151,7 +152,8 @@ def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: O
 # ======// Coordinates //=========================================================================//
 
 
-def x():
+@macro
+def x() -> Density:
     """Returns the X-coordinate of the current block."""
     @implementation(until=113)
     def x():
@@ -166,30 +168,31 @@ def x():
         return caching.cache(
             gradient(
                 "x",
-                "clamp_to_edge",
                 -_coord_limit,
                 _coord_limit,
                 -_coord_limit,
                 _coord_limit,
+                tiling="clamp_to_edge",
             )
         )
 
 
-def y():
+def y() -> Density:
     """Returns the Y-coordinate of the current block."""
     return caching.cache(
         gradient(
             "y",
-            "clamp_to_edge",
             -_coord_limit,
             _coord_limit,
             -_coord_limit,
             _coord_limit,
+            tiling="clamp_to_edge",
         )
     )
 
 
-def z():
+@macro
+def z() -> Density:
     """Returns the Z-coordinate of the current block."""
     @implementation(until=113)
     def z():
@@ -205,11 +208,11 @@ def z():
         return caching.cache(
             gradient(
                 "z",
-                "clamp_to_edge",
                 -_coord_limit,
                 _coord_limit,
                 -_coord_limit,
                 _coord_limit,
+                tiling="clamp_to_edge",
             )
         )
 

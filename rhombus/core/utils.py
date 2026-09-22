@@ -6,7 +6,7 @@ __all__ = [
     "Decorator",
     "Dataclass",
     "DataclassInstance",
-    "uuid_hash",
+    "JSON_hash",
     "fields",
     "annotated_fields",
     "GlobalBinding",
@@ -14,6 +14,8 @@ __all__ = [
 ]
 
 from typing import Callable, Any, get_type_hints
+import typing
+import types
 import hashlib
 import uuid
 import json
@@ -60,12 +62,54 @@ type DataclassInstance = object
 # ======// Data //================================================================================//
 
 
-def uuid_hash(data: JSONDict) -> str:
-    """Creates a UUID string without dashes based of a JSON dictionary."""
+_ADJECTIVES = [
+    "agile", "brave", "calm", "clever", "cool", "crazy", "eager", "epic",
+    "fierce", "fluffy", "flying", "frosty", "golden", "happy", "hidden",
+    "jolly", "lazy", "lucky", "magic", "mighty", "mystic", "noble", "proud",
+    "quiet", "rapid", "secret", "silent", "smart", "sneaky", "solid", "swift",
+    "wild", "wise", "wooden", "yellow", "ancient", "angry", "awesome", "bold",
+    "bouncy", "bright", "broken", "bumpy", "busy", "careful", "chilly", "chunky",
+    "classic", "clean", "clumsy", "creepy", "crispy", "curious", "cute", "dark",
+    "deadly", "deep", "dizzy", "dry", "dusty", "empty", "evil", "fancy", "fast",
+    "fat", "fierce", "filthy", "fine", "flat", "fresh", "friendly", "funny",
+    "gentle", "giant", "glad", "gloomy", "good", "great", "greedy", "green",
+    "heavy", "holy", "hot", "huge", "hungry", "icy", "itchy", "kind", "large",
+    "light", "little", "lonely", "long", "lost", "loud", "lovely", "mad", "mean"
+]
+
+_NOUNS = [
+    "axolotl", "bee", "cat", "creeper", 
+    "enderman", "fox", "frog", "ghast", "horse",
+    "llama", "panda", "phantom",
+    "piglin", "sheep", "slime", "spider", "squid",
+    "turtle", "warden", "wolf", "zombie", "allay", "armadillo",
+    "bat", "blaze", "breeze", "camel", "chicken", "cod", "cow", "dolphin",
+    "donkey", "drowned", "evoker", "glowsquid", "goat",
+    "hoglin", "husk", "illusioner", "magmacube", "mooshroom",
+    "mule", "ocelot", "parrot", "pig", "pillager", "polarbear", "pufferfish",
+    "rabbit", "ravager", "salmon", "shulker", "silverfish", "skeleton",
+    "sniffer", "snowgolem", "stray", "strider", "tadpole", "vex",
+    "villager", "vindicator", "witch", "wither", "zoglin"
+]
+
+def JSON_hash(data: JSONDict) -> str:
+    """Creates a UUID-string without dashes based of a JSON dictionary.
+    
+    When `human_readable_names` is `True` in the active Rhombus environment,
+    a more memorable word group is returned.
+    """
     encoded_str = json.dumps(
         data, sort_keys=True, ensure_ascii=True, separators=(",", ":")
     ).encode("utf-8")
     hash_digest = hashlib.sha256(encoded_str).digest()
+    
+    from rhombus.runtime import rho
+    if rho.human_readable_names:
+        adj_idx = int.from_bytes(hash_digest[0:4], "little") % len(_ADJECTIVES)
+        noun_idx = int.from_bytes(hash_digest[4:8], "little") % len(_NOUNS)
+        num = int.from_bytes(hash_digest[8:12], "little") % 10000
+        return f"{_ADJECTIVES[adj_idx]}_{_NOUNS[noun_idx]}_{num:04d}"
+        
     return str(uuid.UUID(bytes=hash_digest[:16])).replace("-", "")
 
 
@@ -98,9 +142,7 @@ def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
         return {f.name: hints.get(f.name, typing.Any) for f in flds if f.init}
 
 
-def check_type(value: Any, annotation: Any) -> bool:
-    import typing
-    import types
+def check_type(value: Any, annotation: Annotation) -> bool:
     
     if value is None:
         return True
@@ -229,6 +271,10 @@ class GlobalBinding[T]:
                 *args, **kwargs
             )
         return value
+
+
+# ======// Minecraft Metadata //=================================================================//
+
 
 _MISODE_VERSIONS_CACHE: list[dict] | None = None
 

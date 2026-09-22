@@ -28,7 +28,6 @@ __all__ = [
     "mod",
     "floordiv",
     "heaviside",
-    "ramp",
     "sign",
     "monus",
     "spline"
@@ -38,7 +37,7 @@ import builtins as py_builtins
 
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
-from rhombus.std import conditional as cond, caching
+from rhombus.std import caching
 import rhombus.support.vanilla.types as vt
 
 
@@ -87,7 +86,7 @@ def constant(value: float) -> Density:
 
 @macro
 def sum(*dfs: AnyDensity) -> Density:
-    "Returns the sum of any number of arguments."
+    "Calculates the sum of any number of arguments."
     if len(dfs) == 0:
         return Density(0)
     if len(dfs) == 1:
@@ -104,7 +103,7 @@ def sum(*dfs: AnyDensity) -> Density:
 
 @macro
 def prod(*dfs: AnyDensity) -> Density:
-    "Returns the product of any number of arguments."
+    "Calculates the product of any number of arguments."
     if len(dfs) == 0:
         return Density(0)
     if len(dfs) == 1:
@@ -119,14 +118,15 @@ def prod(*dfs: AnyDensity) -> Density:
     return Density(result)
 
 
+@macro
 def add(*dfs: AnyDensity) -> Density:
-    """Returns the sum of any number of arguments."""
+    """Calculates the sum of any number of arguments."""
     return sum(*dfs)
 
 
 @macro
 def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
-    """Returns the difference of two inputs."""
+    """Caluclates the difference of two arguments."""
     @implementation(until=111)
     def sub():
         return Density(vt.add(minuend.AST, vt.mul(-1, subtrahend.AST)))
@@ -135,14 +135,15 @@ def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
         return Density(vt.sub(minuend.AST, subtrahend.AST))
 
 
+@macro
 def mul(*dfs: AnyDensity) -> Density:
-    """Returns the product of any number of arguments."""
+    """Calculates the product of any number of arguments."""
     return prod(*dfs)
 
 
 @macro
 def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
-    """Returns the quotient of two inputs."""
+    """Calculates the quotient of two arguments."""
     @implementation(until=111)
     def div():
         return Density(vt.mul(dividend.AST, vt.reciprocal(divisor.AST)))
@@ -171,7 +172,7 @@ def neg(df: AnyDensity) -> Density:
 
 @macro
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
-    """Raises the input to an arbitrary power. Since the `exponent` can be a fraction, roots can also be realized.
+    """Raises the input to an arbitrary power. Since `exponent` can be a fraction, roots can also be calculated.
     
     **NOTE:** In datapack versions below 113, only integer exponents are supported.
     """
@@ -196,22 +197,24 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     
     @implementation
     def pow():
-        if exponent == Density(0.5):
+        if exponent.is_identical(Density(0.5)):
             return Density(vt.sqrt(base.AST))
         return Density(vt.pow(base.AST, exponent.AST))
 
 
 @macro
 def sqrt(df: AnyDensity) -> Density:
+    "Calculates the square root of the input."
     @implementation(since=111)
     def sqrt():
         return Density(vt.sqrt(df.AST))
 
 @macro
-def log(df: AnyDensity, *, base: AnyDensity = e):
+def log(df: AnyDensity, *, base: AnyDensity = e) -> Density:
+    "Calculates the logarithm of the input to an arbitrary base."
     @implementation(since=111)
     def log():
-        if base == Density(e):
+        if base.AST == Density(e).AST:
             return vt.log(df.AST)
         return vt.log(df.AST) / vt.log(base.AST)
 
@@ -220,9 +223,11 @@ def log(df: AnyDensity, *, base: AnyDensity = e):
 
 
 @macro
-def clamp(df: AnyDensity, min: float, max: float) -> Density:
-    """Returns the larger value from the input and min, and the smaller value from that and max."""
-    return Density(vt.clamp(df.AST, min, max))
+def clamp(df: AnyDensity, min: AnyDensity, max: AnyDensity) -> Density:
+    """Limits the values of the input to the range `[min, max]`."""
+    if isinstance(min.AST, vt.constant) and isinstance(max.AST, vt.constant):
+        return Density(vt.clamp(df.AST, min, max))
+    return Density(vt.max(max.AST, vt.min(min.AST, df.AST)))
 
 
 @macro
@@ -259,21 +264,21 @@ def max(*dfs: AnyDensity) -> Density:
     return Density(result)
 
 
+# Reference: https://www.youtube.com/watch?v=6Qb6QtC6QMs
 @macro
 def smax(
     *dfs: AnyDensity, smoothing_factor: AnyDensity = 0.1, degree: int = 3
 ) -> Density:
-    """Returns the smooth maximum of any number of arguments.
+    """Calculates a smooth maximum of any number of arguments.
 
     This function uses a piecewise polynomial approximation to smooth out the hard
     edges of the regular `max()` function.
 
     Parameters:
-        smoothing_factor (AnyDensity): The smoothing radius (lambda). It defines the interval
-            `[-smoothing_factor, smoothing_factor]` around the intersection where the blending occurs.
+        smoothing_factor (AnyDensity): Defines the interval `[-smoothing_factor, smoothing_factor]`
+            around intersections where the blending occurs.
             Outside this distance, the function behaves exactly like the regular `max()`.
-        degree (int): The polynomial degree used for the interpolation.
-            `2` = quadratic, `3` = cubic (default), `4` = quartic, etc.
+        degree (int): Polynomial degree used for the interpolation.
             Higher degrees yield smoother derivatives at the boundary.
     """
     if len(dfs) == 0:
@@ -294,21 +299,21 @@ def smax(
     return result
 
 
+# Reference: https://www.youtube.com/watch?v=6Qb6QtC6QMs
 @macro
 def smin(
     *dfs: AnyDensity, smoothing_factor: AnyDensity = 0.1, degree: int = 3
 ) -> Density:
-    """Returns the smooth minimum of any number of arguments.
+    """Calculates a smooth minimum of any number of arguments.
 
     This function uses a piecewise polynomial approximation to smooth out the hard
     edges of the regular `min()` function.
 
     Parameters:
-        smoothing_factor (AnyDensity): The smoothing radius (lambda). It defines the interval
-            `[-smoothing_factor, smoothing_factor]` around the intersection where the blending occurs.
-            Outside this distance, the function behaves exactly like the regular `min()`.
-        degree (int): The polynomial degree used for the interpolation.
-            `2` = quadratic, `3` = cubic (default), `4` = quartic, etc.
+        smoothing_factor (AnyDensity): Defines the interval `[-smoothing_factor, smoothing_factor]`
+            around intersections where the blending occurs.
+            Outside this distance, the function behaves exactly like the regular `max()`.
+        degree (int): Polynomial degree used for the interpolation.
             Higher degrees yield smoother derivatives at the boundary.
     """
     if len(dfs) == 0:
@@ -334,7 +339,7 @@ def smin(
 
 @macro
 def round(df: AnyDensity, decimals: int = 0) -> Density:
-    """Rounds the input to the nearest integer or given decimal."""
+    """Rounds the input to the nearest integer or a given decimal place."""
     @implementation(until=111)
     def round():
         if decimals:
@@ -354,7 +359,7 @@ def round(df: AnyDensity, decimals: int = 0) -> Density:
 
 @macro
 def floor(df: AnyDensity, decimals: int = 0) -> Density:
-    """Rounds the input down to the nearest integer or given decimal."""
+    """Rounds the input down to the nearest integer or a given decimal place."""
     @implementation(until=111)
     def floor():
         if decimals:
@@ -368,7 +373,7 @@ def floor(df: AnyDensity, decimals: int = 0) -> Density:
 
 @macro
 def ceil(df: AnyDensity, decimals: int = 0) -> Density:
-    """Rounds the input up to the nearest integer or given decimal."""
+    """Rounds the input up to the nearest integer or a given decimal place."""
     @implementation(until=111)
     def floor():
         if decimals:
@@ -382,7 +387,7 @@ def ceil(df: AnyDensity, decimals: int = 0) -> Density:
 
 @macro
 def truncate(df: AnyDensity, decimals: int = 0) -> Density:
-    """Truncates the input to the nearest integer or given decimal. This is equivalent to rounding towards to zero."""
+    """Truncates (rounding towards zero) the input to the nearest integer or a given decimal place."""
     @implementation(since=111)
     def truncate():
         return Density(vt.truncate(df.AST, 10**-decimals))
@@ -390,13 +395,13 @@ def truncate(df: AnyDensity, decimals: int = 0) -> Density:
 
 @macro
 def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
-    """Returns the floor division of two inputs (`argument1 // argument2`)."""
+    """Calculates the quotient of two arguments and discards the remainder."""
     return floor(dividend / divisor)
 
 
 @macro
 def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
-    """Returns the modulo of two inputs (`argument1 % argument2`)."""
+    """Calculates the remainder of the division of two arguments."""
     return caching.specified_cache(
         dividend - divisor * floor(dividend / divisor), dividend, divisor
     )
@@ -411,15 +416,12 @@ def sign(df: AnyDensity) -> Density:
     """Returns `1.0` when the input is positive, `-1.0` when it's negative and itself when it's `0.0`."""
     @implementation(until=113)
     def sign():
-        return (
-            cond.when(df)
-            .equals(0.0)
-            .then(0.0)
-            .elsewhen(cond.it)
-            .less(0.0)
-            .then(-1.0)
-            .otherwise(1.0)
-        )
+        if df == 0:
+            return Density(0)
+        elif df < 0:
+            return Density(-1)
+        else:
+            return Density(1)
         
     @implementation
     def sign():
@@ -428,28 +430,19 @@ def sign(df: AnyDensity) -> Density:
 
 @macro
 def heaviside(df: AnyDensity, *, at_zero: AnyDensity = 0.5) -> Density:
-    "Returns the Heaviside function value of the input which is `0.0` when the input is negative and `1.0` when it is positive."
-    return (
-        cond.when(df)
-        .equals(0.0)
-        .then(at_zero)
-        .elsewhen(cond.it)
-        .less(0.0)
-        .then(0.0)
-        .otherwise(1.0)
-    )
+    "Returns `0.0` when the input is negative and `1.0` when it is positive."
+    if df == 0:
+        return at_zero
+    elif df < 0:
+        return 0
+    else:
+        return 1
 
 
 @macro
 def monus(minuend: AnyDensity, subtrahend: AnyDensity):
     """Returns `argument1 - argument2`, but when that's negative, returns `0.0` instead."""
     return max(minuend - subtrahend, 0.0)
-
-
-@macro
-def ramp(df: AnyDensity) -> Density:
-    """Returns the ramp function value of the input, meaning `argument1` itself, when it's positive, otherwise returns `0.0`."""
-    return max(df, 0)
 
 
 # ======// Spline //=============================================================================//

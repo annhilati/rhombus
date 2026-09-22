@@ -16,13 +16,10 @@ from rhombus.std import math
 
 
 @macro
-def erf(
-    argument: AnyDensity, domain: tuple[float, float] = (-3, 3)
-) -> Density:
-    """Evaluates the value of the input on Gaussian error function."""
-    points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
+def erf(argument: AnyDensity) -> Density:
+    """Calculates the value of the input on the Gaussian error function."""
     return math.spline(
-        argument, _splinelib.sample_spline_points(py_math.erf, domain, points)
+        argument, _splinelib.sample_spline_points(py_math.erf, (-2.5, 2.5), 5)
     )
 
 
@@ -32,9 +29,8 @@ def logistic(
     capacity: float = 1,
     growth_rate: float = 4,
     center: float = 0,
-    domain: tuple[float, float] = (-1, 1),
 ) -> Density:
-    """Evaluates the value of the input on a logistic function.
+    """Calculates the value of the input on a logistic function.
 
     Parameters:
         capacity (float):
@@ -46,9 +42,8 @@ def logistic(
     [Wikipedia](https://en.wikipedia.org/wiki/Logistic_function)
     """
     func = lambda x: capacity / (1 + py_math.exp(-growth_rate * (x - center)))
-    points = max(5, round((domain[1] - domain[0]) / 1.5) + 1)
     return math.spline(
-        argument, _splinelib.sample_spline_points(func, domain, points)
+        argument, _splinelib.sample_spline_points(func, (-6, 6), 5) # TODO: Improve number of points: calculate from parameters
     )
 
 
@@ -56,7 +51,7 @@ def logistic(
 def normalPDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
 ) -> Density:
-    """Evaluates the value of the input on a normal distributed probability density function.
+    """Calculates the value of the input on a normal distributed probability density function.
 
     Parameters:
         mean (float): The center of the normal distribution.
@@ -82,7 +77,7 @@ def normalPDF(
 def normalCDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
 ) -> Density:
-    """Evaluates the value of the input on a normal distributed cumulative distribution function.
+    """Calculates the value of the input on a normal distributed cumulative distribution function.
 
     Parameters:
         mean (float): The center of the normal distribution.
@@ -108,7 +103,7 @@ def smoothstep(
     domain: tuple[float, float] = (-1, 1),
     range: tuple[float, float] = (-1, 1),
 ) -> Density:
-    """Evaluates a smoothstep transition of the input.
+    """Performs a smoothstep transition of the input.
 
     The smoothstep curve rises smoothly from `yRange[0]` to `yRange[1]` while the
     input moves from `domain[0]` to `domain[1]`. Outside the latter interval the output

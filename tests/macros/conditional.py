@@ -2,7 +2,7 @@ from rhombus import *
 from rhombus.support.vanilla import types
 from rhombus.support.vanilla.types import range_choice
 from rhombus.core.density_function import Reference
-from rhombus.core.utils import uuid_hash
+from rhombus.core.utils import JSON_hash
 
 when = conditional.when
 EPS = 1e-7
@@ -37,7 +37,7 @@ def test_alternatives():
 
     value = Density("minecraft:in").AST
     inp = Reference(
-        "rhombus:partitioned/" + uuid_hash(value.serialize_toplevel()),
+        "rhombus:partitioned/" + JSON_hash(value.serialize_toplevel()),
         definition=types.cache(value),
     )
     assert resolve_ast_versioning(when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(

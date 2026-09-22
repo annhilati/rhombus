@@ -12,7 +12,7 @@ from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
-    uuid_hash,
+    JSON_hash,
     annotated_fields,
 )
 from rhombus.runtime import rho, datapack_handler
@@ -84,7 +84,7 @@ class DatapackResource(RhombusASTNode):
                 if ":" in self._reference
                 else "minecraft:" + self._reference
             )
-        return "rhombus:generated/" + uuid_hash(self.serialize_toplevel())
+        return "rhombus:generated/" + JSON_hash(self.serialize_toplevel())
 
     def serialize_toplevel(self) -> JSONDict:
         return {

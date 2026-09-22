@@ -4,7 +4,7 @@ import sys
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash,walk
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash,walk
 from rhombus.std.density import Density
 from rhombus.std.macros import resolve_ast_versioning
 import rhombus.support.vanilla.types as vt
@@ -134,7 +134,7 @@ def cache_nodes(
     root: DensityFunction,
     *conditions: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
     transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
-        "rhombus:partitioned/" + uuid_hash(df.serialize_toplevel()),
+        "rhombus:partitioned/" + JSON_hash(df.serialize_toplevel()),
         definition=vt.cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:

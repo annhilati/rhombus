@@ -9,7 +9,7 @@ import dataclasses
 import inspect
 import copy
 
-from rhombus.core.utils import JSONValue, BeetFile, fields, uuid_hash
+from rhombus.core.utils import JSONValue, BeetFile, fields, JSON_hash
 from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
 from rhombus.runtime import rho
 
@@ -319,7 +319,7 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
         """The namespaced resource identifier of this node. This can be a fixed
         string or one generated from the nodes data.
         """
-        return f"rhombus:generated/{uuid_hash(self.serialize_toplevel())}"
+        return f"rhombus:generated/{JSON_hash(self.serialize_toplevel())}"
 
     def serialize_toplevel(self) -> JSONValue:
         """Serializes the nodes data into the target format (usually a JSON

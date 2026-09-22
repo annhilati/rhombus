@@ -113,6 +113,7 @@ class Noise(DatapackResource):
         return noise(self, xz_scale=xz_scale, y_scale=y_scale, shift_x=shift_x, shift_y=shift_y, shift_z=shift_z)
 
 
+lt.Noise = Noise # this has a reason
 @macro
 def noise(
     noise: Noise,
@@ -138,7 +139,7 @@ def noise(
     """
     @implementation(until=113)
     def noise_legacy():
-        if 0 == shift_x == shift_y == shift_z:
+        if shift_x.AST == shift_y.AST == shift_z.AST == Density(0).AST:
             return Density(vt.noise(noise, xz_scale, y_scale))
         return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
     

@@ -3,12 +3,11 @@ import inspect
 import textwrap
 from typing import Callable, Any
 
-
-
+# do not import from rhombus.std.conditional.fluent to avoid circular import
 
 def _dsl_if_helper(cond: Any, true_func: Callable[[], Any], false_func: Callable[[], Any]) -> Any:
     # Resolve condition class dynamically to avoid circular imports
-    from rhombus.std.conditional.fluent import Condition, Causality
+    from rhombus.std.conditional.fluent import Condition, Causality 
     if isinstance(cond, Condition):
         # We know it returns a Causality if we call .then()
         return cond.then(true_func()).otherwise(false_func())
@@ -22,7 +21,17 @@ def _dsl_if_block_helper(cond: Any, true_fn: Callable[..., Any], false_fn: Calla
     if isinstance(cond, Condition):
         t_vals, t_has_ret, t_ret = true_fn(*args)
         f_vals, f_has_ret, f_ret = false_fn(*args)
-        
+        if t_has_ret and f_has_ret:
+            # Both branches return, so we merge the return values
+            return t_vals, True, cond.then(t_ret).otherwise(f_ret)
+        elif t_has_ret or f_has_ret:
+            # One branch returns but the other doesn't.
+            # Since we evaluate both branches, we cannot magically skip the rest of the function.
+            raise TypeError(
+                "Inside of macros, early returns inside Density-dependent if-statements are not supported unless all branches return a value. "
+                "Please structure your code so that either both branches return, or neither does (and return at the end of the macro instead)."
+            )
+
         merged_vars = []
         for t, f in zip(t_vals, f_vals):
             if t is f:
@@ -31,12 +40,7 @@ def _dsl_if_block_helper(cond: Any, true_fn: Callable[..., Any], false_fn: Calla
                 merged_vars.append(cond.then(t).otherwise(f))
         merged_vars = tuple(merged_vars)
         
-        if t_has_ret and f_has_ret:
-            return merged_vars, True, cond.then(t_ret).otherwise(f_ret)
-        elif t_has_ret or f_has_ret:
-            raise TypeError("In DSL mode, if one branch of an if-statement returns, the other branch must also return.")
-        else:
-            return merged_vars, False, None
+        return merged_vars, False, None
     elif isinstance(cond, Causality):
         raise TypeError("Causality cannot be used as a condition")
     else:
@@ -469,4 +473,3 @@ def transform_ast(func: Callable) -> Callable:
     if func.__name__ in local_ns:
         return local_ns[func.__name__]
     return func
-

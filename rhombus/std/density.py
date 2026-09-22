@@ -4,17 +4,17 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Self, Literal, overload
+from typing import Any, Self, Literal, overload
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus.core.node import UnresolvedVersionedNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
-from rhombus.core.utils import JSONDict, BeetFile, uuid_hash
+from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
-
+import rhombus.support.vanilla.types as vt
 
 # ======// Density Type //========================================================================//
 
@@ -65,7 +65,7 @@ class Density:
     def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
         value = Density(value)
-        return ("rhombus:partitioned/" + uuid_hash(value.as_dict())) @ value
+        return ("rhombus:partitioned/" + JSON_hash(value.as_dict())) @ value
 
     def __rmatmul__(self, identifier: str):
         if not isinstance(identifier, str):
@@ -73,7 +73,6 @@ class Density:
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
         
-        import rhombus.support.vanilla.types as vt
         if isinstance(self.AST, Reference) and isinstance(self.AST.definition, vt.cache):
             default = default.definition
         return Density(Reference(identifier, default))
@@ -282,7 +281,7 @@ class Density:
         from rhombus.std.conditional.fluent import when
         return when(self).unequals(other)
 
-    def is_identical(self, other) -> bool:
+    def is_identical(self, other: Density | Any) -> bool:
         """Returns True if the AST of this Density is identical to the AST of the other Density."""
         if not isinstance(other, Density):
             return False

@@ -11,7 +11,7 @@ import rhombus.support.vanilla.legacy_types as lt
 
 @macro
 def flatten(df: AnyDensity) -> Density:
-    """Flattens a density function to 2 dimensions by ignoring the Y-coordinate."""
+    """Reduces a density function to two dimensions by uniforming the values in an XZ-column for all Y-coordinates."""
     @implementation(until=118)
     def flatten():
         return Density(lt.flat_cache(df.AST))

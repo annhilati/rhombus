@@ -2,7 +2,7 @@ __all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 
 from typing import Callable, Iterable
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, uuid_hash
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, resolve_ast_versioning
 
@@ -92,7 +92,7 @@ def recurrence_cache(
         max_nodes (int): Number of nodes a recurring function part must surpass to get partitioned.
     """
     transformer = lambda dfnode: Reference(
-        "rhombus:partitioned/" + uuid_hash(dfnode.serialize_toplevel()),
+        "rhombus:partitioned/" + JSON_hash(dfnode.serialize_toplevel()),
         definition=caching_function(dfnode),
     )
     return Density(
@@ -120,7 +120,7 @@ def specified_cache(
         caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
     """
     transformer = lambda node: Reference(
-        "rhombus:partitioned/" + uuid_hash(node.serialize_toplevel()),
+        "rhombus:partitioned/" + JSON_hash(node.serialize_toplevel()),
         definition=Density(caching_function(node)).AST,
     )
         

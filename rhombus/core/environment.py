@@ -88,6 +88,11 @@ class RhombusEnvironment:
         different files but one combined abstract syntax tree instead.
         """
 
+        self.human_readable_names: bool = False
+        """When `True`, automatically generated datapack files will receive a human readable codename
+        (e.g., "agile_warden_1234") instead of a UUID hash. This is recommended for debugging purposes.
+        """
+
         # Registries
         self.density_function_type_deserialization_register: dict[str, type["DensityFunction"]] = {}
         "Mapping of all `DensityFunction` subclasses that are used for deserialization, with their ids as the keys."
@@ -252,8 +257,8 @@ class RhombusAddon:
     from . import types
 
     __addon__ = RhombusAddon(
-        namespace="Lithostitched",
-        default_version=(1, 20),
+        namespace="lithostitched",
+        version=(1, 20),
         preview_scripts=[
             files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
             files("rhombus.support.lithostitched").joinpath("deepslate.ts"),
@@ -271,7 +276,7 @@ class RhombusAddon:
 
     Parameters:
         namespace (str): Identifier for the addon
-        default_version (VersionLike | None): The default version to set in the environment when the addon is loaded.
+        version (DatapackVersion | VersionString | VersionTuple | None): The default version to set in the environment when the addon is loaded.
         density_functions (dict[str, DensityFunction]): Mapping of additional density function types
             (their identifiers) as the keys. This is mainly used for deserializing density function from JSON dictionaries.
         preview_scripts (list[str | Path]): Paths of JavaScript or TypeScript files that will be provided
