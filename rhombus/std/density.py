@@ -169,8 +169,8 @@ class Density:
                     raise TypeError(
                         f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'"
                     )
-                # if id != self.AST.identifier:
-                #     files.add((id, node.fileclass(node.serialize_toplevel())))
+                if id != getattr(self.AST, "identifier", None) or not id.startswith("rhombus:generated/"):
+                    files.add((id, node.fileclass(node.serialize_toplevel())))
 
         files.add(
             (

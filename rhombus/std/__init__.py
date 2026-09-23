@@ -13,7 +13,8 @@ from . import (
     macros,
     maps,
     noise as noises,
-    math
+    math,
+    blending
 )
 
 # Convenience
