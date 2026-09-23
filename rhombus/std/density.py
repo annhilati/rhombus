@@ -14,7 +14,6 @@ from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
-import rhombus.support.vanilla.types as vt
 
 # ======// Density Type //========================================================================//
 
@@ -65,7 +64,7 @@ class Density:
     def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
         value = Density(value)
-        return ("rhombus:partitioned/" + JSON_hash(value.as_dict())) @ value
+        return ("rhombus:generated/" + JSON_hash(value.as_dict())) @ value
 
     def __rmatmul__(self, identifier: str):
         if not isinstance(identifier, str):
@@ -73,6 +72,7 @@ class Density:
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
         default = self.AST
         
+        import rhombus.support.vanilla.types as vt
         if isinstance(self.AST, Reference) and isinstance(self.AST.definition, vt.cache):
             default = default.definition
         return Density(Reference(identifier, default))
@@ -149,7 +149,10 @@ class Density:
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
 
     def compile(self, identifier: str = "main", /, *, version: DatapackVersion = ...) -> set[tuple[str, BeetFile]]:
-        "Compiles the Density into Beet file class instances."
+        """Compiles the Density into Beet file class instances.
+        
+        See the `BeetFile` protocol to find out how to use the file data without using Beet.
+        """
         old_datapack_version = rho.datapack_version
         if version is not ...:
             rho.datapack_version = version
@@ -166,7 +169,8 @@ class Density:
                     raise TypeError(
                         f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'"
                     )
-                files.add((id, node.fileclass(node.serialize_toplevel())))
+                # if id != self.AST.identifier:
+                #     files.add((id, node.fileclass(node.serialize_toplevel())))
 
         files.add(
             (
@@ -180,7 +184,7 @@ class Density:
         return files
 
     def implement(self, dp: beet.DataPack, identifier: str) -> None:
-        """Implements the Density and all additionally required files in a datapack."""
+        """Implements the Density and all additional required files in a datapack."""
 
         files = self.compile(identifier)
         for id, file in files:
@@ -190,7 +194,7 @@ class Density:
     # ======// Debug //===========================================================================//
 
     def as_dict(self) -> JSONDict:
-        """Only for debugging.<br>Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.<br>
+        """Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.
         The dictionary will not be fully inline. References that require separate files will be references."""
         return self.AST.serialize_toplevel()
 
@@ -315,6 +319,7 @@ type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
 
+# TODO: integrate into the Density type?
 def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersionedNode) -> DensityFunction | UnresolvedVersionedNode:
     """Interprets a QoL argument input and returns a DensityFunction object.
     Applies logic like splitting large literal constants into calculations

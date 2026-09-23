@@ -11,9 +11,6 @@ from rhombus.core import (
 if TYPE_CHECKING:
     from rhombus.std.noise import Noise
 
-class end_islands(SimpleDensityFunction, versions=(9, 113)):
-    id: ClassVar[str] = "minecraft:end_islands"
-
 
 class cache_2d(MappedDensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:cache_2d"
@@ -22,6 +19,8 @@ class cache_2d(MappedDensityFunction, versions=(9, 118)):
 class cache_all_in_cell(MappedDensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:cache_all_in_cell"
 
+class end_islands(SimpleDensityFunction, versions=(9, 113)):
+    id: ClassVar[str] = "minecraft:end_islands"
 
 class flat_cache(MappedDensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:flat_cache"

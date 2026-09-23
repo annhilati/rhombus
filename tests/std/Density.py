@@ -10,7 +10,7 @@ def test_partitioning():
 
     assert Density.partitioned(1.0).is_identical(Density(
         types.Reference(
-            "rhombus:partitioned/d0ff5974b6aa52cf562bea5921840c03",
+            "rhombus:generated/d0ff5974b6aa52cf562bea5921840c03",
             definition=types.constant(value=1.0),
         )
     ))

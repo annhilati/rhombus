@@ -37,7 +37,7 @@ def test_alternatives():
 
     value = Density("minecraft:in").AST
     inp = Reference(
-        "rhombus:partitioned/" + JSON_hash(value.serialize_toplevel()),
+        "rhombus:generated/" + JSON_hash(value.serialize_toplevel()),
         definition=types.cache(value),
     )
     assert resolve_ast_versioning(when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(

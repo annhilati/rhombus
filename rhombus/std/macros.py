@@ -20,7 +20,7 @@ import sys
 
 from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
-from rhombus.core.utils import Annotation
+from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
 from rhombus.runtime import rho
 
@@ -256,24 +256,21 @@ class MacroDispatcher:
         )
 
 
-from typing import ParamSpec, TypeVar
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 
 @overload
-def macro(func: Callable[_P, _R]) -> Callable[_P, _R]: ...
+def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
 @overload
-def macro(*, repr: Callable[["UnresolvedVersionedNode"], str] | None = None) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]: ...
+def macro[**P, R](*, repr: Callable[["UnresolvedVersionedNode"], str] | None = None) -> Decorator: ...
 def macro(
     func: Callable | None = None,
     *,
     repr: Callable[["UnresolvedVersionedNode"], str] | None = None
 ) -> Callable:
-    """The **`macro`** decorator allows functions to use the `AnyDensity` type
-    for annotation of its arguments to automatically resolve passed values to
-    `Density` objects.
-
-    It acts as an organizer for `@implementation` decorated inner functions.
+    """The **`macro`** decorator allows functions to use special behaviour beneficial for writing density functions:
+    
+    - Values for parameters annotated with `AnyDensity` will automatically be coerced to the `Density` type.
+    - Allows defining functions decorated with the `@implementation` decorator inside the function to provide lazily chosen version-dependent implementations.
+    - Allows using Python's `if / elif / else` syntax as well as special macros with `with`-statements inside the function.
     """
     def decorator(f: Callable) -> Callable:
         return cast(Callable, MacroDispatcher(f, repr_func=repr))

@@ -92,7 +92,7 @@ def recurrence_cache(
         max_nodes (int): Number of nodes a recurring function part must surpass to get partitioned.
     """
     transformer = lambda dfnode: Reference(
-        "rhombus:partitioned/" + JSON_hash(dfnode.serialize_toplevel()),
+        "rhombus:generated/" + JSON_hash(dfnode.serialize_toplevel()),
         definition=caching_function(dfnode),
     )
     return Density(
@@ -120,7 +120,7 @@ def specified_cache(
         caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
     """
     transformer = lambda node: Reference(
-        "rhombus:partitioned/" + JSON_hash(node.serialize_toplevel()),
+        "rhombus:generated/" + JSON_hash(node.serialize_toplevel()),
         definition=Density(caching_function(node)).AST,
     )
         

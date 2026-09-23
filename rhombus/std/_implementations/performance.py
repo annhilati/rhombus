@@ -134,7 +134,7 @@ def cache_nodes(
     root: DensityFunction,
     *conditions: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
     transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
-        "rhombus:partitioned/" + JSON_hash(df.serialize_toplevel()),
+        "rhombus:generated/" + JSON_hash(df.serialize_toplevel()),
         definition=vt.cache(df),
     ),
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:

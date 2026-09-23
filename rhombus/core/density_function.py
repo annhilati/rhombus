@@ -259,7 +259,7 @@ class Reference(DensityFunction):
     def __repr__(self) -> str:
         if self.definition is None:
             return '"' + self.identifier + '"'
-        elif "partitioned" in self.identifier:
+        elif "generated" in self.identifier:
             return "Density.partitioned(" + self.definition.__repr__() + ")"
         else:
             return (
