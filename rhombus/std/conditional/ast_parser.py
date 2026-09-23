@@ -86,6 +86,14 @@ def _dsl_with_block_helper(context_manager, body_fn, *args):
 class ConditionalTransformer(ast.NodeTransformer):
     def __init__(self):
         self.counter = 0
+        self.root_visited = False
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        if not self.root_visited:
+            self.root_visited = True
+            node.decorator_list = []
+        self.generic_visit(node)
+        return node
 
     def visit_IfExp(self, node: ast.IfExp) -> Any:
         self.generic_visit(node)
