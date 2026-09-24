@@ -17,14 +17,13 @@ from .sub_parameters import (
 )
 from . import types
 
-from importlib.resources import files as _files
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
 
 __addon__ = _RhombusAddon(
     namespace="moredfs",
     version=(2, 2, 1),
-    preview_scripts=[_files("rhombus.support.moredfs").joinpath("deepslate.ts")],
+    preview_scripts=[_RhombusAddon("rhombus.support.moredfs", "deepslate.ts")],
     density_functions={
         cls.id: cls
         for name, cls in types.__dict__.items()

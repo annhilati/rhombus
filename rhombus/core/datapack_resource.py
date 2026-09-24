@@ -154,12 +154,6 @@ class DatapackResource(RhombusASTNode):
         object.__setattr__(instance, "_reference", identifier)
         return instance
 
-    # @reference.setter
-    # def reference(self, value: str | None) -> None:
-    #     if not isinstance(value, str):
-    #         raise TypeError(f"Cannot assign non-string value '{value}' to reference identifier")
-    #     object.__setattr__(self, "_reference", value)
-
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."
         return self.serialize_toplevel()

@@ -19,6 +19,7 @@ def flatten(df: AnyDensity) -> Density:
     def flatten():
         return coords.slice(df, y=0)
 
+
 @macro
 def extrude_heightmap(
     heightmap: AnyDensity,

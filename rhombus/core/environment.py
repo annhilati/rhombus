@@ -6,23 +6,24 @@ from typing import Callable, Any, Optional, overload, TYPE_CHECKING
 from types import ModuleType, EllipsisType
 from dataclasses import dataclass, field
 from pathlib import Path
+from importlib.resources import files
 import threading
 import sys
 
 import beet
 
-if TYPE_CHECKING:
-    from rhombus.core import DensityFunction
-    from rhombus.core.utils import BeetFile
-
 from rhombus.core.utils import get_Minecraft_datapack_version
 
+if TYPE_CHECKING:
+    from rhombus.core import DensityFunction, BeetFile
 
 # ======// Versioning //==========================================================================//
+
 
 type DatapackVersion = float | int
 type VersionString = str
 type VersionTuple = tuple[int, ...]
+
 
 def parseVersionString(spec: str) -> VersionTuple:
     return tuple(int(p) for p in spec.split("."))
@@ -249,7 +250,6 @@ class RhombusAddon:
     from .functions import *
     from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 
-    from importlib.resources import files
     from rhombus.core.config import RhombusAddon
     from rhombus.core.density_function import DensityFunction
     from . import types
@@ -258,8 +258,8 @@ class RhombusAddon:
         namespace="lithostitched",
         version=(1, 20),
         preview_scripts=[
-            files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
-            files("rhombus.support.lithostitched").joinpath("deepslate.ts"),
+            RhombusAddon.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
+            RhombusAddon.resource("rhombus.support.lithostitched", "deepslate.ts"),
         ],
         preview_beet_file_extensions={LithostitchedFastNoiseConfig},
         density_functions={
@@ -324,3 +324,12 @@ class RhombusAddon:
                         
         env.preview_scripts.extend(self.preview_scripts)
         env.preview_beet_file_extensions.update(self.preview_beet_file_extensions)
+
+
+    @staticmethod
+    def resource(module_path: str, file_name: str):
+        """Returns the path for a file located in a directory that is also a Python module.
+        
+        This is just a helper implementing `importlib.resources.files(module_path).joinpath(file_name)`.
+        """
+        return files(module_path).joinpath(file_name)

@@ -12,7 +12,6 @@ from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 from . import types
 
-from importlib.resources import files as _files
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
 from rhombus.core.density_function import DensityFunction as _DensityFunction
 
@@ -20,8 +19,8 @@ __addon__ = _RhombusAddon(
     namespace="lithostitched",
     version=(1, 6, 0),
     preview_scripts=[
-        _files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
-        _files("rhombus.support.lithostitched").joinpath("deepslate.ts"),
+        _RhombusAddon.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
+        _RhombusAddon.resource("rhombus.support.lithostitched", "deepslate.ts"),
     ],
     preview_beet_file_extensions={LithostitchedFastNoiseConfig},
     density_functions={

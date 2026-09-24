@@ -1,6 +1,6 @@
 """The macro infrastructure of Rhombus."""
 
-__all__ = ["macro", "implementation", "resolve_ast_versioning"]
+__all__ = ["macro", "implementation"]
 
 from typing import (
     Callable,
