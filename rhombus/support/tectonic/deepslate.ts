@@ -25,9 +25,10 @@ class TectonicConfigClamp extends deepslate.DensityFunction {
     compute(context: any): number {
         return Math.min(Math.max(this.input.compute(context), this.min.compute(context)), this.max.compute(context));
     }
-    minValue(): number { return this.min.minValue(); }
-    maxValue(): number { return this.max.maxValue(); }
-    mapAll(visitor: any): any { return visitor.map(new TectonicConfigClamp(this.input.mapAll(visitor), this.min.mapAll(visitor), this.max.mapAll(visitor))); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return ((this.min.range && typeof this.min.range === 'function') ? this.min.range() : deepslate.Interval.ofExact(0)).min; }
+    getMax(): number { return ((this.max.range && typeof this.max.range === 'function') ? this.max.range() : deepslate.Interval.ofExact(0)).max; }
+    mapChildren(visitor: any): any { return new TectonicConfigClamp(visitor.apply(this.input), visitor.apply(this.min), visitor.apply(this.max)); }
 }
 densityFunctions.set('tectonic:config_clamp', (obj: any, parser: any) => new TectonicConfigClamp(parser(obj.input), parser(obj.min), parser(obj.max)));
 
@@ -39,16 +40,17 @@ class TectonicInvert extends deepslate.DensityFunction {
     compute(context: any): number {
         return 1.0 / this.input.compute(context);
     }
-    minValue(): number { return this.minVal; }
-    maxValue(): number { return this.maxVal; }
-    mapAll(visitor: any): any { return visitor.map(new TectonicInvert(this.input.mapAll(visitor), this.minVal, this.maxVal)); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return this.minVal; }
+    getMax(): number { return this.maxVal; }
+    mapChildren(visitor: any): any { return new TectonicInvert(visitor.apply(this.input), this.minVal, this.maxVal); }
 }
 densityFunctions.set('tectonic:invert', (obj: any, parser: any) => {
     // In Java, min/max bounds are precomputed based on the input's min/max.
     // If the input spans across 0, bounds are -Infinity to Infinity.
     const parsedInput = parser(obj.argument);
-    const min = parsedInput.minValue();
-    const max = parsedInput.maxValue();
+    const min = ((parsedInput.range && typeof parsedInput.range === 'function') ? parsedInput.range() : deepslate.Interval.ofExact(0)).min;
+    const max = ((parsedInput.range && typeof parsedInput.range === 'function') ? parsedInput.range() : deepslate.Interval.ofExact(0)).max;
     let invertMin = min;
     let invertMax = max;
     if (min < 0 && max > 0) {

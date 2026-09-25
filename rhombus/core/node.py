@@ -28,6 +28,13 @@ class FieldMeta:
                 return key
         return default
 
+    def is_present(self, env: RhombusEnvironment) -> bool:
+        if self.added_with is not ... and env._check_version(self.added_with) is False:
+            return False
+        if self.removed_with is not ... and env._check_version(self.removed_with) is True:
+            return False
+        return True
+
 
 def field[Node, Value](
     default: Value=...,

@@ -106,6 +106,27 @@ class ComparisonCondition(Condition):
     relation: Relation
     value: float | tuple[float, float]
 
+    def __post_init__(self):
+        from rhombus.core.density_function import DensityFunction
+        from rhombus.std.density import Density
+        
+        def check_val(v):
+            if isinstance(v, (DensityFunction, Density)):
+                raise TypeError(
+                    "Density Functions can only be conditionally compared against constants (numbers), "
+                    f"not other Density Functions. Attempted to compare against: {v}"
+                )
+            try:
+                float(v)
+            except (TypeError, ValueError):
+                raise TypeError(f"Comparison value must be a number, got: {type(v).__name__}")
+                
+        if isinstance(self.value, tuple):
+            for v in self.value:
+                check_val(v)
+        else:
+            check_val(self.value)
+
     @property
     def _default_input(self) -> DensityFunction:
         return self.input

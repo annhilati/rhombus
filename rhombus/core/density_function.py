@@ -49,6 +49,8 @@ class DensityFunction(RhombusASTNode):
             meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
+                if not meta.is_present(active_env):
+                    continue
                 json_key = meta.get_appropriate_key(active_env, default=parameter)
                 if meta.validate:
                     import inspect

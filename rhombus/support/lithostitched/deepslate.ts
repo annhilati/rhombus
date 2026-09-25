@@ -37,9 +37,10 @@ class LithostitchedSqrt extends deepslate.DensityFunction {
     input: any;
     constructor(input: any) { super(); this.input = input; }
     compute(context: any): number { return Math.sqrt(Math.max(0, this.input.compute(context))); }
-    maxValue(): number { return Math.sqrt(Math.max(0, this.input.maxValue())); }
-    minValue(): number { return Math.sqrt(Math.max(0, this.input.minValue())); }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedSqrt(this.input.mapAll(visitor))); }
+    getMax(): number { return Math.sqrt(Math.max(0, ((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).max)); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return Math.sqrt(Math.max(0, ((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).min)); }
+    mapChildren(visitor: any): any { return new LithostitchedSqrt(visitor.apply(this.input)); }
 }
 densityFunctions.set('lithostitched:sqrt', (obj: any, parser: any) => new LithostitchedSqrt(parser(obj.argument)));
 
@@ -52,9 +53,10 @@ class LithostitchedAxis extends deepslate.DensityFunction {
         if (this.axis === 'y') return context.y;
         return context.z;
     }
-    minValue(): number { return this.axis === 'y' ? -4064 : -1e100; }
-    maxValue(): number { return this.axis === 'y' ? 4064 : 1e100; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return this.axis === 'y' ? -4064 : -1e100; }
+    getMax(): number { return this.axis === 'y' ? 4064 : 1e100; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('lithostitched:axis', (obj: any) => new LithostitchedAxis(obj.axis));
 
@@ -63,9 +65,10 @@ class LithostitchedCeil extends deepslate.DensityFunction {
     input: any;
     constructor(input: any) { super(); this.input = input; }
     compute(context: any): number { return Math.ceil(this.input.compute(context)); }
-    maxValue(): number { return Math.ceil(this.input.maxValue()); }
-    minValue(): number { return Math.ceil(this.input.minValue()); }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedCeil(this.input.mapAll(visitor))); }
+    getMax(): number { return Math.ceil(((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).max); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return Math.ceil(((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).min); }
+    mapChildren(visitor: any): any { return new LithostitchedCeil(visitor.apply(this.input)); }
 }
 densityFunctions.set('lithostitched:ceil', (obj: any, parser: any) => new LithostitchedCeil(parser(obj.argument)));
 
@@ -74,9 +77,10 @@ class LithostitchedFloor extends deepslate.DensityFunction {
     input: any;
     constructor(input: any) { super(); this.input = input; }
     compute(context: any): number { return Math.floor(this.input.compute(context)); }
-    maxValue(): number { return Math.floor(this.input.maxValue()); }
-    minValue(): number { return Math.floor(this.input.minValue()); }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedFloor(this.input.mapAll(visitor))); }
+    getMax(): number { return Math.floor(((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).max); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return Math.floor(((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).min); }
+    mapChildren(visitor: any): any { return new LithostitchedFloor(visitor.apply(this.input)); }
 }
 densityFunctions.set('lithostitched:floor', (obj: any, parser: any) => new LithostitchedFloor(parser(obj.argument)));
 
@@ -85,9 +89,10 @@ class LithostitchedSin extends deepslate.DensityFunction {
     input: any;
     constructor(input: any) { super(); this.input = input; }
     compute(context: any): number { return Math.sin(this.input.compute(context)); }
-    maxValue(): number { return 1; }
-    minValue(): number { return -1; }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedSin(this.input.mapAll(visitor))); }
+    getMax(): number { return 1; }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -1; }
+    mapChildren(visitor: any): any { return new LithostitchedSin(visitor.apply(this.input)); }
 }
 densityFunctions.set('lithostitched:sin', (obj: any, parser: any) => new LithostitchedSin(parser(obj.argument)));
 
@@ -96,9 +101,10 @@ class LithostitchedCos extends deepslate.DensityFunction {
     input: any;
     constructor(input: any) { super(); this.input = input; }
     compute(context: any): number { return Math.cos(this.input.compute(context)); }
-    maxValue(): number { return 1; }
-    minValue(): number { return -1; }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedCos(this.input.mapAll(visitor))); }
+    getMax(): number { return 1; }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -1; }
+    mapChildren(visitor: any): any { return new LithostitchedCos(visitor.apply(this.input)); }
 }
 densityFunctions.set('lithostitched:cos', (obj: any, parser: any) => new LithostitchedCos(parser(obj.argument)));
 
@@ -112,9 +118,10 @@ class LithostitchedMix extends deepslate.DensityFunction {
         if (i >= 1) return this.arg2.compute(context);
         return this.arg1.compute(context) * (1 - i) + this.arg2.compute(context) * i;
     }
-    minValue(): number { return Math.min(this.arg1.minValue(), this.arg2.minValue()); }
-    maxValue(): number { return Math.max(this.arg1.maxValue(), this.arg2.maxValue()); }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedMix(this.input.mapAll(visitor), this.arg1.mapAll(visitor), this.arg2.mapAll(visitor))); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return Math.min(((this.arg1.range && typeof this.arg1.range === 'function') ? this.arg1.range() : deepslate.Interval.ofExact(0)).min, ((this.arg2.range && typeof this.arg2.range === 'function') ? this.arg2.range() : deepslate.Interval.ofExact(0)).min); }
+    getMax(): number { return Math.max(((this.arg1.range && typeof this.arg1.range === 'function') ? this.arg1.range() : deepslate.Interval.ofExact(0)).max, ((this.arg2.range && typeof this.arg2.range === 'function') ? this.arg2.range() : deepslate.Interval.ofExact(0)).max); }
+    mapChildren(visitor: any): any { return new LithostitchedMix(visitor.apply(this.input), visitor.apply(this.arg1), visitor.apply(this.arg2)); }
 }
 densityFunctions.set('lithostitched:mix', (obj: any, parser: any) => new LithostitchedMix(parser(obj.input), parser(obj.argument1), parser(obj.argument2)));
 
@@ -123,11 +130,11 @@ class LithostitchedSelect extends deepslate.DensityFunction {
     input: any; fallback: any; selections: any[]; min: number; max: number;
     constructor(input: any, fallback: any, selections: any[]) {
         super(); this.input = input; this.fallback = fallback; this.selections = selections;
-        let curMin = fallback.minValue();
-        let curMax = fallback.maxValue();
+        let curMin = ((fallback.range && typeof fallback.range === 'function') ? fallback.range() : deepslate.Interval.ofExact(0)).min;
+        let curMax = ((fallback.range && typeof fallback.range === 'function') ? fallback.range() : deepslate.Interval.ofExact(0)).max;
         for (const s of selections) {
-            curMin = Math.min(curMin, s.function.minValue());
-            curMax = Math.max(curMax, s.function.maxValue());
+            curMin = Math.min(curMin, ((s.function.range && typeof s.function.range === 'function') ? s.function.range() : deepslate.Interval.ofExact(0)).min);
+            curMax = Math.max(curMax, ((s.function.range && typeof s.function.range === 'function') ? s.function.range() : deepslate.Interval.ofExact(0)).max);
         }
         this.min = curMin;
         this.max = curMax;
@@ -141,14 +148,15 @@ class LithostitchedSelect extends deepslate.DensityFunction {
         }
         return this.fallback.compute(context);
     }
-    minValue(): number { return this.min; }
-    maxValue(): number { return this.max; }
-    mapAll(visitor: any): any {
-        return visitor.map(new LithostitchedSelect(
-            this.input.mapAll(visitor),
-            this.fallback.mapAll(visitor),
-            this.selections.map((s: any) => ({ range: s.range, function: s.function.mapAll(visitor) }))
-        ));
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return this.min; }
+    getMax(): number { return this.max; }
+    mapChildren(visitor: any): any {
+        return new LithostitchedSelect(
+            visitor.apply(this.input),
+            visitor.apply(this.fallback),
+            this.selections.map((s: any) => ({ range: s.range, function: visitor.apply(s.function) }))
+        );
     }
 }
 densityFunctions.set('lithostitched:select', (obj: any, parser: any) => {
@@ -173,9 +181,10 @@ class LithostitchedShift extends deepslate.DensityFunction {
         const z = context.z + this.shiftZ.compute(context);
         return this.input.compute({ x, y, z });
     }
-    minValue(): number { return this.input.minValue(); }
-    maxValue(): number { return this.input.maxValue(); }
-    mapAll(visitor: any): any { return visitor.map(new LithostitchedShift(this.input.mapAll(visitor), this.shiftX.mapAll(visitor), this.shiftY.mapAll(visitor), this.shiftZ.mapAll(visitor))); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return ((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).min; }
+    getMax(): number { return ((this.input.range && typeof this.input.range === 'function') ? this.input.range() : deepslate.Interval.ofExact(0)).max; }
+    mapChildren(visitor: any): any { return new LithostitchedShift(visitor.apply(this.input), visitor.apply(this.shiftX), visitor.apply(this.shiftY), visitor.apply(this.shiftZ)); }
 }
 densityFunctions.set('lithostitched:shift', (obj: any, parser: any) => new LithostitchedShift(parser(obj.input), parser(obj.shift_x), parser(obj.shift_y), parser(obj.shift_z)));
 
@@ -183,9 +192,10 @@ densityFunctions.set('lithostitched:shift', (obj: any, parser: any) => new Litho
 class LithostitchedMarker extends deepslate.DensityFunction {
     constructor() { super(); }
     compute(context: any): number { return 0; }
-    minValue(): number { return 0; }
-    maxValue(): number { return 0; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return 0; }
+    getMax(): number { return 0; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('lithostitched:original_marker', () => new LithostitchedMarker());
 densityFunctions.set('lithostitched:wrapped_marker', () => new LithostitchedMarker());
@@ -282,18 +292,19 @@ class LithostitchedFastNoise extends deepslate.DensityFunction {
         return this.fnl.GetNoise(x, y, z);
     }
     
-    minValue(): number { return -1; }
-    maxValue(): number { return 1; }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -1; }
+    getMax(): number { return 1; }
 
-    mapAll(visitor: any): any {
-        return visitor.map(new LithostitchedFastNoise(
+    mapChildren(visitor: any): any {
+        return new LithostitchedFastNoise(
             this.configHolder,
             this.xzScale,
             this.yScale,
-            this.shiftX.mapAll(visitor),
-            this.shiftY.mapAll(visitor),
-            this.shiftZ.mapAll(visitor)
-        ));
+            visitor.apply(this.shiftX),
+            visitor.apply(this.shiftY),
+            visitor.apply(this.shiftZ)
+        );
     }
 }
 

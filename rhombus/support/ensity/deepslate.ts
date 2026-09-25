@@ -26,9 +26,10 @@ class EnsityLonelyIsland extends deepslate.DensityFunction {
         const val = Math.max(-100.0, Math.min(80.0, 100.0 - h));
         return (val - 8.0) / 128.0;
     }
-    minValue(): number { return -0.84375; }
-    maxValue(): number { return 0.5625; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -0.84375; }
+    getMax(): number { return 0.5625; }
+    mapChildren(visitor: any): any { return this; }
 }
 
 densityFunctions.set('msg:lonely_island', () => new EnsityLonelyIsland());
@@ -78,9 +79,10 @@ class EnsityFloatingIslands extends deepslate.DensityFunction {
         return (this.getHeightValue(Math.floor(context.x / 8), Math.floor(context.z / 8)) - 8.0) / 128.0;
     }
     
-    minValue(): number { return -0.84375; }
-    maxValue(): number { return 0.5625; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -0.84375; }
+    getMax(): number { return 0.5625; }
+    mapChildren(visitor: any): any { return this; }
 }
 
 densityFunctions.set('msg:floating_islands', () => new EnsityFloatingIslands(0n));

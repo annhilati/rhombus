@@ -65,6 +65,7 @@ function getNiceTicks(min: number, max: number, maxTicks = 5) {
 }
 
 export default function DensityGraphVisualizer({ onClose, file, contextFiles }: DensityGraphVisualizerProps) {
+  const [mode, setMode] = useState<'curve' | 'distribution'>('distribution');
   const [selectedRef, setSelectedRef] = useState<string>('');
   const [xMinInput, setXMinInput] = useState<string>('-5');
   const [xMaxInput, setXMaxInput] = useState<string>('5');
@@ -100,9 +101,9 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
   }, [availableRefs, selectedRef]);
 
   const graphData = useMemo(() => {
-    if (!selectedRef) return null;
-    
     try {
+      if (mode === 'curve' && !selectedRef) return null;
+
       const runtime = loadDeepslateRuntime();
       runtime.registerFiles(contextFiles);
       
@@ -121,7 +122,7 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
           mapAll(v: any) { return v.apply(this); }
       }
       
-      if (dfRegistry) {
+      if (mode === 'curve' && dfRegistry) {
           try {
               const parsedId = Identifier.parse(selectedRef);
               dfRegistry.register(parsedId, new MockInputFunction());
@@ -136,94 +137,166 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
           noiseRouter: NoiseRouter.create({ finalDensity: df }),
       });
 
-      const points = [];
-      const steps = 1000;
-      let actualMinY = Infinity;
-      let actualMaxY = -Infinity;
+      if (mode === 'curve') {
+          const points = [];
+          const steps = 1000;
+          let actualMinY = Infinity;
+          let actualMaxY = -Infinity;
 
-      const safeMinX = Math.min(xMin, xMax);
-      const safeMaxX = Math.max(xMin, xMax);
-      const range = safeMaxX - safeMinX || 1;
+          const safeMinX = Math.min(xMin, xMax);
+          const safeMaxX = Math.max(xMin, xMax);
+          const range = safeMaxX - safeMinX || 1;
 
-      for (let i = 0; i <= steps; i++) {
-        currentX = safeMinX + (i / steps) * range;
-        
-        // Re-create RandomState to clear DensityFunction caches (e.g. cache_once, cache_2d)
-        const state = new RandomState(settings, 0n);
-        const y = state.router.finalDensity.compute({ x: 0, y: 0, z: 0 });
-        
-        if (!Number.isNaN(y)) {
-          actualMinY = Math.min(actualMinY, y);
-          actualMaxY = Math.max(actualMaxY, y);
-          points.push({ x: currentX, y });
-        }
+          for (let i = 0; i <= steps; i++) {
+            currentX = safeMinX + (i / steps) * range;
+            const state = new RandomState(settings, 0n);
+            const y = state.router.finalDensity.compute({ x: 0, y: 0, z: 0 });
+            if (!Number.isNaN(y)) {
+              actualMinY = Math.min(actualMinY, y);
+              actualMaxY = Math.max(actualMaxY, y);
+              points.push({ x: currentX, y });
+            }
+          }
+
+          if (points.length < 2) {
+              setErrorMsg("Graph generated less than 2 valid points.");
+              return null;
+          }
+          setErrorMsg(null);
+          return { type: 'curve', points, actualMinY, actualMaxY, safeMinX, safeMaxX };
+      } else {
+          // Distribution Mode
+          const samples = 10000;
+          const values: number[] = [];
+          const state = new RandomState(settings, 0n);
+          for (let i = 0; i < samples; i++) {
+              const x = (Math.random() - 0.5) * 20000;
+              const y = (Math.random() - 0.5) * 256;
+              const z = (Math.random() - 0.5) * 20000;
+              const v = state.router.finalDensity.compute({ x, y, z });
+              if (!Number.isNaN(v)) {
+                  values.push(v);
+              }
+          }
+          
+          if (values.length === 0) {
+              setErrorMsg("Failed to generate any valid values.");
+              return null;
+          }
+
+          values.sort((a, b) => a - b);
+          
+          // Truncate bottom 0.5% and top 0.5% to avoid extreme outliers messing up the scale
+          const trimCount = Math.floor(values.length * 0.005);
+          const trimmed = values.slice(trimCount, values.length - trimCount);
+          
+          let minV = trimmed[0];
+          let maxV = trimmed[trimmed.length - 1];
+          if (minV === maxV) { minV -= 1; maxV += 1; }
+          
+          const bins = 50;
+          const binSize = (maxV - minV) / bins;
+          const histogram = new Array(bins).fill(0);
+          
+          let maxCount = 0;
+          for (const v of trimmed) {
+              let bin = Math.floor((v - minV) / binSize);
+              if (bin >= bins) bin = bins - 1;
+              if (bin < 0) bin = 0;
+              histogram[bin]++;
+              if (histogram[bin] > maxCount) maxCount = histogram[bin];
+          }
+
+          setErrorMsg(null);
+          return { type: 'distribution', histogram, minV, maxV, maxCount, bins };
       }
-
-      if (points.length < 2) {
-          setErrorMsg("Graph generated less than 2 valid points.");
-          return null;
-      }
-      setErrorMsg(null);
-      return { points, actualMinY, actualMaxY, safeMinX, safeMaxX };
     } catch (e: any) {
       console.error("Failed to generate graph", e);
       setErrorMsg(e.stack || e.message || String(e));
       return null;
     }
-  }, [file.content, contextFiles, selectedRef, xMin, xMax]);
+  }, [file.content, contextFiles, selectedRef, xMin, xMax, mode]);
 
   const formatTick = (n: number) => Number.isInteger(n) ? n.toString() : n.toFixed(2).replace(/\.?0+$/, '');
 
   const svgContent = useMemo(() => {
     if (!graphData) return null;
-    const { points, actualMinY, actualMaxY, safeMinX, safeMaxX } = graphData;
-
-    let minX = safeMinX, maxX = safeMaxX;
-    let minY = actualMinY, maxY = actualMaxY;
-    if (minY === maxY) { minY -= 1; maxY += 1; }
-    
-    const xTicksObj = getNiceTicks(minX, maxX, 8);
-    minX = xTicksObj.niceMin;
-    maxX = xTicksObj.niceMax;
-    
-    const yTicksObj = getNiceTicks(minY, maxY, 6);
-    minY = yTicksObj.niceMin;
-    maxY = yTicksObj.niceMax;
-
     const width = 800, height = 400, padX = 60, padTop = 30, padBottom = 40;
-    const mapX = (x: number) => padX + ((x - minX) / (maxX - minX)) * (width - padX * 2);
-    const mapY = (y: number) => height - padBottom - ((y - minY) / (maxY - minY)) * (height - padTop - padBottom);
 
-    const zeroY = minY <= 0 && maxY >= 0 ? mapY(0) : height - padBottom;
-    const zeroX = minX <= 0 && maxX >= 0 ? mapX(0) : padX;
+    if (graphData.type === 'curve') {
+        const { points, actualMinY, actualMaxY, safeMinX, safeMaxX } = graphData as any;
 
-    const xAxisTicks = xTicksObj.ticks.map(t => (
-      <text key={`xt_${t}`} x={mapX(t)} y={height - padBottom + 20} fill="#aaa" fontSize="12" fontFamily="sans-serif" textAnchor="middle">{formatTick(t)}</text>
-    ));
+        let minX = safeMinX, maxX = safeMaxX;
+        let minY = actualMinY, maxY = actualMaxY;
+        if (minY === maxY) { minY -= 1; maxY += 1; }
+        
+        const xTicksObj = getNiceTicks(minX, maxX, 8);
+        minX = xTicksObj.niceMin;
+        maxX = xTicksObj.niceMax;
+        
+        const yTicksObj = getNiceTicks(minY, maxY, 6);
+        minY = yTicksObj.niceMin;
+        maxY = yTicksObj.niceMax;
 
-    const yAxisTicks = yTicksObj.ticks.map(t => (
-      <text key={`yt_${t}`} x={padX - 10} y={mapY(t)} fill="#aaa" fontSize="12" fontFamily="sans-serif" textAnchor="end" dominantBaseline="middle">{formatTick(t)}</text>
-    ));
+        const mapX = (x: number) => padX + ((x - minX) / (maxX - minX)) * (width - padX * 2);
+        const mapY = (y: number) => height - padBottom - ((y - minY) / (maxY - minY)) * (height - padTop - padBottom);
 
-    const gridLines = yTicksObj.ticks.map(t => (
-      <line key={`gl_${t}`} x1={padX} y1={mapY(t)} x2={width - padX} y2={mapY(t)} stroke="#333" strokeWidth="1" strokeDasharray="4 4" />
-    ));
+        const zeroY = minY <= 0 && maxY >= 0 ? mapY(0) : height - padBottom;
+        const zeroX = minX <= 0 && maxX >= 0 ? mapX(0) : padX;
 
-    let pathD = `M ${mapX(points[0].x)} ${mapY(points[0].y)}`;
-    for (let i = 1; i < points.length; i++) {
-      pathD += ` L ${mapX(points[i].x)} ${mapY(points[i].y)}`;
+        const xAxisTicks = xTicksObj.ticks.map((t: number) => (
+          <text key={`xt_${t}`} x={mapX(t)} y={height - padBottom + 20} fill="#aaa" fontSize="12" fontFamily="sans-serif" textAnchor="middle">{formatTick(t)}</text>
+        ));
+
+        const yAxisTicks = yTicksObj.ticks.map((t: number) => (
+          <text key={`yt_${t}`} x={padX - 10} y={mapY(t)} fill="#aaa" fontSize="12" fontFamily="sans-serif" textAnchor="end" dominantBaseline="middle">{formatTick(t)}</text>
+        ));
+
+        const gridLines = yTicksObj.ticks.map((t: number) => (
+          <line key={`gl_${t}`} x1={padX} y1={mapY(t)} x2={width - padX} y2={mapY(t)} stroke="#333" strokeWidth="1" strokeDasharray="4 4" />
+        ));
+
+        let pathD = `M ${mapX(points[0].x)} ${mapY(points[0].y)}`;
+        for (let i = 1; i < points.length; i++) {
+          pathD += ` L ${mapX(points[i].x)} ${mapY(points[i].y)}`;
+        }
+
+        return (
+          <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: '#1e1e1e', borderRadius: '8px', border: '1px solid #333' }}>
+            {gridLines}
+            <line x1={padX} y1={zeroY} x2={width - padX} y2={zeroY} stroke="#555" strokeWidth="1.5" />
+            <line x1={zeroX} y1={padTop} x2={zeroX} y2={height - padBottom} stroke="#555" strokeWidth="1.5" />
+            <path d={pathD} fill="none" stroke="#35aaf3" strokeWidth="2.5" />
+            {xAxisTicks}
+            {yAxisTicks}
+          </svg>
+        );
+    } else {
+        const { histogram, minV, maxV, maxCount, bins } = graphData as any;
+        const binWidth = (width - padX * 2) / bins;
+        
+        const xTicksObj = getNiceTicks(minV, maxV, 8);
+        const mapX = (v: number) => padX + ((v - minV) / (maxV - minV)) * (width - padX * 2);
+        
+        const xAxisTicks = xTicksObj.ticks.map((t: number) => (
+          <text key={`xt_${t}`} x={mapX(t)} y={height - padBottom + 20} fill="#aaa" fontSize="12" fontFamily="sans-serif" textAnchor="middle">{formatTick(t)}</text>
+        ));
+        
+        const bars = histogram.map((count: number, i: number) => {
+            const barH = (count / maxCount) * (height - padTop - padBottom);
+            const x = padX + i * binWidth;
+            const y = height - padBottom - barH;
+            return <rect key={`bar_${i}`} x={x} y={y} width={Math.max(1, binWidth - 1)} height={barH} fill="#35aaf3" opacity="0.8" />;
+        });
+
+        return (
+          <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: '#1e1e1e', borderRadius: '8px', border: '1px solid #333' }}>
+            {bars}
+            <line x1={padX} y1={height - padBottom} x2={width - padX} y2={height - padBottom} stroke="#555" strokeWidth="1.5" />
+            {xAxisTicks}
+          </svg>
+        );
     }
-
-    return (
-      <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ background: '#1e1e1e', borderRadius: '8px', border: '1px solid #333' }}>
-        {gridLines}
-        <line x1={padX} y1={zeroY} x2={width - padX} y2={zeroY} stroke="#555" strokeWidth="1.5" />
-        <line x1={zeroX} y1={padTop} x2={zeroX} y2={height - padBottom} stroke="#555" strokeWidth="1.5" />
-        <path d={pathD} fill="none" stroke="#35aaf3" strokeWidth="2.5" />
-        {xAxisTicks}
-        {yAxisTicks}
-      </svg>
-    );
   }, [graphData]);
 
   return (
@@ -233,22 +306,33 @@ export default function DensityGraphVisualizer({ onClose, file, contextFiles }: 
           <h2>Density Function Graph</h2>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
-        <div className="density-graph-controls">
+        <div className="density-graph-controls" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <div className="control-group">
-            <label>Reference:</label>
-            <select value={selectedRef} onChange={e => setSelectedRef(e.target.value)}>
-              {availableRefs.length === 0 && <option value="">No references found</option>}
-              {availableRefs.map(r => <option key={r} value={r}>{r}</option>)}
+            <label>Mode:</label>
+            <select value={mode} onChange={e => setMode(e.target.value as any)}>
+              <option value="distribution">Value Distribution</option>
+              <option value="curve">Transformation Curve</option>
             </select>
           </div>
-          <div className="control-group">
-            <label>X-Min:</label>
-            <input type="number" value={xMinInput} onChange={e => setXMinInput(e.target.value)} />
-          </div>
-          <div className="control-group">
-            <label>X-Max:</label>
-            <input type="number" value={xMaxInput} onChange={e => setXMaxInput(e.target.value)} />
-          </div>
+          {mode === 'curve' && (
+              <>
+                  <div className="control-group">
+                    <label>Reference:</label>
+                    <select value={selectedRef} onChange={e => setSelectedRef(e.target.value)}>
+                      {availableRefs.length === 0 && <option value="">No references found</option>}
+                      {availableRefs.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="control-group">
+                    <label>X-Min:</label>
+                    <input type="number" value={xMinInput} onChange={e => setXMinInput(e.target.value)} />
+                  </div>
+                  <div className="control-group">
+                    <label>X-Max:</label>
+                    <input type="number" value={xMaxInput} onChange={e => setXMaxInput(e.target.value)} />
+                  </div>
+              </>
+          )}
         </div>
         <div className="density-graph-canvas">
           {svgContent || (

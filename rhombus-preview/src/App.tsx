@@ -135,7 +135,7 @@ export default function App() {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.ctrlKey && e.key === 'g') {
+            if (e.ctrlKey && (e.key === 'g' || e.key === 'd')) {
                 e.preventDefault()
                 setShowGraphVisualizer(prev => !prev)
             }

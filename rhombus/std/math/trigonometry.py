@@ -15,11 +15,11 @@ pi = 3.1415926535897932 # 384626433832795028841971693993751058209749445923078164
 
 @macro
 def sin(df: AnyDensity) -> Density:
-    return spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.sin, (-pi, pi), 5))
+    return spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.sin, (0, 2 * pi), 5))
 
 @macro
 def cos(df: AnyDensity) -> Density:
-    return spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.cos, (-pi, pi), 5))
+    return spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.cos, (0, 2 * pi), 5))
 
 # ======// Derived Trigonometric Functions //====================================================//
 
@@ -140,7 +140,7 @@ def arcsinh(df: AnyDensity) -> Density:
 def arccosh(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arccosh():
-        if 1 <= df <= math.Infinity:
+        if df >= 1:
             return math.log(df + math.sqrt(df**2 - 1))
         else:
             return math.NaN
@@ -149,7 +149,7 @@ def arccosh(df: AnyDensity) -> Density:
 def arctanh(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arctanh():
-        if 1 <= df <= 1:
+        if -1 < df < 1:
             return 0.5 * math.log((1+df) / (1-df))
         else:
             return math.NaN
@@ -158,7 +158,7 @@ def arctanh(df: AnyDensity) -> Density:
 def arccoth(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arccoth():
-        if (-math.Infinity < df < -1) or (1 < df < math.Infinity):
+        if df < -1 or df > 1:
             return 0.5 * math.log((1+df) / (1-df))
         else:
             return math.NaN
@@ -176,7 +176,7 @@ def arcsech(df: AnyDensity) -> Density:
 def arccsch(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arccsch():
-        if (-math.Infinity < df < math.Infinity) and df != 0:
+        if df != 0:
             return math.log(1/df + math.sqrt(1/df**2 + 1))
         else:
             return math.NaN

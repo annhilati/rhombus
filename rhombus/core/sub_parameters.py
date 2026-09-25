@@ -73,6 +73,8 @@ class SubParameters(RhombusASTNode):
             meta = rhombus_fields.get(parameter)
             json_key = parameter
             if meta:
+                if not meta.is_present(rho):
+                    continue
                 json_key = meta.get_appropriate_key(rho, default=parameter)
                 if meta.validate:
                     import inspect

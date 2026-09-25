@@ -44,9 +44,10 @@ class MoredfsMapped extends deepslate.DensityFunction {
         this.func = func;
     }
     compute(context: any): number { return this.func(this.input.compute(context)); }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(new MoredfsMapped(this.input.mapAll(visitor), this.func)); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return new MoredfsMapped(visitor.apply(this.input), this.func); }
 }
 
 const mathMaps: Record<string, (v: number) => number> = {
@@ -83,9 +84,10 @@ class MoredfsClamp extends deepslate.DensityFunction {
         super(); this.input = input; this.minVal = minVal; this.maxVal = maxVal;
     }
     compute(context: any): number { return Math.max(this.minVal, Math.min(this.maxVal, this.input.compute(context))); }
-    minValue(): number { return this.minVal; }
-    maxValue(): number { return this.maxVal; }
-    mapAll(visitor: any): any { return visitor.map(new MoredfsClamp(this.input.mapAll(visitor), this.minVal, this.maxVal)); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return this.minVal; }
+    getMax(): number { return this.maxVal; }
+    mapChildren(visitor: any): any { return new MoredfsClamp(visitor.apply(this.input), this.minVal, this.maxVal); }
 }
 densityFunctions.set('moredfs:clamp', (obj: any, parser: any) => new MoredfsClamp(parser(obj.input), obj.min, obj.max));
 
@@ -96,9 +98,10 @@ class MoredfsDivisionBase extends deepslate.DensityFunction {
         super(); this.arg1 = arg1; this.arg2 = arg2; this.func = func;
     }
     compute(context: any): number { return this.func(this.arg1.compute(context), this.arg2.compute(context)); }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(new MoredfsDivisionBase(this.arg1.mapAll(visitor), this.arg2.mapAll(visitor), this.func)); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return new MoredfsDivisionBase(visitor.apply(this.arg1), visitor.apply(this.arg2), this.func); }
 }
 
 const divMaps: Record<string, (a: number, b: number) => number> = {
@@ -118,9 +121,10 @@ class MoredfsReciprocal extends deepslate.DensityFunction {
     input: any;
     constructor(input: any) { super(); this.input = input; }
     compute(context: any): number { return 1.0 / this.input.compute(context); }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(new MoredfsReciprocal(this.input.mapAll(visitor))); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return new MoredfsReciprocal(visitor.apply(this.input)); }
 }
 densityFunctions.set('moredfs:reciprocal', (obj: any, parser: any) => new MoredfsReciprocal(parser(obj.denominator)));
 
@@ -145,9 +149,10 @@ class MoredfsDotProduct extends deepslate.DensityFunction {
     compute(context: any): number {
         return this.arg1.compute(context) * this.arg2.compute(context);
     }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:dot_product', (obj: any, parser: any) => new MoredfsDotProduct(parser(obj.argument1), parser(obj.argument2), obj.step_x ?? 1, obj.step_y ?? 1, obj.step_z ?? 1));
 
@@ -164,9 +169,10 @@ class MoredfsCoord extends deepslate.DensityFunction {
         if (this.type === 'polar_coords') return Math.atan2(context.z, context.x);
         return 0;
     }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return this; }
 }
 ['x', 'y', 'z', 'radius', 'radius_3d', 'polar_coords'].forEach(type => {
     densityFunctions.set(`moredfs:${type}`, () => new MoredfsCoord(type));
@@ -212,9 +218,10 @@ class MoredfsDistance extends deepslate.DensityFunction {
         }
         return 0; // fallback
     }
-    minValue(): number { return 0; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return 0; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:distance', (obj: any, parser: any) => new MoredfsDistance(
     obj.distance_metric?.type?.replace('moredfs:', '') || 'euclidean',
@@ -250,9 +257,10 @@ class MoredfsDerivative extends deepslate.DensityFunction {
         const mag = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ) || 1;
         return gradX * (dirX/mag) + gradY * (dirY/mag) + gradZ * (dirZ/mag);
     }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:derivative', (obj: any, parser: any) => new MoredfsDerivative(
     parser(obj.argument),
@@ -273,9 +281,10 @@ class MoredfsGradientMagnitude extends deepslate.DensityFunction {
         if (this.stepZ) gradZ = (this.argument.compute({ ...context, z: context.z + this.stepZ }) - this.argument.compute({ ...context, z: context.z - this.stepZ })) / (2 * this.stepZ);
         return Math.sqrt(gradX*gradX + gradY*gradY + gradZ*gradZ);
     }
-    minValue(): number { return 0; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return 0; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:gradient_magnitude', (obj: any, parser: any) => new MoredfsGradientMagnitude(parser(obj.argument), obj.step_x ?? 1, obj.step_y ?? 1, obj.step_z ?? 1));
 
@@ -286,9 +295,10 @@ class MoredfsOrElse extends deepslate.DensityFunction {
         const val = this.argument.compute(context);
         return (isNaN(val) || !isFinite(val)) ? this.fallback.compute(context) : val; // JS doesn't have an exact equivalent to java Optional here, but typically NaNs or throwing.
     }
-    minValue(): number { return Math.min(this.argument.minValue(), this.fallback.minValue()); }
-    maxValue(): number { return Math.max(this.argument.maxValue(), this.fallback.maxValue()); }
-    mapAll(visitor: any): any { return visitor.map(new MoredfsOrElse(this.argument.mapAll(visitor), this.fallback.mapAll(visitor))); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return Math.min(((this.argument.range && typeof this.argument.range === 'function') ? this.argument.range() : deepslate.Interval.ofExact(0)).min, ((this.fallback.range && typeof this.fallback.range === 'function') ? this.fallback.range() : deepslate.Interval.ofExact(0)).min); }
+    getMax(): number { return Math.max(((this.argument.range && typeof this.argument.range === 'function') ? this.argument.range() : deepslate.Interval.ofExact(0)).max, ((this.fallback.range && typeof this.fallback.range === 'function') ? this.fallback.range() : deepslate.Interval.ofExact(0)).max); }
+    mapChildren(visitor: any): any { return new MoredfsOrElse(visitor.apply(this.argument), visitor.apply(this.fallback)); }
 }
 densityFunctions.set('moredfs:or_else', (obj: any, parser: any) => new MoredfsOrElse(parser(obj.argument), parser(obj.fallback)));
 
@@ -296,9 +306,10 @@ class MoredfsProfiler extends deepslate.DensityFunction {
     argument: any;
     constructor(argument: any) { super(); this.argument = argument; }
     compute(context: any): number { return this.argument.compute(context); }
-    minValue(): number { return this.argument.minValue(); }
-    maxValue(): number { return this.argument.maxValue(); }
-    mapAll(visitor: any): any { return visitor.map(new MoredfsProfiler(this.argument.mapAll(visitor))); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return ((this.argument.range && typeof this.argument.range === 'function') ? this.argument.range() : deepslate.Interval.ofExact(0)).min; }
+    getMax(): number { return ((this.argument.range && typeof this.argument.range === 'function') ? this.argument.range() : deepslate.Interval.ofExact(0)).max; }
+    mapChildren(visitor: any): any { return new MoredfsProfiler(visitor.apply(this.argument)); }
 }
 densityFunctions.set('moredfs:profiler', (obj: any, parser: any) => new MoredfsProfiler(parser(obj.argument)));
 
@@ -313,22 +324,26 @@ class MoredfsShift extends deepslate.DensityFunction {
         const sz = this.shiftZ ? this.shiftZ.compute(context) : 0;
         return this.argument.compute({ x: context.x + sx, y: context.y + sy, z: context.z + sz });
     }
-    minValue(): number { return this.argument.minValue(); }
-    maxValue(): number { return this.argument.maxValue(); }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return ((this.argument.range && typeof this.argument.range === 'function') ? this.argument.range() : deepslate.Interval.ofExact(0)).min; }
+    getMax(): number { return ((this.argument.range && typeof this.argument.range === 'function') ? this.argument.range() : deepslate.Interval.ofExact(0)).max; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:shift', (obj: any, parser: any) => new MoredfsShift(parser(obj.argument), parser(obj.shift_x), parser(obj.shift_y), parser(obj.shift_z)));
 
 class MoredfsValueNoise extends deepslate.DensityFunction {
-    sizeX: number; sizeY: number; sizeZ: number; interp: string; salt: number;
-    constructor(sizeX: number, sizeY: number, sizeZ: number, interp: string, salt: number) {
+    sizeX: number; sizeY: number; sizeZ: number; interp: string; salt: number; samplerMin: number; samplerMax: number;
+    constructor(sizeX: number, sizeY: number, sizeZ: number, interp: string, salt: number, sampler: any) {
         super(); this.sizeX = sizeX; this.sizeY = sizeY; this.sizeZ = sizeZ; this.interp = interp; this.salt = salt;
+        this.samplerMin = sampler?.min ?? 0;
+        this.samplerMax = sampler?.max ?? 1;
     }
     private hash(x: number, y: number, z: number): number {
         // basic fast hash for grid points
-        let h = (x * 3129871) ^ (y * 1161293) ^ (z * 7919) ^ this.salt;
-        h = (h ^ (h >> 13)) * 2654435761;
-        h = (h ^ (h >> 16));
+        // Use Math.imul to prevent JS floating point precision loss on 32-bit int multiplication
+        let h = Math.imul(x, 3129871) ^ Math.imul(y, 1161293) ^ Math.imul(z, 7919) ^ this.salt;
+        h = Math.imul(h ^ (h >>> 13), 2654435761);
+        h = (h ^ (h >>> 16));
         return (h >>> 0) / 4294967295.0; // 0 to 1
     }
     compute(context: any): number {
@@ -337,41 +352,47 @@ class MoredfsValueNoise extends deepslate.DensityFunction {
         const pz = this.sizeZ > 0 ? context.z / this.sizeZ : 0;
 
         const x0 = Math.floor(px); const y0 = Math.floor(py); const z0 = Math.floor(pz);
-        if (this.interp === 'none') return this.hash(x0, y0, z0);
+        
+        let val = 0;
+        if (this.interp === 'none') {
+            val = this.hash(x0, y0, z0);
+        } else {
+            let tx = px - x0; let ty = py - y0; let tz = pz - z0;
+            if (this.interp === 'smoothstep') {
+                tx = tx * tx * (3.0 - 2.0 * tx);
+                ty = ty * ty * (3.0 - 2.0 * ty);
+                tz = tz * tz * (3.0 - 2.0 * tz);
+            }
 
-        let tx = px - x0; let ty = py - y0; let tz = pz - z0;
-        if (this.interp === 'smoothstep') {
-            tx = tx * tx * (3.0 - 2.0 * tx);
-            ty = ty * ty * (3.0 - 2.0 * ty);
-            tz = tz * tz * (3.0 - 2.0 * tz);
+            const c000 = this.hash(x0, y0, z0);
+            const c100 = this.hash(x0 + 1, y0, z0);
+            const c010 = this.hash(x0, y0 + 1, z0);
+            const c110 = this.hash(x0 + 1, y0 + 1, z0);
+            const c001 = this.hash(x0, y0, z0 + 1);
+            const c101 = this.hash(x0 + 1, y0, z0 + 1);
+            const c011 = this.hash(x0, y0 + 1, z0 + 1);
+            const c111 = this.hash(x0 + 1, y0 + 1, z0 + 1);
+
+            const c00 = c000 + tx * (c100 - c000);
+            const c10 = c010 + tx * (c110 - c010);
+            const c01 = c001 + tx * (c101 - c001);
+            const c11 = c011 + tx * (c111 - c011);
+
+            const c0 = c00 + ty * (c10 - c00);
+            const c1 = c01 + ty * (c11 - c01);
+
+            val = c0 + tz * (c1 - c0);
         }
-
-        const c000 = this.hash(x0, y0, z0);
-        const c100 = this.hash(x0 + 1, y0, z0);
-        const c010 = this.hash(x0, y0 + 1, z0);
-        const c110 = this.hash(x0 + 1, y0 + 1, z0);
-        const c001 = this.hash(x0, y0, z0 + 1);
-        const c101 = this.hash(x0 + 1, y0, z0 + 1);
-        const c011 = this.hash(x0, y0 + 1, z0 + 1);
-        const c111 = this.hash(x0 + 1, y0 + 1, z0 + 1);
-
-        const c00 = c000 + tx * (c100 - c000);
-        const c10 = c010 + tx * (c110 - c010);
-        const c01 = c001 + tx * (c101 - c001);
-        const c11 = c011 + tx * (c111 - c011);
-
-        const c0 = c00 + ty * (c10 - c00);
-        const c1 = c01 + ty * (c11 - c01);
-
-        return c0 + tz * (c1 - c0);
+        return this.samplerMin + val * (this.samplerMax - this.samplerMin);
     }
-    minValue(): number { return 0; }
-    maxValue(): number { return 1; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return this.samplerMin; }
+    getMax(): number { return this.samplerMax; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:value_noise', (obj: any, parser: any) => new MoredfsValueNoise(
     obj.size_x ?? 1, obj.size_y ?? 1, obj.size_z ?? 1,
-    obj.interpolation ?? 'none', obj.salt ?? 0
+    obj.interpolation ?? 'none', obj.salt ?? 0, obj.sampler
 ));
 
 class MoredfsImageTessellation extends deepslate.DensityFunction {
@@ -397,9 +418,10 @@ class MoredfsImageTessellation extends deepslate.DensityFunction {
         if (idx >= 0 && idx < this.data.length) return this.data[idx];
         return 0;
     }
-    minValue(): number { return 0; }
-    maxValue(): number { return 255; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return 0; }
+    getMax(): number { return 255; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:single_channel_image_tessellation', (obj: any, parser: any) => new MoredfsImageTessellation(obj.x_size, obj.z_size, obj.deflated_frame_data));
 
@@ -434,9 +456,10 @@ class MoredfsGappedSpiral extends deepslate.DensityFunction {
         if (index >= 0 && index < this.gridCellArgs.length) return this.gridCellArgs[index].compute(context);
         return this.oobArg.compute(context);
     }
-    minValue(): number { return -Infinity; }
-    maxValue(): number { return Infinity; }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return -Infinity; }
+    getMax(): number { return Infinity; }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:gapped_grid_square_spiral', (obj: any, parser: any) => new MoredfsGappedSpiral(
     obj.x_size, obj.z_size, obj.spacing,
@@ -453,9 +476,10 @@ class MoredfsClampedGradient extends deepslate.DensityFunction {
         const val = this.axis === 'x' ? context.x : context.z;
         return clampedMap(val, this.from, this.to, this.fromV, this.toV);
     }
-    minValue(): number { return Math.min(this.fromV, this.toV); }
-    maxValue(): number { return Math.max(this.fromV, this.toV); }
-    mapAll(visitor: any): any { return visitor.map(this); }
+    range(): any { return deepslate.Interval.of(this.getMin(), this.getMax()); }
+    getMin(): number { return Math.min(this.fromV, this.toV); }
+    getMax(): number { return Math.max(this.fromV, this.toV); }
+    mapChildren(visitor: any): any { return this; }
 }
 densityFunctions.set('moredfs:x_clamped_gradient', (obj: any, parser: any) => new MoredfsClampedGradient('x', obj.from_x, obj.to_x, obj.from_value, obj.to_value));
 densityFunctions.set('moredfs:z_clamped_gradient', (obj: any, parser: any) => new MoredfsClampedGradient('z', obj.from_z, obj.to_z, obj.from_value, obj.to_value));
