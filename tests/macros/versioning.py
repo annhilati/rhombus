@@ -1,7 +1,8 @@
 ﻿import pytest
 from rhombus import rho
 from rhombus.core.density_function import constant
-from rhombus.std.macros import macro, implementation, resolve_ast_versioning
+from rhombus.core.node import resolve_ast_versioning
+from rhombus.std.macros import macro, implementation
 
 def test_macro_versioning_immediate():
     @macro

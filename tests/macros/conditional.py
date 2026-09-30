@@ -2,6 +2,7 @@ from rhombus import *
 from rhombus.support.vanilla import types
 from rhombus.support.vanilla.types import range_choice
 from rhombus.core.density_function import Reference
+from rhombus.core.node import resolve_ast_versioning
 from rhombus.core.utils import JSON_hash
 
 when = conditional.when
@@ -9,7 +10,6 @@ EPS = 1e-7
 
 
 def test_logic():
-    from rhombus.std.macros import resolve_ast_versioning
 
     assert resolve_ast_versioning((when("in1").equals(0) & when("in2").equals(1)).then(10).otherwise(
         -10
@@ -33,7 +33,6 @@ def test_logic():
 
 
 def test_alternatives():
-    from rhombus.std.macros import resolve_ast_versioning
 
     value = Density("minecraft:in").AST
     inp = Reference(

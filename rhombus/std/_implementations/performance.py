@@ -4,9 +4,8 @@ import sys
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash,walk
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash, walk, resolve_ast_versioning
 from rhombus.std.density import Density
-from rhombus.std.macros import resolve_ast_versioning
 import rhombus.support.vanilla.types as vt
 
 # Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).

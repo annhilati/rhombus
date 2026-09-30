@@ -18,7 +18,7 @@ import inspect
 import functools
 import sys
 
-from rhombus.core.node import UnresolvedVersionedNode, resolve_ast_versioning
+from rhombus.core.node import UnresolvedVersionedNode
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity

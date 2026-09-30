@@ -2,9 +2,9 @@ __all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 
 from typing import Callable, Iterable
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash, resolve_ast_versioning
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, resolve_ast_versioning
+from rhombus.std.macros import macro, implementation
 
 import rhombus.support.vanilla.types as vt
 
@@ -13,15 +13,18 @@ from ._implementations.performance import cache_nodes, df_size_info, DensityFunc
 
 # NOTE: multiple nested caching functions are no longer auto-inlined. When adding compatability with older versions again, implement it again
 @macro
-def cache(df: AnyDensity, *, partition: bool = True) -> Density:
+def cache(df: AnyDensity) -> Density:
     """If this density function is referenced twice, it is only computed once per block position.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache)
     """
-    if partition:
+    @implementation(until=118)
+    def cache():
         return Density.partitioned(vt.cache(df.AST))
-    return Density(vt.cache(df.AST))
+    @implementation
+    def cache():
+        return Density(vt.cache(df.AST))
 
 
 @macro

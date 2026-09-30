@@ -62,21 +62,29 @@ class Density:
     # ======// Factories //=======================================================================//
 
     @classmethod
+    def _configured(cls, identifier: str, value: AnyDensity):
+        if not isinstance(identifier, str):
+            raise TypeError("identifier has to be of string type")
+        value = Density(value)
+        identifier = "minecraft:" + identifier if ":" not in identifier else identifier
+        return Density(Reference(identifier, definition=value.AST))
+
+    @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
-        value = Density(value)
-        return ("rhombus:generated/" + JSON_hash(value.as_dict())) @ value
+        return Density._configured(
+            identifier="rhombus:generated/" + JSON_hash(Density(value).as_dict()),
+            value=value
+        )
 
     def __rmatmul__(self, identifier: str):
-        if not isinstance(identifier, str):
-            raise TypeError("Density can only be assigned to a string identifier")
-        identifier = "minecraft:" + identifier if ":" not in identifier else identifier
-        default = self.AST
-        
         import rhombus.support.vanilla.types as vt
-        if isinstance(self.AST, Reference) and isinstance(self.AST.definition, vt.cache):
+        
+        default = self.AST
+        if isinstance(default, Reference) and isinstance(default.definition, vt.cache):
             default = default.definition
-        return Density(Reference(identifier, default))
+        return Density._configured(identifier, default)
+
 
     # ======// Toolchain //=======================================================================//
 
