@@ -51,6 +51,8 @@ def safe_is_type(obj, attr: str) -> bool:
         return False
 
 def is_documented_member(m) -> bool:
+    if safe_is_type(m, "is_attribute") and m.name.startswith("__"):
+        return False
     if m.name.startswith("_") and not m.name.startswith("__"):
         return False
     if getattr(m, "is_alias", False):

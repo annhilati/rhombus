@@ -2,6 +2,8 @@ from __future__ import annotations
 
 __all__ = ["when", "NOT", "ALL", "ANY", "it"]
 
+# TODO: Reimplement NOT, ALL, ANY and it
+
 from dataclasses import dataclass, field
 from typing import Any, Never
 from enum import Enum

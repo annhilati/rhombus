@@ -4,6 +4,7 @@ import textwrap
 from typing import Callable, Any
 
 # do not import from rhombus.std.conditional.fluent to avoid circular import
+# TODO: allow is NaN and warn on == NaN
 
 def _dsl_if_helper(cond: Any, true_func: Callable[[], Any], false_func: Callable[[], Any]) -> Any:
     # Resolve condition class dynamically to avoid circular imports
@@ -204,9 +205,8 @@ class ConditionalTransformer(ast.NodeTransformer):
         if not assigned_names and not finder.has_return:
             return node
             
-        self.counter += 1
-        fn_true_name = f"_true_fn_{self.counter}"
-        fn_false_name = f"_false_fn_{self.counter}"
+        fn_true_name = "if_branch"
+        fn_false_name = "else_branch"
         
         class ReturnRewriter(ast.NodeTransformer):
             def visit_Return(self, n: ast.Return):
@@ -345,8 +345,7 @@ class ConditionalTransformer(ast.NodeTransformer):
         if not assigned_names and not finder.has_return:
             return node
             
-        self.counter += 1
-        fn_name = f"_with_body_{self.counter}"
+        fn_name = "with_block"
         
         class ReturnRewriter(ast.NodeTransformer):
             def visit_Return(self, n: ast.Return):

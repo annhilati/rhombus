@@ -24,6 +24,7 @@ from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
 from rhombus.runtime import rho
 
+# TODO: Comprehend values returnd in macors as AnyDensity? -> Will raise of not applicable
 
 def _create_argument_resolver(func: Callable) -> Callable:
     """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
