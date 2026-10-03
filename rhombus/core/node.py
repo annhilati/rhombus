@@ -1,4 +1,4 @@
-__all__ = ["RhombusASTNode", "field", "FieldMeta", "UnresolvedVersionedNode", "walk", "transform", "resolve_ast_versioning"]
+__all__ = ["RhombusASTNode", "field", "FieldMeta", "walk", "transform"]
 
 
 from typing import Self, Any, ClassVar, Callable, dataclass_transform 
@@ -364,59 +364,6 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
         return cls.deserialize_toplevel(data)
 
 
-class UnresolvedVersionedNode(RhombusASTNode):
-    # TODO: don't be so fixed on versioning
-    dispatcher: Callable = dataclasses.field(repr=False, compare=False)
-    args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
-    kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
-    repr_func: Callable[["UnresolvedVersionedNode"], str] | None = dataclasses.field(
-        default=None, repr=False, compare=False
-    )
-
-    _cached_version: Any = dataclasses.field(init=False, default=None, repr=False, compare=False)
-    _cached_node: RhombusASTNode | None = dataclasses.field(
-        init=False, default=None, repr=False, compare=False
-    )
-
-    def __repr__(self) -> str:
-        if self.repr_func is not None:
-            return self.repr_func(self)
-        parts = [repr(arg) for arg in self.args]
-        parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
-        return f"{self.dispatcher.__name__}({', '.join(parts)})"
-
-    def resolve(self) -> RhombusASTNode:
-        current_version = rho.datapack_version
-
-        if self._cached_version == current_version and self._cached_node is not None:
-            return self._cached_node
-
-        result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
-        object.__setattr__(self, "_cached_version", current_version)
-
-        if hasattr(result, "AST") and isinstance(result.AST, RhombusASTNode):
-            object.__setattr__(self, "_cached_node", result.AST)
-        elif isinstance(result, RhombusASTNode):
-            object.__setattr__(self, "_cached_node", result)
-        else:
-            raise TypeError(
-                f"Version node dispatcher returned invalid type: {type(result)}"
-            )
-
-        return self._cached_node
-
-    # Pass through standard methods to the resolved node
-    def serialize_inline(self):
-        return self.resolve().serialize_inline()
-
-    def serialize_toplevel(self):
-        return self.resolve().serialize_toplevel()
-
-    @property
-    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
-        return self.resolve().inscribed_toplevel_nodes
-
-
 def walk(node: RhombusASTNode | Any) -> Iterator[RhombusASTNode]:
     """Yields all RhombusASTNodes in the tree recursively (top-down)."""
 
@@ -478,7 +425,7 @@ def transform(node: RhombusASTNode | Any, func: Callable[[RhombusASTNode], Rhomb
     return node
 
 
-def resolve_ast_versioning(node: RhombusASTNode) -> RhombusASTNode:
+
     """Recursively traverses the AST and resolves all UnresolvedVersionedNodes."""
     
     def _resolver(n: RhombusASTNode) -> RhombusASTNode:

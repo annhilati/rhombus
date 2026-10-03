@@ -110,8 +110,8 @@ def check_type(value: Any, annotation: Annotation) -> bool:
         if issubclass(annotation, enum.Enum):
             return isinstance(value, annotation) or value in [e.value for e in annotation]
             
-        if type(value).__name__ == "UnresolvedVersionedNode":
-            # UnresolvedVersionedNodes are placeholders for any RhombusASTNode subclass.
+        if type(value).__name__ == "UnresolvedMacroNode":
+            # UnresolvedMacroNodes are placeholders for any RhombusASTNode subclass.
             # We skip strict validation since the actual type isn't known until resolution.
             return True
             

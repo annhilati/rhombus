@@ -18,13 +18,11 @@ import inspect
 import functools
 import sys
 
-from rhombus.core.node import UnresolvedVersionedNode
+
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
 from rhombus.runtime import rho
-
-# TODO: Comprehend values returnd in macors as AnyDensity? -> Will raise of not applicable
 
 def _create_argument_resolver(func: Callable) -> Callable:
     """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
@@ -154,40 +152,23 @@ class MacroDispatcher:
         self.func = _create_argument_resolver(func)
         self.repr_func = repr_func
 
-
         self.default_ns = get_module_addon_namespace(func.__module__) or "datapack"
 
         functools.update_wrapper(self, func)
         self.__signature__ = inspect.signature(func)
 
-        # Determine if we should evaluate lazily based on return annotation
-        ret_anno = func.__annotations__.get("return")
-        if ret_anno is None:
-            self.returns_density = True
-        else:
-            ret_str = str(ret_anno)
-            if "Density" in ret_str or "RhombusASTNode" in ret_str or "Any" in ret_str:
-                self.returns_density = True
-            else:
-                self.returns_density = False
-
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         # Pre-validate arguments so we throw early if they are invalid
         self.__signature__.bind(*args, **kwargs)
 
-        if self.returns_density:
-            return Density(
-                UnresolvedVersionedNode(
-                    dispatcher=self,
-                    args=args,
-                    kwargs=kwargs,
-                    repr_func=self.repr_func
-                )
+        return Density(
+            UnresolvedMacroNode(
+                dispatcher=self,
+                args=args,
+                kwargs=kwargs,
+                repr_func=self.repr_func
             )
-        else:
-            # If the macro explicitly returns something else (like an int or tuple),
-            # we cannot use a lazy AST node placeholder. We must evaluate it immediately.
-            return self._execute_for_version(*args, **kwargs)
+        )
 
     def _execute_for_version(self, *args: Any, **kwargs: Any) -> Any:
         global _macro_registrations
@@ -200,8 +181,16 @@ class MacroDispatcher:
         impls = list(_macro_registrations)
         _macro_registrations = []
 
+        def _coerce_density(res: Any) -> "Density":
+            if not isinstance(res, Density):
+                try:
+                    res = Density(res)
+                except Exception as e:
+                    raise TypeError(f"Macro '{self.__name__}' returned {type(res)}, which could not be converted to a Density object.") from e
+            return res
+
         if not impls:
-            return result
+            return _coerce_density(result)
 
         parsed_impls = []
         default_impl = None
@@ -222,8 +211,8 @@ class MacroDispatcher:
         def _invoke(impl_f: Callable) -> Any:
             sig = inspect.signature(impl_f)
             if not sig.parameters:
-                return impl_f()
-            return _create_argument_resolver(impl_f)(*args, **kwargs)
+                return _coerce_density(impl_f())
+            return _coerce_density(_create_argument_resolver(impl_f)(*args, **kwargs))
 
         def _check(req_tuple: tuple[str, tuple[int, ...]]) -> bool:
             ns, req_v = req_tuple
@@ -261,11 +250,11 @@ class MacroDispatcher:
 @overload
 def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
 @overload
-def macro[**P, R](*, repr: Callable[["UnresolvedVersionedNode"], str] | None = None) -> Decorator[P, R]: ...
+def macro[**P, R](*, repr: Callable[["UnresolvedMacroNode"], str] | None = None) -> Decorator[P, R]: ...
 def macro(
     func: Callable | None = None,
     *,
-    repr: Callable[["UnresolvedVersionedNode"], str] | None = None
+    repr: Callable[["UnresolvedMacroNode"], str] | None = None
 ) -> Callable:
     """The **`macro`** decorator allows functions to use special behaviour beneficial for writing density functions:
     
@@ -280,3 +269,63 @@ def macro(
         return decorator(func)
     return decorator
 
+import dataclasses
+from rhombus.core.node import RhombusASTNode, transform
+from typing import Any
+
+class UnresolvedMacroNode(RhombusASTNode):
+    dispatcher: Callable = dataclasses.field(repr=False, compare=False)
+    args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
+    kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
+    repr_func: Callable[["UnresolvedMacroNode"], str] | None = dataclasses.field(
+        default=None, repr=False, compare=False
+    )
+
+    _cached_version: Any = dataclasses.field(init=False, default=None, repr=False, compare=False)
+    _cached_node: RhombusASTNode | None = dataclasses.field(
+        init=False, default=None, repr=False, compare=False
+    )
+
+    def __repr__(self) -> str:
+        if self.repr_func is not None:
+            return self.repr_func(self)
+        parts = [repr(arg) for arg in self.args]
+        parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
+        return f"{self.dispatcher.__name__}({', '.join(parts)})"
+
+    def resolve(self) -> RhombusASTNode:
+        current_version = rho.datapack_version
+
+        if self._cached_version == current_version and self._cached_node is not None:
+            return self._cached_node
+
+        result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
+        object.__setattr__(self, "_cached_version", current_version)
+
+        if hasattr(result, "AST") and isinstance(result.AST, RhombusASTNode):
+            object.__setattr__(self, "_cached_node", result.AST)
+        elif isinstance(result, RhombusASTNode):
+            object.__setattr__(self, "_cached_node", result)
+        else:
+            raise TypeError(
+                f"Version node dispatcher returned invalid type: {type(result)}"
+            )
+
+        return self._cached_node
+
+    def serialize_inline(self):
+        return self.resolve().serialize_inline()
+
+    def serialize_toplevel(self):
+        return self.resolve().serialize_toplevel()
+
+    @property
+    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+        return self.resolve().inscribed_toplevel_nodes
+
+def resolve_ast_macros(node: RhombusASTNode) -> RhombusASTNode:
+    def _resolver(n: RhombusASTNode) -> RhombusASTNode:
+        if isinstance(n, UnresolvedMacroNode):
+            return resolve_ast_macros(n.resolve())
+        return n
+    return transform(node, _resolver)

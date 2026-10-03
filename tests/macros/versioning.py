@@ -1,7 +1,7 @@
-﻿import pytest
+import pytest
 from rhombus import rho
 from rhombus.core.density_function import constant
-from rhombus.core.node import resolve_ast_versioning
+from rhombus.std.macros import resolve_ast_macros
 from rhombus.std.macros import macro, implementation
 
 def test_macro_versioning_immediate():
@@ -20,19 +20,19 @@ def test_macro_versioning_immediate():
             return 3
         
     rho.datapack_version = "1.17"
-    assert dummy() == 1
+    assert resolve_ast_macros(dummy().AST).value == 1.0
     
     rho.datapack_version = "1.18"
-    assert dummy() == 2
+    assert resolve_ast_macros(dummy().AST).value == 2.0
     
     rho.datapack_version = "1.19"
-    assert dummy() == 2
+    assert resolve_ast_macros(dummy().AST).value == 2.0
     
     rho.datapack_version = "1.20"
-    assert dummy() == 3
+    assert resolve_ast_macros(dummy().AST).value == 3.0
     
     rho.datapack_version = "1.21"
-    assert dummy() == 3
+    assert resolve_ast_macros(dummy().AST).value == 3.0
 
 def test_macro_versioning_lazy():
     @macro
@@ -50,19 +50,19 @@ def test_macro_versioning_lazy():
             return constant(3.0)
         
     rho.datapack_version = "1.17"
-    assert resolve_ast_versioning(dummy().AST).value == 1.0
+    assert resolve_ast_macros(dummy().AST).value == 1.0
     
     rho.datapack_version = "1.18"
-    assert resolve_ast_versioning(dummy().AST).value == 2.0
+    assert resolve_ast_macros(dummy().AST).value == 2.0
     
     rho.datapack_version = "1.19"
-    assert resolve_ast_versioning(dummy().AST).value == 2.0
+    assert resolve_ast_macros(dummy().AST).value == 2.0
     
     rho.datapack_version = "1.20"
-    assert resolve_ast_versioning(dummy().AST).value == 3.0
+    assert resolve_ast_macros(dummy().AST).value == 3.0
     
     rho.datapack_version = "1.21"
-    assert resolve_ast_versioning(dummy().AST).value == 3.0
+    assert resolve_ast_macros(dummy().AST).value == 3.0
 
 def test_macro_versioning_exceptions():
     @macro
@@ -73,10 +73,10 @@ def test_macro_versioning_exceptions():
         
     rho.datapack_version = "1.19"
     with pytest.raises(NotImplementedError):
-        dummy_since()
+        resolve_ast_macros(dummy_since().AST)
         
     rho.datapack_version = "1.20"
-    assert dummy_since() == 1
+    assert resolve_ast_macros(dummy_since().AST).value == 1.0
     
     @macro
     def dummy_missing_namespace() -> int:
@@ -85,7 +85,7 @@ def test_macro_versioning_exceptions():
             return 1
         
     with pytest.raises(NotImplementedError):
-        dummy_missing_namespace()
+        resolve_ast_macros(dummy_missing_namespace().AST)
 
 def test_macro_versioning_default():
     @macro
@@ -99,7 +99,7 @@ def test_macro_versioning_default():
             return 2
         
     rho.datapack_version = "1.17"
-    assert dummy() == 1
+    assert resolve_ast_macros(dummy().AST).value == 1.0
     
     rho.datapack_version = "1.20"
-    assert dummy() == 2
+    assert resolve_ast_macros(dummy().AST).value == 2.0

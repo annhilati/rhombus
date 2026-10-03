@@ -109,15 +109,8 @@ class ComparisonCondition(Condition):
     value: float | tuple[float, float]
 
     def __post_init__(self):
-        from rhombus.core.density_function import DensityFunction
-        from rhombus.std.density import Density
         
         def check_val(v):
-            if isinstance(v, (DensityFunction, Density)):
-                raise TypeError(
-                    "Density Functions can only be conditionally compared against constants (numbers), "
-                    f"not other Density Functions. Attempted to compare against: {v}"
-                )
             try:
                 float(v)
             except (TypeError, ValueError):
@@ -301,47 +294,41 @@ class _ConditionBuilder[T]:
     def _wrap(self, cond: Condition) -> T:
         raise NotImplementedError
 
-    def equals(self, value: float) -> T:
-        return self._wrap(
-            ComparisonCondition(
-                input=self._subject, relation=Relation.EQUALS, value=value
-            )
-        )
+    def _coerce_input_and_value(self, value: Any) -> tuple["DensityFunction", float]:
+        from rhombus.core.density_function import DensityFunction
+        from rhombus.std.density import Density
+        if isinstance(value, (DensityFunction, Density)):
+            from rhombus.std.math.general import sub
+            diff = sub(Density(self._subject), Density(value))
+            return diff.AST, 0.0
+        try:
+            return self._subject, float(value)
+        except (TypeError, ValueError):
+            raise TypeError(f"Comparison value must be a number or density function, got: {type(value).__name__}")
 
-    def unequals(self, value: float) -> T:
-        return self._wrap(
-            ComparisonCondition(
-                input=self._subject, relation=Relation.UNEQUAL, value=value
-            )
-        )
+    def equals(self, value: float | AnyDensity) -> T:
+        input_ast, val = self._coerce_input_and_value(value)
+        return self._wrap(ComparisonCondition(input=input_ast, relation=Relation.EQUALS, value=val))
 
-    def greater(self, value: float) -> T:
-        return self._wrap(
-            ComparisonCondition(
-                input=self._subject, relation=Relation.GREATER_THAN, value=value
-            )
-        )
+    def unequals(self, value: float | AnyDensity) -> T:
+        input_ast, val = self._coerce_input_and_value(value)
+        return self._wrap(ComparisonCondition(input=input_ast, relation=Relation.UNEQUAL, value=val))
 
-    def less(self, value: float) -> T:
-        return self._wrap(
-            ComparisonCondition(
-                input=self._subject, relation=Relation.LESS_THAN, value=value
-            )
-        )
+    def greater(self, value: float | AnyDensity) -> T:
+        input_ast, val = self._coerce_input_and_value(value)
+        return self._wrap(ComparisonCondition(input=input_ast, relation=Relation.GREATER_THAN, value=val))
 
-    def atleast(self, value: float) -> T:
-        return self._wrap(
-            ComparisonCondition(
-                input=self._subject, relation=Relation.GREATER_OR_EQUAL, value=value
-            )
-        )
+    def less(self, value: float | AnyDensity) -> T:
+        input_ast, val = self._coerce_input_and_value(value)
+        return self._wrap(ComparisonCondition(input=input_ast, relation=Relation.LESS_THAN, value=val))
 
-    def atmost(self, value: float) -> T:
-        return self._wrap(
-            ComparisonCondition(
-                input=self._subject, relation=Relation.LESS_OR_EQUAL, value=value
-            )
-        )
+    def atleast(self, value: float | AnyDensity) -> T:
+        input_ast, val = self._coerce_input_and_value(value)
+        return self._wrap(ComparisonCondition(input=input_ast, relation=Relation.GREATER_OR_EQUAL, value=val))
+
+    def atmost(self, value: float | AnyDensity) -> T:
+        input_ast, val = self._coerce_input_and_value(value)
+        return self._wrap(ComparisonCondition(input=input_ast, relation=Relation.LESS_OR_EQUAL, value=val))
 
     def inside(self, low: float, high: float, /) -> T:
         return self._wrap(

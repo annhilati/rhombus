@@ -2,9 +2,9 @@ __all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
 
 from typing import Callable, Iterable
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash, resolve_ast_versioning
+from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
+from rhombus.std.macros import macro, implementation, resolve_ast_macros
 
 import rhombus.support.vanilla.types as vt
 
@@ -100,7 +100,7 @@ def recurrence_cache(
     )
     return Density(
         cache_nodes(
-            resolve_ast_versioning(df.AST),
+            resolve_ast_macros(df.AST),
             Conditions.occurrences_satisfy(lambda n: n > 1),
             Conditions.min_size(max_nodes + 1),
             transformer=transformer,
@@ -147,5 +147,5 @@ def get_size(df: Density) -> DensityFunctionSizeInfo:
             - `~.unique_unknown_references`: Number of unique references with unknown definition
             - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
     """
-    resolved = resolve_ast_versioning(df.AST)
+    resolved = resolve_ast_macros(df.AST)
     return df_size_info(resolved)

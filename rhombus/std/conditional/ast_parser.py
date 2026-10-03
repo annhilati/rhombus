@@ -4,7 +4,13 @@ import textwrap
 from typing import Callable, Any
 
 # do not import from rhombus.std.conditional.fluent to avoid circular import
-# TODO: allow is NaN and warn on == NaN
+
+def _dsl_is_nan(val: Any) -> Any:
+    import math
+    if isinstance(val, (int, float)):
+        return math.isnan(val)
+    from rhombus.std.conditional.fluent import when
+    return when(val).is_nan()
 
 def _dsl_if_helper(cond: Any, true_func: Callable[[], Any], false_func: Callable[[], Any]) -> Any:
     # Resolve condition class dynamically to avoid circular imports
@@ -29,8 +35,8 @@ def _dsl_if_block_helper(cond: Any, true_fn: Callable[..., Any], false_fn: Calla
             # One branch returns but the other doesn't.
             # Since we evaluate both branches, we cannot magically skip the rest of the function.
             raise TypeError(
-                "Inside of macros, early returns inside Density-dependent if-statements are not supported unless all branches return a value. "
-                "Please structure your code so that either both branches return, or neither does (and return at the end of the macro instead)."
+                "Inside of macros, early returns inside Density-dependent if-statements are not supported unless all branches including the 'else' branch return a value. "
+                "Please structure your code so that either all branches return, or no do (and return at the end of the macro instead)."
             )
 
         merged_vars = []
@@ -147,6 +153,21 @@ class ConditionalTransformer(ast.NodeTransformer):
     def visit_Compare(self, node: ast.Compare) -> Any:
         self.generic_visit(node)
         
+        if len(node.ops) == 1 and isinstance(node.comparators[0], ast.Name) and node.comparators[0].id == 'NaN':
+            op = node.ops[0]
+            if isinstance(op, (ast.Eq, ast.NotEq)):
+                import warnings
+                warnings.warn("Comparison with 'NaN' using '==' or '!=' is unreliable. Use 'is NaN' or 'is not NaN' instead to generate a valid condition.", SyntaxWarning, stacklevel=2)
+            elif isinstance(op, (ast.Is, ast.IsNot)):
+                call = ast.Call(
+                    func=ast.Name(id='_dsl_is_nan', ctx=ast.Load()),
+                    args=[node.left],
+                    keywords=[]
+                )
+                if isinstance(op, ast.IsNot):
+                    call = ast.UnaryOp(op=ast.Invert(), operand=call)
+                return ast.copy_location(call, node)
+
         if len(node.ops) <= 1:
             return node
             
@@ -466,6 +487,7 @@ def transform_ast(func: Callable) -> Callable:
     ast.fix_missing_locations(new_tree)
 
     func_globals = func.__globals__.copy()
+    func_globals['_dsl_is_nan'] = _dsl_is_nan
     func_globals['_dsl_if_helper'] = _dsl_if_helper
     func_globals['_dsl_if_block_helper'] = _dsl_if_block_helper
     func_globals['_dsl_with_block_helper'] = _dsl_with_block_helper

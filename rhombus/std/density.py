@@ -9,7 +9,9 @@ from typing import Any, Self, Literal, overload
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus.core.node import UnresolvedVersionedNode
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from rhombus.std.macros import UnresolvedMacroNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
@@ -40,7 +42,7 @@ class Density:
     ```
     """
 
-    AST: DensityFunction | UnresolvedVersionedNode
+    AST: DensityFunction | "UnresolvedMacroNode"
     "The density function AST represented by this Density."
 
     @overload
@@ -329,7 +331,7 @@ type AnyDensity = Density | float | int | str
 
 
 # TODO: integrate into the Density type?
-def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersionedNode) -> DensityFunction | UnresolvedVersionedNode:
+def _unify(v: int | float | str | Density | DensityFunction | "UnresolvedMacroNode") -> DensityFunction | UnresolvedMacroNode:
     """Interprets a QoL argument input and returns a DensityFunction object.
     Applies logic like splitting large literal constants into calculations
     before constructing constant AST nodes.
@@ -338,7 +340,8 @@ def _unify(v: int | float | str | Density | DensityFunction | UnresolvedVersione
     if isinstance(v, Density):
         return v.AST
 
-    if isinstance(v, (DensityFunction, UnresolvedVersionedNode)):
+    from rhombus.std.macros import UnresolvedMacroNode
+    if isinstance(v, (DensityFunction, UnresolvedMacroNode)):
         return v
 
     if isinstance(v, (int, float)):
