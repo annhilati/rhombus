@@ -226,7 +226,7 @@ def log(df: AnyDensity, *, base: AnyDensity = e) -> Density:
 def clamp(df: AnyDensity, min: AnyDensity, max: AnyDensity) -> Density:
     """Limits the values of the input to the range `[min, max]`."""
     if isinstance(min.AST, vt.constant) and isinstance(max.AST, vt.constant):
-        return Density(vt.clamp(df.AST, min, max))
+        return Density(vt.clamp(df.AST, min.AST.value, max.AST.value))
     return Density(vt.max(max.AST, vt.min(min.AST, df.AST)))
 
 

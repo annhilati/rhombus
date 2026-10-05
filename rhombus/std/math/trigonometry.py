@@ -42,39 +42,39 @@ def csc(df: AnyDensity) -> Density:
 # ======// Inverse Trigonometric Functions //====================================================//
 
 @macro
-def asin(df: AnyDensity) -> Density:
+def arcsin(df: AnyDensity) -> Density:
     if -1 <= df <= 1:
-        return caching.specified_cache(atan(df / (1 - df**2)**0.5), df)
+        return caching.specified_cache(arctan(df / (1 - df**2)**0.5), df)
     else:
         return math.NaN
 
 @macro
-def acos(df: AnyDensity) -> Density:
-    return pi/2 - asin(df)
+def arccos(df: AnyDensity) -> Density:
+    return pi/2 - arcsin(df)
 
 @macro
-def atan(df: AnyDensity) -> Density:
+def arctan(df: AnyDensity) -> Density:
     return spline(df, _splinelib.sample_spline_points(py_math.atan, (-8, 8), points=7))
 
 @macro
-def acot(df: AnyDensity) -> Density:
-    return atan(1/df)
+def arccot(df: AnyDensity) -> Density:
+    return arctan(1/df)
 
 @macro
-def asec(df: AnyDensity) -> Density:
+def arcsec(df: AnyDensity) -> Density:
     if df <= -1:
-        return pi - atan((df**2 - 1)**0.5)
+        return pi - arctan((df**2 - 1)**0.5)
     elif df >= 1:
-        return atan((df**2 - 1)**0.5)
+        return arctan((df**2 - 1)**0.5)
     else:
         return math.NaN
 
 @macro
-def acsc(df: AnyDensity) -> Density:
+def arccsc(df: AnyDensity) -> Density:
     if df <= -1:
-        return - atan(1 / (df**2 - 1)**0.5)
+        return - arctan(1 / (df**2 - 1)**0.5)
     elif df >= 1:
-        return atan(1 / (df**2 - 1)**0.5)
+        return arctan(1 / (df**2 - 1)**0.5)
     else:
         return math.NaN
 
@@ -126,7 +126,7 @@ def csch(df: AnyDensity) -> Density:
 # ======// Inverse Hyperbolic Trigonometric Functions //=========================================//
 
 @macro
-def arcsinh(df: AnyDensity) -> Density:
+def arsinh(df: AnyDensity) -> Density:
     @implementation(until=113)
     def arcsinh():
         spline(df, _splinelib.sample_spline_points(py_math.asinh, (-60, 60), points=14))
@@ -134,10 +134,10 @@ def arcsinh(df: AnyDensity) -> Density:
     def arcsinh():
         return math.log(df + math.sqrt(df**2 + 1))
     
-# Check whether there are legacy implementations
+# TODO: Check whether there are legacy implementations
 
 @macro
-def arccosh(df: AnyDensity) -> Density:
+def arcosh(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arccosh():
         if df >= 1:
@@ -146,7 +146,7 @@ def arccosh(df: AnyDensity) -> Density:
             return math.NaN
         
 @macro
-def arctanh(df: AnyDensity) -> Density:
+def artanh(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arctanh():
         if -1 < df < 1:
@@ -155,7 +155,7 @@ def arctanh(df: AnyDensity) -> Density:
             return math.NaN
         
 @macro
-def arccoth(df: AnyDensity) -> Density:
+def arcoth(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arccoth():
         if df < -1 or df > 1:
@@ -164,7 +164,7 @@ def arccoth(df: AnyDensity) -> Density:
             return math.NaN
         
 @macro
-def arcsech(df: AnyDensity) -> Density:
+def arsech(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arcsech():
         if 0 < df <= 1:
@@ -173,7 +173,7 @@ def arcsech(df: AnyDensity) -> Density:
             return math.NaN
         
 @macro
-def arccsch(df: AnyDensity) -> Density:
+def arcsch(df: AnyDensity) -> Density:
     @implementation(since=113)
     def arccsch():
         if df != 0:
@@ -190,14 +190,14 @@ def arctan2(df1: AnyDensity, df2: AnyDensity) -> Density:
     # https://en.wikipedia.org/wiki/Atan2
     # We do not use half-angle formula to avoid precission loss with the atan definition
     if df1 > 0:
-        return atan(df2/df1)
+        return arctan(df2/df1)
     elif df1 < 0:
         if df2 > 0:
-            return atan(df2/df1) + pi
+            return arctan(df2/df1) + pi
         elif df2 == 0:
             return pi
         else:
-            return atan(df2/df1) - pi
+            return arctan(df2/df1) - pi
     else:
         if df2 > 0:
             return pi/2
