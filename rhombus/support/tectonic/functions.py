@@ -7,7 +7,7 @@ from . import types
 
 @macro
 def invert(argument: AnyDensity) -> Density:
-    """Calculates `1/x`."""
+    """Calculates the reciprocal value of the input."""
     return Density(types.invert(argument.AST))
 
 

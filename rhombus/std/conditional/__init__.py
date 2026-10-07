@@ -12,7 +12,7 @@ from rhombus.std.conditional import *
 out = (
     when(input).equals(1.0)
         .then(10.0)
-    .elsewhen(it).equals(2.0)
+    .elsewhen(input).equals(2.0)
         .then(20.0)
     .otherwise(0.0)
 )

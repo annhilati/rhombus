@@ -33,7 +33,6 @@ def test_logic():
 
 
 def test_alternatives():
-
     value = Density("minecraft:in").AST
     inp = Reference(
         "rhombus:generated/" + JSON_hash(value.serialize_toplevel()),

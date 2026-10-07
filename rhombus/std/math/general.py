@@ -200,7 +200,7 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     
     @implementation
     def pow():
-        if exponent.is_identical(Density(0.5)):
+        if exponent.AST == Density(0.5).AST:
             return Density(vt.sqrt(base.AST))
         return Density(vt.pow(base.AST, exponent.AST))
 

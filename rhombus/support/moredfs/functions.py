@@ -56,7 +56,7 @@ __all__ = [
 ]
 
 # For more detailed information about specific parameters, please refer to the MoreDFs documentation:
-# https://github.com/TheDeathlyCow/more-density-functions/wiki
+# https://github.com/Klinbee/more-density-functions/wiki
 
 import base64
 from typing import Literal
@@ -369,7 +369,7 @@ def dot_product(
 ):
     "Returns the dot product of two functions."
     return Density(
-        types.dot_product(argument1.AST, argument2.AST, step_x, step_y, step_z)
+        types.dot_product(argument1.AST, argument2.AST, step_x, step_y, step_z) # TODO: Check whether null is allowed. Also check for other types that might have a problem there.
     )
 
 
