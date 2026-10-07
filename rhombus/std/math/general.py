@@ -146,6 +146,9 @@ def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the quotient of two arguments."""
     @implementation(until=111)
     def div():
+        if isinstance(dividend.AST, vt.constant):
+            if dividend.AST.value == 1:
+                return Density(vt.reciprocal(divisor.AST))
         return Density(vt.mul(dividend.AST, vt.reciprocal(divisor.AST)))
     @implementation
     def div():
@@ -178,20 +181,20 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     """
     @implementation(until=113)
     def pow():
-        if not isinstance(exponent, int):
+        if not isinstance(exponent.AST, vt.constant):
             raise ValueError("Can only raise to integer powers in datapack versions below 113")
-        if 0 <= py_builtins.abs(exponent) <= 3:
+        if 0 <= py_builtins.abs(exponent.AST.value) <= 3:
             result = {
                 0: Density(vt.constant(1)),
                 1: base,
                 2: Density(vt.square(base.AST)),
                 3: Density(vt.cube(base.AST))
-            }[exponent]
+            }[py_builtins.int(exponent.AST.value)]
         else:
             result = base
-            for _ in range(py_builtins.abs(exponent) - 1):
+            for _ in range(py_builtins.abs(exponent.AST.value) - 1):
                 result = Density(vt.mul(result.AST, base.AST))
-        if exponent < 0:
+        if exponent.AST.value < 0:
             result = Density(vt.reciprocal(result.AST))
         return result
     

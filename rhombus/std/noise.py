@@ -1,7 +1,7 @@
 """
 """
 
-__all__ = ["Noise", "noise", "blended_noise", "shifted_noise", "shift", "shift_a", "shift_b", "end_outer_islands"]
+__all__ = ["Noise", "noise", "blended_noise", "shift", "shift_a", "shift_b", "end_outer_islands"]
 
 from typing import ClassVar, Literal
 

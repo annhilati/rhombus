@@ -38,7 +38,15 @@ class DensityFunction(RhombusASTNode):
     def serialize_toplevel(self) -> JSONDict:
         active_env = rho
 
-        result = {"type": self.id}
+        type_id = self.id
+        legacy_values = getattr(self.__class__, "__rhombus_legacy_values__", {}).get("id")
+        if legacy_values:
+            for threshold, val in sorted(legacy_values.items(), reverse=False):
+                if active_env._check_version(threshold) is False:
+                    type_id = val
+                    break
+
+        result = {"type": type_id}
         
         rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
         
@@ -171,7 +179,14 @@ class SimpleDensityFunction(DensityFunction):
         return cls()
 
     def serialize_toplevel(self) -> JSONDict:
-        return {"type": self.id}
+        type_id = self.id
+        legacy_values = getattr(self.__class__, "__rhombus_legacy_values__", {}).get("id")
+        if legacy_values:
+            for threshold, val in sorted(legacy_values.items(), reverse=False):
+                if rho._check_version(threshold) is False:
+                    type_id = val
+                    break
+        return {"type": type_id}
 
 
 class MappedDensityFunction(DensityFunction):
