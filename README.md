@@ -127,7 +127,7 @@ The easiest way to support the Rhombus project is to propagate its use in your p
 </p>
 
 
-<h2></h2>
+<!-- <h2></h2>
 
 > [!note]
 > ### Rhombus' current State and its Development in the Future<br>
@@ -140,4 +140,4 @@ The easiest way to support the Rhombus project is to propagate its use in your p
 > Until then I'm happy to add smaller new features - mod support, or macros - upon request, but nothing fundamentally new.
 >
 > Thank you for reading this and for your interest in Rhombus!<br>
-> Annhilati on July 20, 2026
+> Annhilati on July 20, 2026 -->

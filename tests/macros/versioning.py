@@ -4,6 +4,7 @@ from rhombus.core.density_function import constant
 from rhombus.std.macros import resolve_ast_macros
 from rhombus.std.macros import macro, implementation
 
+
 def test_macro_versioning_immediate():
     @macro
     def dummy() -> int:
@@ -33,6 +34,7 @@ def test_macro_versioning_immediate():
     
     rho.datapack_version = "1.21"
     assert resolve_ast_macros(dummy().AST).value == 3.0
+
 
 def test_macro_versioning_lazy():
     @macro
@@ -64,7 +66,8 @@ def test_macro_versioning_lazy():
     rho.datapack_version = "1.21"
     assert resolve_ast_macros(dummy().AST).value == 3.0
 
-def test_macro_versioning_exceptions():
+
+def test_no_implementations():
     @macro
     def dummy_since() -> int:
         @implementation(since="1.20")
@@ -87,7 +90,8 @@ def test_macro_versioning_exceptions():
     with pytest.raises(NotImplementedError):
         resolve_ast_macros(dummy_missing_namespace().AST)
 
-def test_macro_versioning_default():
+
+def test_default():
     @macro
     def dummy() -> int:
         @implementation(until="1.18")

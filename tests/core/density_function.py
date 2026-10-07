@@ -63,9 +63,9 @@ def test_serialize_literals():
     # Be aware of the order of arguments
 
 
-@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_Unknown_type():
 
-    assert DensityFunction.deserialize_toplevel(
-        {"type": "this:does_not_exist", "arg1": 1, "arg2": 2}
-    ) == Unknown("this:does_not_exist", {"arg1": 1, "arg2": 2})
+    with pytest.warns(UserWarning, match="Could not deserialize density function with type 'this:does_not_exist'"):
+        assert DensityFunction.deserialize_toplevel(
+            {"type": "this:does_not_exist", "arg1": 1, "arg2": 2}
+        ) == Unknown("this:does_not_exist", {"arg1": 1, "arg2": 2})

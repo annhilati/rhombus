@@ -145,8 +145,7 @@ class RhombusEnvironment:
     def set_version(self, *, minecraft: VersionString) -> None: ...
 
     def set_version(self, *args, **kwargs) -> None:
-        """Sets the datapack version and/or addon versions.
-        If a Minecraft version string (e.g. '1.21.4') is provided, it is resolved to a datapack version using Misode's data.
+        """Sets the datapack or Minecraft game version.
         """
         if args:
             raise TypeError(
