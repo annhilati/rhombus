@@ -4,38 +4,7 @@ from rhombus.core.density_function import constant
 from rhombus.std.macros import macro, implementation, resolve_ast_macros
 
 
-def test_macro_versioning_immediate():
-    @macro
-    def dummy() -> int:
-        @implementation(until="1.18")
-        def _():
-            return 1
-            
-        @implementation(since="1.18", until="1.20")
-        def _():
-            return 2
-            
-        @implementation(since="1.20")
-        def _():
-            return 3
-        
-    rho.datapack_version = "1.17"
-    assert resolve_ast_macros(dummy().AST).value == 1.0
-    
-    rho.datapack_version = "1.18"
-    assert resolve_ast_macros(dummy().AST).value == 2.0
-    
-    rho.datapack_version = "1.19"
-    assert resolve_ast_macros(dummy().AST).value == 2.0
-    
-    rho.datapack_version = "1.20"
-    assert resolve_ast_macros(dummy().AST).value == 3.0
-    
-    rho.datapack_version = "1.21"
-    assert resolve_ast_macros(dummy().AST).value == 3.0
-
-
-def test_macro_versioning_lazy():
+def test_version_selection():
     @macro
     def dummy():
         @implementation(until="1.18")
@@ -50,19 +19,19 @@ def test_macro_versioning_lazy():
         def _():
             return constant(3.0)
         
-    rho.datapack_version = "1.17"
+    rho.set_version(minecraft="1.17")
     assert resolve_ast_macros(dummy().AST).value == 1.0
     
-    rho.datapack_version = "1.18"
+    rho.set_version(minecraft="1.18")
     assert resolve_ast_macros(dummy().AST).value == 2.0
     
-    rho.datapack_version = "1.19"
+    rho.set_version(minecraft="1.19")
     assert resolve_ast_macros(dummy().AST).value == 2.0
     
-    rho.datapack_version = "1.20"
+    rho.set_version(minecraft="1.20")
     assert resolve_ast_macros(dummy().AST).value == 3.0
     
-    rho.datapack_version = "1.21"
+    rho.set_version(minecraft="1.21")
     assert resolve_ast_macros(dummy().AST).value == 3.0
 
 
@@ -73,11 +42,11 @@ def test_no_implementations():
         def _():
             return 1
         
-    rho.datapack_version = "1.19"
+    rho.set_version(minecraft="1.19")
     with pytest.raises(NotImplementedError):
         resolve_ast_macros(dummy_since().AST)
         
-    rho.datapack_version = "1.20"
+    rho.set_version(minecraft="1.20")
     assert resolve_ast_macros(dummy_since().AST).value == 1.0
     
     @macro
@@ -90,7 +59,7 @@ def test_no_implementations():
         resolve_ast_macros(dummy_missing_namespace().AST)
 
 
-def test_default():
+def test_default_implementation():
     @macro
     def dummy() -> int:
         @implementation(until="1.18")
@@ -101,8 +70,8 @@ def test_default():
         def _():
             return 2
         
-    rho.datapack_version = "1.17"
+    rho.set_version(minecraft="1.17")
     assert resolve_ast_macros(dummy().AST).value == 1.0
     
-    rho.datapack_version = "1.20"
+    rho.set_version(minecraft="1.20")
     assert resolve_ast_macros(dummy().AST).value == 2.0

@@ -38,15 +38,30 @@ def _parse_version_specifier(spec: DatapackVersion | VersionString | VersionTupl
             parts = (*parts, 0)
         return parts
 
+    def try_misode_lookup(v_str: str) -> str:
+        if default_namespace != "datapack": return v_str
+        try:
+            return str(get_Minecraft_datapack_version(v_str, use_cache=True))
+        except ValueError:
+            if v_str.count('.') == 1:
+                try:
+                    return str(get_Minecraft_datapack_version(v_str + "0", use_cache=True))
+                except ValueError:
+                    pass
+            return v_str
+
     if isinstance(spec, (int, float)):
         return default_namespace, pad_and_fix_float(parseVersionString(str(float(spec))), from_float=True)
     if isinstance(spec, str):
+        spec = try_misode_lookup(spec)
         return default_namespace, pad_and_fix_float(parseVersionString(spec), from_float=False)
     if isinstance(spec, tuple):
         if len(spec) >= 2 and isinstance(spec[0], str):
             ns = spec[0]
             inner = spec[1]
             if isinstance(inner, str):
+                if ns == "datapack":
+                    inner = try_misode_lookup(inner)
                 return ns, pad_and_fix_float(parseVersionString(inner), from_float=False)
             if isinstance(inner, (int, float)):
                 return ns, pad_and_fix_float(parseVersionString(str(float(inner))), from_float=True)

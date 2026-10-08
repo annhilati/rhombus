@@ -43,15 +43,15 @@ def test_versioning():
     meta_old = VersionedNode.__rhombus_fields__["old_field"]
     meta_renamed = VersionedNode.__rhombus_fields__["renamed_field"]
 
-    rho.datapack_version = "1.19"
+    rho.set_version(minecraft="1.19")
     assert not meta_new.is_present(rho)
     assert meta_old.is_present(rho)
     assert meta_renamed.get_appropriate_key(rho, "renamed_field") == "renamed_field"
 
-    rho.datapack_version = "1.17"
+    rho.set_version(minecraft="1.17")
     assert meta_renamed.get_appropriate_key(rho, "renamed_field") == "old_name"
 
-    rho.datapack_version = "1.20"
+    rho.set_version(minecraft="1.20")
     assert meta_new.is_present(rho)
     assert not meta_old.is_present(rho)
 
