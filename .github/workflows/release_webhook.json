@@ -2,12 +2,14 @@
   "content": null,
   "embeds": [
     {
-      "title": "📦 Publish Successful",
-      "description": "Version [`{{VERSION}}`](https://pypi.org/project/rhombus/{{VERSION}}/) of **Rhombus** has been published to PyPI! 🚀",
+      "title": "📦 New Version of Rhombus published!",
+      "description": "Version [`{{VERSION}}`](https://pypi.org/project/rhombus/{{VERSION}}/) of **Rhombus** has just been published to PyPI! 🚀",
       "color": 6703855,
-      "footer": {
-        "text": "[View Run]({{RUN_URL}})"
-      }
+      "fields": [
+        {
+          "value": "[View Run]({{RUN_URL}})"
+        }
+      ]
     }
   ],
   "attachments": []

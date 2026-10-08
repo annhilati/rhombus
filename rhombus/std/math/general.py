@@ -212,14 +212,15 @@ def sqrt(df: AnyDensity) -> Density:
     def sqrt():
         return Density(vt.sqrt(df.AST))
 
+
 @macro
 def log(df: AnyDensity, *, base: AnyDensity = e) -> Density:
     "Calculates the logarithm of the input to an arbitrary base."
     @implementation(since=111)
     def log():
         if base.AST == Density(e).AST:
-            return vt.log(df.AST)
-        return vt.log(df.AST) / vt.log(base.AST)
+            return Density(vt.log(df.AST))
+        return Density(vt.log(df.AST)) / Density(vt.log(base.AST))
 
 
 # ======// Ordering //===========================================================================//

@@ -242,7 +242,7 @@ class MacroDispatcher:
             return _invoke(default_impl)
 
         raise NotImplementedError(
-            f"No valid implementation found for macro '{self.__name__}' for versions: {rho.versions}."
+            f"No implementation found for macro '{self.__name__}' for versions: {rho.versions}."
         )
 
 
