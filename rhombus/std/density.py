@@ -286,6 +286,7 @@ class Density:
 
     # ======// Logical Magic //===================================================================//
 
+    # TODO: Can we add to Condition's __bool__ the option to also use this for comparison?
     def __eq__(self, other):
         "**ATTENTION:** This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime."
         from rhombus.std.conditional.fluent import when
@@ -295,12 +296,6 @@ class Density:
         "**ATTENTION:** This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime."
         from rhombus.std.conditional.fluent import when
         return when(self).unequals(other)
-
-    def is_identical(self, other: Density | Any) -> bool:
-        """Returns True if the AST of this Density is identical to the AST of the other Density."""
-        if not isinstance(other, Density):
-            return False
-        return self.AST == other.AST
 
     def __gt__(self, other):
         from rhombus.std.conditional.fluent import when
