@@ -35,6 +35,15 @@ class Relation(str, Enum):
 class Condition:
     _chain: "Causality" | None = None
 
+    def __bool__(self) -> bool:
+        fallback = getattr(self, "_truthy_eval_fallback", None)
+        if fallback is not None:
+            return fallback()
+        raise TypeError(
+            "A Condition cannot be evaluated as a boolean directly outside of a Density-dependent if-statement context. "
+            "If you meant to compare Densities, this only works for == and !=."
+        )
+
     def __and__(self, other: Condition) -> Condition:
         res = AndCondition(self, other)
         object.__setattr__(res, '_chain', self._chain or getattr(other, "_chain", None))

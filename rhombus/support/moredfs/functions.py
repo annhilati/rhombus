@@ -342,7 +342,7 @@ def derivative(
     component_y: DerivativeComponent | None = None,
     component_z: DerivativeComponent | None = None,
 ):
-    "Returns the directional derivative."
+    "Returns the directional derivative of a density function along a specified 3D direction vector."
     return Density(
         types.derivative(argument.AST, component_x, component_y, component_z)
     )
@@ -351,11 +351,11 @@ def derivative(
 @macro
 def gradient_magnitude(
     argument: AnyDensity,
-    step_x: int | None = None,
-    step_y: int | None = None,
-    step_z: int | None = None,
+    step_x: int = 0,
+    step_y: int = 0,
+    step_z: int = 0,
 ):
-    "Returns the magnitude of the gradient vector."
+    "Returns the magnitude of the spatial gradient vector (the steepest rate of change in 3D space) of the density function using central differences."
     return Density(types.gradient_magnitude(argument.AST, step_x, step_y, step_z))
 
 
@@ -363,13 +363,13 @@ def gradient_magnitude(
 def dot_product(
     argument1: AnyDensity,
     argument2: AnyDensity,
-    step_x: int | None = None,
-    step_y: int | None = None,
-    step_z: int | None = None,
+    step_x: int = 0,
+    step_y: int = 0,
+    step_z: int = 0,
 ):
-    "Returns the dot product of two functions."
+    "Computes the spatial gradient vectors (rate of change) of both density functions and returns their dot product, effectively measuring how aligned their slopes are in 3D space."
     return Density(
-        types.dot_product(argument1.AST, argument2.AST, step_x, step_y, step_z) # TODO: Check whether null is allowed. Also check for other types that might have a problem there.
+        types.dot_product(argument1.AST, argument2.AST, step_x, step_y, step_z)
     )
 
 

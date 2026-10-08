@@ -89,7 +89,7 @@ class dot_product(DensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:dot_product"
     argument1: DensityFunction
     argument2: DensityFunction
-    step_x: int = None
+    step_x: int = field(default=None, validate=lambda x, node: (x or 0) != 0 or (node.step_y or 0) != 0 or (node.step_z or 0) != 0)
     step_y: int = None
     step_z: int = None
 

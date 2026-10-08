@@ -286,16 +286,29 @@ class Density:
 
     # ======// Logical Magic //===================================================================//
 
-    # TODO: Can we add to Condition's __bool__ the option to also use this for comparison?
     def __eq__(self, other):
-        "**ATTENTION:** This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime."
         from rhombus.std.conditional.fluent import when
-        return when(self).equals(other)
+        cond = when(self).equals(other)
+        
+        def _fallback():
+            if hasattr(other, "AST"):
+                return self.AST == other.AST
+            return False
+            
+        object.__setattr__(cond, "_truthy_eval_fallback", _fallback)
+        return cond
 
     def __ne__(self, other):
-        "**ATTENTION:** This method constructs a Condition used for conditionality AST manipulation. It can not be used to compare densities on runtime."
         from rhombus.std.conditional.fluent import when
-        return when(self).unequals(other)
+        cond = when(self).unequals(other)
+        
+        def _fallback():
+            if hasattr(other, "AST"):
+                return self.AST != other.AST
+            return True
+            
+        object.__setattr__(cond, "_truthy_eval_fallback", _fallback)
+        return cond
 
     def __gt__(self, other):
         from rhombus.std.conditional.fluent import when
@@ -325,7 +338,6 @@ type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
 
-# TODO: integrate into the Density type?
 def _unify(v: int | float | str | Density | DensityFunction | "UnresolvedMacroNode") -> DensityFunction | UnresolvedMacroNode:
     """Interprets a QoL argument input and returns a DensityFunction object.
     Applies logic like splitting large literal constants into calculations

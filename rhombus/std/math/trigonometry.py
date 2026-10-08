@@ -134,8 +134,6 @@ def arsinh(df: AnyDensity) -> Density:
     def arcsinh():
         return math.log(df + math.sqrt(df**2 + 1))
     
-# TODO: Check whether there are legacy implementations
-
 @macro
 def arcosh(df: AnyDensity) -> Density:
     @implementation(since=113)
