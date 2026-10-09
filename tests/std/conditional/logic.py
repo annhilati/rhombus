@@ -2,7 +2,7 @@ from rhombus import *
 from rhombus.support.vanilla import types
 from rhombus.support.vanilla.types import range_choice
 from rhombus.core.density_function import Reference
-from rhombus.std.macros import resolve_ast_macros
+from rhombus.std.macros import resolve_macro_densityfunction
 from rhombus.core.utils import JSON_hash
 
 when = conditional.when
@@ -11,7 +11,7 @@ EPS = 1e-7
 
 def test_logic():
 
-    assert resolve_ast_macros((when("in1").equals(0) & when("in2").equals(1)).then(10).otherwise(
+    assert resolve_macro_densityfunction((when("in1").equals(0) & when("in2").equals(1)).then(10).otherwise(
         -10
     ).AST) == range_choice(
         "minecraft:in1",
@@ -21,7 +21,7 @@ def test_logic():
         -10.0,
     )
 
-    assert resolve_ast_macros((when("in1").equals(0) | when("in2").equals(1)).then(10).otherwise(
+    assert resolve_macro_densityfunction((when("in1").equals(0) | when("in2").equals(1)).then(10).otherwise(
         -10
     ).AST) == range_choice(
         "minecraft:in1",
@@ -33,17 +33,12 @@ def test_logic():
 
 
 def test_alternatives():
-    value = Density("minecraft:in").AST
-    inp = Reference(
-        "rhombus:generated/" + JSON_hash(value.serialize_toplevel()),
-        definition=types.cache(value),
-    )
-    assert resolve_ast_macros(when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(
+    assert resolve_macro_densityfunction(when("in").equals(-1).then(1).elsewhen("in").equals(1).then(-1).otherwise(
         0
     ).AST) == range_choice(
-        inp,
+        "minecraft:in",
         -1.0,
         -1.0 + EPS,
         types.constant(1.0),
-        range_choice(inp, 1.0, 1.0 + EPS, types.constant(-1.0), types.constant(0.0)),
+        range_choice("minecraft:in", 1.0, 1.0 + EPS, types.constant(-1.0), types.constant(0.0)),
     )

@@ -381,7 +381,7 @@ class Causality:
         for condition, branch_value in reversed(self._cases):
             result = condition._compile(branch_value, result)
             inputs.update(condition._inputs)
-        return caching.specified_cache(Density(result), *[Density(inp) for inp in inputs])
+        return caching.new_cache_transformer(Density(result), targets=[Density(inp) for inp in inputs])
 
 
 class _ElseWhenBuilder(ConditionSelector):

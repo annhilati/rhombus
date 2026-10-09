@@ -52,7 +52,7 @@ from rhombus.std.density import Density
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
-from rhombus.std.caching import interpolated, recurrence_cache
+from rhombus.std.caching import interpolated, new_cache_transformer
 
 import rhombus.support.vanilla.legacy_types as lt
 
@@ -148,4 +148,4 @@ def coord_component(
         value,
     )
 
-    return recurrence_cache(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.AST))), max_nodes=4)
+    return new_cache_transformer(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.AST))), min_size=5)

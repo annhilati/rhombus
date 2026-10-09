@@ -4,18 +4,19 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Any, Self, Literal, overload
+from typing import TYPE_CHECKING, Self, Literal, overload
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from rhombus.std.macros import UnresolvedMacroNode
 from rhombus.core.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
+
+if TYPE_CHECKING:
+    from rhombus.std.macros import UnresolvedMacroDensityFunction
+    from rhombus.std._implementations.optimization import DensityFunctionSizeInfo
 
 
 # ======// Density Type //========================================================================//
@@ -42,7 +43,7 @@ class Density:
     ```
     """
 
-    AST: DensityFunction | "UnresolvedMacroNode"
+    AST: DensityFunction
     "The density function AST represented by this Density."
 
     @overload
@@ -52,7 +53,7 @@ class Density:
     @overload
     def __init__(self, ast: Density): ...
     @overload
-    def __init__(self, ast: DensityFunction | UnresolvedMacroNode): ...
+    def __init__(self, ast: DensityFunction): ...
     @overload
     def __init__(self, arg: AnyDensity): ...
     def __init__(self, arg: AnyDensity):
@@ -208,6 +209,20 @@ class Density:
         """Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.
         The dictionary will not be fully inline. References that require separate files will be references."""
         return self.AST.serialize_toplevel()
+    
+    def info(self, count_unresolved_macros: bool = False) -> DensityFunctionSizeInfo:
+        from rhombus.std._implementations.optimization import df_size_info
+        from rhombus.std.macros import resolve_macro_densityfunction
+        
+        info = df_size_info(resolve_macro_densityfunction(self.AST))
+        
+        if count_unresolved_macros:
+            from rhombus.std.macros import UnresolvedMacroDensityFunction
+            from rhombus.core.node import walk
+            macros_count = sum(1 for n in walk(self.AST) if isinstance(n, UnresolvedMacroDensityFunction))
+            info = info._replace(unresolved_macros=macros_count)
+            
+        return info
 
     # ======// Arithmetic Magic //================================================================//
 
@@ -338,7 +353,7 @@ type AnyDensity = Density | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
 
-def _unify(v: int | float | str | Density | DensityFunction | "UnresolvedMacroNode") -> DensityFunction | UnresolvedMacroNode:
+def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
     """Interprets a QoL argument input and returns a DensityFunction object.
     Applies logic like splitting large literal constants into calculations
     before constructing constant AST nodes.
@@ -347,8 +362,7 @@ def _unify(v: int | float | str | Density | DensityFunction | "UnresolvedMacroNo
     if isinstance(v, Density):
         return v.AST
 
-    from rhombus.std.macros import UnresolvedMacroNode
-    if isinstance(v, (DensityFunction, UnresolvedMacroNode)):
+    if isinstance(v, DensityFunction):
         return v
 
     if isinstance(v, (int, float)):

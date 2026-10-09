@@ -19,6 +19,7 @@ class DensityFunctionSizeInfo(NamedTuple):
     unique_cached_nodes: int
     unique_unknown_references: int
     total_unknown_references: int
+    unresolved_macros: int = 0
 
 
 def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
@@ -26,7 +27,6 @@ def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
 
     Nodes that are equal are grouped.
     """
-    from rhombus.core.node import walk
 
     if not isinstance(node, RhombusASTNode):
         raise TypeError("Expected RhombusASTNode instance")
@@ -129,7 +129,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
     )
 
 
-def cache_nodes(
+def node_caching_transformer(
     root: DensityFunction,
     *conditions: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
     transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(

@@ -406,8 +406,8 @@ def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
 @macro
 def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the remainder of the division of two arguments."""
-    return caching.specified_cache(
-        dividend - divisor * floor(dividend / divisor), dividend, divisor
+    return caching.new_cache_transformer(
+        dividend - divisor * floor(dividend / divisor), targets=(dividend, divisor)
     )
     # TODO: do not cache small functions
 

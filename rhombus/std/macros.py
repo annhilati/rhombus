@@ -14,11 +14,13 @@ from typing import (
     overload,
 )
 from types import UnionType
+import dataclasses
 import inspect
 import functools
 import sys
 
-
+from rhombus.core.node import RhombusASTNode, transform
+from rhombus.core.density_function import DensityFunction
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple, _parse_version_specifier, get_module_addon_namespace
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
@@ -162,7 +164,7 @@ class MacroDispatcher:
         self.__signature__.bind(*args, **kwargs)
 
         return Density(
-            UnresolvedMacroNode(
+            UnresolvedMacroDensityFunction(
                 dispatcher=self,
                 args=args,
                 kwargs=kwargs,
@@ -250,11 +252,11 @@ class MacroDispatcher:
 @overload
 def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
 @overload
-def macro[**P, R](*, repr: Callable[["UnresolvedMacroNode"], str] | None = None) -> Decorator[P, R]: ...
+def macro[**P, R](*, repr: Callable[["UnresolvedMacroDensityFunction"], str] | None = None) -> Decorator[P, R]: ...
 def macro(
     func: Callable | None = None,
     *,
-    repr: Callable[["UnresolvedMacroNode"], str] | None = None
+    repr: Callable[["UnresolvedMacroDensityFunction"], str] | None = None
 ) -> Callable:
     """The **`macro`** decorator allows functions to use special behaviour beneficial for writing density functions:
     
@@ -269,15 +271,12 @@ def macro(
         return decorator(func)
     return decorator
 
-import dataclasses
-from rhombus.core.node import RhombusASTNode, transform
-from typing import Any
 
-class UnresolvedMacroNode(RhombusASTNode):
+class UnresolvedMacroDensityFunction(DensityFunction):
     dispatcher: Callable = dataclasses.field(repr=False, compare=False)
     args: tuple[Any, ...] = dataclasses.field(repr=False, compare=False)
     kwargs: dict[str, Any] = dataclasses.field(repr=False, compare=False)
-    repr_func: Callable[["UnresolvedMacroNode"], str] | None = dataclasses.field(
+    repr_func: Callable[["UnresolvedMacroDensityFunction"], str] | None = dataclasses.field(
         default=None, repr=False, compare=False
     )
 
@@ -323,9 +322,9 @@ class UnresolvedMacroNode(RhombusASTNode):
     def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
         return self.resolve().inscribed_toplevel_nodes
 
-def resolve_ast_macros(node: RhombusASTNode) -> RhombusASTNode:
+def resolve_macro_densityfunction(node: RhombusASTNode) -> RhombusASTNode:
     def _resolver(n: RhombusASTNode) -> RhombusASTNode:
-        if isinstance(n, UnresolvedMacroNode):
-            return resolve_ast_macros(n.resolve())
+        if isinstance(n, UnresolvedMacroDensityFunction):
+            return resolve_macro_densityfunction(n.resolve())
         return n
     return transform(node, _resolver)

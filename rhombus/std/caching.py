@@ -1,14 +1,14 @@
-__all__ = ["cache", "interpolated", "recurrence_cache", "specified_cache"]
+__all__ = ["cache", "interpolated", "new_cache_transformer"]
 
 from typing import Callable, Iterable
 
 from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation, resolve_ast_macros
+from rhombus.std.macros import macro, implementation, resolve_macro_densityfunction
 
 import rhombus.support.vanilla.types as vt
 
-from ._implementations.performance import cache_nodes, df_size_info, DensityFunctionSizeInfo
+from ._implementations.optimization import node_caching_transformer, df_size_info
 
 
 # NOTE: multiple nested caching functions are no longer auto-inlined. When adding compatability with older versions again, implement it again
@@ -73,79 +73,45 @@ class Conditions:
         return condition
     
     @staticmethod
-    def min_size(nodes_count: int) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    def size_satisfies(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
         """Applies if the node has at least a specified number of toplevel nodes."""
         def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
-            return df_size_info(node).toplevel_nodes >= nodes_count
+            return validator(df_size_info(node).toplevel_nodes)
         return condition
 
 
+
 @macro
-def recurrence_cache(
+def new_cache_transformer(
     df: AnyDensity,
     *,
-    caching_function: DensityFunction = vt.cache,
-    max_nodes: int = 5,
+    targets: Iterable[AnyDensity] = ...,
+    min_size: int = 5,
+    min_occurances: int = 2,
+    caching_function: DensityFunction | Callable[[DensityFunction], DensityFunction] = vt.cache
 ) -> Density:
-    """Applies caching to recurring parts of a density function by partitioning it and wrapping it
-    with a caching function.
+    if targets == ...:
+        targets: Iterable[AnyDensity] = ()
+        
+    targets_list = [n.AST for n in targets if isinstance(n, Density)]
     
-    Parameters:
-        caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
-        max_nodes (int): Number of nodes a recurring function part must surpass to get partitioned.
-    """
-    transformer = lambda dfnode: Reference(
-        "rhombus:generated/" + JSON_hash(dfnode.serialize_toplevel()),
-        definition=caching_function(dfnode),
-    )
-    return Density(
-        cache_nodes(
-            resolve_ast_macros(df.AST),
-            Conditions.occurrences_satisfy(lambda n: n > 1),
-            Conditions.min_size(max_nodes + 1),
-            transformer=transformer,
-        )[0]
-    )
-
-
-@macro
-def specified_cache(
-    df: AnyDensity,
-    *functions: Density,
-    caching_function: type[DensityFunction] = vt.cache,
-) -> Density:
-    """Applies cahing to specific parts of a density function. All subfunctions
-    that are equal to a node specified in `functions` and occur multiple times
-    are partitioned and wrapped in a caching function.
+    conditions = [
+        Conditions.size_satisfies(lambda n: n >= min_size),
+        Conditions.occurrences_satisfy(lambda n: n >= min_occurances)
+    ]
     
-    Parameters:
-        *functions (Density): Subfunctions to cache. (Values not of type `Density` are ignored)
-        caching_function (DensityFunction): The density function type partitioned functions get wrapped in.
-    """
-    transformer = lambda node: Reference(
+    if targets_list:
+        conditions.append(Conditions.is_one_of(targets_list))
+        
+    transformer: Callable[[DensityFunction], DensityFunction] = lambda node: Reference(
         "rhombus:generated/" + JSON_hash(node.serialize_toplevel()),
         definition=Density(caching_function(node)).AST,
     )
         
     return Density(
-        cache_nodes(
-            df.AST,
-            Conditions.is_one_of([n.AST for n in functions if isinstance(n, Density)]),
-            Conditions.occurrences_satisfy(lambda n: n > 1),
+        node_caching_transformer(
+            resolve_macro_densityfunction(df.AST),
+            *conditions,
             transformer=transformer
         )[0]
     )
-
-
-def get_size(df: Density) -> DensityFunctionSizeInfo:
-    """Returns information about the size of a density function.
-
-    Returns:
-        DensityFunctionSizeInfo
-            - `~.nodes_uncached`: Number of nodes that are not part of a unique cached subtree
-            - `~.nodes_in_unique_cached`: Number of nodes that are part of a unique cached subtree
-            - `~.unique_unknown_references`: Number of unique references with unknown definition
-            - `~.total_unknown_references`: Total number of references with unknown definition (counting duplicates)
-    """
-    resolved = resolve_ast_macros(df.AST)
-    return df_size_info(resolved)
