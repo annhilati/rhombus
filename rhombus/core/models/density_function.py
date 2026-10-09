@@ -9,20 +9,22 @@ __all__ = [
 ]
 
 
-from typing import ClassVar, Self
+from typing import ClassVar, Self, TYPE_CHECKING
 import warnings
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-from rhombus.core.node import RhombusASTNode, FieldMeta, field 
-from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
+from rhombus.core.models.node import NewDatapackNode, FieldMeta, field 
+from rhombus.core.models.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 from rhombus.runtime import rho
 
+if TYPE_CHECKING:
+    from rhombus.core.ast import RhombusASTNode
 
 # ======// DensityFunction Base Class //==========================================================//
 
-class DensityFunction(RhombusASTNode):
+class DensityFunction(NewDatapackNode):
     """The **`DensityFunction`** base class implements functionality for nodes
     in the abstract syntax tree of Rhombus that also resemble operations in the
     abstract syntax tree of a density function (so called density function types).
@@ -224,7 +226,7 @@ class DoubleArgumentDensityFunction(DensityFunction):
 
 class Reference(DensityFunction):
     target: str
-    definition: DensityFunction | None = None
+    definition: "DensityFunction | RhombusASTNode | None" = None # TODO: Check whether allowing RhombusASTNode here is fine. 
 
     def __post_init__(self):
         if not isinstance(self.target, str) or not self.target:
@@ -265,7 +267,7 @@ class Reference(DensityFunction):
         return self.target
 
     @property
-    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+    def inscribed_toplevel_nodes(self) -> set[NewDatapackNode]:
         nodes = set()
         if self.definition is not None:
             nodes.add(self)

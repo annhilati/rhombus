@@ -1,5 +1,4 @@
 from rhombus.core import utils
-import dataclasses
 
 
 def test_uuid_hash():

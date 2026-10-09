@@ -1,6 +1,6 @@
 from typing import ClassVar, Literal
 
-from rhombus.core.density_function import (
+from rhombus.core.models.density_function import (
     DensityFunction,
     MappedDensityFunction,
     SimpleDensityFunction,

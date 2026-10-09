@@ -7,8 +7,8 @@ import copy
 
 import beet
 
-from rhombus.core.node import RhombusASTNode
-from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
+from rhombus.core.models.node import NewDatapackNode
+from rhombus.core.models.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
@@ -18,7 +18,7 @@ from rhombus.core.utils import (
 from rhombus.runtime import rho, datapack_handler
 
 
-class DatapackResource(RhombusASTNode):
+class DatapackResource(NewDatapackNode):
     """The **`DatapackResource`** base class implements functionality for nodes
     in the abstract syntax tree of Rhombus that resemble files that are provided
     by a datapack and cannot be defined inside of a density function, but must be
@@ -67,12 +67,12 @@ class DatapackResource(RhombusASTNode):
     # ======// Serialization //===================================================================//
 
     @property
-    def inscribed_toplevel_nodes(self) -> set[RhombusASTNode]:
+    def inscribed_toplevel_nodes(self) -> set[NewDatapackNode]:
         nodes = set()
         if not all(v is None for f, v in self.fields.items() if f != "_reference"):
             nodes.add(self)
             for param, value in self.fields.items():
-                if isinstance(value, RhombusASTNode):
+                if isinstance(value, NewDatapackNode):
                     nodes |= value.inscribed_toplevel_nodes
         return nodes
 

@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from rhombus.core.density_function import SimpleDensityFunction
+from rhombus.core.models.density_function import SimpleDensityFunction
 
 
 class floating_islands(SimpleDensityFunction):

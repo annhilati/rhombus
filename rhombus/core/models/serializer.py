@@ -10,13 +10,13 @@ from typing import Union, TypeAliasType, Literal, Any, get_origin, get_args
 from types import UnionType
 
 from rhombus.core.utils import JSONValue
-from rhombus.core.node import RhombusASTNode
+from rhombus.core.models.node import NewDatapackNode
 
 
 def serialize_any_toplevel[T](o: T) -> JSONValue:
     """Main serialization function for top-level values."""
 
-    if isinstance(o, RhombusASTNode):
+    if isinstance(o, NewDatapackNode):
         return o.serialize_toplevel()
 
     # Correct me if I'm wrong but there aren't any other valid cases?
@@ -29,7 +29,7 @@ def serialize_any_toplevel[T](o: T) -> JSONValue:
 def serialize_any_inline[T](o: T) -> JSONValue:
     """Main serialization function for nested/inline values."""
 
-    if isinstance(o, RhombusASTNode):
+    if isinstance(o, NewDatapackNode):
         return o.serialize_inline()
 
     elif isinstance(o, (list, set, tuple)):
@@ -59,7 +59,7 @@ def _deserialize_any[T](v: Any, t: type[T], *, top_level: bool) -> T:
             return _deserialize_any(v, t.__value__, top_level=top_level)
 
         if isinstance(t, type):
-            if issubclass(t, RhombusASTNode):
+            if issubclass(t, NewDatapackNode):
                 if top_level:
                     return t.deserialize_toplevel(v)
                 return t.deserialize_inline(v)

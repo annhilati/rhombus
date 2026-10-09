@@ -2,9 +2,9 @@ __all__ = ["cache", "interpolated", "new_cache_transformer"]
 
 from typing import Callable, Iterable
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash
+from rhombus.core import NewDatapackNode, DensityFunction, Reference, JSON_hash
 from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation, resolve_macro_densityfunction
+from rhombus.std.macros import macro, implementation
 
 import rhombus.support.vanilla.types as vt
 
@@ -45,17 +45,19 @@ class Conditions:
     
     @staticmethod
     def is_one_of(
-        target_nodes: Iterable[RhombusASTNode],
-    ) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+        target_nodes: Iterable[NewDatapackNode],
+    ) -> Callable[[DensityFunction, dict[NewDatapackNode, int]], bool]:
         """Applies if the node is one of the specified target nodes."""
         targets = []
         for n in target_nodes:
             if isinstance(n, Density):
-                targets.append(n.AST)
+                targets.append(n.AST.build())
+            elif hasattr(n, "build"):
+                targets.append(n.build())
             else:
                 targets.append(n)
 
-        def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
+        def condition(node: DensityFunction, occurrences: dict[NewDatapackNode, int]) -> bool:
             for target in targets:
                 if isinstance(target, type) and isinstance(node, target):
                     return True
@@ -66,16 +68,16 @@ class Conditions:
         return condition
     
     @staticmethod
-    def occurrences_satisfy(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    def occurrences_satisfy(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[NewDatapackNode, int]], bool]:
         """Applies if the node occurs at least a specified number of times."""
-        def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
+        def condition(node: DensityFunction, occurrences: dict[NewDatapackNode, int]) -> bool:
             return validator(occurrences.get(node, 0))
         return condition
     
     @staticmethod
-    def size_satisfies(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[RhombusASTNode, int]], bool]:
+    def size_satisfies(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[NewDatapackNode, int]], bool]:
         """Applies if the node has at least a specified number of toplevel nodes."""
-        def condition(node: DensityFunction, occurrences: dict[RhombusASTNode, int]) -> bool:
+        def condition(node: DensityFunction, occurrences: dict[NewDatapackNode, int]) -> bool:
             return validator(df_size_info(node).toplevel_nodes)
         return condition
 
@@ -105,12 +107,12 @@ def new_cache_transformer(
         
     transformer: Callable[[DensityFunction], DensityFunction] = lambda node: Reference(
         "rhombus:generated/" + JSON_hash(node.serialize_toplevel()),
-        definition=Density(caching_function(node)).AST,
+        definition=caching_function(node) if not isinstance(caching_function(node), Density) else caching_function(node).AST.build(),
     )
         
     return Density(
         node_caching_transformer(
-            resolve_macro_densityfunction(df.AST),
+            df.AST.build(),
             *conditions,
             transformer=transformer
         )[0]

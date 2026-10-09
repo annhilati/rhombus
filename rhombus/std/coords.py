@@ -81,6 +81,7 @@ def gradient(
         )
 
 
+@macro
 def distance_to_point(
     point: tuple[int, int, int],
     metric: Literal[
@@ -177,6 +178,7 @@ def x() -> Density:
         )
 
 
+@macro
 def y() -> Density:
     """Returns the Y-coordinate of the current block."""
     return caching.cache(

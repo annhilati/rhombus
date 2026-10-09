@@ -18,7 +18,7 @@ from .sub_parameters import (
 from . import types
 
 from rhombus.core.environment import RhombusAddon as _RhombusAddon
-from rhombus.core.density_function import DensityFunction as _DensityFunction
+from rhombus.core.models.density_function import DensityFunction as _DensityFunction
 
 __addon__ = _RhombusAddon(
     namespace="moredfs",

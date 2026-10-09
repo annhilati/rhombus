@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from rhombus.core.density_function import MappedDensityFunction, DensityFunction
+from rhombus.core.models.density_function import MappedDensityFunction, DensityFunction
 from rhombus.std.noise import Noise
 
 

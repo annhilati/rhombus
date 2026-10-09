@@ -25,7 +25,7 @@ import asyncio
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus.core import BeetFile, RhombusASTNode
+from rhombus.core import BeetFile, NewDatapackNode
 from rhombus.std.density import Density
 
 from rhombus.runtime import rho
@@ -95,7 +95,7 @@ class RhombusPreviewService:
     def __init__(
         self,
         watch_path: Path | None,
-        items: list[tuple[str, Density | RhombusASTNode | BeetFile]],
+        items: list[tuple[str, Density | NewDatapackNode | BeetFile]],
     ):
         self.watch_path = watch_path
         self.items = items
@@ -151,7 +151,7 @@ class RhombusPreviewService:
                     result = item.compile(id)
                     files.update(result)
 
-                elif isinstance(item, RhombusASTNode):
+                elif isinstance(item, NewDatapackNode):
                     result = set()
                     for node in item.inscribed_toplevel_nodes:
                         if node == item:
@@ -336,7 +336,7 @@ class RhombusPreviewService:
 
 
 def serve(
-    *items: tuple[str, Density | RhombusASTNode | BeetFile],
+    *items: tuple[str, Density | NewDatapackNode | BeetFile],
     watch_path: str | Path | None = Path.cwd(),
     **uvicorn_args: Any,
 ) -> None:

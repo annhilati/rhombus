@@ -1,4 +1,4 @@
-__all__ = ["RhombusASTNode", "field", "FieldMeta", "walk", "transform"]
+__all__ = ["NewDatapackNode", "field", "FieldMeta", "walk", "transform"]
 
 
 from typing import Self, Any, ClassVar, Callable, dataclass_transform 
@@ -118,8 +118,8 @@ class NodeDataclassTransformer(type):
         def _freeze_field_value(value: Any) -> Any:
             # Unwrap wrapper objects if they are passed in!
             if hasattr(value, "AST"):
-                from rhombus.core.node import RhombusASTNode
-                if isinstance(value.AST, RhombusASTNode):
+                from rhombus.core.models.node import NewDatapackNode
+                if isinstance(value.AST, NewDatapackNode):
                     value = value.AST
 
             if isinstance(value, list):
@@ -146,7 +146,7 @@ class NodeDataclassTransformer(type):
                     
                     # Automatically deserialize inline-declared DensityFunctions
                     if isinstance(val, (int, float, str)) and "DensityFunction" in str(field.type):
-                        from rhombus.core.density_function import DensityFunction
+                        from rhombus.core.models.density_function import DensityFunction
                         val = DensityFunction.deserialize_inline(val)
                     
                     if "rhombus_meta" in field.metadata:
@@ -172,7 +172,8 @@ class NodeDataclassTransformer(type):
                         
                     if field.name in hints:
                         import warnings
-                        if not check_type(val, hints[field.name]):
+                        from rhombus.core.ast import RhombusASTNode
+                        if not isinstance(val, RhombusASTNode) and not check_type(val, hints[field.name]):
                             warnings.warn(f"Type mismatch in '{self.__class__.__name__}.{field.name}': Expected {hints[field.name]}, got {type(val).__name__} ({val!r})")
 
                     # Freeze the node value (e.g. lists/dicts) to ensure immutability
@@ -227,7 +228,7 @@ class NodeDataclassTransformer(type):
         return cls
 
 
-class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
+class NewDatapackNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     """The **`RhombusASTNode`** class defines the common behaviour for all nodes
     in the abstract syntax tree of Rhombus. It thus can be called the base class
     for all nodes.
@@ -296,15 +297,15 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     # ======// Serialization //===================================================================//
 
     @property
-    def inscribed_toplevel_nodes(self) -> set["RhombusASTNode"]:
+    def inscribed_toplevel_nodes(self) -> set["NewDatapackNode"]:
         """All nodes defined inside the abstract syntax tree of this node, that will
         require a separate file when compiling. This will include this node itself,
         if it always requires a separate file.
         """
 
-        def _collect_inscribed_toplevel_nodes(value: Any) -> set["RhombusASTNode"]:
+        def _collect_inscribed_toplevel_nodes(value: Any) -> set["NewDatapackNode"]:
             nodes = set()
-            if isinstance(value, RhombusASTNode):
+            if isinstance(value, NewDatapackNode):
                 nodes |= value.inscribed_toplevel_nodes
             elif isinstance(value, dict):
                 for key, item in value.items():
@@ -364,10 +365,10 @@ class RhombusASTNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
         return cls.deserialize_toplevel(data)
 
 
-def walk(node: RhombusASTNode | Any) -> Iterator[RhombusASTNode]:
+def walk(node: NewDatapackNode | Any) -> Iterator[NewDatapackNode]:
     """Yields all RhombusASTNodes in the tree recursively (top-down)."""
 
-    if isinstance(node, RhombusASTNode):
+    if isinstance(node, NewDatapackNode):
         yield node
         for value in node.fields.values():
             yield from walk(value)
@@ -380,11 +381,11 @@ def walk(node: RhombusASTNode | Any) -> Iterator[RhombusASTNode]:
             yield from walk(v)
 
 
-def transform(node: RhombusASTNode | Any, func: Callable[[RhombusASTNode], RhombusASTNode]) -> Any:
+def transform(node: NewDatapackNode | Any, func: Callable[[NewDatapackNode], NewDatapackNode]) -> Any:
     """Traverses the AST and applies the given function to each RhombusASTNode.
     This creates a new tree if any child node is modified, while preserving nodes that are unchanged.
     """
-    if isinstance(node, RhombusASTNode):
+    if isinstance(node, NewDatapackNode):
         changes = {}
         for field_name, child_value in node.fields.items():
             new_child_value = transform(child_value, func)
@@ -428,7 +429,7 @@ def transform(node: RhombusASTNode | Any, func: Callable[[RhombusASTNode], Rhomb
 
     """Recursively traverses the AST and resolves all UnresolvedVersionedNodes."""
     
-    def _resolver(n: RhombusASTNode) -> RhombusASTNode:
+    def _resolver(n: NewDatapackNode) -> NewDatapackNode:
         if isinstance(n, UnresolvedVersionedNode):
             # Since UnresolvedVersionedNode might return a node that itself needs resolving/transforming,
             # we need to transform the newly resolved branch as well.

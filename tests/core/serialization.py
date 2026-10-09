@@ -1,8 +1,7 @@
-from rhombus.core.serializer import serialize_any_inline, deserialize_any_inline
-from rhombus.core.node import RhombusASTNode
+from rhombus.core.models import NewDatapackNode, serialize_any_inline, deserialize_any_inline
 
 
-class DummyNode(RhombusASTNode):
+class DummyNode(NewDatapackNode):
     val: int
 
     def serialize_inline(self):

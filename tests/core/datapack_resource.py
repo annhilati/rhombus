@@ -1,4 +1,4 @@
-from rhombus.core.datapack_resource import DatapackResource
+from rhombus.core.models import DatapackResource
 import beet
 
 

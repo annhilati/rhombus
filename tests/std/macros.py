@@ -1,7 +1,7 @@
 import pytest
 from rhombus import rho
-from rhombus.core.density_function import constant
-from rhombus.std.macros import macro, implementation, resolve_macro_densityfunction
+from rhombus.core.models import constant
+from rhombus.std.macros import macro, implementation
 
 
 def test_version_selection():
@@ -20,19 +20,19 @@ def test_version_selection():
             return constant(3.0)
         
     rho.set_version(minecraft="1.17")
-    assert resolve_macro_densityfunction(dummy().AST).value == 1.0
+    assert dummy().AST.build().value == 1.0
     
     rho.set_version(minecraft="1.18")
-    assert resolve_macro_densityfunction(dummy().AST).value == 2.0
+    assert dummy().AST.build().value == 2.0
     
     rho.set_version(minecraft="1.19")
-    assert resolve_macro_densityfunction(dummy().AST).value == 2.0
+    assert dummy().AST.build().value == 2.0
     
     rho.set_version(minecraft="1.20")
-    assert resolve_macro_densityfunction(dummy().AST).value == 3.0
+    assert dummy().AST.build().value == 3.0
     
     rho.set_version(minecraft="1.21")
-    assert resolve_macro_densityfunction(dummy().AST).value == 3.0
+    assert dummy().AST.build().value == 3.0
 
 
 def test_no_implementations():
@@ -44,10 +44,10 @@ def test_no_implementations():
         
     rho.set_version(minecraft="1.19")
     with pytest.raises(NotImplementedError):
-        resolve_macro_densityfunction(dummy_since().AST)
+        dummy_since().AST.build()
         
     rho.set_version(minecraft="1.20")
-    assert resolve_macro_densityfunction(dummy_since().AST).value == 1.0
+    assert dummy_since().AST.build().value == 1.0
     
     @macro
     def dummy_missing_namespace() -> int:
@@ -56,7 +56,7 @@ def test_no_implementations():
             return 1
         
     with pytest.raises(NotImplementedError):
-        resolve_macro_densityfunction(dummy_missing_namespace().AST)
+        dummy_missing_namespace().AST.build()
 
 
 def test_default_implementation():
@@ -71,7 +71,7 @@ def test_default_implementation():
             return 2
         
     rho.set_version(minecraft="1.17")
-    assert resolve_macro_densityfunction(dummy().AST).value == 1.0
+    assert dummy().AST.build().value == 1.0
     
     rho.set_version(minecraft="1.20")
-    assert resolve_macro_densityfunction(dummy().AST).value == 2.0
+    assert dummy().AST.build().value == 2.0

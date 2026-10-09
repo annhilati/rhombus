@@ -5,12 +5,12 @@ import warnings
 from typing import Self, ClassVar
 
 from rhombus.core.utils import JSONDict, annotated_fields
-from rhombus.core.node import RhombusASTNode
-from rhombus.core.serializer import deserialize_any_inline, serialize_any_inline
+from rhombus.core.models.node import NewDatapackNode
+from rhombus.core.models.serializer import deserialize_any_inline, serialize_any_inline
 from rhombus.runtime import rho
 
 
-class SubParameters(RhombusASTNode):
+class SubParameters(NewDatapackNode):
     """The **`SubParameters`** base class implements functionality for nodes
     in the abstract syntax tree of Rhombus that simply represent a grouping
     of parameters. This is a concept very similar to Pythons `TypedDict` class.

@@ -4,18 +4,19 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Self, Literal, overload
+from typing import Any, TYPE_CHECKING, Self, Literal, overload
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus.core.density_function import DensityFunction, constant, Reference
+from rhombus.core.models.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
+from rhombus.core.ast import lazy
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
 
 if TYPE_CHECKING:
-    from rhombus.std.macros import UnresolvedMacroDensityFunction
+    from rhombus.std.macros import RhombusASTNode
     from rhombus.std._implementations.optimization import DensityFunctionSizeInfo
 
 
@@ -43,7 +44,7 @@ class Density:
     ```
     """
 
-    AST: DensityFunction
+    AST: RhombusASTNode[DensityFunction]
     "The density function AST represented by this Density."
 
     @overload
@@ -53,7 +54,7 @@ class Density:
     @overload
     def __init__(self, ast: Density): ...
     @overload
-    def __init__(self, ast: DensityFunction): ...
+    def __init__(self, ast: RhombusASTNode[DensityFunction] | DensityFunction): ...
     @overload
     def __init__(self, arg: AnyDensity): ...
     def __init__(self, arg: AnyDensity):
@@ -70,7 +71,13 @@ class Density:
             raise TypeError("identifier has to be of string type")
         value = Density(value)
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
-        return Density(Reference(identifier, definition=value.AST))
+        
+        @lazy
+        def _lazy_reference(target: str, definition: Any):
+            from rhombus.core.models.density_function import Reference
+            return Reference(target, definition=definition.build())
+
+        return Density(_lazy_reference(identifier, value.AST))
 
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
@@ -165,6 +172,7 @@ class Density:
         
         See the `BeetFile` protocol to find out how to use the file data without using Beet.
         """
+        
         old_datapack_version = rho.datapack_version
         if version is not ...:
             rho.datapack_version = version
@@ -174,20 +182,22 @@ class Density:
         if ":" not in identifier:
             identifier = "minecraft:" + identifier
 
-        for node in self.AST.inscribed_toplevel_nodes:
+        df = self.AST.build()
+
+        for node in df.inscribed_toplevel_nodes:
             id = node.identifier
             if id != identifier:
                 if node.fileclass is None:
                     raise TypeError(
                         f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'"
                     )
-                if id != getattr(self.AST, "identifier", None) or not id.startswith("rhombus:generated/"):
+                if id != df.identifier or not id.startswith("rhombus:generated/"):
                     files.add((id, node.fileclass(node.serialize_toplevel())))
 
         files.add(
             (
                 identifier,
-                beet_worldgen.WorldgenDensityFunction(self.AST.serialize_toplevel()),
+                beet_worldgen.WorldgenDensityFunction(df.serialize_toplevel()),
             )
         )
 
@@ -208,21 +218,11 @@ class Density:
     def as_dict(self) -> JSONDict:
         """Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.
         The dictionary will not be fully inline. References that require separate files will be references."""
-        return self.AST.serialize_toplevel()
+        return self.AST.build().serialize_toplevel()
     
-    def info(self, count_unresolved_macros: bool = False) -> DensityFunctionSizeInfo:
+    def info(self) -> DensityFunctionSizeInfo:
         from rhombus.std._implementations.optimization import df_size_info
-        from rhombus.std.macros import resolve_macro_densityfunction
-        
-        info = df_size_info(resolve_macro_densityfunction(self.AST))
-        
-        if count_unresolved_macros:
-            from rhombus.std.macros import UnresolvedMacroDensityFunction
-            from rhombus.core.node import walk
-            macros_count = sum(1 for n in walk(self.AST) if isinstance(n, UnresolvedMacroDensityFunction))
-            info = info._replace(unresolved_macros=macros_count)
-            
-        return info
+        return df_size_info(self.AST.build())
 
     # ======// Arithmetic Magic //================================================================//
 
@@ -349,29 +349,39 @@ class Density:
 
 # ======// AnyDensity //==========================================================================//
 
-type AnyDensity = Density | float | int | str
+type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | float | int | str
 "Type for denoting that any straightforward Density shorthand can be used."
 
 
-def _unify(v: int | float | str | Density | DensityFunction) -> DensityFunction:
-    """Interprets a QoL argument input and returns a DensityFunction object.
+from rhombus.core.ast import lazy as _core_macro
+
+@_core_macro
+def _lazy_node(val: Any) -> Any:
+    return val
+
+def _unify(v: Any) -> "RhombusASTNode":
+    """Interprets a QoL argument input and returns a lazy RhombusASTNode.
     Applies logic like splitting large literal constants into calculations
-    before constructing constant AST nodes.
+    before constructing constant AST nodes, and wraps concrete nodes in lazy proxies.
     """
 
     if isinstance(v, Density):
         return v.AST
 
-    if isinstance(v, DensityFunction):
+    from rhombus.core.ast import RhombusASTNode
+    if isinstance(v, RhombusASTNode):
         return v
 
+    if isinstance(v, DensityFunction):
+        return _lazy_node(v)
+
     if isinstance(v, (int, float)):
-        return constant(float(v))
+        return _lazy_node(constant(float(v)))
 
     if isinstance(v, str):
         if ":" not in v:
             v = "minecraft:" + v
-        return Reference(v)
+        return _lazy_node(Reference(v))
 
     raise ValueError(
         f"Cannot resolve object of type {type(v).__name__!r} to a density function"

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from rhombus.core.density_function import DensityFunction
+from rhombus.core.models.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 import rhombus.support.vanilla.types as vt

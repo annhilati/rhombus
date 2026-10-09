@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Never
 from enum import Enum
 
-from rhombus.core.density_function import DensityFunction
+from rhombus.core.models.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std import caching
 import rhombus.support.vanilla.types as vt
@@ -264,7 +264,7 @@ class ConditionSelector:
         raise NotImplementedError
 
     def _coerce_input_and_value(self, value: Any) -> tuple["DensityFunction", float]:
-        from rhombus.core.density_function import DensityFunction
+        from rhombus.core.models.density_function import DensityFunction
         from rhombus.std.density import Density
         if isinstance(value, (DensityFunction, Density)):
             from rhombus.std.math.general import sub

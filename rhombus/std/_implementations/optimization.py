@@ -4,7 +4,7 @@ import sys
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.core import RhombusASTNode, DensityFunction, Reference, JSON_hash, walk
+from rhombus.core import NewDatapackNode, DensityFunction, Reference, JSON_hash, walk
 from rhombus.std.density import Density
 import rhombus.support.vanilla.types as vt
 
@@ -19,19 +19,18 @@ class DensityFunctionSizeInfo(NamedTuple):
     unique_cached_nodes: int
     unique_unknown_references: int
     total_unknown_references: int
-    unresolved_macros: int = 0
 
 
-def count_node_values(node: RhombusASTNode) -> dict[RhombusASTNode, int]:
+def count_node_values(node: NewDatapackNode) -> dict[NewDatapackNode, int]:
     """Recursively count unique nodes.
 
     Nodes that are equal are grouped.
     """
 
-    if not isinstance(node, RhombusASTNode):
+    if not isinstance(node, NewDatapackNode):
         raise TypeError("Expected RhombusASTNode instance")
 
-    counts: dict[RhombusASTNode, int] = {}
+    counts: dict[NewDatapackNode, int] = {}
     for n in walk(node):
         counts[n] = counts.get(n, 0) + 1
 
@@ -96,7 +95,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                 if files.get(value.identifier):
                     visited_references.add(value.identifier)
                     visit(
-                        Density.from_dict(files[value.identifier].data).AST,
+                        Density.from_dict(files[value.identifier].data).AST.build(),
                         we_are_in_cached=we_are_in_cached,
                     )
                 else:
@@ -119,7 +118,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
             for item in value:
                 visit(item, we_are_in_cached)
 
-    visit(Density.from_dict(files["rhombus:main"].data).AST)
+    visit(Density.from_dict(files["rhombus:main"].data).AST.build())
 
     return DensityFunctionSizeInfo(
         toplevel_nodes=count_toplevel_nodes,
@@ -131,7 +130,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
 def node_caching_transformer(
     root: DensityFunction,
-    *conditions: Callable[[DensityFunction, dict[RhombusASTNode, int]], bool],
+    *conditions: Callable[[DensityFunction, dict[NewDatapackNode, int]], bool],
     transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
         "rhombus:generated/" + JSON_hash(df.serialize_toplevel()),
         definition=vt.cache(df),
