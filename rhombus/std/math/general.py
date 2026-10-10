@@ -407,9 +407,10 @@ def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
 def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the remainder of the division of two arguments."""
     return caching.new_cache_transformer(
-        dividend - divisor * floor(dividend / divisor), targets=(dividend, divisor)
+        dividend - divisor * floor(dividend / divisor),
+        targets=(dividend, divisor),
+        min_size=5
     )
-    # TODO: do not cache small functions
 
 
 # ======// Step Functions //======================================================================//

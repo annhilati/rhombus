@@ -2,12 +2,12 @@ from typing import ClassVar
 import pytest
 import dataclasses
 
-from rhombus.core.models import NewDatapackNode, field
+from rhombus.core.models import DatapackNode, field
 from rhombus import rho
 
 
 def test_fields():
-    class DummyNode(NewDatapackNode):
+    class DummyNode(DatapackNode):
         a: int
         b: str = "test"
 
@@ -21,7 +21,7 @@ def test_fields():
 
 
 def test_equality():
-    class DummyNode(NewDatapackNode):
+    class DummyNode(DatapackNode):
         a: int
 
     node1 = DummyNode(a=5)
@@ -33,7 +33,7 @@ def test_equality():
 
 
 def test_versioning():
-    class VersionedNode(NewDatapackNode):
+    class VersionedNode(DatapackNode):
         id: ClassVar[str] = field("my_id", legacy_values={"1.19": "my_legacy_id"})
         new_field: str | None = field(default=None, added_with="1.20")
         old_field: str | None = field(default=None, removed_with="1.19.4")
@@ -57,7 +57,7 @@ def test_versioning():
 
 
 def test_validation():
-    class ValidatedNode(NewDatapackNode):
+    class ValidatedNode(DatapackNode):
         count: int = field(default=1, validate=lambda x: x > 0)
         complex: int = field(default=5, validate=lambda x, node: x == node.other_field)
         other_field: int = 5

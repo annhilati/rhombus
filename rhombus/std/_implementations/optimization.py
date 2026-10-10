@@ -4,7 +4,7 @@ import sys
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.core import NewDatapackNode, DensityFunction, Reference, JSON_hash, walk
+from rhombus.core import DatapackNode, DensityFunction, Reference, JSON_hash, walk
 from rhombus.std.density import Density
 import rhombus.support.vanilla.types as vt
 
@@ -21,16 +21,16 @@ class DensityFunctionSizeInfo(NamedTuple):
     total_unknown_references: int
 
 
-def count_node_values(node: NewDatapackNode) -> dict[NewDatapackNode, int]:
+def count_node_values(node: DatapackNode) -> dict[DatapackNode, int]:
     """Recursively count unique nodes.
 
     Nodes that are equal are grouped.
     """
 
-    if not isinstance(node, NewDatapackNode):
+    if not isinstance(node, DatapackNode):
         raise TypeError("Expected RhombusASTNode instance")
 
-    counts: dict[NewDatapackNode, int] = {}
+    counts: dict[DatapackNode, int] = {}
     for n in walk(node):
         counts[n] = counts.get(n, 0) + 1
 
@@ -130,7 +130,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
 def node_caching_transformer(
     root: DensityFunction,
-    *conditions: Callable[[DensityFunction, dict[NewDatapackNode, int]], bool],
+    *conditions: Callable[[DensityFunction, dict[DatapackNode, int]], bool],
     transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
         "rhombus:generated/" + JSON_hash(df.serialize_toplevel()),
         definition=vt.cache(df),

@@ -2,8 +2,8 @@ from typing import Any, Callable, overload, cast
 import inspect
 import functools
 
-from rhombus.runtime import rho
 from rhombus.core.environment import _parse_version_specifier, get_module_addon_namespace
+from rhombus.runtime import rho
 
 
 class RhombusASTNode[T]:
@@ -211,5 +211,3 @@ def lazy(
     if func is not None:
         return decorator(func)
     return decorator
-
-# TODO: Fix repr

@@ -4,19 +4,18 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Any, TYPE_CHECKING, Self, Literal, overload
+from typing import Any, Self, Literal, overload, TYPE_CHECKING
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
+from rhombus.core.abstract import RhombusASTNode, lazy
 from rhombus.core.models.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
-from rhombus.core.ast import lazy
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
 
 if TYPE_CHECKING:
-    from rhombus.std.macros import RhombusASTNode
     from rhombus.std._implementations.optimization import DensityFunctionSizeInfo
 
 
@@ -58,7 +57,27 @@ class Density:
     @overload
     def __init__(self, arg: AnyDensity): ...
     def __init__(self, arg: AnyDensity):
-        self.AST = _unify(arg)
+        if isinstance(arg, Density):
+            self.AST = arg.AST
+
+        elif isinstance(arg, RhombusASTNode):
+            self.AST = arg
+
+        elif isinstance(arg, DensityFunction):
+            self.AST = _lazy_node(arg)
+
+        elif isinstance(arg, (int, float)):
+            self.AST = _lazy_node(constant(float(arg)))
+    
+        elif isinstance(arg, str):
+            if ":" not in arg:
+                arg = "minecraft:" + arg
+            self.AST = _lazy_node(Reference(arg)) # TODO: Fetch datapack context here?
+    
+        else:
+            raise ValueError(
+                f"Cannot resolve object of type {type(arg).__name__!r} to a density function"
+            )
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
@@ -353,36 +372,6 @@ type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | 
 "Type for denoting that any straightforward Density shorthand can be used."
 
 
-from rhombus.core.ast import lazy as _core_macro
-
-@_core_macro
+@lazy
 def _lazy_node(val: Any) -> Any:
     return val
-
-def _unify(v: Any) -> "RhombusASTNode":
-    """Interprets a QoL argument input and returns a lazy RhombusASTNode.
-    Applies logic like splitting large literal constants into calculations
-    before constructing constant AST nodes, and wraps concrete nodes in lazy proxies.
-    """
-
-    if isinstance(v, Density):
-        return v.AST
-
-    from rhombus.core.ast import RhombusASTNode
-    if isinstance(v, RhombusASTNode):
-        return v
-
-    if isinstance(v, DensityFunction):
-        return _lazy_node(v)
-
-    if isinstance(v, (int, float)):
-        return _lazy_node(constant(float(v)))
-
-    if isinstance(v, str):
-        if ":" not in v:
-            v = "minecraft:" + v
-        return _lazy_node(Reference(v))
-
-    raise ValueError(
-        f"Cannot resolve object of type {type(v).__name__!r} to a density function"
-    )

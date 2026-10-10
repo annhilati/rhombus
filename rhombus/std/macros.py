@@ -17,7 +17,7 @@ import inspect
 import functools
 import sys
 
-from rhombus.core.ast import RhombusASTNode, lazy as core_macro, implementation as core_implementation
+from rhombus.core.abstract import RhombusASTNode, lazy as core_macro, implementation as core_implementation
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
@@ -177,7 +177,7 @@ def macro(
         @functools.wraps(f)
         def base_wrapper(*args, **kwargs):
             res = f_resolved(*args, **kwargs)
-            from rhombus.core.ast import _macro_registrations
+            from rhombus.core.abstract import _macro_registrations
             if _macro_registrations:
                 return res
             return _coerce_node(res)
@@ -196,6 +196,3 @@ def macro(
     if func is not None:
         return decorator(func)
     return decorator
-
-
-

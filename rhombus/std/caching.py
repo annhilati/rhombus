@@ -2,7 +2,7 @@ __all__ = ["cache", "interpolated", "new_cache_transformer"]
 
 from typing import Callable, Iterable
 
-from rhombus.core import NewDatapackNode, DensityFunction, Reference, JSON_hash
+from rhombus.core import DatapackNode, DensityFunction, Reference, JSON_hash
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 
@@ -45,8 +45,8 @@ class Conditions:
     
     @staticmethod
     def is_one_of(
-        target_nodes: Iterable[NewDatapackNode],
-    ) -> Callable[[DensityFunction, dict[NewDatapackNode, int]], bool]:
+        target_nodes: Iterable[DatapackNode],
+    ) -> Callable[[DensityFunction, dict[DatapackNode, int]], bool]:
         """Applies if the node is one of the specified target nodes."""
         targets = []
         for n in target_nodes:
@@ -57,7 +57,7 @@ class Conditions:
             else:
                 targets.append(n)
 
-        def condition(node: DensityFunction, occurrences: dict[NewDatapackNode, int]) -> bool:
+        def condition(node: DensityFunction, occurrences: dict[DatapackNode, int]) -> bool:
             for target in targets:
                 if isinstance(target, type) and isinstance(node, target):
                     return True
@@ -68,16 +68,16 @@ class Conditions:
         return condition
     
     @staticmethod
-    def occurrences_satisfy(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[NewDatapackNode, int]], bool]:
+    def occurrences_satisfy(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[DatapackNode, int]], bool]:
         """Applies if the node occurs at least a specified number of times."""
-        def condition(node: DensityFunction, occurrences: dict[NewDatapackNode, int]) -> bool:
+        def condition(node: DensityFunction, occurrences: dict[DatapackNode, int]) -> bool:
             return validator(occurrences.get(node, 0))
         return condition
     
     @staticmethod
-    def size_satisfies(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[NewDatapackNode, int]], bool]:
+    def size_satisfies(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[DatapackNode, int]], bool]:
         """Applies if the node has at least a specified number of toplevel nodes."""
-        def condition(node: DensityFunction, occurrences: dict[NewDatapackNode, int]) -> bool:
+        def condition(node: DensityFunction, occurrences: dict[DatapackNode, int]) -> bool:
             return validator(df_size_info(node).toplevel_nodes)
         return condition
 

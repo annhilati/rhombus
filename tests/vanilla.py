@@ -4,14 +4,13 @@ from rhombus.std.conditional import range_choice
 rho.set_version(datapack=104)
 
 
-from rhombus.std.density import _unify
-flat_cache       = lambda df: Density(support.vanilla.legacy_types.flat_cache(_unify(df)))
-cache_2d         = lambda df: Density(support.vanilla.legacy_types.cache_2d(_unify(df)))
-quarter_negative = lambda df: Density(support.vanilla.types.quarter_negative(_unify(df)))
-half_negative    = lambda df: Density(support.vanilla.types.half_negative(_unify(df)))
-squeeze          = lambda df: Density(support.vanilla.types.squeeze(_unify(df)))
-weird_scaled_sampler = lambda df, n, rvm: Density(support.vanilla.legacy_types.weird_scaled_sampler(_unify(df), n, rvm))
-
+flat_cache       = lambda df: Density(support.vanilla.legacy_types.flat_cache(Density(df).AST))
+cache_2d         = lambda df: Density(support.vanilla.legacy_types.cache_2d(Density(df).AST))
+quarter_negative = lambda df: Density(support.vanilla.types.quarter_negative(Density(df).AST))
+half_negative    = lambda df: Density(support.vanilla.types.half_negative(Density(df).AST))
+squeeze          = lambda df: Density(support.vanilla.types.squeeze(Density(df).AST))
+weird_scaled_sampler = lambda df, n, rvm: Density(support.vanilla.legacy_types.weird_scaled_sampler(Density(df).AST, n, rvm))
+# TODO: This is stupid. .AST is lazy. We can't use it in the models. We need a general solution for this problem
 
 noise_jagged = Noise(
     -16,
