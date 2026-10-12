@@ -9,7 +9,7 @@ from typing import Any, Self, Literal, overload, TYPE_CHECKING
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
-from rhombus.core.abstract import RhombusASTNode, lazy
+from rhombus.core.abstract import RhombusASTNode
 from rhombus.core.models.density_function import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
@@ -19,7 +19,32 @@ if TYPE_CHECKING:
     from rhombus.std._implementations.optimization import DensityFunctionSizeInfo
 
 
-# ======// Density Type //========================================================================//
+# ======// AnyDensity //==========================================================================//
+
+type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | float | int | str
+"Type for denoting that any straightforward shorthand for a `Density` value can be used."
+
+
+def _identity(val: Any) -> Any:
+    return val
+
+
+
+def _build_reference(target: str, value: AnyDensity) -> Reference:
+    import rhombus.support.vanilla.types as vt
+    built_def = Density(value).build()
+    if isinstance(built_def, Reference) and isinstance(built_def.definition, vt.cache):
+        built_def = built_def.definition
+    return Reference(target, definition=built_def)
+
+
+def _build_partitioned(value: AnyDensity) -> Reference:
+    import rhombus.support.vanilla.types as vt
+    built_def = Density(value).build()
+    if isinstance(built_def, Reference) and isinstance(built_def.definition, vt.cache):
+        built_def = built_def.definition
+    h = JSON_hash(built_def.serialize_toplevel())
+    return Reference(f"rhombus:generated/{h}", definition=built_def)
 
 
 @dataclass(frozen=False)
@@ -64,15 +89,15 @@ class Density:
             self.AST = arg
 
         elif isinstance(arg, DensityFunction):
-            self.AST = _lazy_node(arg)
+            self.AST = RhombusASTNode.defer(_identity, arg)
 
         elif isinstance(arg, (int, float)):
-            self.AST = _lazy_node(constant(float(arg)))
+            self.AST = RhombusASTNode.defer(_identity, constant(float(arg)))
     
         elif isinstance(arg, str):
             if ":" not in arg:
                 arg = "minecraft:" + arg
-            self.AST = _lazy_node(Reference(arg)) # TODO: Fetch datapack context here?
+            self.AST = RhombusASTNode.defer(_identity, Reference(arg)) # TODO: Fetch datapack context here?
     
         else:
             raise ValueError(
@@ -85,34 +110,19 @@ class Density:
     # ======// Factories //=======================================================================//
 
     @classmethod
-    def _configured(cls, identifier: str, value: AnyDensity):
+    def _configured(cls, identifier: str, value: AnyDensity) -> Density:
         if not isinstance(identifier, str):
             raise TypeError("identifier has to be of string type")
-        value = Density(value)
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
-        
-        @lazy
-        def _lazy_reference(target: str, definition: Any):
-            from rhombus.core.models.density_function import Reference
-            return Reference(target, definition=definition.build())
-
-        return Density(_lazy_reference(identifier, value.AST))
+        return Density(RhombusASTNode.defer(_build_reference, identifier, value))
 
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
-        return Density._configured(
-            identifier="rhombus:generated/" + JSON_hash(Density(value).as_dict()),
-            value=value
-        )
+        return Density(RhombusASTNode.defer(_build_partitioned, value))
 
-    def __rmatmul__(self, identifier: str):
-        import rhombus.support.vanilla.types as vt
-        
-        default = self.AST
-        if isinstance(default, Reference) and isinstance(default.definition, vt.cache):
-            default = default.definition
-        return Density._configured(identifier, default)
+    def __rmatmul__(self, identifier: str) -> Density:
+        return Density._configured(identifier, self)
 
 
     # ======// Toolchain //=======================================================================//
@@ -126,7 +136,7 @@ class Density:
 
         A Beet datapack can be provided as context.
         """
-        return Density(DensityFunction.deserialize_toplevel(d))
+        return Density(RhombusASTNode.defer(lambda: DensityFunction.deserialize_toplevel(d)))
 
     @classmethod
     @datapack_handler
@@ -186,6 +196,9 @@ class Density:
 
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
 
+    def build(self) -> DensityFunction:
+        return self.AST.build()
+
     def compile(self, identifier: str = "main", /, *, version: DatapackVersion = ...) -> set[tuple[str, BeetFile]]:
         """Compiles the Density into Beet file class instances.
         
@@ -201,7 +214,7 @@ class Density:
         if ":" not in identifier:
             identifier = "minecraft:" + identifier
 
-        df = self.AST.build()
+        df = self.build()
 
         for node in df.inscribed_toplevel_nodes:
             id = node.identifier
@@ -242,6 +255,7 @@ class Density:
     def info(self) -> DensityFunctionSizeInfo:
         from rhombus.std._implementations.optimization import df_size_info
         return df_size_info(self.AST.build())
+
 
     # ======// Arithmetic Magic //================================================================//
 
@@ -364,14 +378,3 @@ class Density:
     #     raise NotImplementedError(
     #         "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
     #     )
-
-
-# ======// AnyDensity //==========================================================================//
-
-type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | float | int | str
-"Type for denoting that any straightforward Density shorthand can be used."
-
-
-@lazy
-def _lazy_node(val: Any) -> Any:
-    return val

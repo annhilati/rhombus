@@ -72,7 +72,7 @@ def gradient(
             )
         return Density(
             lt.y_clamped_gradient(from_coordinate, to_coordinate, from_value, to_value)
-        )
+        ) # TODO: norm to 4062
         
     @implementation
     def gradient():

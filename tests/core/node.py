@@ -73,3 +73,21 @@ def test_validation():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         ValidatedNode(count=1, complex=5, other_field=5)
+
+
+def test_defer_parametrization():
+    from rhombus.core.abstract import RhombusASTNode
+
+    def typed_func() -> int:
+        return 42
+
+    node = RhombusASTNode.defer(typed_func)
+    assert node.return_type is int
+    assert getattr(node, "__orig_class__", None) == RhombusASTNode[int]
+    assert node.build() == 42
+
+    def untyped_func():
+        return "hello"
+
+    untyped_node = RhombusASTNode.defer(untyped_func)
+    assert untyped_node.build() == "hello"

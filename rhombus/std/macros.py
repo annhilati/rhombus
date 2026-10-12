@@ -17,7 +17,7 @@ import inspect
 import functools
 import sys
 
-from rhombus.core.abstract import RhombusASTNode, lazy as core_macro, implementation as core_implementation
+from rhombus.core.abstract import RhombusASTNode, LazyDispatcher, implementation as core_implementation
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
@@ -183,7 +183,7 @@ def macro(
             return _coerce_node(res)
         base_wrapper.__signature__ = inspect.signature(f_resolved)
 
-        core_dispatcher = core_macro(repr=repr)(base_wrapper)
+        core_dispatcher = LazyDispatcher(base_wrapper, repr_func=repr)
         
         @functools.wraps(f)
         def wrapper(*args: Any, **kwargs: Any) -> Any:

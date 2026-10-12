@@ -4,13 +4,13 @@ from rhombus.std.conditional import range_choice
 rho.set_version(datapack=104)
 
 
-flat_cache       = lambda df: Density(support.vanilla.legacy_types.flat_cache(Density(df).AST))
-cache_2d         = lambda df: Density(support.vanilla.legacy_types.cache_2d(Density(df).AST))
-quarter_negative = lambda df: Density(support.vanilla.types.quarter_negative(Density(df).AST))
-half_negative    = lambda df: Density(support.vanilla.types.half_negative(Density(df).AST))
-squeeze          = lambda df: Density(support.vanilla.types.squeeze(Density(df).AST))
-weird_scaled_sampler = lambda df, n, rvm: Density(support.vanilla.legacy_types.weird_scaled_sampler(Density(df).AST, n, rvm))
-# TODO: This is stupid. .AST is lazy. We can't use it in the models. We need a general solution for this problem
+flat_cache       = macro(lambda df: Density(support.vanilla.legacy_types.flat_cache(Density(df).build())))
+cache_2d         = macro(lambda df: Density(support.vanilla.legacy_types.cache_2d(Density(df).build())))
+quarter_negative = macro(lambda df: Density(support.vanilla.types.quarter_negative(Density(df).build())))
+half_negative    = macro(lambda df: Density(support.vanilla.types.half_negative(Density(df).build())))
+squeeze          = macro(lambda df: Density(support.vanilla.types.squeeze(Density(df).build())))
+weird_scaled_sampler = macro(lambda df, n, rvm: Density(support.vanilla.legacy_types.weird_scaled_sampler(Density(df).build(), n, rvm)))
+# TODO: This is stupid. We need a general solution for this problem
 
 noise_jagged = Noise(
     -16,
@@ -1797,6 +1797,12 @@ final_destiny = min(
     overworld_caves_noodles,
 )
 
+if __name__ == "__main__":
+    import beet
+    dp = beet.DataPack(path="test_out")
+    final_destiny.implement(dp, "main")
+    # dp.save(overwrite=True)
+    preview.serve(("main", final_destiny))
 
 # TODO: Reset-Method needed?
 rho.set_version(datapack=118)

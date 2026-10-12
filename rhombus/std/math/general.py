@@ -54,7 +54,7 @@ Infinity = _infinity()
 def _nan() -> Density:
     @implementation(until=111)
     def _legacy():
-        return Density(vt.mul(vt.constant(0), vt.reciprocal(vt.constant(0))))
+        return Density(vt.mul(vt.constant(0.0), vt.reciprocal(vt.constant(0.0))))
     @implementation
     def _modern():
         return Density(vt.sqrt(vt.constant(-1)))
@@ -146,8 +146,8 @@ def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the quotient of two arguments."""
     @implementation(until=111)
     def div():
-        if isinstance(dividend.AST, vt.constant):
-            if dividend.AST.value == 1:
+        if isinstance(dividend.AST.build(), vt.constant):
+            if dividend.AST.build().value == 1:
                 return Density(vt.reciprocal(divisor.AST))
         return Density(vt.mul(dividend.AST, vt.reciprocal(divisor.AST)))
     @implementation
@@ -181,20 +181,21 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     """
     @implementation(until=113)
     def pow():
-        if not isinstance(exponent.AST, vt.constant):
+        built_exponent = exponent.AST.build()
+        if not isinstance(built_exponent, vt.constant):
             raise ValueError("Can only raise to integer powers in datapack versions below 113")
-        if 0 <= py_builtins.abs(exponent.AST.value) <= 3:
+        if 0 <= py_builtins.abs(built_exponent.value) <= 3:
             result = {
                 0: Density(vt.constant(1)),
                 1: base,
                 2: Density(vt.square(base.AST)),
                 3: Density(vt.cube(base.AST))
-            }[py_builtins.int(exponent.AST.value)]
+            }[py_builtins.int(built_exponent.value)]
         else:
             result = base
-            for _ in range(py_builtins.abs(exponent.AST.value) - 1):
+            for _ in range(py_builtins.abs(built_exponent.value) - 1):
                 result = Density(vt.mul(result.AST, base.AST))
-        if exponent.AST.value < 0:
+        if built_exponent.value < 0:
             result = Density(vt.reciprocal(result.AST))
         return result
     
@@ -229,8 +230,10 @@ def log(df: AnyDensity, *, base: AnyDensity = e) -> Density:
 @macro
 def clamp(df: AnyDensity, min: AnyDensity, max: AnyDensity) -> Density:
     """Limits the values of the input to the range `[min, max]`."""
-    if isinstance(min.AST, vt.constant) and isinstance(max.AST, vt.constant):
-        return Density(vt.clamp(df.AST, min.AST.value, max.AST.value))
+    built_min = min.AST.build()
+    built_max = max.AST.build()
+    if isinstance(built_min, vt.constant) and isinstance(built_max, vt.constant):
+        return Density(vt.clamp(df.AST, built_min.value, built_max.value))
     return Density(vt.max(max.AST, vt.min(min.AST, df.AST)))
 
 
@@ -476,9 +479,10 @@ def spline(
     def convert_point(p):
         location, value, derivative = p
         ast_value = value.AST
+        built_value = ast_value.build()
         
-        if isinstance(ast_value, vt.spline):
-            ast_value = ast_value.spline
+        if isinstance(built_value, vt.spline):
+            ast_value = built_value.spline
             
         return vt.SplinePoint(location, ast_value, derivative)
 

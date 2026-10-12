@@ -148,4 +148,4 @@ def coord_component(
         value,
     )
 
-    return new_cache_transformer(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.AST))), min_size=5)
+    return new_cache_transformer(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.AST.build()))), min_size=5)

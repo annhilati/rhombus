@@ -1,22 +1,86 @@
-from typing import Any, Callable, overload, cast
+from typing import Any, Self, Callable, Protocol, overload, cast, get_type_hints, get_args
 import inspect
 import functools
 
 from rhombus.core.environment import _parse_version_specifier, get_module_addon_namespace
 from rhombus.runtime import rho
 
+__all__ = [
+    "RhombusASTNode",
+    "LazyDispatcher",
+    "implementation",
+    "RhombusAbstractType",
+]
+
 
 class RhombusASTNode[T]:
     """Represents a lazy, unresolved node in the abstract syntax tree."""
     
-    def __init__(self, dispatcher: "LazyDispatcher", args: tuple[Any, ...], kwargs: dict[str, Any], repr_func: Callable | None = None):
+    def __init__(
+        self,
+        dispatcher: Callable[..., Any],
+        args: tuple[Any, ...] = (),
+        kwargs: dict[str, Any] | None = None,
+        repr_func: Callable[[Self], str] | None = None,
+    ):
         self.dispatcher = dispatcher
         self.args = args
-        self.kwargs = kwargs
+        self.kwargs = kwargs or {}
         self.repr_func = repr_func
 
         self._cached_version: Any = None
         self._cached_node: T | None = None
+
+    @classmethod
+    def defer[R](
+        cls,
+        func: Callable[..., R],
+        *args: Any,
+        repr_func: Callable[[Any], str] | None = None,
+        **kwargs: Any,
+    ) -> "RhombusASTNode[R]":
+        target_cls = cls
+        if getattr(cls, "__parameters__", None):
+            return_type = None
+            try:
+                hints = get_type_hints(func)
+                return_type = hints.get("return")
+            except Exception:
+                return_type = getattr(func, "__annotations__", {}).get("return")
+                if return_type is None:
+                    try:
+                        sig = inspect.signature(func)
+                        if sig.return_annotation is not inspect.Signature.empty:
+                            return_type = sig.return_annotation
+                    except Exception:
+                        pass
+
+            if return_type is not None and return_type is not Any:
+                try:
+                    target_cls = cls[return_type]
+                except Exception:
+                    pass
+
+        return target_cls(func, args=args, kwargs=kwargs, repr_func=repr_func)
+
+    @property
+    def return_type(self) -> Any:
+        orig = getattr(self, "__orig_class__", None)
+        if orig is not None:
+            args = get_args(orig)
+            if args:
+                return args[0]
+        if hasattr(self, "dispatcher"):
+            try:
+                hints = get_type_hints(self.dispatcher)
+                ret = hints.get("return")
+                if ret is not None and ret is not Any:
+                    return ret
+            except Exception:
+                ret = getattr(self.dispatcher, "__annotations__", {}).get("return")
+                if ret is not None and ret is not Any:
+                    return ret
+        return Any
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, RhombusASTNode):
@@ -39,7 +103,8 @@ class RhombusASTNode[T]:
             return self.repr_func(self)
         parts = [repr(arg) for arg in self.args]
         parts.extend(f"{k}={repr(v)}" for k, v in self.kwargs.items())
-        return f"{self.dispatcher.__name__}({', '.join(parts)})"
+        name = getattr(self.dispatcher, "__name__", getattr(type(self.dispatcher), "__name__", "lazy"))
+        return f"{name}({', '.join(parts)})"
 
     def build(self) -> T:
         current_version = rho.datapack_version
@@ -47,7 +112,10 @@ class RhombusASTNode[T]:
         if self._cached_version == current_version and self._cached_node is not None:
             return self._cached_node
 
-        result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
+        if hasattr(self.dispatcher, "_execute_for_version"):
+            result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
+        else:
+            result = self.dispatcher(*self.args, **self.kwargs)
 
         def _deep_build(node: Any) -> Any:
             if isinstance(node, RhombusASTNode):
@@ -95,24 +163,6 @@ class RhombusASTNode[T]:
         return self._cached_node
 
 
-_macro_registrations: list[tuple[Any, Any, Callable]] = []
-
-
-def implementation(
-    func: Callable | None = None, 
-    *, 
-    since=None,
-    until=None
-):
-    """Decorator for inner functions inside a macro to register them as version implementations."""
-    def decorator(f: Callable):
-        _macro_registrations.append((since, until, f))
-        return f
-
-    if func is not None:
-        return decorator(func)
-    return decorator
-
 
 class LazyDispatcher:
     def __init__(self, func: Callable, repr_func: Callable | None = None):
@@ -121,6 +171,11 @@ class LazyDispatcher:
         self.default_ns = get_module_addon_namespace(func.__module__) or "datapack"
         functools.update_wrapper(self, func)
         self.__signature__ = inspect.signature(func)
+
+    def __get__(self, instance: Any, owner: Any = None) -> Any:
+        if instance is None:
+            return self
+        return functools.partial(self, instance)
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         self.__signature__.bind(*args, **kwargs)
@@ -196,18 +251,24 @@ class LazyDispatcher:
         )
 
 
-@overload
-def lazy[**P, R](func: Callable[P, R]) -> Callable[P, RhombusASTNode[R]]: ...
-@overload
-def lazy[**P, R](*, repr: Callable[["RhombusASTNode"], str] | None = None) -> Callable[[Callable[P, R]], Callable[P, RhombusASTNode[R]]]: ...
-def lazy(
-    func: Callable | None = None,
-    *,
-    repr: Callable[["RhombusASTNode"], str] | None = None
-) -> Callable:
-    def decorator(f: Callable) -> Callable:
-        return cast(Callable, LazyDispatcher(f, repr_func=repr))
-    
+_macro_registrations: list[tuple[Any, Any, Callable]] = []
+
+
+def implementation(
+    func: Callable | None = None, 
+    *, 
+    since=None,
+    until=None
+):
+    """Decorator for inner functions inside a macro to register them as version implementations."""
+    def decorator(f: Callable):
+        _macro_registrations.append((since, until, f))
+        return f
+
     if func is not None:
         return decorator(func)
     return decorator
+
+
+class RhombusAbstractType[T](Protocol):
+    AST: RhombusASTNode[T]
