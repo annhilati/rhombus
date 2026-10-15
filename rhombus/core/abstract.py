@@ -1,8 +1,14 @@
-from typing import Any, Self, Callable, Protocol, overload, cast, get_type_hints, get_args
+from typing import Any, Self, Callable, Protocol, get_type_hints, get_args
 import inspect
 import functools
 
-from rhombus.core.environment import _parse_version_specifier, get_module_addon_namespace
+from rhombus.core.environment import (
+    _parse_version_specifier,
+    get_module_addon_namespace,
+    DatapackVersion,
+    VersionString,
+    VersionTuple
+)
 from rhombus.runtime import rho
 
 __all__ = [
@@ -34,11 +40,14 @@ class RhombusASTNode[T]:
     @classmethod
     def defer[R](
         cls,
-        func: Callable[..., R],
-        *args: Any,
-        repr_func: Callable[[Any], str] | None = None,
-        **kwargs: Any,
+        func: Callable[[], R],
+        # *args: Any,
+        repr_func: Callable[["RhombusASTNode[R]"], str] | None = None,
+        # **kwargs: Any,
     ) -> "RhombusASTNode[R]":
+        # TODO: Can we safely remove the argument parameters? I believe we need them because using
+        #       lambdas makes comparing RhombusASTNodes impossible, because every call of the lambda-
+        #       keyword creates a new object. 
         target_cls = cls
         if getattr(cls, "__parameters__", None):
             return_type = None
@@ -61,7 +70,21 @@ class RhombusASTNode[T]:
                 except Exception:
                     pass
 
-        return target_cls(func, args=args, kwargs=kwargs, repr_func=repr_func)
+        return target_cls(func, repr_func=repr_func)
+        #                       args=args, kwargs=kwargs
+
+    @classmethod
+    def value[T](cls, val: T) -> "RhombusASTNode[T]":
+        """Create a RhombusASTNode that simply contains a value when no lazy execution is needed."""
+
+        def identity():
+            # This function is required instead of a lambda to enable correct comparison of simple RhombusASTNodes.
+            return val
+
+        repr: Callable[[RhombusASTNode, str]] = (
+            lambda n: val.__repr__()
+        )
+        return cls.defer(identity, repr_func=repr)
 
     @property
     def return_type(self) -> Any:
@@ -251,7 +274,13 @@ class LazyDispatcher:
         )
 
 
-_macro_registrations: list[tuple[Any, Any, Callable]] = []
+_macro_registrations: list[
+    tuple[
+        DatapackVersion | VersionString | VersionTuple | tuple[str, DatapackVersion | VersionString | VersionTuple],
+        DatapackVersion | VersionString | VersionTuple | tuple[str, DatapackVersion | VersionString | VersionTuple],
+        Callable
+    ]
+] = []
 
 
 def implementation(
@@ -261,6 +290,7 @@ def implementation(
     until=None
 ):
     """Decorator for inner functions inside a macro to register them as version implementations."""
+    # TODO: Rationalize; this should probably be a fabric and not a decorator here
     def decorator(f: Callable):
         _macro_registrations.append((since, until, f))
         return f

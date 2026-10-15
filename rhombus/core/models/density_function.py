@@ -227,7 +227,7 @@ class DoubleArgumentDensityFunction(DensityFunction):
 
 class Reference(DensityFunction):
     target: str
-    definition: "DensityFunction | RhombusASTNode | None" = None # TODO: Check whether allowing RhombusASTNode here is fine. 
+    definition: "DensityFunction | None" = None # TODO: Check whether allowing RhombusASTNode here is fine. 
 
     def __post_init__(self):
         if not isinstance(self.target, str) or not self.target:
@@ -260,8 +260,8 @@ class Reference(DensityFunction):
     def serialize_toplevel(self) -> JSONDict:
         if self.definition is not None:
             return self.definition.serialize_toplevel()
-        import rhombus.support.vanilla.types as vt
 
+        import rhombus.support.vanilla.types as vt
         return vt.add(self, constant(0.0)).serialize_toplevel()
 
     def serialize_inline(self) -> str:

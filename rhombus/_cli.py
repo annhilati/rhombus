@@ -7,7 +7,6 @@ import sys
 
 import typer
 
-# TODO: Add rhombus.toml definition where more complex workflows can be stated. Or: make it a hooked python script
 
 cli = typer.Typer(
     help="The Rhombus CLI",

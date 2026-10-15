@@ -126,6 +126,22 @@ The easiest way to support the Rhombus project is to propagate its use in your p
   <code>&lt;a href="https://github.com/annhilati/rhombus">&lt;img src="https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/badge-cozy-minimal.svg"/>&lt;/a></code>
 </p>
 
+<!-- ## Acknowledgements
+
+<details>
+<summary>Show</summary>
+
+- gegy – for their improvements of the worldgen system which they consulted the community for
+- abkwreu – for inspiring me how to implement syntactic conditionality
+- AtronixMH48 – for testing out Rhombus in it's early stages
+
+**For their work in the field**
+- Klinbee
+- Uni
+- Apollo
+- Wektory
+
+</details> -->
 
 <!-- <h2></h2>
 

@@ -10,7 +10,7 @@ quarter_negative = macro(lambda df: Density(support.vanilla.types.quarter_negati
 half_negative    = macro(lambda df: Density(support.vanilla.types.half_negative(Density(df).build())))
 squeeze          = macro(lambda df: Density(support.vanilla.types.squeeze(Density(df).build())))
 weird_scaled_sampler = macro(lambda df, n, rvm: Density(support.vanilla.legacy_types.weird_scaled_sampler(Density(df).build(), n, rvm)))
-# TODO: This is stupid. We need a general solution for this problem
+# NOTE: This is may seem stupid, but for a patch-like solution with lambdas this is actually quite expressive
 
 noise_jagged = Noise(
     -16,

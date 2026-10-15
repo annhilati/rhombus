@@ -52,8 +52,11 @@ def _create_argument_resolver(func: Callable) -> Callable:
         args = get_args(hint)
 
         # Leaf: AnyDensity -> Density(...)
-        if is_anydensity_hint(hint) or hint is __import__("rhombus.std.density", fromlist=["Density"]).Density or str(hint) == "Density" or str(hint) == "~Density":
-            return val if isinstance(val, __import__("rhombus.std.density", fromlist=["Density"]).Density) else __import__("rhombus.std.density", fromlist=["Density"]).Density(val)
+        # if is_anydensity_hint(hint) or hint is __import__("rhombus.std.density", fromlist=["Density"]).Density or str(hint) == "Density" or str(hint) == "~Density":
+        #     return val if isinstance(val, __import__("rhombus.std.density", fromlist=["Density"]).Density) else __import__("rhombus.std.density", fromlist=["Density"]).Density(val)
+        # TODO: What was this?
+        if is_anydensity_hint(hint) or hint is Density or str(hint) == "Density" or str(hint) == "~Density":
+            return Density(val)
 
         # Union / |: try the first matching branch
         if origin is Union or isinstance(hint, UnionType):

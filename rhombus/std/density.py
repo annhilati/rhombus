@@ -4,13 +4,13 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Any, Self, Literal, overload, TYPE_CHECKING
+from typing import Self, Literal, Callable, overload, TYPE_CHECKING
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus.core.abstract import RhombusASTNode
-from rhombus.core.models.density_function import DensityFunction, constant, Reference
+from rhombus.core.models import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
 from rhombus.core.environment import DatapackVersion
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
@@ -19,32 +19,8 @@ if TYPE_CHECKING:
     from rhombus.std._implementations.optimization import DensityFunctionSizeInfo
 
 
-# ======// AnyDensity //==========================================================================//
-
 type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | float | int | str
 "Type for denoting that any straightforward shorthand for a `Density` value can be used."
-
-
-def _identity(val: Any) -> Any:
-    return val
-
-
-
-def _build_reference(target: str, value: AnyDensity) -> Reference:
-    import rhombus.support.vanilla.types as vt
-    built_def = Density(value).build()
-    if isinstance(built_def, Reference) and isinstance(built_def.definition, vt.cache):
-        built_def = built_def.definition
-    return Reference(target, definition=built_def)
-
-
-def _build_partitioned(value: AnyDensity) -> Reference:
-    import rhombus.support.vanilla.types as vt
-    built_def = Density(value).build()
-    if isinstance(built_def, Reference) and isinstance(built_def.definition, vt.cache):
-        built_def = built_def.definition
-    h = JSON_hash(built_def.serialize_toplevel())
-    return Reference(f"rhombus:generated/{h}", definition=built_def)
 
 
 @dataclass(frozen=False)
@@ -89,15 +65,15 @@ class Density:
             self.AST = arg
 
         elif isinstance(arg, DensityFunction):
-            self.AST = RhombusASTNode.defer(_identity, arg)
+            self.AST = RhombusASTNode.value(arg)
 
         elif isinstance(arg, (int, float)):
-            self.AST = RhombusASTNode.defer(_identity, constant(float(arg)))
+            self.AST = RhombusASTNode.value(constant(float(arg)))
     
         elif isinstance(arg, str):
             if ":" not in arg:
                 arg = "minecraft:" + arg
-            self.AST = RhombusASTNode.defer(_identity, Reference(arg)) # TODO: Fetch datapack context here?
+            self.AST = RhombusASTNode.value(Reference(arg)) # TODO: Fetch datapack context here? Maybe make it an option
     
         else:
             raise ValueError(
@@ -109,20 +85,42 @@ class Density:
 
     # ======// Factories //=======================================================================//
 
-    @classmethod
-    def _configured(cls, identifier: str, value: AnyDensity) -> Density:
+    def named(self, identifier: str, /) -> Density:
+        """Creates a new `Density` object which value will be compiled to a separate file with the given identifier."""
         if not isinstance(identifier, str):
             raise TypeError("identifier has to be of string type")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
-        return Density(RhombusASTNode.defer(_build_reference, identifier, value))
+
+        def build_reference() -> Reference:
+            import rhombus.support.vanilla.types as vt
+            df_build = self.build()
+            if isinstance(df_build, Reference) and isinstance(df_build.definition, vt.cache):
+                df_build = df_build.definition
+            return Reference(identifier, definition=df_build)
+
+        repr: Callable[[RhombusASTNode[Reference], str]] = (
+            lambda n: f"({self!r}).named(\"{identifier}\")"
+        )
+        return Density(RhombusASTNode.defer(build_reference, repr_func=repr))
+            # TODO: Density(5).named("value") + "other" produces add((identity()).named("minecraft:value"), 'other')
+            #       why is 'other' in the example namespace-less?
 
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
-        return Density(RhombusASTNode.defer(_build_partitioned, value))
+
+        def build_partitioned() -> Reference:
+            import rhombus.support.vanilla.types as vt
+            df_build = Density(value).build()
+            if isinstance(df_build, Reference) and isinstance(df_build.definition, vt.cache):
+                df_build = df_build.definition
+            h = JSON_hash(df_build.serialize_toplevel())
+            return Reference(f"rhombus:generated/{h}", definition=df_build)
+
+        return Density(RhombusASTNode.defer(build_partitioned))
 
     def __rmatmul__(self, identifier: str) -> Density:
-        return Density._configured(identifier, self)
+        return self.named(identifier)
 
 
     # ======// Toolchain //=======================================================================//
@@ -197,6 +195,7 @@ class Density:
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
 
     def build(self) -> DensityFunction:
+        """"""
         return self.AST.build()
 
     def compile(self, identifier: str = "main", /, *, version: DatapackVersion = ...) -> set[tuple[str, BeetFile]]:
@@ -214,22 +213,22 @@ class Density:
         if ":" not in identifier:
             identifier = "minecraft:" + identifier
 
-        df = self.build()
+        df_build = self.build()
 
-        for node in df.inscribed_toplevel_nodes:
+        for node in df_build.inscribed_toplevel_nodes:
             id = node.identifier
             if id != identifier:
                 if node.fileclass is None:
                     raise TypeError(
                         f"Cannot compile Density. Node class '{node.__class__}' is missing class variable 'fileclass'"
                     )
-                if id != df.identifier or not id.startswith("rhombus:generated/"):
+                if id != df_build.identifier or not id.startswith("rhombus:generated/"):
                     files.add((id, node.fileclass(node.serialize_toplevel())))
 
         files.add(
             (
                 identifier,
-                beet_worldgen.WorldgenDensityFunction(df.serialize_toplevel()),
+                beet_worldgen.WorldgenDensityFunction(df_build.serialize_toplevel()),
             )
         )
 
