@@ -41,7 +41,7 @@ def blend_density(df: AnyDensity) -> Density:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#blend_density)
     """
-    return Density(vt.blend_density(df.AST))
+    return Density(vt.blend_density(df.build()))
 
 
 def blend_offset() -> Density:

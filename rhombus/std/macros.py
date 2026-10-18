@@ -17,12 +17,12 @@ import inspect
 import functools
 import sys
 
-from rhombus.core.abstract import RhombusASTNode, LazyDispatcher, implementation as core_implementation
+from rhombus.core.abstract import RhombusASTNode, LazyDispatcher, register_implementation, has_macro_registrations
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
 
-def _create_argument_resolver(func: Callable) -> Callable:
+def _create_argument_resolver[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
     sig = inspect.signature(func)
     module = sys.modules[func.__module__]
@@ -33,17 +33,17 @@ def _create_argument_resolver(func: Callable) -> Callable:
         include_extras=True,
     )
 
-    def is_anydensity_hint(hint: Annotation) -> bool:
+    def hints_AnyDensity(hint: Annotation) -> bool:
         if hint is AnyDensity:
             return True
 
         origin = get_origin(hint)
 
         if origin is Annotated:
-            return is_anydensity_hint(get_args(hint)[0])
+            return hints_AnyDensity(get_args(hint)[0])
 
         if origin is Union or isinstance(hint, UnionType):
-            return any(is_anydensity_hint(arg) for arg in get_args(hint))
+            return any(hints_AnyDensity(arg) for arg in get_args(hint))
 
         return False
 
@@ -52,10 +52,7 @@ def _create_argument_resolver(func: Callable) -> Callable:
         args = get_args(hint)
 
         # Leaf: AnyDensity -> Density(...)
-        # if is_anydensity_hint(hint) or hint is __import__("rhombus.std.density", fromlist=["Density"]).Density or str(hint) == "Density" or str(hint) == "~Density":
-        #     return val if isinstance(val, __import__("rhombus.std.density", fromlist=["Density"]).Density) else __import__("rhombus.std.density", fromlist=["Density"]).Density(val)
-        # TODO: What was this?
-        if is_anydensity_hint(hint) or hint is Density or str(hint) == "Density" or str(hint) == "~Density":
+        if hints_AnyDensity(hint) or hint is Density or str(hint) == "Density" or str(hint) == "~Density":
             return Density(val)
 
         # Union / |: try the first matching branch
@@ -123,16 +120,82 @@ def _create_argument_resolver(func: Callable) -> Callable:
     wrapper.__signature__ = sig
     return wrapper
 
-def _coerce_node(res: Any) -> Any:
+def _coerce_node(res: Density | AnyDensity):
     if not isinstance(res, Density):
         try:
             res = Density(res)
         except Exception as e:
             raise TypeError(f"Macro returned {type(res)}, which could not be converted to a Density object.") from e
-    if hasattr(res, "AST"):
-        return res.AST
-    return res
+    return res.AST
 
+
+@overload
+def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
+@overload
+def macro[**P, R](*, repr: Callable[["RhombusASTNode"], str] | None = None) -> Decorator[P, R]: ...
+def macro(
+    func: Callable | None = None,
+    *,
+    repr: Callable[["RhombusASTNode"], str] | None = None
+) -> Callable:
+    """The **`macro`** decorator allows functions to use special behaviour beneficial for writing density functions:
+    
+    - Values for parameters annotated with `AnyDensity` will automatically be coerced to the `Density` type.
+    - Allows defining functions decorated with the `@implementation` decorator inside the function to provide lazily chosen version-dependent implementations.
+    - Allows using Python's `if / elif / else` syntax as well as special macros with `with`-statements inside the function.
+    
+    ## Usage:
+    ```
+    @macro
+    def floor(df: AnyDensity, decimals: int = 0) -> Density:
+        do_something() # everything before implementation declarations will be executed too
+        
+        @implementation(until=111)
+        def floor():
+            return ...
+        
+        @implementation
+        def floor():
+            return ...
+    ```
+    """
+    def decorator(f: Callable) -> Callable:
+        from rhombus.std.conditional.ast_parser import transform_ast # avoid circular import
+        f_transformed = transform_ast(f)
+        f_resolved = _create_argument_resolver(f_transformed)
+        
+        @functools.wraps(f)
+        def base_wrapper(*args, **kwargs):
+            res = f_resolved(*args, **kwargs)
+            if has_macro_registrations():
+                return res
+            return _coerce_node(res)
+        base_wrapper.__signature__ = inspect.signature(f_resolved)
+
+        core_dispatcher = LazyDispatcher(base_wrapper, repr_func=repr)
+        
+        @functools.wraps(f)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            ast_node = core_dispatcher(*args, **kwargs)
+            return Density(ast_node)
+            
+        wrapper.__signature__ = inspect.signature(f_resolved)
+        return wrapper
+    
+    if func is not None:
+        return decorator(func)
+    return decorator
+
+@overload
+def implementation[**P, R](
+    func: Callable[P, R]
+) -> Callable[P, R]: ...
+@overload
+def implementation[**P, R](
+    *,
+    since: DatapackVersion | VersionString | VersionTuple | None = None,
+    until: DatapackVersion | VersionString | VersionTuple | None = None
+) -> Decorator[P, R]: ...
 def implementation(
     func: Callable | None = None, 
     *, 
@@ -150,52 +213,9 @@ def implementation(
             return _coerce_node(f_resolved(*args, **kwargs))
             
         wrapper.__signature__ = inspect.signature(f_resolved)
-        return core_implementation(since=since, until=until)(wrapper)
-
-    if func is not None:
-        return decorator(func)
-    return decorator
-
-
-@overload
-def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
-@overload
-def macro[**P, R](*, repr: Callable[["RhombusASTNode"], str] | None = None) -> Decorator[P, R]: ...
-def macro(
-    func: Callable | None = None,
-    *,
-    repr: Callable[["RhombusASTNode"], str] | None = None
-) -> Callable:
-    """The **`macro`** decorator allows functions to use special behaviour beneficial for writing density functions:
-    
-    - Values for parameters annotated with `AnyDensity` will automatically be coerced to the `Density` type.
-    - Allows defining functions decorated with the `@implementation` decorator inside the function to provide lazily chosen version-dependent implementations.
-    - Allows using Python's `if / elif / else` syntax as well as special macros with `with`-statements inside the function.
-    """
-    def decorator(f: Callable) -> Callable:
-        from rhombus.std.conditional.ast_parser import transform_ast # avoid circular import
-        f_transformed = transform_ast(f)
-        f_resolved = _create_argument_resolver(f_transformed)
-        
-        @functools.wraps(f)
-        def base_wrapper(*args, **kwargs):
-            res = f_resolved(*args, **kwargs)
-            from rhombus.core.abstract import _macro_registrations
-            if _macro_registrations:
-                return res
-            return _coerce_node(res)
-        base_wrapper.__signature__ = inspect.signature(f_resolved)
-
-        core_dispatcher = LazyDispatcher(base_wrapper, repr_func=repr)
-        
-        @functools.wraps(f)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            ast_node = core_dispatcher(*args, **kwargs)
-            return Density(ast_node)
-            
-        wrapper.__signature__ = inspect.signature(f_resolved)
+        register_implementation(wrapper, since=since, until=until)
         return wrapper
-    
+
     if func is not None:
         return decorator(func)
     return decorator

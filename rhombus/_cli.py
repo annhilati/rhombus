@@ -72,11 +72,11 @@ def preview(
         resolve_path=True,
         help="Path to the datapack.",
     ),
-    addons: list[str] = typer.Option(
+    extensions: list[str] = typer.Option(
         [],
-        "--addon",
+        "--extension",
         "-a",
-        help="Rhombus addon to load with the preview service. (Use multiple times to load multiple plugins)",
+        help="Rhombus extension to load with the preview service. (Use multiple times to load multiple plugins)",
     ),
     overlays: list[str] = typer.Option(
         [],
@@ -96,9 +96,9 @@ def preview(
     from rhombus import preview, rho
 
     try:
-        addon_objects = [resolve_object_path(e) for e in addons]
-        if addon_objects:
-            rho.require({addon: ... for addon in addon_objects})
+        extension_objects = [resolve_object_path(e) for e in extensions]
+        if extension_objects:
+            rho.require({extension: ... for extension in extension_objects})
     except Exception as e:
         raise typer.BadParameter(e)
 

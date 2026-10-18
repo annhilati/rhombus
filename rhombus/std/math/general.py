@@ -93,10 +93,10 @@ def sum(*dfs: AnyDensity) -> Density:
         return dfs[0]
 
     it = iter(dfs)
-    result = vt.add(next(it).AST, next(it).AST)
+    result = vt.add(next(it).build(), next(it).build())
 
     for x in it:
-        result = vt.add(result, x.AST)
+        result = vt.add(result, x.build())
 
     return Density(result)
 
@@ -110,10 +110,10 @@ def prod(*dfs: AnyDensity) -> Density:
         return dfs[0]
 
     it = iter(dfs)
-    result = vt.mul(next(it).AST, next(it).AST)
+    result = vt.mul(next(it).build(), next(it).build())
 
     for x in it:
-        result = vt.mul(result, x.AST)
+        result = vt.mul(result, x.build())
 
     return Density(result)
 
@@ -129,10 +129,10 @@ def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
     """Caluclates the difference of two arguments."""
     @implementation(until=111)
     def sub():
-        return Density(vt.add(minuend.AST, vt.mul(-1, subtrahend.AST)))
+        return Density(vt.add(minuend.build(), vt.mul(-1, subtrahend.build())))
     @implementation
     def sub():
-        return Density(vt.sub(minuend.AST, subtrahend.AST))
+        return Density(vt.sub(minuend.build(), subtrahend.build()))
 
 
 @macro
@@ -146,19 +146,19 @@ def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the quotient of two arguments."""
     @implementation(until=111)
     def div():
-        if isinstance(dividend.AST.build(), vt.constant):
-            if dividend.AST.build().value == 1:
-                return Density(vt.reciprocal(divisor.AST))
-        return Density(vt.mul(dividend.AST, vt.reciprocal(divisor.AST)))
+        if isinstance(dividend.build(), vt.constant):
+            if dividend.build().value == 1:
+                return Density(vt.reciprocal(divisor.build()))
+        return Density(vt.mul(dividend.build(), vt.reciprocal(divisor.build())))
     @implementation
     def div():
-        return Density(vt.div(dividend.AST, divisor.AST))
+        return Density(vt.div(dividend.build(), divisor.build()))
 
 
 @macro
 def abs(df: AnyDensity) -> Density:
     """Returns the absolute value of the input."""
-    return Density(vt.abs(df.AST))
+    return Density(vt.abs(df.build()))
 
 
 @macro
@@ -170,7 +170,7 @@ def neg(df: AnyDensity) -> Density:
     
     @implementation
     def neg():
-        return Density(vt.negate(df.AST))
+        return Density(vt.negate(df.build()))
 
 
 @macro
@@ -181,29 +181,29 @@ def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     """
     @implementation(until=113)
     def pow():
-        built_exponent = exponent.AST.build()
+        built_exponent = exponent.build()
         if not isinstance(built_exponent, vt.constant):
             raise ValueError("Can only raise to integer powers in datapack versions below 113")
         if 0 <= py_builtins.abs(built_exponent.value) <= 3:
             result = {
                 0: Density(vt.constant(1)),
                 1: base,
-                2: Density(vt.square(base.AST)),
-                3: Density(vt.cube(base.AST))
+                2: Density(vt.square(base.build())),
+                3: Density(vt.cube(base.build()))
             }[py_builtins.int(built_exponent.value)]
         else:
             result = base
             for _ in range(py_builtins.abs(built_exponent.value) - 1):
-                result = Density(vt.mul(result.AST, base.AST))
+                result = Density(vt.mul(result.build(), base.build()))
         if built_exponent.value < 0:
-            result = Density(vt.reciprocal(result.AST))
+            result = Density(vt.reciprocal(result.build()))
         return result
     
     @implementation
     def pow():
         if exponent.AST == Density(0.5).AST:
-            return Density(vt.sqrt(base.AST))
-        return Density(vt.pow(base.AST, exponent.AST))
+            return Density(vt.sqrt(base.build()))
+        return Density(vt.pow(base.build(), exponent.build()))
 
 
 @macro
@@ -211,7 +211,7 @@ def sqrt(df: AnyDensity) -> Density:
     "Calculates the square root of the input."
     @implementation(since=111)
     def sqrt():
-        return Density(vt.sqrt(df.AST))
+        return Density(vt.sqrt(df.build()))
 
 
 @macro
@@ -220,8 +220,8 @@ def log(df: AnyDensity, *, base: AnyDensity = e) -> Density:
     @implementation(since=111)
     def log():
         if base.AST == Density(e).AST:
-            return Density(vt.log(df.AST))
-        return Density(vt.log(df.AST)) / Density(vt.log(base.AST))
+            return Density(vt.log(df.build()))
+        return Density(vt.log(df.build())) / Density(vt.log(base.build()))
 
 
 # ======// Ordering //===========================================================================//
@@ -230,11 +230,11 @@ def log(df: AnyDensity, *, base: AnyDensity = e) -> Density:
 @macro
 def clamp(df: AnyDensity, min: AnyDensity, max: AnyDensity) -> Density:
     """Limits the values of the input to the range `[min, max]`."""
-    built_min = min.AST.build()
-    built_max = max.AST.build()
+    built_min = min.build()
+    built_max = max.build()
     if isinstance(built_min, vt.constant) and isinstance(built_max, vt.constant):
-        return Density(vt.clamp(df.AST, built_min.value, built_max.value))
-    return Density(vt.max(max.AST, vt.min(min.AST, df.AST)))
+        return Density(vt.clamp(df.build(), built_min.value, built_max.value))
+    return Density(vt.max(max.build(), vt.min(min.build(), df.build())))
 
 
 @macro
@@ -246,10 +246,10 @@ def min(*dfs: AnyDensity) -> Density:
         return dfs[0]
 
     it = iter(dfs)
-    result = vt.min(next(it).AST, next(it).AST)
+    result = vt.min(next(it).build(), next(it).build())
 
     for x in it:
-        result = vt.min(result, x.AST)
+        result = vt.min(result, x.build())
 
     return Density(result)
 
@@ -263,10 +263,10 @@ def max(*dfs: AnyDensity) -> Density:
         return dfs[0]
 
     it = iter(dfs)
-    result = vt.max(next(it).AST, next(it).AST)
+    result = vt.max(next(it).build(), next(it).build())
 
     for x in it:
-        result = vt.max(result, x.AST)
+        result = vt.max(result, x.build())
 
     return Density(result)
 
@@ -361,7 +361,7 @@ def round(df: AnyDensity, decimals: int = 0) -> Density:
     
     @implementation
     def round():
-        return Density(vt.round(df.AST, 10**-decimals))
+        return Density(vt.round(df.build(), 10**-decimals))
 
 
 @macro
@@ -375,7 +375,7 @@ def floor(df: AnyDensity, decimals: int = 0) -> Density:
     
     @implementation
     def floor():
-        return Density(vt.floor(df.AST, 10**-decimals))
+        return Density(vt.floor(df.build(), 10**-decimals))
 
 
 @macro
@@ -389,7 +389,7 @@ def ceil(df: AnyDensity, decimals: int = 0) -> Density:
     
     @implementation
     def floor():
-        return Density(vt.ceil(df.AST, 10**-decimals))
+        return Density(vt.ceil(df.build(), 10**-decimals))
 
 
 @macro
@@ -397,7 +397,7 @@ def truncate(df: AnyDensity, decimals: int = 0) -> Density:
     """Truncates (rounding towards zero) the input to the nearest integer or a given decimal place."""
     @implementation(since=111)
     def truncate():
-        return Density(vt.truncate(df.AST, 10**-decimals))
+        return Density(vt.truncate(df.build(), 10**-decimals))
 
 
 @macro
@@ -409,7 +409,7 @@ def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
 @macro
 def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the remainder of the division of two arguments."""
-    return caching.new_cache_transformer(
+    return caching.optimize(
         dividend - divisor * floor(dividend / divisor),
         targets=(dividend, divisor),
         min_size=5
@@ -433,7 +433,7 @@ def sign(df: AnyDensity) -> Density:
         
     @implementation
     def sign():
-        return Density(vt.sign(df.AST))
+        return Density(vt.sign(df.build()))
 
 
 @macro
@@ -487,4 +487,4 @@ def spline(
         return vt.SplinePoint(location, ast_value, derivative)
 
     ast_points = [convert_point(p) for p in points]
-    return Density(vt.spline(vt.SplineConfig(input.AST, ast_points)))
+    return Density(vt.spline(vt.SplineConfig(input.build(), ast_points)))

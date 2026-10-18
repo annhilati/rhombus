@@ -25,11 +25,11 @@ def cos(df: AnyDensity) -> Density:
 
 @macro
 def tan(df: AnyDensity) -> Density:
-    return caching.new_cache_transformer(sin(df) / cos(df), targets=(df))
+    return caching.optimize(sin(df) / cos(df), targets=(df))
 
 @macro
 def cot(df: AnyDensity) -> Density:
-    return caching.new_cache_transformer(cos(df) / sin(df), targets=(df))
+    return caching.optimize(cos(df) / sin(df), targets=(df))
 
 @macro
 def sec(df: AnyDensity) -> Density:
@@ -44,7 +44,7 @@ def csc(df: AnyDensity) -> Density:
 @macro
 def arcsin(df: AnyDensity) -> Density:
     if -1 <= df <= 1:
-        return caching.new_cache_transformer(arctan(df / (1 - df**2)**0.5), targets=(df))
+        return caching.optimize(arctan(df / (1 - df**2)**0.5), targets=(df))
     else:
         return math.NaN
 

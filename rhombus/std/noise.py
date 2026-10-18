@@ -141,11 +141,11 @@ def noise(
     def noise_legacy():
         if shift_x.AST == shift_y.AST == shift_z.AST == Density(0).AST:
             return Density(vt.noise(noise, xz_scale, y_scale))
-        return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
+        return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
     
     @implementation
     def noise_modern():
-        return Density(vt.noise(noise, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST))
+        return Density(vt.noise(noise, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
 
 
 def blended_noise(

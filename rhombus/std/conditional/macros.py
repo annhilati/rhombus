@@ -31,11 +31,11 @@ def range_choice(
     @implementation()
     def _impl():
         return vt.range_choice(
-            input.AST,
+            input.build(),
             min_inclusive,
             max_exclusive,
-            when_in_range.AST,
-            when_out_of_range.AST,
+            when_in_range.build(),
+            when_out_of_range.build(),
         )
 
 
@@ -59,11 +59,11 @@ def interval_select(
     def _legacy():
         result = functions[-1].AST
         for i in range(len(thresholds) - 1, -1, -1):
-            result = vt.range_choice(input.AST, -OMEGA, thresholds[i], functions[i].AST, result)
+            result = vt.range_choice(input.build(), -OMEGA, thresholds[i], functions[i].build(), result)
         return result
 
     @implementation()
     def _impl():
         return vt.interval_select(
-            input.AST, thresholds, [function.AST for function in functions]
+            input.build(), thresholds, [function.AST for function in functions]
         )

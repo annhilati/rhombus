@@ -31,7 +31,7 @@ def sqrt(
     for _ in range(iterations):
         x = 0.5 * (x + (df / x))
 
-    return caching.new_cache_transformer(x if df >= 0 else math.NaN, targets=(df))
+    return caching.optimize(x if df >= 0 else math.NaN, targets=(df))
 
 
 @macro
@@ -40,7 +40,7 @@ def exp(df: AnyDensity, terms: int = 4) -> Density:
     if terms < 1:
         raise ValueError("Need one term at least")
 
-    return caching.new_cache_transformer(math.sum(Density(1), *(
+    return caching.optimize(math.sum(Density(1), *(
         (df**k) / py_math.factorial(k) for k in range(1, terms + 1)
     )), targets=(df))
 
@@ -51,6 +51,6 @@ def ln(df: AnyDensity, terms: int = 4) -> Density:
     if terms < 1:
             raise ValueError("Need one term at least")
 
-    return caching.new_cache_transformer(math.sum(*(
+    return caching.optimize(math.sum(*(
         ((-1 if (k % 2 == 0) else 1) * ((df - 1)**k) / k) for k in range(1, terms + 1)
     )) if df > 0 else math.NaN, targets=(df))

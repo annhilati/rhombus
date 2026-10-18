@@ -13,3 +13,4 @@ to support features from mods, see the [Rhombus Documentation](https://annhilati
 from rhombus.core.models import *
 from rhombus.core.utils import *
 from rhombus.core.environment import *
+from rhombus.core.abstract import *

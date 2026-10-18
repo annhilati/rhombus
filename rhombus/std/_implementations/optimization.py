@@ -8,7 +8,7 @@ from rhombus.core import DatapackNode, DensityFunction, Reference, JSON_hash, wa
 from rhombus.std.density import Density
 import rhombus.support.vanilla.types as vt
 
-# Datapack density functions can have exceptionally deep ASTs (400+ nodes deep).
+# Datapack density functions can have exceptionally deep ASTs.
 # We bump the recursion limit to prevent crashes during tree traversals and recursive hashing.
 if sys.getrecursionlimit() < 10000:
     sys.setrecursionlimit(10000)
@@ -95,7 +95,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
                 if files.get(value.identifier):
                     visited_references.add(value.identifier)
                     visit(
-                        Density.from_dict(files[value.identifier].data).AST.build(),
+                        Density.from_dict(files[value.identifier].data).build(),
                         we_are_in_cached=we_are_in_cached,
                     )
                 else:
@@ -118,7 +118,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
             for item in value:
                 visit(item, we_are_in_cached)
 
-    visit(Density.from_dict(files["rhombus:main"].data).AST.build())
+    visit(Density.from_dict(files["rhombus:main"].data).build())
 
     return DensityFunctionSizeInfo(
         toplevel_nodes=count_toplevel_nodes,
@@ -131,10 +131,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 def node_caching_transformer(
     root: DensityFunction,
     *conditions: Callable[[DensityFunction, dict[DatapackNode, int]], bool],
-    transformer: Callable[[DensityFunction], DensityFunction] = lambda df: Reference(
-        "rhombus:generated/" + JSON_hash(df.serialize_toplevel()),
-        definition=vt.cache(df),
-    ),
+    transformer: Callable[[DensityFunction], DensityFunction],
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
     occurrences = count_node_values(root)
     replacement_info: dict[DensityFunction, int] = {}

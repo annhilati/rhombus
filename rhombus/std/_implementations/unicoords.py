@@ -52,7 +52,7 @@ from rhombus.std.density import Density
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
-from rhombus.std.caching import interpolated, new_cache_transformer
+from rhombus.std.caching import interpolated, optimize
 
 import rhombus.support.vanilla.legacy_types as lt
 
@@ -70,15 +70,8 @@ _coord_base = Density(lt.flat_cache(
             shift_y=0,
             shift_z=1.01,
         )
-    ).AST)
+    ).build())
 ))
-
-
-# ======// Additional Information about the Implementation //=====================================//
-#   Why are the nested multiplications exactly 27 (26 when leaving the coord_quad-sampling out) arguments long?
-#       2^26 is the smallest power of two that’s wider then a Minecraft world
-#   Why are the 5 outermost powers of two calculated by a density function and not given literal?
-#       Minecraft doesn’t allow literals over 1 million
 
 
 def coord_component(
@@ -148,4 +141,4 @@ def coord_component(
         value,
     )
 
-    return new_cache_transformer(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.AST.build()))), min_size=5)
+    return optimize(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.build()))), min_size=5)

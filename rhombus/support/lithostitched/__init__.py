@@ -1,7 +1,6 @@
 """### [Lithostitched](https://modrinth.com/mod/lithostitched) by Apollo
 
 Offers a comprehensive suite of extended density functions and utilities for advanced world generation.
-This module enables finer control over terrain shaping and noise manipulation within the datapack ecosystem.
 
 ---
 [Wiki](https://github.com/Apollounknowndev/lithostitched/wiki)
@@ -12,15 +11,15 @@ from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 from . import types
 
-from rhombus.core.environment import RhombusAddon as _RhombusAddon
+from rhombus.core.environment import ModExtension as _ModExtension
 from rhombus.core.models.density_function import DensityFunction as _DensityFunction
 
-__addon__ = _RhombusAddon(
+__extension__ = _ModExtension(
     namespace="lithostitched",
     version=(1, 6, 0),
     preview_scripts=[
-        _RhombusAddon.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
-        _RhombusAddon.resource("rhombus.support.lithostitched", "deepslate.ts"),
+        _ModExtension.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
+        _ModExtension.resource("rhombus.support.lithostitched", "deepslate.ts"),
     ],
     preview_beet_file_extensions={LithostitchedFastNoiseConfig},
     density_functions={

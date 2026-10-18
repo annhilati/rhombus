@@ -8,14 +8,14 @@ import beet.contrib.worldgen as worldgen
 
 def test_partitioning():
 
-    assert Density.partitioned(1.0).AST.build() == (
+    assert Density.partitioned(1.0).build() == (
         types.Reference(
             "rhombus:generated/d0ff5974b6aa52cf562bea5921840c03",
             definition=types.constant(value=1.0),
         )
     )
 
-    assert ("test" @ Density(1.0)).AST.build() == (
+    assert ("test" @ Density(1.0)).build() == (
         types.Reference("minecraft:test", definition=types.constant(value=1.0))
     )
 

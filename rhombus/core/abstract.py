@@ -1,64 +1,66 @@
-from typing import Any, Self, Callable, Protocol, get_type_hints, get_args
+from typing import Any, Optional, Self, Callable, Protocol, get_type_hints, get_args
+from types import EllipsisType
 import inspect
 import functools
+import copy
 
 from rhombus.core.environment import (
-    _parse_version_specifier,
-    get_module_addon_namespace,
+    get_module_extension_namespace,
+    parse_version_specifier_NEW,
     DatapackVersion,
     VersionString,
     VersionTuple
 )
+from rhombus.core.models import DatapackNode
 from rhombus.runtime import rho
 
 __all__ = [
     "RhombusASTNode",
     "LazyDispatcher",
-    "implementation",
+    "register_implementation",
+    "has_macro_registrations",
     "RhombusAbstractType",
 ]
 
 
 class RhombusASTNode[T]:
-    """Represents a lazy, unresolved node in the abstract syntax tree."""
+    """The **`RhombusASTNode`** type is a wrapper for producing values in a lazy manner.
+    """
+    _value: T | EllipsisType = ... # we use this for some cases where the result is effectively known to ensure proper comparability
     
     def __init__(
         self,
-        dispatcher: Callable[..., Any],
+        dispatcher: "LazyDispatcher" | Callable[..., T],
         args: tuple[Any, ...] = (),
-        kwargs: dict[str, Any] | None = None,
-        repr_func: Callable[[Self], str] | None = None,
+        kwargs: dict[str, Any] = {},
+        repr: Callable[[Self], str] | None = None,
     ):
         self.dispatcher = dispatcher
         self.args = args
-        self.kwargs = kwargs or {}
-        self.repr_func = repr_func
+        self.kwargs = kwargs
+        self.repr_func = repr
 
-        self._cached_version: Any = None
+        self._cached_version: DatapackVersion = None
         self._cached_node: T | None = None
 
     @classmethod
-    def defer[R](
+    def defer(
         cls,
-        func: Callable[[], R],
-        # *args: Any,
-        repr_func: Callable[["RhombusASTNode[R]"], str] | None = None,
-        # **kwargs: Any,
-    ) -> "RhombusASTNode[R]":
-        # TODO: Can we safely remove the argument parameters? I believe we need them because using
-        #       lambdas makes comparing RhombusASTNodes impossible, because every call of the lambda-
-        #       keyword creates a new object. 
+        fabric: Callable[[], T],
+        repr: Optional[Callable[[Self], str]] = None,
+    ) -> "RhombusASTNode[T]":
+
         target_cls = cls
         if getattr(cls, "__parameters__", None):
             return_type = None
             try:
-                hints = get_type_hints(func)
+                hints = get_type_hints(fabric)
                 return_type = hints.get("return")
             except Exception:
-                return_type = getattr(func, "__annotations__", {}).get("return")
+                return_type = getattr(fabric, "__annotations__", {}).get("return")
                 if return_type is None:
                     try:
-                        sig = inspect.signature(func)
+                        sig = inspect.signature(fabric)
                         if sig.return_annotation is not inspect.Signature.empty:
                             return_type = sig.return_annotation
                     except Exception:
@@ -70,44 +72,45 @@ class RhombusASTNode[T]:
                 except Exception:
                     pass
 
-        return target_cls(func, repr_func=repr_func)
-        #                       args=args, kwargs=kwargs
+        return target_cls(fabric, repr=repr)
+
 
     @classmethod
-    def value[T](cls, val: T) -> "RhombusASTNode[T]":
+    def value(cls, val: T) -> "RhombusASTNode[T]":
         """Create a RhombusASTNode that simply contains a value when no lazy execution is needed."""
 
         def identity():
-            # This function is required instead of a lambda to enable correct comparison of simple RhombusASTNodes.
             return val
 
         repr: Callable[[RhombusASTNode, str]] = (
             lambda n: val.__repr__()
         )
-        return cls.defer(identity, repr_func=repr)
+        node = cls.defer(identity, repr=repr)
+        node._value = val
+        return node
 
     @property
-    def return_type(self) -> Any:
+    def return_type(self) -> type[T]:
         orig = getattr(self, "__orig_class__", None)
         if orig is not None:
             args = get_args(orig)
             if args:
                 return args[0]
-        if hasattr(self, "dispatcher"):
-            try:
-                hints = get_type_hints(self.dispatcher)
-                ret = hints.get("return")
-                if ret is not None and ret is not Any:
-                    return ret
-            except Exception:
-                ret = getattr(self.dispatcher, "__annotations__", {}).get("return")
-                if ret is not None and ret is not Any:
-                    return ret
-        return Any
+        try:
+            hints = get_type_hints(self.dispatcher)
+            ret = hints.get("return")
+            if ret is not None and ret is not Any:
+                return ret
+        except Exception:
+            ret = getattr(self.dispatcher, "__annotations__", {}).get("return")
+            if ret is not None and ret is not Any:
+                return ret
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, RhombusASTNode):
             return False
+        if self._value is not ... and other._value is not ...:
+            return self._value == other._value
         return (
             self.dispatcher == other.dispatcher
             and self.args == other.args
@@ -115,6 +118,8 @@ class RhombusASTNode[T]:
         )
 
     def __hash__(self) -> int:
+        if self._value is not ...:
+            return hash(self._value)
         return hash((
             self.dispatcher,
             self.args,
@@ -135,7 +140,7 @@ class RhombusASTNode[T]:
         if self._cached_version == current_version and self._cached_node is not None:
             return self._cached_node
 
-        if hasattr(self.dispatcher, "_execute_for_version"):
+        if isinstance(self.dispatcher, LazyDispatcher):
             result = self.dispatcher._execute_for_version(*self.args, **self.kwargs) # type: ignore
         else:
             result = self.dispatcher(*self.args, **self.kwargs)
@@ -144,7 +149,7 @@ class RhombusASTNode[T]:
             if isinstance(node, RhombusASTNode):
                 return node.build()
             
-            if hasattr(node, "fields") and isinstance(node.fields, dict):
+            if isinstance(node, DatapackNode):
                 changes = {}
                 for field_name, child_value in node.fields.items():
                     new_child_value = _deep_build(child_value)
@@ -152,7 +157,6 @@ class RhombusASTNode[T]:
                         changes[field_name] = new_child_value
 
                 if changes:
-                    import copy
                     new_node = copy.copy(node)
                     object.__setattr__(new_node, "_rhombus_frozen", False)
                     for k, v in changes.items():
@@ -191,7 +195,7 @@ class LazyDispatcher:
     def __init__(self, func: Callable, repr_func: Callable | None = None):
         self.func = func
         self.repr_func = repr_func
-        self.default_ns = get_module_addon_namespace(func.__module__) or "datapack"
+        self.default_ns = get_module_extension_namespace(func.__module__) or "datapack"
         functools.update_wrapper(self, func)
         self.__signature__ = inspect.signature(func)
 
@@ -206,17 +210,25 @@ class LazyDispatcher:
             dispatcher=self,
             args=args,
             kwargs=kwargs,
-            repr_func=self.repr_func
+            repr=self.repr_func
         )
 
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, LazyDispatcher):
+            return self.func == other.func
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.func)
+
     def _execute_for_version(self, *args: Any, **kwargs: Any) -> Any:
-        global _macro_registrations
-        _macro_registrations = []
+        # TODO: Make this thread-safe
+        _macro_registrations.clear()
 
         result = self.func(*args, **kwargs)
 
         impls = list(_macro_registrations)
-        _macro_registrations = []
+        _macro_registrations.clear()
 
         if not impls:
             return result
@@ -224,9 +236,19 @@ class LazyDispatcher:
         parsed_impls = []
         default_impl = None
 
+        def _parse_impl_spec(v: Any) -> tuple[str, VersionTuple] | None:
+            if v is None:
+                return None
+            if isinstance(v, tuple) and len(v) == 2 and isinstance(v[0], str) and isinstance(v[1], (str, int, float, tuple)):
+                ns, ver = v[0], v[1]
+            else:
+                ns, ver = self.default_ns, v
+            is_dp = (ns == "datapack")
+            return (ns, parse_version_specifier_NEW(ver, interpret_as_game_version_convert_to_datapack_version=is_dp))
+
         for since_v, until_v, impl_func in impls:
-            p_since = _parse_version_specifier(since_v, default_namespace=self.default_ns) if since_v is not None else None
-            p_until = _parse_version_specifier(until_v, default_namespace=self.default_ns) if until_v is not None else None
+            p_since = _parse_impl_spec(since_v)
+            p_until = _parse_impl_spec(until_v)
             
             if p_since is None and p_until is None:
                 if default_impl is not None:
@@ -245,15 +267,7 @@ class LazyDispatcher:
 
         def _check(req_tuple: tuple[str, tuple[int, ...]]) -> bool:
             ns, req_v = req_tuple
-            current_v = rho.versions.get(ns)
-            if current_v is None:
-                return False
-            
-            length = max(len(current_v), len(req_v))
-            current_padded = tuple(list(current_v) + [0] * (length - len(current_v)))
-            req_padded = tuple(list(req_v) + [0] * (length - len(req_v)))
-            
-            return current_padded >= req_padded
+            return rho._check_version(req_v, namespace=ns) is True
 
         valid_impls = []
         for p_since, p_until, impl_func in parsed_impls:
@@ -276,28 +290,24 @@ class LazyDispatcher:
 
 _macro_registrations: list[
     tuple[
-        DatapackVersion | VersionString | VersionTuple | tuple[str, DatapackVersion | VersionString | VersionTuple],
-        DatapackVersion | VersionString | VersionTuple | tuple[str, DatapackVersion | VersionString | VersionTuple],
+        DatapackVersion | VersionString | VersionTuple | None,
+        DatapackVersion | VersionString | VersionTuple | None,
         Callable
     ]
 ] = []
 
 
-def implementation(
-    func: Callable | None = None, 
+def register_implementation(
+    func: Callable, 
     *, 
-    since=None,
-    until=None
-):
-    """Decorator for inner functions inside a macro to register them as version implementations."""
-    # TODO: Rationalize; this should probably be a fabric and not a decorator here
-    def decorator(f: Callable):
-        _macro_registrations.append((since, until, f))
-        return f
+    since: DatapackVersion | VersionString | VersionTuple | None = None,
+    until: DatapackVersion | VersionString | VersionTuple | None = None
+) -> None:
+    _macro_registrations.append((since, until, func))
 
-    if func is not None:
-        return decorator(func)
-    return decorator
+
+def has_macro_registrations() -> bool:
+    return len(_macro_registrations) > 0
 
 
 class RhombusAbstractType[T](Protocol):

@@ -1,10 +1,10 @@
 from . import types
 from . import legacy_types
 
-from rhombus.core.environment import RhombusAddon as _RhombusAddon
+from rhombus.core.environment import ModExtension as _ModExtension
 from rhombus.core.models.density_function import DensityFunction as _DensityFunction
 
-__addon__ = _RhombusAddon(
+__extension__ = _ModExtension(
     namespace="datapack",
     version=(118, 0), # 26.3
     density_functions=[

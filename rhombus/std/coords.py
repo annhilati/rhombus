@@ -123,7 +123,7 @@ def find_top_surface(
     @implementation(since=82)
     def find_top_surface():
         return Density(
-            vt.find_top_surface(density.AST, upper_bound=start.AST, lower_bound=stop, cell_height=step_size)
+            vt.find_top_surface(density.build(), upper_bound=start.build(), lower_bound=stop, cell_height=step_size)
         )
 
 

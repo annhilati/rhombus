@@ -8,7 +8,7 @@ from . import types
 @macro
 def invert(argument: AnyDensity) -> Density:
     """Calculates the reciprocal value of the input."""
-    return Density(types.invert(argument.AST))
+    return Density(types.invert(argument.build()))
 
 
 def config_constant(key: str) -> Density:
@@ -21,4 +21,4 @@ def config_noise(
     noise: Noise, key: str, shift_x: AnyDensity, shift_z: AnyDensity
 ) -> Density:
     ""
-    return Density(types.config_noise(noise, key, shift_x.AST, shift_z.AST))
+    return Density(types.config_noise(noise, key, shift_x.build(), shift_z.build()))

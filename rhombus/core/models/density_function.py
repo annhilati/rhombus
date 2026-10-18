@@ -44,8 +44,9 @@ class DensityFunction(DatapackNode):
         type_id = self.id
         legacy_values = getattr(self.__class__, "__rhombus_legacy_values__", {}).get("id")
         if legacy_values:
+            ns = getattr(self.__class__, "__rhombus_namespace__", "datapack")
             for threshold, val in sorted(legacy_values.items(), reverse=False):
-                if active_env._check_version(threshold) is False:
+                if active_env._check_version(threshold, namespace=ns) is False:
                     type_id = val
                     break
 
@@ -185,8 +186,9 @@ class SimpleDensityFunction(DensityFunction):
         type_id = self.id
         legacy_values = getattr(self.__class__, "__rhombus_legacy_values__", {}).get("id")
         if legacy_values:
+            ns = getattr(self.__class__, "__rhombus_namespace__", "datapack")
             for threshold, val in sorted(legacy_values.items(), reverse=False):
-                if rho._check_version(threshold) is False:
+                if rho._check_version(threshold, namespace=ns) is False:
                     type_id = val
                     break
         return {"type": type_id}

@@ -13,7 +13,7 @@ __all__ = [
     "get_Minecraft_datapack_version"
 ]
 
-from typing import Callable, Any, get_type_hints
+from typing import Any, Callable, get_type_hints
 import typing
 import types
 import enum
@@ -72,7 +72,7 @@ def check_type(value: Any, annotation: Annotation) -> bool:
     args = typing.get_args(annotation)
     
     # Union types (e.g. A | B or Union[A, B])
-    if origin is typing.Union or type(annotation) is getattr(types, "UnionType", type(None)):
+    if origin is typing.Union or type(annotation) is types.UnionType:
         return any(check_type(value, arg) for arg in args)
         
     if origin is typing.Literal:
@@ -109,12 +109,7 @@ def check_type(value: Any, annotation: Annotation) -> bool:
         
         if issubclass(annotation, enum.Enum):
             return isinstance(value, annotation) or value in [e.value for e in annotation]
-            
-        if type(value).__name__ == "UnresolvedMacroNode":
-            # UnresolvedMacroNodes are placeholders for any RhombusASTNode subclass.
-            # We skip strict validation since the actual type isn't known until resolution.
-            return True
-            
+                        
         return isinstance(value, annotation)
         
     return True

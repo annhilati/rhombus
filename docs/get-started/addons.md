@@ -1,26 +1,26 @@
 ---
-title: Addons
+title: Extensions
 icon: lucide/package-plus
 ---
-# Addons
+# Extensions
 
 Add-ons are used in Rhombus to facilitate certain workflows.
 They are almost always used with Minecraft mods to provide support for them.
 
-## Declaring an Addon
+## Declaring an Extension
 
-Addons are declared as a `__addon__` value of type `RhombusAddon` inside a module's root.
+Extensions are declared as a `__extension__` value of type `ModExtension` inside a module's root.
 
 ```py
 from .functions import *
 from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 
 from importlib.resources import files
-from rhombus.core.config import RhombusAddon
+from rhombus.core.config import ModExtension
 from rhombus.core.density_function import DensityFunction
 from . import types
 
-__addon__ = RhombusAddon(
+__extension__ = ModExtension(
     name="Lithostitched",
     preview_scripts=[
         files("rhombus.support.lithostitched").joinpath("fastnoise-lite.ts"),
@@ -37,4 +37,4 @@ __addon__ = RhombusAddon(
 )
 ```
 
-See the available parameters for addons at the [`RhombusAddon` page](https://annhilati.github.io/rhombus/reference/rhombus/core/config/RhombusAddon/#rhombusaddon).
+See the available parameters for extensions at the [`ModExtension` page](https://annhilati.github.io/rhombus/reference/rhombus/core/config/ModExtension/).

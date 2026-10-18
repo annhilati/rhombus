@@ -13,13 +13,13 @@ def test_ternary_operator():
         return 10.0 if Density("in") > 0 else -10.0
         
     rho.set_version(minecraft="1.21")
-    res_new = my_ternary().AST.build()
+    res_new = my_ternary().build()
     # interval_select is only active >= 104.0 which is not reached by minecraft="1.21"
     # assert isinstance(res_new, vt.interval_select)
     assert isinstance(res_new, (vt.interval_select, vt.range_choice))
     
     rho.set_version(minecraft="1.18")
-    res_old = my_ternary().AST.build()
+    res_old = my_ternary().build()
     assert isinstance(res_old, vt.range_choice)
 
 
@@ -35,12 +35,12 @@ def test_if_elif_else_blocks():
         return a
 
     rho.set_version(minecraft="1.21")
-    res_new = my_blocks().AST.build()
+    res_new = my_blocks().build()
     assert isinstance(res_new, vt.range_choice)
     assert isinstance(res_new.when_out_of_range, (vt.interval_select, vt.range_choice))
     
     rho.set_version(minecraft="1.18")
-    res_old = my_blocks().AST.build()
+    res_old = my_blocks().build()
     assert isinstance(res_old, vt.range_choice)
     assert isinstance(res_old.when_out_of_range, vt.range_choice)
 
@@ -54,7 +54,7 @@ def test_early_exit():
 
     rho.set_version(minecraft="1.21")
     with pytest.raises(TypeError, match="early returns inside Density-dependent if-statements are not supported"):
-        my_early_exit().AST.build()
+        my_early_exit().build()
 
 
 def test_outside_of_macros():

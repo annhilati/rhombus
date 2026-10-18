@@ -20,19 +20,19 @@ def test_version_selection():
             return constant(3.0)
         
     rho.set_version(minecraft="1.17")
-    assert dummy().AST.build().value == 1.0
+    assert dummy().build().value == 1.0
     
     rho.set_version(minecraft="1.18")
-    assert dummy().AST.build().value == 2.0
+    assert dummy().build().value == 2.0
     
     rho.set_version(minecraft="1.19")
-    assert dummy().AST.build().value == 2.0
+    assert dummy().build().value == 2.0
     
     rho.set_version(minecraft="1.20")
-    assert dummy().AST.build().value == 3.0
+    assert dummy().build().value == 3.0
     
     rho.set_version(minecraft="1.21")
-    assert dummy().AST.build().value == 3.0
+    assert dummy().build().value == 3.0
 
 
 def test_no_implementations():
@@ -44,10 +44,10 @@ def test_no_implementations():
         
     rho.set_version(minecraft="1.19")
     with pytest.raises(NotImplementedError):
-        dummy_since().AST.build()
+        dummy_since().build()
         
     rho.set_version(minecraft="1.20")
-    assert dummy_since().AST.build().value == 1.0
+    assert dummy_since().build().value == 1.0
     
     @macro
     def dummy_missing_namespace() -> int:
@@ -56,7 +56,7 @@ def test_no_implementations():
             return 1
         
     with pytest.raises(NotImplementedError):
-        dummy_missing_namespace().AST.build()
+        dummy_missing_namespace().build()
 
 
 def test_default_implementation():
@@ -71,7 +71,7 @@ def test_default_implementation():
             return 2
         
     rho.set_version(minecraft="1.17")
-    assert dummy().AST.build().value == 1.0
+    assert dummy().build().value == 1.0
     
     rho.set_version(minecraft="1.20")
-    assert dummy().AST.build().value == 2.0
+    assert dummy().build().value == 2.0

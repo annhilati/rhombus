@@ -29,13 +29,13 @@ def axis(axis: Literal["x", "y", "z"]):
 @macro
 def ceil(argument: AnyDensity):
     "Rounds the input to the nearest integer above the input."
-    return Density(types.ceil(argument.AST))
+    return Density(types.ceil(argument.build()))
 
 
 @macro
 def cos(argument: AnyDensity):
     "Returns the cosine value of the input."
-    return Density(types.cos(argument.AST))
+    return Density(types.cos(argument.build()))
 
 
 @macro
@@ -56,7 +56,7 @@ def fast_noise(
     """
     return Density(
         types.fast_noise(
-            config, xz_scale, y_scale, shift_x.AST, shift_y.AST, shift_z.AST
+            config, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.AST
         )
     )
 
@@ -64,7 +64,7 @@ def fast_noise(
 @macro
 def floor(argument: AnyDensity):
     "Rounds the input to the nearest integer below the input."
-    return Density(types.floor(argument.AST))
+    return Density(types.floor(argument.build()))
 
 
 @macro
@@ -76,7 +76,7 @@ def mix(input: AnyDensity, argument1: AnyDensity, argument2: AnyDensity):
     ---
     [Lithostitched Wiki Reference](https://github.com/Apollounknowndev/lithostitched/wiki/Density-Function-Types#mix)
     """
-    return Density(types.mix(input.AST, argument1.AST, argument2.AST))
+    return Density(types.mix(input.build(), argument1.build(), argument2.build()))
 
 
 def original_marker():
@@ -99,8 +99,8 @@ def select(
     ---
     [Lithostitched Wiki Reference](https://github.com/Apollounknowndev/lithostitched/wiki/Density-Function-Types#select)
     """
-    selections = [(v, df.AST) for v, df in selections]
-    return Density(types.select(input.AST, fallback.AST, selections))
+    selections = [(v, df.build()) for v, df in selections]
+    return Density(types.select(input.build(), fallback.build(), selections))
 
 
 @macro
@@ -111,19 +111,19 @@ def shift(
     shift_z: AnyDensity = 0,
 ):
     "Returns the values of the input from shifted coordinates."
-    return Density(types.shift(input.AST, shift_x.AST, shift_y.AST, shift_z.AST))
+    return Density(types.shift(input.build(), shift_x.build(), shift_y.build(), shift_z.build()))
 
 
 @macro
 def sin(argument: AnyDensity):
     "Returns the sine value of the input."
-    return Density(types.sin(argument.AST))
+    return Density(types.sin(argument.build()))
 
 
 @macro
 def sqrt(argument: AnyDensity):
     "Returns the square root of the input."
-    return Density(types.sqrt(argument.AST))
+    return Density(types.sqrt(argument.build()))
 
 
 def wrapped_marker():

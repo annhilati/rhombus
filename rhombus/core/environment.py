@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-__all__ = ["DatapackVersion", "VersionTuple", "RhombusEnvironment", "RhombusAddon", "get_module_addon_namespace"]
+__all__ = ["DatapackVersion", "VersionTuple", "RhombusEnvironment", "ModExtension", "get_module_extension_namespace", "parse_version_specifier_NEW"]
 
-from typing import Callable, Any, Optional, overload, TYPE_CHECKING
+from typing import Callable, Any, Optional, Protocol, overload, TYPE_CHECKING
 from types import ModuleType, EllipsisType
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,62 +23,61 @@ if TYPE_CHECKING:
 type DatapackVersion = float | int
 type VersionString = str
 type VersionTuple = tuple[int, ...]
+type NamespacedVersion = tuple[str, VersionTuple]
 
 
-def parseVersionString(spec: str) -> VersionTuple:
-    return tuple(int(p) for p in spec.split("."))
-
-def _parse_version_specifier(spec: DatapackVersion | VersionString | VersionTuple | tuple[str, DatapackVersion | VersionString | VersionTuple], default_namespace: str = "datapack") -> tuple[str, VersionTuple]:
-    def pad_and_fix_float(parts: tuple[int, ...], from_float: bool = False) -> VersionTuple:
-        # Fix float truncation: 1.20 in Python becomes 1.2, which splits to (1, 2).
-        if from_float and len(parts) >= 2 and parts[0] == 1 and parts[1] < 10:
+def parse_version_specifier_NEW(spec: DatapackVersion | VersionString | VersionTuple, interpret_as_game_version_convert_to_datapack_version: bool = False) -> VersionTuple:
+    
+    def parse_VersionString(spec: VersionString) -> VersionTuple:
+        return tuple(int(p) for p in spec.split("."))
+    
+    if isinstance(spec, (int, float)):
+        if interpret_as_game_version_convert_to_datapack_version:
+            try:
+                return parse_version_specifier_NEW(get_Minecraft_datapack_version(str(float(spec))))
+            except ValueError:
+                pass
+        parts = parse_VersionString(str(float(spec)))
+        if isinstance(spec, float) and len(parts) >= 2 and parts[0] == 1 and parts[1] < 10:
             parts = (parts[0], parts[1] * 10, *parts[2:])
-        # Pad to at least 2 elements
         if len(parts) == 1:
             parts = (*parts, 0)
         return parts
+    
+    elif isinstance(spec, str):
+        if interpret_as_game_version_convert_to_datapack_version:
+            try:
+                return parse_version_specifier_NEW(get_Minecraft_datapack_version(spec))
+            except ValueError:
+                pass
+        parts = parse_VersionString(spec)
+        if len(parts) == 1:
+            parts = (*parts, 0)
+        return parts
+    
+    elif isinstance(spec, tuple):
+        if not all(isinstance(part, int) for part in spec):
+            raise ValueError(f"Some parts of {spec} are not of type int or float")
+        if interpret_as_game_version_convert_to_datapack_version:
+            try:
+                return parse_version_specifier_NEW(get_Minecraft_datapack_version(".".join(str(p) for p in spec)))
+            except ValueError:
+                pass
+        if len(spec) == 1:
+            return (*spec, 0)
+        return spec
+        
+    raise TypeError(f"Cannot parse object of type {type(spec)} to version")
 
-    def try_misode_lookup(v_str: str) -> str:
-        if default_namespace != "datapack": return v_str
-        try:
-            return str(get_Minecraft_datapack_version(v_str, use_cache=True))
-        except ValueError:
-            if v_str.count('.') == 1:
-                try:
-                    return str(get_Minecraft_datapack_version(v_str + "0", use_cache=True))
-                except ValueError:
-                    pass
-            return v_str
 
-    if isinstance(spec, (int, float)):
-        return default_namespace, pad_and_fix_float(parseVersionString(str(float(spec))), from_float=True)
-    if isinstance(spec, str):
-        spec = try_misode_lookup(spec)
-        return default_namespace, pad_and_fix_float(parseVersionString(spec), from_float=False)
-    if isinstance(spec, tuple):
-        if len(spec) >= 2 and isinstance(spec[0], str):
-            ns = spec[0]
-            inner = spec[1]
-            if isinstance(inner, str):
-                if ns == "datapack":
-                    inner = try_misode_lookup(inner)
-                return ns, pad_and_fix_float(parseVersionString(inner), from_float=False)
-            if isinstance(inner, (int, float)):
-                return ns, pad_and_fix_float(parseVersionString(str(float(inner))), from_float=True)
-            if isinstance(inner, tuple):
-                return ns, pad_and_fix_float(inner, from_float=False) # type: ignore
-        else:
-            return default_namespace, pad_and_fix_float(spec, from_float=False) # type: ignore
-    raise TypeError(f"Invalid version specifier: {spec}")
-
-def get_module_addon_namespace(module_path: str) -> str | None:
-    "Recursively searches in a module and its parents for the `__addon__` declaration and returns the addons namespace."
+def get_module_extension_namespace(module_path: str) -> str | None:
+    """Recursively searches in a module and its parents for the `__extension__` declaration and returns the extensions namespace."""
     parts = module_path.split('.')
     while parts:
         current_module_name = '.'.join(parts)
         module = sys.modules.get(current_module_name)
-        if module and hasattr(module, "__addon__"):
-            return getattr(module, "__addon__").namespace
+        if module and hasattr(module, "__extension__"):
+            return module.__extension__.namespace
         parts.pop()
     return None
 
@@ -113,7 +112,7 @@ class RhombusEnvironment:
 
         # Preview
         self.preview_beet_file_extensions: set[type["BeetFile"]] = set()
-        "Set of `BeetFile` representing datapack files to include when previewing a datapack."  # This was introduces for the CLI, so addons can be stated
+        "Set of `BeetFile` representing datapack files to include when previewing a datapack."  # This was introduces for the CLI, so extensions can be stated
         self.preview_file_icons: dict[str, str] = {}
         "Mapping of svg file icons and corresponding Regex expressions that are tested on the registry ids (without namespace)"
         self.preview_scripts: list[str | Path] = []
@@ -125,34 +124,23 @@ class RhombusEnvironment:
         """
 
         # State
-        self._addons: set["RhombusAddon"] = set()
+        self._extensions: set["ModExtension"] = set()
         self._id_counter: int = 0
         self._reg_lock = threading.RLock()
 
 
     @property
-    def datapack_version(self) -> float:
+    def datapack_version(self) -> DatapackVersion:
         val = self.versions.get("datapack", (118, 0))
-        if isinstance(val, (int, float)):
-            return float(val)
-        if isinstance(val, tuple) and len(val) >= 1:
-            if len(val) == 1:
-                return float(val[0])
-            else:
-                # To handle cases like (41, 0) or (1, 18)
-                if val[0] == 1:
-                    return float(f"1.{val[1]}")
-                return float(val[0] + (val[1] * 0.1 if val[1] < 10 else val[1] * 0.01))
-        return 0.0
+        return float(".".join(str(part) for part in val))
 
     @datapack_version.setter
-    def datapack_version(self, value: DatapackVersion | tuple[int, ...] | VersionString):
+    def datapack_version(self, value: DatapackVersion):
         if value is None:
             raise ValueError("datapack_version cannot be None.")
-        if not isinstance(value, (int, float, tuple, str)):
+        if not isinstance(value, (int, float)):
             raise TypeError("datapack_version must be a float, int, str, or a tuple.")
-        _, parsed = _parse_version_specifier(value, default_namespace="datapack")
-        self.versions["datapack"] = parsed
+        self.versions["datapack"] = parse_version_specifier_NEW(value)
 
     @overload
     def set_version(self, *, datapack: DatapackVersion) -> None: ...
@@ -189,50 +177,72 @@ class RhombusEnvironment:
         elif datapack_arg is not None:
             self.datapack_version = datapack_arg
 
-    def require(self, addons: dict[ModuleType | "RhombusAddon", VersionString | EllipsisType]) -> None:
-        """Loads addons for Rhombus and calls their individual registration procedures.
+    def require(self, extensions: dict[ModExtensionModule | "ModExtension" | str, VersionString | EllipsisType]) -> None:
+        """Loads extensions for Rhombus and calls their individual registration procedures.
 
-        Addon registration typically includes adding custom density function types to the
+        Extension registration typically includes adding custom density function types to the
         decoding register or providing visualization patches for the preview.
         """
-        for addon_target, version in addons.items():
-            if isinstance(addon_target, ModuleType):
-                if not hasattr(addon_target, "__addon__"):
+        for extension_target, version in extensions.items():
+            
+            extension_obj: ModExtension | None = None
+            extension_ns: str | None
+            extension_version: VersionTuple | None
+            
+            if isinstance(extension_target, ModuleType):
+                if not hasattr(extension_target, "__extension__"):
                     raise ValueError(
-                        f"Module {addon_target.__name__} does not contain an '__addon__' attribute."
+                        f"Module {extension_target.__name__} does not contain an '__extension__' attribute."
                     )
-                addon_obj = addon_target.__addon__
-            elif isinstance(addon_target, RhombusAddon):
-                addon_obj = addon_target
+                self.require({extension_target.__extension__: version})
+                continue
+                
+            elif isinstance(extension_target, str):
+                extension_ns = extension_target
+                if version is ...:
+                    if (known_extension := next(extension for extension in self._extensions if extension.namespace == extension_ns)) and known_extension.version is not None:
+                        extension_version = parse_version_specifier_NEW(known_extension.version)
+                    else:
+                        raise ValueError(f"Cannot use default version for extension '{extension_ns}'. No ModExtension was provided")
+                else:
+                    extension_version = parse_version_specifier_NEW(version)
+                
+            elif isinstance(extension_target, ModExtension):
+                extension_obj = extension_target
+                extension_ns = extension_obj.namespace
+                extension_version = parse_version_specifier_NEW(extension_obj.version) if extension_obj.version is not None else None
+                
             else:
                 raise ValueError(
-                    f"Addon target {addon_target!r} is neither a module nor a RhombusAddon instance."
+                    f"Extension target {extension_target!r} is neither a module nor a ModExtension instance."
                 )
 
-            if not hasattr(addon_obj, "apply"):
-                raise ValueError(
-                    f"Object {addon_obj!r} is not a valid Rhombus Addon. "
-                    "It is missing an 'apply' method"
-                )
+            if extension_obj is not None:
+                extension_obj.apply(self)
+                self._extensions.add(extension_obj)
 
-            addon_obj.apply(self)
-            self._addons.add(addon_obj)
-            
-            # Write the specified version to the environment's active versions dict
-            ver = version if version is not ... else addon_obj.version
-            if ver is not None:
-                _, parsed = _parse_version_specifier(ver, default_namespace=addon_obj.namespace)
-                self.versions[addon_obj.namespace] = parsed
+            self.versions[extension_ns] = extension_version
 
-    def _check_version(self, spec: DatapackVersion | VersionString | VersionTuple | tuple[str, DatapackVersion | VersionString | VersionTuple] | EllipsisType) -> bool | None:
+
+    def _check_version(
+        self,
+        version: DatapackVersion | VersionString | VersionTuple | EllipsisType,
+        namespace: str = "datapack",
+    ) -> bool | None:
         """Prüft, ob die Version der Umgebung den Anforderungen entspricht.
         Gibt None zurück, wenn die Version der Umgebung unbekannt ist."""
-        if spec is ...:
+        if version is ...:
             return False
             
-        ns, req_tuple = _parse_version_specifier(spec)
+        if isinstance(version, tuple) and all(isinstance(part, int) for part in version):
+            req_tuple = version
+        else:
+            req_tuple = parse_version_specifier_NEW(
+                version,
+                interpret_as_game_version_convert_to_datapack_version=(namespace == "datapack"),
+            )
         
-        current_v = self.versions.get(ns)
+        current_v = self.versions.get(namespace)
         if current_v is None:
             return None
             
@@ -245,35 +255,39 @@ class RhombusEnvironment:
 
 
 
-# ======// Addon //===============================================================================//
+# ======// Extension //===============================================================================//
+
+class ModExtensionModule(Protocol):
+    __extension__: ModExtension
+
 
 @dataclass
-class RhombusAddon:
-    """The **`RhombusAddon`** class declares an addon for the Rhombus runtime
+class ModExtension:
+    """The **`ModExtension`** class declares an extension for the Rhombus runtime
     environment.
 
-    Add-ons are used to facilitate certain workflows.
+    Extensions are used to facilitate certain workflows.
     They are almost always used with Minecraft mods to provide support for them.
 
-    ## Declaring an Addon
+    ## Declaring an Extension
 
-    Addons are declared as a `__addon__` value inside a module's root.
+    Extensions are declared as a `__extension__` value inside a module's root.
 
     **Example:**
     ```
     from .functions import *
     from .fast_noise_config import FastNoiseConfig, LithostitchedFastNoiseConfig
 
-    from rhombus.core.config import RhombusAddon
+    from rhombus.core.config import ModExtension
     from rhombus.core.density_function import DensityFunction
     from . import types
 
-    __addon__ = RhombusAddon(
+    __extension__ = ModExtension(
         namespace="lithostitched",
         version=(1, 20),
         preview_scripts=[
-            RhombusAddon.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
-            RhombusAddon.resource("rhombus.support.lithostitched", "deepslate.ts"),
+            ModExtension.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
+            ModExtension.resource("rhombus.support.lithostitched", "deepslate.ts"),
         ],
         preview_beet_file_extensions={LithostitchedFastNoiseConfig},
         density_functions={
@@ -287,20 +301,20 @@ class RhombusAddon:
     ```
 
     Parameters:
-        namespace (str): Identifier for the addon
-        version (DatapackVersion | VersionString | VersionTuple | None): The default version to set in the environment when the addon is loaded.
+        namespace (str): Identifier for the extension
+        version (DatapackVersion | VersionString | VersionTuple | None): The default version to set in the environment when the extension is loaded.
         density_functions (dict[str, DensityFunction]): Mapping of additional density function types
             (their identifiers) as the keys. This is mainly used for deserializing density function from JSON dictionaries.
         preview_scripts (list[str | Path]): Paths of JavaScript or TypeScript files that will be provided
             by the Rhombus Preview service, such that they are available in the previewing frontend.
-            It is recommended to provide these paths with the `files().joinpath()` method from `importlib.resources`.
+            It is recommended to provide these paths with the `ModExtension.resource()` method.
         preview_beet_file_extensions (set[BeetFile]): Beet file classes for datapack file types to include in the
             Rhombus Preview. 
-        on_apply (Optional[Callable[[RhombusEnvironment], Any]]): Custom function that is called, when the addon is loaded.
+        on_apply (Optional[Callable[[RhombusEnvironment], Any]]): Custom function that is called, when the extension is loaded.
     """
 
     namespace: str
-    version: DatapackVersion | VersionString | VersionTuple | None = None
+    version: VersionTuple | None = None
     density_functions: dict[str, type["DensityFunction"]] | list[type["DensityFunction"]] = field(default_factory=dict)
     preview_scripts: list[str | Path] = field(default_factory=list)
     preview_beet_file_extensions: set[type["BeetFile"]] = field(default_factory=set)
@@ -310,15 +324,14 @@ class RhombusAddon:
         return hash(self.namespace)
 
     def __eq__(self, other):
-        return isinstance(other, RhombusAddon) and self.namespace == other.namespace
+        return isinstance(other, ModExtension) and self.namespace == other.namespace
 
     def apply(self, env: "RhombusEnvironment") -> None:
         if self.on_apply:
             self.on_apply(env)
             
         if self.version is not None and self.namespace not in env.versions:
-            _, parsed = _parse_version_specifier(self.version, default_namespace=self.namespace)
-            env.versions[self.namespace] = parsed
+            env.versions[self.namespace] = self.version
         if isinstance(self.density_functions, dict):
             env.density_function_type_deserialization_register.update(self.density_functions)
         else:

@@ -134,61 +134,61 @@ def distance(
 @macro
 def acos(argument: AnyDensity):
     "Returns the arc cosine of the input (in radians)."
-    return Density(types.acos(argument.AST))
+    return Density(types.acos(argument.build()))
 
 
 @macro
 def asin(argument: AnyDensity):
     "Returns the arc sine of the input (in radians)."
-    return Density(types.asin(argument.AST))
+    return Density(types.asin(argument.build()))
 
 
 @macro
 def atan(argument: AnyDensity):
     "Returns the arc tangent of the input (in radians)."
-    return Density(types.atan(argument.AST))
+    return Density(types.atan(argument.build()))
 
 
 @macro
 def cosh(argument: AnyDensity):
     "Returns the hyperbolic cosine of the input."
-    return Density(types.cosh(argument.AST))
+    return Density(types.cosh(argument.build()))
 
 
 @macro
 def sinh(argument: AnyDensity):
     "Returns the hyperbolic sine of the input."
-    return Density(types.sinh(argument.AST))
+    return Density(types.sinh(argument.build()))
 
 
 @macro
 def tanh(argument: AnyDensity):
     "Returns the hyperbolic tangent of the input."
-    return Density(types.tanh(argument.AST))
+    return Density(types.tanh(argument.build()))
 
 
 @macro
 def cos(argument: AnyDensity):
     "Returns the cosine of the input (radians)."
-    return Density(types.cos(argument.AST))
+    return Density(types.cos(argument.build()))
 
 
 @macro
 def sin(argument: AnyDensity):
     "Returns the sine of the input (radians)."
-    return Density(types.sin(argument.AST))
+    return Density(types.sin(argument.build()))
 
 
 @macro
 def tan(argument: AnyDensity):
     "Returns the tangent of the input (radians)."
-    return Density(types.tan(argument.AST))
+    return Density(types.tan(argument.build()))
 
 
 @macro
 def vector_angle(argument1: AnyDensity, argument2: AnyDensity):
     "Returns the angle (radians) of `(arg1, arg2)` relative to `(0, 0)`."
-    return Density(types.vector_angle(argument1.AST, argument2.AST))
+    return Density(types.vector_angle(argument1.build(), argument2.build()))
 
 
 # ======// Arithmetic Operations //=============================================================//
@@ -197,73 +197,73 @@ def vector_angle(argument1: AnyDensity, argument2: AnyDensity):
 @macro
 def cbrt(argument: AnyDensity):
     "Returns the cube root of the input."
-    return Density(types.cbrt(argument.AST))
+    return Density(types.cbrt(argument.build()))
 
 
 @macro
 def div(numerator: AnyDensity, denominator: AnyDensity):
     "Returns numerator divided by denominator."
-    return Density(types.div(numerator.AST, denominator.AST))
+    return Density(types.div(numerator.build(), denominator.build()))
 
 
 @macro
 def floor_div(numerator: AnyDensity, denominator: AnyDensity):
     "Returns the floor of the division."
-    return Density(types.floor_div(numerator.AST, denominator.AST))
+    return Density(types.floor_div(numerator.build(), denominator.build()))
 
 
 @macro
 def mod(numerator: AnyDensity, denominator: AnyDensity):
     "Returns the remainder of the division."
-    return Density(types.mod(numerator.AST, denominator.AST))
+    return Density(types.mod(numerator.build(), denominator.build()))
 
 
 @macro
 def floor_mod(numerator: AnyDensity, denominator: AnyDensity):
     "Returns the floor'd modulo."
-    return Density(types.floor_mod(numerator.AST, denominator.AST))
+    return Density(types.floor_mod(numerator.build(), denominator.build()))
 
 
 @macro
 def ieee_rem(numerator: AnyDensity, denominator: AnyDensity):
     "Returns the IEEE 754 remainder."
-    return Density(types.ieee_rem(numerator.AST, denominator.AST))
+    return Density(types.ieee_rem(numerator.build(), denominator.build()))
 
 
 @macro
 def negate(argument: AnyDensity):
     "Multiplies the input by -1."
-    return Density(types.negate(argument.AST))
+    return Density(types.negate(argument.build()))
 
 
 @macro
 def power(base: AnyDensity, exponent: AnyDensity):
     "Returns base raised to the power of exponent."
-    return Density(types.power(base.AST, exponent.AST))
+    return Density(types.power(base.build(), exponent.build()))
 
 
 @macro
 def reciprocal(denominator: AnyDensity):
     "Returns the inverse (1/x) of the input."
-    return Density(types.reciprocal(denominator.AST))
+    return Density(types.reciprocal(denominator.build()))
 
 
 @macro
 def sqrt(argument: AnyDensity):
     "Returns the square root of the input."
-    return Density(types.sqrt(argument.AST))
+    return Density(types.sqrt(argument.build()))
 
 
 @macro
 def subtract(argument1: AnyDensity, argument2: AnyDensity):
     "Returns `argument1 - argument2`."
-    return Density(types.subtract(argument1.AST, argument2.AST))
+    return Density(types.subtract(argument1.build(), argument2.build()))
 
 
 @macro
 def remainder(numerator: AnyDensity, denominator: AnyDensity):
     "Returns the remainder."
-    return Density(types.remainder(numerator.AST, denominator.AST))
+    return Density(types.remainder(numerator.build(), denominator.build()))
 
 
 # ======// Logarithmic Functions //=============================================================//
@@ -272,25 +272,25 @@ def remainder(numerator: AnyDensity, denominator: AnyDensity):
 @macro
 def log(argument: AnyDensity, base: AnyDensity):
     "Returns the logarithm of the argument in the specified base."
-    return Density(types.log(argument.AST, base.AST))
+    return Density(types.log(argument.build(), base.build()))
 
 
 @macro
 def log2(argument: AnyDensity):
     "Returns the base-2 logarithm."
-    return Density(types.log2(argument.AST))
+    return Density(types.log2(argument.build()))
 
 
 @macro
 def log2_floor(argument: AnyDensity):
     "Returns the floor of the base-2 logarithm (optimized)."
-    return Density(types.log2_floor(argument.AST))
+    return Density(types.log2_floor(argument.build()))
 
 
 @macro
 def ln(argument: AnyDensity):
     "Returns the natural logarithm (base e)."
-    return Density(types.ln(argument.AST))
+    return Density(types.ln(argument.build()))
 
 
 # ======// Rounding and Clamping //=============================================================//
@@ -299,37 +299,37 @@ def ln(argument: AnyDensity):
 @macro
 def ceil(argument: AnyDensity):
     "Rounds up to the nearest integer."
-    return Density(types.ceil(argument.AST))
+    return Density(types.ceil(argument.build()))
 
 
 @macro
 def clamp(input: AnyDensity, min: float, max: float):
     "Clamps value between min and max."
-    return Density(types.clamp(input.AST, min, max))
+    return Density(types.clamp(input.build(), min, max))
 
 
 @macro
 def floor(argument: AnyDensity):
     "Rounds down to the nearest integer."
-    return Density(types.floor(argument.AST))
+    return Density(types.floor(argument.build()))
 
 
 @macro
 def round(argument: AnyDensity):
     "Rounds to the nearest integer."
-    return Density(types.round(argument.AST))
+    return Density(types.round(argument.build()))
 
 
 @macro
 def sigmoid(argument: AnyDensity):
     "Applies the sigmoid function (S-curve)."
-    return Density(types.sigmoid(argument.AST))
+    return Density(types.sigmoid(argument.build()))
 
 
 @macro
 def signum(argument: AnyDensity):
     "Returns -1 if x < 0, 0 if x = 0, 1 if x > 0."
-    return Density(types.signum(argument.AST))
+    return Density(types.signum(argument.build()))
 
 
 # ======// Calculus and Derivative Functions //=================================================//
@@ -344,7 +344,7 @@ def derivative(
 ):
     "Returns the directional derivative of a density function along a specified 3D direction vector."
     return Density(
-        types.derivative(argument.AST, component_x, component_y, component_z)
+        types.derivative(argument.build(), component_x, component_y, component_z)
     )
 
 
@@ -356,7 +356,7 @@ def gradient_magnitude(
     step_z: int = 0,
 ):
     "Returns the magnitude of the spatial gradient vector (the steepest rate of change in 3D space) of the density function using central differences."
-    return Density(types.gradient_magnitude(argument.AST, step_x, step_y, step_z))
+    return Density(types.gradient_magnitude(argument.build(), step_x, step_y, step_z))
 
 
 @macro
@@ -369,7 +369,7 @@ def dot_product(
 ):
     "Computes the spatial gradient vectors (rate of change) of both density functions and returns their dot product, effectively measuring how aligned their slopes are in 3D space."
     return Density(
-        types.dot_product(argument1.AST, argument2.AST, step_x, step_y, step_z)
+        types.dot_product(argument1.build(), argument2.build(), step_x, step_y, step_z)
     )
 
 
@@ -381,7 +381,7 @@ def shift(
     argument: AnyDensity, shift_x: AnyDensity, shift_y: AnyDensity, shift_z: AnyDensity
 ):
     "Evaluates `argument` at a shifted position."
-    return Density(types.shift(argument.AST, shift_x.AST, shift_y.AST, shift_z.AST))
+    return Density(types.shift(argument.build(), shift_x.build(), shift_y.build(), shift_z.build()))
 
 
 @macro
@@ -408,7 +408,7 @@ def value_noise(
 @macro
 def or_else(argument: AnyDensity, fallback: AnyDensity):
     "Returns `argument` unless it's non-finite (NaN/Inf), then returns `fallback`."
-    return Density(types.or_else(argument.AST, fallback.AST))
+    return Density(types.or_else(argument.build(), fallback.build()))
 
 class or_else_fallback_handler:
     def __init__(self, fallback_value: AnyDensity):
@@ -440,13 +440,13 @@ def fallback(df: AnyDensity) -> or_else_fallback_handler:
 @macro
 def resolver(argument: AnyDensity):
     "Internally memoizes and optimizes the density function tree."
-    return Density(types.resolver(argument.AST))
+    return Density(types.resolver(argument.build()))
 
 
 @macro
 def profiler(argument: AnyDensity, warm_up: int, iterations: int):
     "Profiles the performance of a density function and prints to console."
-    return Density(types.profiler(argument.AST, warm_up, iterations))
+    return Density(types.profiler(argument.build(), warm_up, iterations))
 
 
 @macro

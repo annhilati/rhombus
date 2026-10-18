@@ -101,7 +101,7 @@ class Density:
         repr: Callable[[RhombusASTNode[Reference], str]] = (
             lambda n: f"({self!r}).named(\"{identifier}\")"
         )
-        return Density(RhombusASTNode.defer(build_reference, repr_func=repr))
+        return Density(RhombusASTNode.defer(build_reference, repr=repr))
             # TODO: Density(5).named("value") + "other" produces add((identity()).named("minecraft:value"), 'other')
             #       why is 'other' in the example namespace-less?
 
@@ -195,7 +195,10 @@ class Density:
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
 
     def build(self) -> DensityFunction:
-        """"""
+        """Creates a `DensityFunction` object from the `Density`.
+        The returned `DensityFunction` contains the complete and valid data model of
+        the density function for the datapack and mod versions set in the environment.
+        """
         return self.AST.build()
 
     def compile(self, identifier: str = "main", /, *, version: DatapackVersion = ...) -> set[tuple[str, BeetFile]]:
@@ -249,11 +252,11 @@ class Density:
     def as_dict(self) -> JSONDict:
         """Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.
         The dictionary will not be fully inline. References that require separate files will be references."""
-        return self.AST.build().serialize_toplevel()
+        return self.build().serialize_toplevel()
     
     def info(self) -> DensityFunctionSizeInfo:
         from rhombus.std._implementations.optimization import df_size_info
-        return df_size_info(self.AST.build())
+        return df_size_info(self.build())
 
 
     # ======// Arithmetic Magic //================================================================//
