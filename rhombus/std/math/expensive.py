@@ -20,7 +20,7 @@ from rhombus.std import math, caching
 def sqrt(
     df: AnyDensity,
     iterations: int = 3,
-    guess: Callable[[Density], Density] = lambda d: d * 0.5,
+    guess: Callable[[Density], Density] = lambda df: df * 0.5,
 ) -> Density:
     """Approximates the square root of the input."""
     if iterations < 1:

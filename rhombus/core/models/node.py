@@ -11,7 +11,7 @@ import copy
 import warnings
 
 from rhombus.core.utils import JSONValue, BeetFile, fields, JSON_hash, check_type, annotated_fields
-from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, get_module_extension_namespace, parse_version_specifier_NEW
+from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, get_module_extension_namespace, parse_version_specifier
 
 
 @dataclasses.dataclass
@@ -81,7 +81,7 @@ class NodeDataclassTransformer(type):
             parsed_versions = []
             for v in versions_kwarg:
                 if v is not ... and v is not None:
-                    parsed_versions.append(parse_version_specifier_NEW(v, interpret_as_game_version_convert_to_datapack_version=is_dp))
+                    parsed_versions.append(parse_version_specifier(v, interpret_as_game_version_convert_to_datapack_version=is_dp))
                 else:
                     parsed_versions.append(...)
             ns["__rhombus_versions__"] = tuple(parsed_versions)        
@@ -90,19 +90,19 @@ class NodeDataclassTransformer(type):
                 meta: FieldMeta = field_obj.metadata["rhombus_meta"]
                 meta.dependency_namespace = default_ns
                 if meta.added_with is not ... and meta.added_with is not None:
-                    meta.added_with = parse_version_specifier_NEW(meta.added_with, interpret_as_game_version_convert_to_datapack_version=is_dp)
+                    meta.added_with = parse_version_specifier(meta.added_with, interpret_as_game_version_convert_to_datapack_version=is_dp)
                 if meta.removed_with is not ... and meta.removed_with is not None:
-                    meta.removed_with = parse_version_specifier_NEW(meta.removed_with, interpret_as_game_version_convert_to_datapack_version=is_dp)
+                    meta.removed_with = parse_version_specifier(meta.removed_with, interpret_as_game_version_convert_to_datapack_version=is_dp)
                 
                 new_legacy_keys = {}
                 for k, v in meta.legacy_keys.items():
-                    k_norm = parse_version_specifier_NEW(k, interpret_as_game_version_convert_to_datapack_version=is_dp) if k is not ... else k
+                    k_norm = parse_version_specifier(k, interpret_as_game_version_convert_to_datapack_version=is_dp) if k is not ... else k
                     new_legacy_keys[k_norm] = v
                 meta.legacy_keys = new_legacy_keys
                 
                 new_legacy_values = {}
                 for k, v in meta.legacy_values.items():
-                    k_norm = parse_version_specifier_NEW(k, interpret_as_game_version_convert_to_datapack_version=is_dp) if k is not ... else k
+                    k_norm = parse_version_specifier(k, interpret_as_game_version_convert_to_datapack_version=is_dp) if k is not ... else k
                     new_legacy_values[k_norm] = v
                 meta.legacy_values = new_legacy_values
 
@@ -229,26 +229,27 @@ class NodeDataclassTransformer(type):
 
 
 class DatapackNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
-    """The **`RhombusASTNode`** class defines the common behaviour for all nodes
-    in the abstract syntax tree of Rhombus. It thus can be called the base class
-    for all nodes.
+    """The **`DatapackNode`** class defines the common behaviour for all nodes
+    in the abstract syntax tree for data already built for daapacks
 
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """
 
-    __dataclass_fields__: ClassVar[dict[str, dataclasses.Field]]
-    __dataclass_params__: ClassVar[Any]
-    __match_args__: ClassVar[tuple[str, ...]]
-    __rhombus_versions__: ClassVar[tuple[DatapackVersion | VersionString | VersionTuple, DatapackVersion | VersionString | VersionTuple | EllipsisType] | None]
+    __dataclass_fields__:      ClassVar[dict[str, dataclasses.Field]]
+    __dataclass_params__:      ClassVar[Any]
+    __match_args__:            ClassVar[tuple[str, ...]]
+    __rhombus_versions__:      ClassVar[tuple[DatapackVersion | VersionString | VersionTuple, DatapackVersion | VersionString | VersionTuple | EllipsisType] | None]
+    __rhombus_namespace__:     ClassVar[str]
     __rhombus_legacy_values__: ClassVar[dict[str, dict[DatapackVersion | VersionString | VersionTuple, Any]]]
-    __rhombus_fields__: ClassVar[dict[str, FieldMeta]]
+    __rhombus_fields__:        ClassVar[dict[str, FieldMeta]]
+    
     _rhombus_frozen: ClassVar[bool]
 
     fileclass: ClassVar[type[BeetFile] | None]
 
     def __init__(self, *args, **kwargs):
         raise NotImplementedError(
-            "Only subclasses of 'RhombusASTNode' can be instantiated directly, not 'RhombusASTNode' itself"
+            "Only subclasses of 'DatapackNode' can be instantiated directly, not 'DatapackNode' itself"
         )
 
     def __setattr__(self, name: str, value: Any) -> None:

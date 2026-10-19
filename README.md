@@ -9,7 +9,6 @@
 <!-- <h1 align="center"><sub><img src="docs/images/logo.svg" height="35"></sub> Rhombus <sub><img src="docs/images/logo.svg" height="35"></sub></h1>
 <p align="center">The Python-embedded Domain Specific Language for Minecraft Terrain Generation</p> -->
 <p align="center">
-    <!-- <a href="#"><img alt="Static Badge" src="https://img.shields.io/pypi/v/rhombus?style=for-the-badge&logo=pypi&logoColor=white&labelColor=4c75a9&label=Version&color=161926"></a> -->
     <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Python 3.13+-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=4c75a9&color=161926"></a>
     <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Beet-x?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=b90d38&color=161926"></a>
     <a href="#"><img alt="Static Badge" src="https://img.shields.io/badge/Deepslate-x?style=for-the-badge&logo=typescript&logoColor=ffffff&labelColor=4b77c3&color=161926"></a>
@@ -33,8 +32,8 @@ Functions and classes provide docstrings describing behavior, parameters, and us
 Recurring expressions and resource intense operations can be cached automatically.
 - 🗄️ **Macro Library**<br>
 Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
-- **Multi-Version Compilation**<br>
-While Rhombus follows an up-to-date-first approach, density functions can be compiled to older versions too. The most optimal implementation for each version is chosen automatically.
+- 🔀 **Multi-Version Compilation**<br>
+While Rhombus follows an up-to-date-first approach, density functions can be compiled for older versions too. The most optimal implementation for each version is chosen automatically.
 
 ## Features
 <details>
@@ -42,42 +41,34 @@ While Rhombus follows an up-to-date-first approach, density functions can be com
 
 *This list only includes features that are principally not necessary, but make up the real strengths of Rhombus.*
 
+- **Macro Library**
+  - Adaptation of all density function types and noise features in recent versions
+  - Caching optimizer
+  - General Math
+    - Implementations of core functions for older versions: sign, rounding, modulo, etc.
+    - Smooth max and min functions
+    - Infinity, NaN
+    - Sign, Heaviside, ramp and smoothstep functions
+    - Spline and exponentiation-based trigonometric functions
+    - Spline approximations for some distribution functions: normalPDF, normalCDF, erf, logistic
+    - Spline point sampler for arbitrary Python functions
+  - Working with Maps
+    - Heightmap extrusion
+  - Expressive construction of conditionalities
+    - Use of the `if / elif / else` keywords in condition blocks and the ternary operator 
+    - Fluent Interface
+  - Coordinate reconstruction for older versions
+- **Mod Support**
+  - More Density Functions
+  - Lithostitched
+  - Tectonic
+  - En-sityFunctions
 - **Rhombus Preview**  
     A lightweight local frontend with file-watching for previewing density functions
   - Visualizer (built on deepslate)
     - Supports all major worldgen mods (see *Mod Support*)
   - File Explorer & Viewer (built on monaco)
   - Spline Visualization
-- **Macro Library**
-  <!-- - [General Math](https://github.com/annhilati/rhombus/blob/main/rhombus/std/math)
-    - sum, prod
-    - smax, smin
-    - Infinity, NaN
-    - round, floor, ceil, mod
-    - sgn, heaviside, monus, ramp
-    - trigonometric functions
-  - [Spline approximations](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/smath.py)
-    - [Sampler for any Python function](https://github.com/annhilati/rhombus/blob/main/rhombus/splines.py)
-    - sin, cos, tan, atan, tanh, coth
-    - exp (with arbitrary base)
-    - smoothstep, normalPDF, normalCDF, erf, logistic
-  - [Performance optimization](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/performance.py)
-    - evaluate the number of unique nodes of a function
-    - automatically cache specific sub functions of a function
-    - automatically cache all recurring sub functions of a function
-  - [Expensive iterative Methods](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/emath.py)
-    - sqrt
-    - sin, cos, tan, exp, ln
-    - round, ceil, floor, mod
-  - [Working with Maps](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/maps.py)
-    - extrude_heightmap
-  - [Fluent Interface for conditionality](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/conditional.py)
-  - [Coordinate reconstruction](https://github.com/annhilati/rhombus/blob/main/rhombus/macros/coords.py) -->
-- **Mod Support**
-  - More Density Functions
-  - Lithostitched
-  - Tectonic
-  - En-sityFunctions
 </details>
 
 ## Impressions
@@ -142,18 +133,3 @@ The easiest way to support the Rhombus project is to propagate its use in your p
 - Wektory
 
 </details> -->
-
-<!-- <h2></h2>
-
-> [!note]
-> ### Rhombus' current State and its Development in the Future<br>
-> Rhombus is a finished product which holds what it promises. It is maintained so that it is fully up to date with Minecraft and does not contain any outdated features, but ...<br>
-> 
-> There is no active development of new features. The project also isn't going to expand into new areas of world generation - At least not for now.
-> As long as there isn't significant public interest, Rhombus will remain a hobby project and will only be developed in spurts, driven by flashes of inspiration.
-> If such interest eventually arises or if someone comes forward who wants to further improve Rhombus by working together with me, then there will certainly be many more new features released on a more regular basis.
-> That's something I'm looking forward to.
-> Until then I'm happy to add smaller new features - mod support, or macros - upon request, but nothing fundamentally new.
->
-> Thank you for reading this and for your interest in Rhombus!<br>
-> Annhilati on July 20, 2026 -->

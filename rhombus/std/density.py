@@ -45,7 +45,7 @@ class Density:
     """
 
     AST: RhombusASTNode[DensityFunction]
-    "The density function AST represented by this Density."
+    "The lazy AST represented by this Density."
 
     @overload
     def __init__(self, reference: str): ...
@@ -82,6 +82,9 @@ class Density:
 
     def __repr__(self) -> str:
         return self.AST.__repr__()
+    
+    def __hash__(self) -> int:
+            return hash(self.AST)
 
     # ======// Factories //=======================================================================//
 
@@ -123,8 +126,6 @@ class Density:
         return self.named(identifier)
 
 
-    # ======// Toolchain //=======================================================================//
-
     @classmethod
     @datapack_handler
     def from_dict(
@@ -135,6 +136,7 @@ class Density:
         A Beet datapack can be provided as context.
         """
         return Density(RhombusASTNode.defer(lambda: DensityFunction.deserialize_toplevel(d)))
+
 
     @classmethod
     @datapack_handler
@@ -148,6 +150,7 @@ class Density:
             return None
 
         return Density.from_dict(file.data, dp=dp)
+
 
     @classmethod
     @datapack_handler
@@ -193,6 +196,10 @@ class Density:
             return None
 
         return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
+
+
+# ======// Processing //=========================================================================//
+
 
     def build(self) -> DensityFunction:
         """Creates a `DensityFunction` object from the `Density`.
@@ -357,7 +364,7 @@ class Density:
                 return self.AST != other.AST
             return True
             
-        object.__setattr__(cond, "_truthy_eval_fallback", _fallback)
+        cond._truthy_eval_fallback = _fallback
         return cond
 
     def __gt__(self, other):
@@ -375,8 +382,3 @@ class Density:
     def __le__(self, other):
         from rhombus.std.conditional.fluent import when
         return when(self).atmost(other)
-
-    # def __bool__(self):
-    #     raise NotImplementedError(
-    #         "Densities are only symbolic values and can't be compared. For conditionality use 'range_choice' or an adequate macro"
-    #     )

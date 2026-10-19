@@ -4,7 +4,7 @@ import sys
 
 from beet.contrib import worldgen as beet_worldgen
 
-from rhombus.core import DatapackNode, DensityFunction, Reference, JSON_hash, walk
+from rhombus.core import DatapackNode, DensityFunction, Reference, walk
 from rhombus.std.density import Density
 import rhombus.support.vanilla.types as vt
 

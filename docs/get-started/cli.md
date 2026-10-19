@@ -21,8 +21,8 @@ rhombus preview PATH [PARAMS]
 |:------------------- |:-------------------:|:---------------------------------------------------------------------------------- |
 | `PATH`              | string              | Absolute or relative path to the datapack root.                                    |
 | `--overlay`, `-o`   | string (repeatable) | Key of an overlay in the datapack to override its files with. Use repeatedly to apply multiple overlays. |
-| `--addon`, `-a`     | string (repeatable) | Python object path of a [Rhombus addon](addons.md) to load. Use repeatedly to load multiple addons. |
-| `--no-watch`, `-n`  | Flag                | Deactivates file watching. Preview data will not be updated on file changes.       |
+| `--extension`, `-e` | string (repeatable) | Python object path of a [Rhombus addon](addons.md) to load. Use repeatedly to load multiple addons. |
+| `--no-watch`, `-n`  | flag                | Deactivates file watching. Preview data will not be updated on file changes.       |
 
 #### Examples
 Preview the datapack in the current directory:
@@ -32,15 +32,15 @@ rhombus preview .
 
 Including files and visualizers from Lithostitched:
 ```
-rhombus preview . --addons rhombus.lithostitched
+rhombus preview . --extension rhombus.lithostitched
 ```
 
-Include multiple addons: 
+Include multiple extension: 
 ```
-rhombus preview test_vanilla -a rhombus.lithostitched -a rhombus.tectonic
+rhombus preview test_vanilla -e rhombus.lithostitched -e rhombus.tectonic
 ```
 
 Apply overlays:
 ```
-rhombus preview tectonic-datapack-3.0.25.zip --addon rhombus.tectonic --addon rhombus.lithostitched --overlay overlay.datapack --overlay overlay.1_21_9 
+rhombus preview tectonic-datapack-3.0.25.zip --extension rhombus.tectonic --extension rhombus.lithostitched --overlay overlay.datapack --overlay overlay.1_21_9 
 ```

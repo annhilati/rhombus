@@ -17,7 +17,7 @@ import inspect
 import functools
 import sys
 
-from rhombus.core.abstract import RhombusASTNode, LazyDispatcher, register_implementation, has_macro_registrations
+from rhombus.core.abstract import RhombusASTNode, LazyDispatcher, register_implementation, has_implementation_registrations
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
@@ -130,9 +130,16 @@ def _coerce_node(res: Density | AnyDensity):
 
 
 @overload
-def macro[**P, R](func: Callable[P, R]) -> Callable[P, R]: ...
+def macro[**P](
+    func: Callable[P, Any],
+    *,
+    repr: Callable[["RhombusASTNode"], str] | None = None,
+) -> Callable[P, Density]: ...
 @overload
-def macro[**P, R](*, repr: Callable[["RhombusASTNode"], str] | None = None) -> Decorator[P, R]: ...
+def macro[**P](
+    *,
+    repr: Callable[["RhombusASTNode"], str] | None = None,
+) -> Callable[[Callable[P, Any]], Callable[P, Density]]: ...
 def macro(
     func: Callable | None = None,
     *,
@@ -143,6 +150,9 @@ def macro(
     - Values for parameters annotated with `AnyDensity` will automatically be coerced to the `Density` type.
     - Allows defining functions decorated with the `@implementation` decorator inside the function to provide lazily chosen version-dependent implementations.
     - Allows using Python's `if / elif / else` syntax as well as special macros with `with`-statements inside the function.
+    
+    **NOTE:** All macros are pricipially lazy and will not be executed until the build process is issued.
+    Thus `~.build()` can be called on `Density` type arguments without any problems to allow finer manipulation of the density function nodes.
     
     ## Usage:
     ```
@@ -167,7 +177,7 @@ def macro(
         @functools.wraps(f)
         def base_wrapper(*args, **kwargs):
             res = f_resolved(*args, **kwargs)
-            if has_macro_registrations():
+            if has_implementation_registrations():
                 return res
             return _coerce_node(res)
         base_wrapper.__signature__ = inspect.signature(f_resolved)
@@ -188,19 +198,22 @@ def macro(
 
 @overload
 def implementation[**P, R](
-    func: Callable[P, R]
+    func: Callable[P, R],
+    *,
+    since: DatapackVersion | VersionString | VersionTuple = None,
+    until: DatapackVersion | VersionString | VersionTuple = None,
 ) -> Callable[P, R]: ...
 @overload
 def implementation[**P, R](
     *,
-    since: DatapackVersion | VersionString | VersionTuple | None = None,
-    until: DatapackVersion | VersionString | VersionTuple | None = None
+    since: DatapackVersion | VersionString | VersionTuple = None,
+    until: DatapackVersion | VersionString | VersionTuple = None,
 ) -> Decorator[P, R]: ...
 def implementation(
     func: Callable | None = None, 
     *, 
-    since: DatapackVersion | VersionString | VersionTuple | None = None,
-    until: DatapackVersion | VersionString | VersionTuple | None = None
+    since: DatapackVersion | VersionString | VersionTuple = None,
+    until: DatapackVersion | VersionString | VersionTuple = None
 ):
     """Decorator for inner functions inside a macro to register them as implementations.
     If 'until' is None, it acts as the default fallback implementation.

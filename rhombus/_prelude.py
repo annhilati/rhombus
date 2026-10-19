@@ -38,9 +38,10 @@ from rhombus.std.coords import x, y, z, gradient
 from rhombus.std.maps import extrude_heightmap
 
 # Extended Library Modules
-from rhombus.std.math import splines
+from rhombus.std.math import distributions
 from rhombus.support import *
 
 # Workflow
 import rhombus.preview as preview
 import rhombus.support as support
+import rhombus as rhombus

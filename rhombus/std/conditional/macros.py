@@ -1,12 +1,8 @@
-from __future__ import annotations
-from rhombus.core.models.density_function import DensityFunction
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
 
-OMEGA = vt.literal_number_limit
 
-# IDEA: Move this
 @macro
 def range_choice(
     input: AnyDensity,
@@ -59,7 +55,7 @@ def interval_select(
     def _legacy():
         result = functions[-1].AST
         for i in range(len(thresholds) - 1, -1, -1):
-            result = vt.range_choice(input.build(), -OMEGA, thresholds[i], functions[i].build(), result)
+            result = vt.range_choice(input.build(), -vt.literal_number_limit, thresholds[i], functions[i].build(), result)
         return result
 
     @implementation()

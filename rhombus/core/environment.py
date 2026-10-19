@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["DatapackVersion", "VersionTuple", "RhombusEnvironment", "ModExtension", "get_module_extension_namespace", "parse_version_specifier_NEW"]
+__all__ = ["DatapackVersion", "VersionTuple", "RhombusEnvironment", "ModExtension", "get_module_extension_namespace", "parse_version_specifier"]
 
 from typing import Callable, Any, Optional, Protocol, overload, TYPE_CHECKING
 from types import ModuleType, EllipsisType
-from dataclasses import dataclass, field
 from pathlib import Path
+from dataclasses import dataclass, field
 from importlib.resources import files
 import threading
 import sys
@@ -26,7 +26,7 @@ type VersionTuple = tuple[int, ...]
 type NamespacedVersion = tuple[str, VersionTuple]
 
 
-def parse_version_specifier_NEW(spec: DatapackVersion | VersionString | VersionTuple, interpret_as_game_version_convert_to_datapack_version: bool = False) -> VersionTuple:
+def parse_version_specifier(spec: DatapackVersion | VersionString | VersionTuple, interpret_as_game_version_convert_to_datapack_version: bool = False) -> VersionTuple:
     
     def parse_VersionString(spec: VersionString) -> VersionTuple:
         return tuple(int(p) for p in spec.split("."))
@@ -34,7 +34,7 @@ def parse_version_specifier_NEW(spec: DatapackVersion | VersionString | VersionT
     if isinstance(spec, (int, float)):
         if interpret_as_game_version_convert_to_datapack_version:
             try:
-                return parse_version_specifier_NEW(get_Minecraft_datapack_version(str(float(spec))))
+                return parse_version_specifier(get_Minecraft_datapack_version(str(float(spec))))
             except ValueError:
                 pass
         parts = parse_VersionString(str(float(spec)))
@@ -47,7 +47,7 @@ def parse_version_specifier_NEW(spec: DatapackVersion | VersionString | VersionT
     elif isinstance(spec, str):
         if interpret_as_game_version_convert_to_datapack_version:
             try:
-                return parse_version_specifier_NEW(get_Minecraft_datapack_version(spec))
+                return parse_version_specifier(get_Minecraft_datapack_version(spec))
             except ValueError:
                 pass
         parts = parse_VersionString(spec)
@@ -60,7 +60,7 @@ def parse_version_specifier_NEW(spec: DatapackVersion | VersionString | VersionT
             raise ValueError(f"Some parts of {spec} are not of type int or float")
         if interpret_as_game_version_convert_to_datapack_version:
             try:
-                return parse_version_specifier_NEW(get_Minecraft_datapack_version(".".join(str(p) for p in spec)))
+                return parse_version_specifier(get_Minecraft_datapack_version(".".join(str(p) for p in spec)))
             except ValueError:
                 pass
         if len(spec) == 1:
@@ -75,8 +75,7 @@ def get_module_extension_namespace(module_path: str) -> str | None:
     parts = module_path.split('.')
     while parts:
         current_module_name = '.'.join(parts)
-        module = sys.modules.get(current_module_name)
-        if module and hasattr(module, "__extension__"):
+        if (module := sys.modules.get(current_module_name)) and hasattr(module, "__extension__"):
             return module.__extension__.namespace
         parts.pop()
     return None
@@ -140,7 +139,7 @@ class RhombusEnvironment:
             raise ValueError("datapack_version cannot be None.")
         if not isinstance(value, (int, float)):
             raise TypeError("datapack_version must be a float, int, str, or a tuple.")
-        self.versions["datapack"] = parse_version_specifier_NEW(value)
+        self.versions["datapack"] = parse_version_specifier(value)
 
     @overload
     def set_version(self, *, datapack: DatapackVersion) -> None: ...
@@ -201,16 +200,16 @@ class RhombusEnvironment:
                 extension_ns = extension_target
                 if version is ...:
                     if (known_extension := next(extension for extension in self._extensions if extension.namespace == extension_ns)) and known_extension.version is not None:
-                        extension_version = parse_version_specifier_NEW(known_extension.version)
+                        extension_version = parse_version_specifier(known_extension.version)
                     else:
                         raise ValueError(f"Cannot use default version for extension '{extension_ns}'. No ModExtension was provided")
                 else:
-                    extension_version = parse_version_specifier_NEW(version)
+                    extension_version = parse_version_specifier(version)
                 
             elif isinstance(extension_target, ModExtension):
                 extension_obj = extension_target
                 extension_ns = extension_obj.namespace
-                extension_version = parse_version_specifier_NEW(extension_obj.version) if extension_obj.version is not None else None
+                extension_version = parse_version_specifier(extension_obj.version) if extension_obj.version is not None else None
                 
             else:
                 raise ValueError(
@@ -237,7 +236,7 @@ class RhombusEnvironment:
         if isinstance(version, tuple) and all(isinstance(part, int) for part in version):
             req_tuple = version
         else:
-            req_tuple = parse_version_specifier_NEW(
+            req_tuple = parse_version_specifier(
                 version,
                 interpret_as_game_version_convert_to_datapack_version=(namespace == "datapack"),
             )

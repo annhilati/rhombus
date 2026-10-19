@@ -1,7 +1,8 @@
-﻿import inspect
+﻿from typing import Final, Callable
+import inspect
 import functools
 import copy
-from typing import Final, Callable
+
 from rhombus.core.environment import RhombusEnvironment
 from rhombus.core.utils import GlobalBinding
 

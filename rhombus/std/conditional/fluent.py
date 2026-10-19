@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["when"]
 
 from dataclasses import dataclass, field
-from typing import Any, Never
+from typing import Any, Never, Callable
 from enum import Enum
 
 from rhombus.core.models.density_function import DensityFunction
@@ -29,14 +29,15 @@ class Relation(str, Enum):
     MORE_BUT_ATMOST = "more_atmost"
 
 
-# ======// Condition //===========================================================================//
+# ======// Condition //==========================================================================//
 
 
 class Condition:
     _chain: "Causality" | None = None
+    _truthy_eval_fallback: Callable[[], bool] | None = None # We use this to allow both AST comparison and Condition construction with the Density class
 
     def __bool__(self) -> bool:
-        fallback = getattr(self, "_truthy_eval_fallback", None)
+        fallback = self._truthy_eval_fallback
         if fallback is not None:
             return fallback()
         raise TypeError(
@@ -69,11 +70,6 @@ class Condition:
         object.__setattr__(res, '_chain', self._chain)
         return res
 
-    def __bool__(self) -> Never:
-        raise TypeError(
-            "Conditions can not be evaluated as a normal boolean value on the top level of a file. "
-            "To use if/else syntax directly, make sure to only use it inside a function decorated with @macro."
-        )
 
     def then(self, value: AnyDensity) -> "Causality":
         """Specifies the value that is returned, if the condition applies."""
@@ -335,23 +331,23 @@ class ConditionSelector:
         return self._wrap(
             ~(
                 when(self._subject).less(0)
-                | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
+                | when(Density(self._subject) * -1.0).less(0)
                 | when(self._subject).inside(-0.1, 0.1)
             )
         )
 
     def is_infinite(self) -> Condition:
         return self._wrap(
-            when(vt.mul(self._subject, vt.constant(0.0))).unequals(0.0)
+            when(Density(self._subject) * 0.0).unequals(0.0)
             & (
                 when(self._subject).less(0)
-                | when(vt.mul(self._subject, vt.constant(-1.0))).less(0)
+                | when(Density(self._subject) * -1.0).less(0)
             )
         )
 
     def is_finite(self) -> Condition:
         return self._wrap(
-            when(vt.mul(self._subject, vt.constant(0.0))).equals(0.0)
+            when(Density(self._subject) * 0.0).equals(0.0)
         )
 
 

@@ -25,7 +25,7 @@ class SubParameters(DatapackNode):
     @classmethod
     def deserialize_toplevel(cls, data: JSONDict) -> Self:
         fields = annotated_fields(cls)
-        rhombus_fields = getattr(cls, "__rhombus_fields__", {})
+        rhombus_fields = cls.__rhombus_fields__
 
         kwargs = {}
         for parameter, tp in fields.items():
@@ -64,7 +64,7 @@ class SubParameters(DatapackNode):
 
     def serialize_toplevel(self) -> JSONDict:
         result = {}
-        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
+        rhombus_fields = type(self).__rhombus_fields__
         
         for parameter, value in self.fields.items():
             if value is None:

@@ -30,7 +30,10 @@ __all__ = [
     "heaviside",
     "sign",
     "monus",
-    "spline"
+    "spline",
+    "sample_spline_points",
+    "poly_spline_points",
+    "spline_points_to_cubics",
 ]
 
 import builtins as py_builtins
@@ -43,20 +46,16 @@ import rhombus.support.vanilla.types as vt
 
 # ======// Constants //==========================================================================//
 
-@macro(repr=lambda n: "Infinity")
-def _infinity() -> Density:
-    return Density(1) / 0
-
-Infinity = _infinity()
+Infinity = macro(lambda: Density(1) / 0, repr=lambda n: "Infinity")()
 "Density equivalent to Java's `Float.POSITIVE_INFINITY`."
 
 @macro(repr=lambda n: "NaN")
 def _nan() -> Density:
     @implementation(until=111)
-    def _legacy():
+    def legacy():
         return Density(vt.mul(vt.constant(0.0), vt.reciprocal(vt.constant(0.0))))
     @implementation
-    def _modern():
+    def modern():
         return Density(vt.sqrt(vt.constant(-1)))
 
 NaN = _nan()
@@ -146,12 +145,15 @@ def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the quotient of two arguments."""
     @implementation(until=111)
     def div():
-        if isinstance(dividend.build(), vt.constant):
-            if dividend.build().value == 1:
-                return Density(vt.reciprocal(divisor.build()))
+        if isinstance(divisor_build := divisor.build(), vt.constant):
+            return dividend * Density(1 / divisor_build.value)
+        if isinstance(dividend_build := dividend.build(), vt.constant) and dividend_build.value == 1:
+            return Density(vt.reciprocal(divisor_build))
         return Density(vt.mul(dividend.build(), vt.reciprocal(divisor.build())))
     @implementation
     def div():
+        if isinstance(dividend_build := dividend.build(), vt.constant) and dividend_build.value == 1:
+            return Density(vt.reciprocal(divisor.build()))
         return Density(vt.div(dividend.build(), divisor.build()))
 
 
@@ -407,11 +409,11 @@ def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
 
 
 @macro
-def mod(dividend: AnyDensity, divisor: AnyDensity) -> Density:
+def mod(dividend: AnyDensity, modulus: AnyDensity) -> Density:
     """Calculates the remainder of the division of two arguments."""
     return caching.optimize(
-        dividend - divisor * floor(dividend / divisor),
-        targets=(dividend, divisor),
+        dividend - modulus * floor(dividend / modulus),
+        targets=(dividend, modulus),
         min_size=5
     )
 
@@ -453,7 +455,7 @@ def monus(minuend: AnyDensity, subtrahend: AnyDensity):
     return max(minuend - subtrahend, 0.0)
 
 
-# ======// Spline //=============================================================================//
+# ======// Splines //============================================================================//
 
 
 @macro
@@ -469,22 +471,24 @@ def spline(
     **NOTE:** If multiple spline points have the same location, for inputs less than the
     location, values aproaching the first defined value will be returned. For
     inputs equal to or greather than the location, values leaving the second
-    defined values will be returned. ("first" and "second" refer to the order
-    of **definition** in `points`).
+    defined values will be returned. ("first" and "second" refer to the order of their
+    **definition** in `points`).
     
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#spline) • [Wikipedia](https://en.wikipedia.org/wiki/Cubic_Hermite_spline)
     """
-    # Recursive helper to convert tuple points to AST nodes
-    def convert_point(p):
+    def convert_point(p: tuple[float, AnyDensity, float]):
         location, value, derivative = p
-        ast_value = value.AST
-        built_value = ast_value.build()
+        value_build = value.build()
         
-        if isinstance(built_value, vt.spline):
-            ast_value = built_value.spline
+        if isinstance(value_build, vt.spline):
+            value_build = value_build.spline
             
-        return vt.SplinePoint(location, ast_value, derivative)
+        return vt.SplinePoint(location, value_build, derivative)
 
     ast_points = [convert_point(p) for p in points]
     return Density(vt.spline(vt.SplineConfig(input.build(), ast_points)))
+
+
+# Redirect imports
+from rhombus.std.math._splinelib import sample_spline_points, poly_spline_points, spline_points_to_cubics

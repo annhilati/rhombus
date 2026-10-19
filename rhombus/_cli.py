@@ -17,7 +17,7 @@ cli = typer.Typer(
 class RhombusCLIProblem(Exception): ...
 
 
-def resolve_object_path(path: str) -> Any:
+def resolve_object_path(path: str) -> object:
 
     parts = path.split(".")
 
@@ -75,7 +75,7 @@ def preview(
     extensions: list[str] = typer.Option(
         [],
         "--extension",
-        "-a",
+        "-e",
         help="Rhombus extension to load with the preview service. (Use multiple times to load multiple plugins)",
     ),
     overlays: list[str] = typer.Option(

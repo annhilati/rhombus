@@ -1,6 +1,6 @@
 [project]
 name = "rhombus"
-version = "0.1.0-pre4"
+version = "0.1.0-pre5"
 description = "The Python-embedded Domain specific Language for Minecraft Terrain Generation."
 readme = "README.md"
 requires-python = ">=3.13"

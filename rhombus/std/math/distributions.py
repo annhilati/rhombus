@@ -43,7 +43,7 @@ def logistic(
     """
     func = lambda x: capacity / (1 + py_math.exp(-growth_rate * (x - center)))
     return math.spline(
-        argument, _splinelib.sample_spline_points(func, (-6, 6), 5) # TODO: Improve number of points: calculate from parameters
+        argument, _splinelib.sample_spline_points(func, (-6, 6), 9) # TODO: Improve number of points: calculate from parameters
     )
 
 

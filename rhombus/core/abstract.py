@@ -6,7 +6,7 @@ import copy
 
 from rhombus.core.environment import (
     get_module_extension_namespace,
-    parse_version_specifier_NEW,
+    parse_version_specifier,
     DatapackVersion,
     VersionString,
     VersionTuple
@@ -18,7 +18,7 @@ __all__ = [
     "RhombusASTNode",
     "LazyDispatcher",
     "register_implementation",
-    "has_macro_registrations",
+    "has_implementation_registrations",
     "RhombusAbstractType",
 ]
 
@@ -223,12 +223,12 @@ class LazyDispatcher:
 
     def _execute_for_version(self, *args: Any, **kwargs: Any) -> Any:
         # TODO: Make this thread-safe
-        _macro_registrations.clear()
+        _implementation_registrations.clear()
 
         result = self.func(*args, **kwargs)
 
-        impls = list(_macro_registrations)
-        _macro_registrations.clear()
+        impls = list(_implementation_registrations)
+        _implementation_registrations.clear()
 
         if not impls:
             return result
@@ -244,7 +244,7 @@ class LazyDispatcher:
             else:
                 ns, ver = self.default_ns, v
             is_dp = (ns == "datapack")
-            return (ns, parse_version_specifier_NEW(ver, interpret_as_game_version_convert_to_datapack_version=is_dp))
+            return (ns, parse_version_specifier(ver, interpret_as_game_version_convert_to_datapack_version=is_dp))
 
         for since_v, until_v, impl_func in impls:
             p_since = _parse_impl_spec(since_v)
@@ -288,7 +288,7 @@ class LazyDispatcher:
         )
 
 
-_macro_registrations: list[
+_implementation_registrations: list[
     tuple[
         DatapackVersion | VersionString | VersionTuple | None,
         DatapackVersion | VersionString | VersionTuple | None,
@@ -303,11 +303,11 @@ def register_implementation(
     since: DatapackVersion | VersionString | VersionTuple | None = None,
     until: DatapackVersion | VersionString | VersionTuple | None = None
 ) -> None:
-    _macro_registrations.append((since, until, func))
+    _implementation_registrations.append((since, until, func))
 
 
-def has_macro_registrations() -> bool:
-    return len(_macro_registrations) > 0
+def has_implementation_registrations() -> bool:
+    return len(_implementation_registrations) > 0
 
 
 class RhombusAbstractType[T](Protocol):

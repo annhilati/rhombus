@@ -57,15 +57,13 @@ def _dsl_if_block_helper(cond: Any, true_fn: Callable[..., Any], false_fn: Calla
             vals, has_ret, ret = false_fn(*args)
         return vals, has_ret, ret
 
-def _dsl_and(a_fn, b_fn):
-    a = a_fn()
+def _dsl_and(a, b_fn):
     from rhombus.std.conditional.fluent import Condition
     if isinstance(a, Condition):
         return a & b_fn()
     return a and b_fn()
 
-def _dsl_or(a_fn, b_fn):
-    a = a_fn()
+def _dsl_or(a, b_fn):
     from rhombus.std.conditional.fluent import Condition
     if isinstance(a, Condition):
         return a | b_fn()
@@ -139,16 +137,20 @@ class ConditionalTransformer(ast.NodeTransformer):
             )
             
         result = make_lambda(node.values[-1])
-        for val in reversed(node.values[:-1]):
-            val_lambda = make_lambda(val)
+        for val in reversed(node.values[1:-1]):
             call = ast.Call(
                 func=ast.Name(id=helper_name, ctx=ast.Load()),
-                args=[val_lambda, result],
+                args=[val, result],
                 keywords=[]
             )
             result = make_lambda(call)
             
-        return ast.copy_location(call, node)
+        first_call = ast.Call(
+            func=ast.Name(id=helper_name, ctx=ast.Load()),
+            args=[node.values[0], result],
+            keywords=[]
+        )
+        return ast.copy_location(first_call, node)
         
     def visit_Compare(self, node: ast.Compare) -> Any:
         self.generic_visit(node)
@@ -212,12 +214,17 @@ class ConditionalTransformer(ast.NodeTransformer):
             def visit_Name(self, n):
                 if isinstance(n.ctx, ast.Store) and not n.id.startswith('_dsl_'):
                     self.names.add(n.id)
+            def visit_NamedExpr(self, n):
+                if isinstance(n.target, ast.Name) and not n.target.id.startswith('_dsl_'):
+                    self.names.add(n.target.id)
+                self.generic_visit(n)
             def visit_Return(self, n):
                 self.has_return = True
             def visit_FunctionDef(self, n): pass
             def visit_ClassDef(self, n): pass
             
         finder = AssignFinder()
+        finder.visit(node.test)
         for stmt in node.body + node.orelse:
             finder.visit(stmt)
             
@@ -471,7 +478,8 @@ class ConditionalTransformer(ast.NodeTransformer):
 
 def transform_ast(func: Callable) -> Callable:
     try:
-        source = inspect.getsource(func)
+        lines, start_lineno = inspect.getsourcelines(func)
+        source = "".join(lines)
     except (TypeError, OSError):
         return func
         
@@ -482,8 +490,12 @@ def transform_ast(func: Callable) -> Callable:
     except SyntaxError:
         return func
 
+    if not tree.body or not isinstance(tree.body[0], ast.FunctionDef):
+        return func
+
     transformer = ConditionalTransformer()
     new_tree = transformer.visit(tree)
+    ast.increment_lineno(new_tree, n=start_lineno - 1)
     ast.fix_missing_locations(new_tree)
 
     func_globals = func.__globals__.copy()

@@ -42,9 +42,8 @@ class DensityFunction(DatapackNode):
         active_env = rho
 
         type_id = self.id
-        legacy_values = getattr(self.__class__, "__rhombus_legacy_values__", {}).get("id")
-        if legacy_values:
-            ns = getattr(self.__class__, "__rhombus_namespace__", "datapack")
+        if (legacy_values := self.__class__.__rhombus_legacy_values__.get("id")):
+            ns = self.__class__.__rhombus_namespace__
             for threshold, val in sorted(legacy_values.items(), reverse=False):
                 if active_env._check_version(threshold, namespace=ns) is False:
                     type_id = val
@@ -52,7 +51,7 @@ class DensityFunction(DatapackNode):
 
         result = {"type": type_id}
         
-        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
+        rhombus_fields = self.__class__.__rhombus_fields__
         
         for parameter, value in self.fields.items():
             if value is None:
@@ -116,7 +115,7 @@ class DensityFunction(DatapackNode):
                 )
 
         fields = annotated_fields(cls)
-        rhombus_fields = getattr(cls, "__rhombus_fields__", {})
+        rhombus_fields = cls.__rhombus_fields__
         
         kwargs = {}
         for parameter, tp in fields.items():
@@ -184,9 +183,9 @@ class SimpleDensityFunction(DensityFunction):
 
     def serialize_toplevel(self) -> JSONDict:
         type_id = self.id
-        legacy_values = getattr(self.__class__, "__rhombus_legacy_values__", {}).get("id")
+        legacy_values = self.__class__.__rhombus_legacy_values__.get("id")
         if legacy_values:
-            ns = getattr(self.__class__, "__rhombus_namespace__", "datapack")
+            ns = self.__class__.__rhombus_namespace__
             for threshold, val in sorted(legacy_values.items(), reverse=False):
                 if rho._check_version(threshold, namespace=ns) is False:
                     type_id = val
@@ -229,7 +228,7 @@ class DoubleArgumentDensityFunction(DensityFunction):
 
 class Reference(DensityFunction):
     target: str
-    definition: "DensityFunction | None" = None # TODO: Check whether allowing RhombusASTNode here is fine. 
+    definition: "DensityFunction | None" = None
 
     def __post_init__(self):
         if not isinstance(self.target, str) or not self.target:
