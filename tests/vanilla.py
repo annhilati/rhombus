@@ -1536,7 +1536,7 @@ overworld_caves_pillars = cache(
 )
 
 overworld_caves_noodles = range_choice(
-    input=interpolated(
+    input=upscale(
         range_choice(
             input=y(),
             max_exclusive=321.0,
@@ -1549,7 +1549,7 @@ overworld_caves_noodles = range_choice(
     min_inclusive=-1000000.0,
     when_in_range=64.0,
     when_out_of_range=(
-        interpolated(
+        upscale(
             range_choice(
                 input=y(),
                 max_exclusive=321.0,
@@ -1568,7 +1568,7 @@ overworld_caves_noodles = range_choice(
             1.5
             * max(
                 abs(
-                    interpolated(
+                    upscale(
                         range_choice(
                             input=y(),
                             max_exclusive=321.0,
@@ -1583,7 +1583,7 @@ overworld_caves_noodles = range_choice(
                     )
                 ),
                 abs(
-                    interpolated(
+                    upscale(
                         range_choice(
                             input=y(),
                             max_exclusive=321.0,
@@ -1698,7 +1698,7 @@ final_destiny = min(
     squeeze(
         (
             0.64
-            * interpolated(
+            * upscale(
                 blending.blend_density(
                     (
                         0.1171875

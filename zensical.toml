@@ -6,13 +6,14 @@ repo_name = "rhombus"
 nav = [
     {"Worldgen Developers" = [
         "index.md",
-        "usage/walkthrough.md",
         {"Get Started" = [
-            "get-started/density.md",          
+            "get-started/walkthrough.md",
+            # "get-started/density.md",          
+            # "get-started/extensions.md",
+            # "get-started/datapack_development.md",
+            "get-started/mod_development.md",
+            "get-started/migration.md",
             "get-started/cli.md",
-            "get-started/extensions.md",
-            # "datapack_development.md",
-            "mod_development.md",
         ]},
         {"Reference" = [
             {"Standard Library" = "reference/rhombus/std/"},

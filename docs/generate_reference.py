@@ -114,10 +114,10 @@ def render_docstring(docstring: Docstring) -> str:
                         keyword = "warning"
                     content = match.group("content").strip()
                     indented = "\n    ".join(content.split("\n"))
-                    return f"!!! {keyword}\n    {indented}"
+                    return f"\n\n!!! {keyword}\n    {indented}\n\n"
 
                 out = re.sub(
-                    r"^\*\*(?P<keyword>[A-Za-z]+):\*\*(?P<content>.*?)(?=^\*\*[A-Za-z]+:\*\*|\Z)",
+                    r"^[ \t]*\*\*(?P<keyword>[A-Za-z]+):\*\*(?P<content>.*?)(?=^[ \t]*\*\*[A-Za-z]+:\*\*|^#{1,6}\s|^-{3,}|^\[.*?\]\(.*?\)|\Z)",
                     admonition_repl,
                     out,
                     flags=re.DOTALL | re.MULTILINE,
@@ -139,6 +139,7 @@ def render_docstring(docstring: Docstring) -> str:
                             fixed_lines.append("")
                     fixed_lines.append(line)
                 out = "\n".join(fixed_lines)
+                out = re.sub(r"\n{3,}", "\n\n", out)
 
                 parts.append(out)
 

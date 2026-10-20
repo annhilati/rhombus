@@ -23,18 +23,14 @@ Full use of Python’s object model for composing, reusing, and structuring dens
 - 📝 **Native Comments**<br>
 Since Python code is in use, comments work naturally without any custom syntax.
 - 📖 **Integrated Documentation**<br>
-Functions and classes provide detailed docstrings describing behavior, parameters, and usage.
+Functions and classes provide docstrings describing behavior, parameters, and usage.
+- ⚡ **Performance Optimization**<br>
+Recurring expressions and resource intense operations can be cached automatically.
 - 🗄️ **Macro Library**<br>
-Collection of macros simplifies various common applications.
-- ⚡ **Efficient Worldgen Performance**<br>
-Density expressions are transpiled into as few files as possible, reducing overhead during chunk generation.
+Growing collection of macros for common patterns and complex operations, reducing boilerplate and improving readability.
+- 🔀 **Multi-Version Compilation**<br>
+While Rhombus follows an up-to-date-first approach, density functions can be compiled for older versions too. The most optimal implementation for each version is chosen automatically.
 
-<h4>Quality Assurance</h4>
-
-- 🛠️ **Generous Modding-API**<br>
-Classes can be used to derive support for any features from mods.
-- ⚙️ **High Stability**<br>
-As long as the format of the density function definition remains unchanged in new versions, the generated data will work in all versions of Minecraft.
 
 <h2>Installation</h2>
 

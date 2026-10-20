@@ -9,8 +9,8 @@ from rhombus.core import (
     DoubleArgumentDensityFunction,
     Reference,
     constant,
+    SubParameters,
     field,
-    SubParameters
 )
 from rhombus.runtime import rho
 
@@ -114,12 +114,6 @@ class gradient(DensityFunction, versions=(113, ...)):
 
 class half_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:half_negative"
-
-
-class interpolated(MappedDensityFunction):
-    id: ClassVar[str] = "minecraft:interpolated"
-    cell_size_xz: int = field(added_with=118, validate=lambda x: x > 0)
-    cell_size_y: int = field(added_with=118, validate=lambda x: x > 0)
 
 
 class interval_select(DensityFunction, versions=(104, ...)):
@@ -271,3 +265,14 @@ class sub(DoubleArgumentDensityFunction, versions=(111, ...)):
 class truncate(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:truncate"
 
+
+class AxisScaling(SubParameters, versions=(125, ...)):
+    mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"]
+    cell_size: int = field(validate=lambda x: 1 <= x <= 64)
+
+class upscale(DensityFunction, versions=(125, ...)):
+    id: ClassVar[str] = "minecraft:upscale"
+    input: DensityFunction
+    x: AxisScaling
+    y: AxisScaling
+    z: AxisScaling

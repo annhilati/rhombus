@@ -52,7 +52,7 @@ from rhombus.std.density import Density
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
-from rhombus.std.caching import interpolated, optimize
+from rhombus.std.caching import upscale, optimize
 
 import rhombus.support.vanilla.legacy_types as lt
 
@@ -141,4 +141,4 @@ def coord_component(
         value,
     )
 
-    return optimize(interpolated(lt.flat_cache(lt.cache_2d(outermost_mul.build()))), min_size=5)
+    return optimize(upscale(lt.flat_cache(lt.cache_2d(outermost_mul.build()))), min_size=5)

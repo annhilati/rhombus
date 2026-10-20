@@ -67,8 +67,14 @@ When implementing into a datapack (or compiling in any other way) we have to add
 
 If we composed a density function with multiple Density variables even if we reuse one variable multiple times, in the output we would only find one file. This is because the density function AST is always flattened to include as few references as possible to reduce overhead.
 
-But of course separate files are needed nevertheless to implement caching. Don't worry, this is covered in functions that need it. We can recognize them if they return a type `Density[Reference]` when we wouldn't expect that.
+But of course separate files are still possible (and needed to enable caching for older versions). For that we refer to this idiom:
 
+```py
+from rhombus import *
+
+configurable = Density(5).named("my_pack:variable")
+# This could be a special value users can edit to alter the terrain.
+```
 
 
 [^1]: We say *compose*, because neither do we define fundamentally new functions in the process nor do we do actual calculations with them.

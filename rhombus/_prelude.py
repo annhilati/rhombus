@@ -31,7 +31,7 @@ from rhombus.std.noise import (
 )
 from rhombus.std.caching import (
     cache,
-    interpolated,
+    upscale,
 )
 # from rhombus.std.conditional import when
 from rhombus.std.coords import x, y, z, gradient

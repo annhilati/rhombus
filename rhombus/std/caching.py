@@ -1,12 +1,14 @@
-__all__ = ["cache", "interpolated", "optimize"]
+__all__ = ["cache", "upscale", "optimize"]
 
-from typing import Callable, Iterable, Any
+from typing import Literal, Callable, Iterable, Any
+import warnings
 
 from rhombus.core import DatapackNode, DensityFunction, Reference, RhombusASTNode, JSON_hash
 from rhombus.std.density import Density, AnyDensity
 from rhombus.std.macros import macro, implementation
 
 import rhombus.support.vanilla.types as vt
+import rhombus.support.vanilla.legacy_types as lt
 
 from ._implementations.optimization import node_caching_transformer, df_size_info
 
@@ -16,6 +18,7 @@ from ._implementations.optimization import node_caching_transformer, df_size_inf
 def cache(df: AnyDensity) -> Density:
     """If this density function is referenced twice, it is only computed once per block position.
 
+    **NOTE:** Also consider `caching.optimize()` to automatically cache recurring parts in a `Density`.
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache)
     """
@@ -28,17 +31,59 @@ def cache(df: AnyDensity) -> Density:
 
 
 @macro
-def interpolated(df: AnyDensity, cell_size_xz: int = 4, cell_size_y: int = 4) -> Density:
-    # TODO: Improve technical explanation
-    """Interpolates at each block in one cell based on the input density function
-    value of some cells around.
+def upscale(
+    df: AnyDensity,
+    x_cell_size: int = 4,
+    y_cell_size: int = 8,
+    z_cell_size: int = 4,
+    x_mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"] = "interpolate_linear",
+    y_mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"] = "interpolate_linear",
+    z_mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"] = "interpolate_linear",
+) -> Density:
+    # TODO: extent technical explanation
+    """Samples the input function at a reduced resolution, and interpolates on each axis with the specified modes.
+    
+    ### Modes:
+    - `nearest_neighbor` (1 sample) 
+    - `interpolate_linear` (2 samples) 
+    - `interpolate_cosine` (2 samples) 
+    - `interpolate_cubic` (4 samples) 
+    - `b_spline_cubic` (4 samples) 
+    
+    **NOTE:** Upscaling is performed by axis in order: Z, X, then Y.
 
-    **NOTE:** `cell_size_xz` and `cell_size_y` only take effect starting with datapack version 118.
+    **NOTE:** Cell size specifications only take effect starting with datapack version 118.
+    For versions below, the cell size is derived from the noise settings. The effective cell sizes for vanilla dimensions are:
+    - Overworld: 4×8×4
+    - Nether: 4×8×4
+    - The End: 8×4×8
+    
+    **NOTE:** Mode specifications only take effect starting with datapack version 125.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
     """
-    return Density(vt.interpolated(df.build(), cell_size_xz, cell_size_y))
+    @implementation(until=118)
+    def interpolated():
+        if any(mode != "interpolate_linear" for mode in (x_mode, y_mode, z_mode)):
+            warnings.warn("In datapack versions before 125 the interpolation mode cannot be set. A procedure identical to the 'interpolate_linear' mode will be used instead.")
+        warnings.warn("In datapack versions before 118 the interpolation cell size is derived from the noise settings. Passed cell size parameters will not take effect.")
+        return Density(lt.interpolated(df.build()))
+    @implementation(until=125)
+    def interpolated():
+        if any(mode != "interpolate_linear" for mode in (x_mode, y_mode, z_mode)):
+            warnings.warn("In datapack versions before 125 the interpolation mode cannot be set. A procedure identical to the 'interpolate_linear' mode will be used instead.")
+        if x_cell_size != z_cell_size:
+            raise ValueError("In datapack versions before 125 the cell sizes for the X and Z axes must be identical.")
+        return Density(lt.interpolated(df.build(), cell_size_xz=x_cell_size, cell_size_y=y_cell_size))
+    @implementation
+    def upscale():
+        return Density(vt.upscale(
+            df.build(),
+            x=vt.AxisScaling(x_mode, x_cell_size),
+            y=vt.AxisScaling(y_mode, y_cell_size),
+            z=vt.AxisScaling(z_mode, z_cell_size),
+        ))
 
 
 

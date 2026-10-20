@@ -25,6 +25,12 @@ class end_islands(SimpleDensityFunction, versions=(9, 113)):
 class flat_cache(MappedDensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:flat_cache"
     
+    
+class interpolated(MappedDensityFunction, versions=(9, 125)):
+    id: ClassVar[str] = "minecraft:interpolated"
+    cell_size_xz: int = field(added_with=118, validate=lambda x: x > 0)
+    cell_size_y: int = field(added_with=118, validate=lambda x: x > 0)
+
 
 class shifted_noise(DensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:shifted_noise"

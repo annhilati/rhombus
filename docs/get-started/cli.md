@@ -21,7 +21,7 @@ rhombus preview PATH [PARAMS]
 |:------------------- |:-------------------:|:---------------------------------------------------------------------------------- |
 | `PATH`              | string              | Absolute or relative path to the datapack root.                                    |
 | `--overlay`, `-o`   | string (repeatable) | Key of an overlay in the datapack to override its files with. Use repeatedly to apply multiple overlays. |
-| `--extension`, `-e` | string (repeatable) | Python object path of a [Rhombus addon](addons.md) to load. Use repeatedly to load multiple addons. |
+| `--extension`, `-e` | string (repeatable) | Python object path of a [Rhombus addon](extensions.md) to load. Use repeatedly to load multiple addons. |
 | `--no-watch`, `-n`  | flag                | Deactivates file watching. Preview data will not be updated on file changes.       |
 
 #### Examples

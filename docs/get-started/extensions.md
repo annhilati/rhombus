@@ -4,7 +4,7 @@ icon: lucide/package-plus
 ---
 # Extensions
 
-Add-ons are used in Rhombus to facilitate certain workflows.
+Extensions are used in Rhombus to facilitate certain workflows.
 They are almost always used with Minecraft mods to provide support for them.
 
 ## Declaring an Extension
@@ -37,4 +37,4 @@ __extension__ = ModExtension(
 )
 ```
 
-See the available parameters for extensions at the [`ModExtension` page](https://annhilati.github.io/rhombus/reference/rhombus/core/config/ModExtension/).
+See the available parameters for extensions at the [`ModExtension` page](../reference/rhombus/core/environment/ModExtension/).
