@@ -40,9 +40,6 @@ class abs(MappedDensityFunction):
 class add(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:add"
 
-    def __repr__(self) -> str:
-        return "(" + self.left.__repr__() + " + " + self.right.__repr__() + ")"
-
 
 class beardifier(SimpleDensityFunction):
     id: ClassVar[str] = "minecraft:beardifier"
@@ -78,9 +75,6 @@ class clamp(DensityFunction):
 class cube(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:cube"
     
-    def __repr__(self) -> str:
-            return "(" + self.input.__repr__() + " ** 3)"
-
 
 class distance_to_point(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:distance_to_point"
@@ -157,16 +151,10 @@ class min(DoubleArgumentDensityFunction):
 class mul(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "minecraft:mul"
 
-    def __repr__(self) -> str:
-        return "(" + self.left.__repr__() + " * " + self.right.__repr__() + ")"
-
 
 class negate(MappedDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:negate"
     
-    def __repr__(self) -> str:
-        return "- " + self.input.__repr__()
-
 
 class noise(DensityFunction):
     id: ClassVar[str] = "minecraft:noise"
@@ -192,9 +180,6 @@ class pow(DensityFunction, versions=(113, ...)):
     base: DensityFunction
     exponent: DensityFunction
     
-    def __repr__(self) -> str:
-                return "(" + self.base.__repr__() + " ** " + self.exponent.__repr__() + ")"
-
 
 class quarter_negative(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:quarter_negative"
@@ -270,9 +255,6 @@ class spline(DensityFunction):
 class square(MappedDensityFunction):
     id: ClassVar[str] = "minecraft:square"
     
-    def __repr__(self) -> str:
-                return "(" + self.input.__repr__() + " ** 2)"
-
 
 class sqrt(MappedDensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:sqrt"
@@ -285,9 +267,6 @@ class squeeze(MappedDensityFunction):
 class sub(DoubleArgumentDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:sub"
     
-    def __repr__(self) -> str:
-        return "(" + self.left.__repr__() + " - " + self.right.__repr__() + ")"
-
 
 class truncate(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:truncate"

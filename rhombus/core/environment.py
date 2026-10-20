@@ -94,9 +94,12 @@ class RhombusEnvironment:
         # Configuration
         self.versions: dict[str, VersionTuple] = {}
         self.deserialize_references_inline: bool = False
-        """When `deserialize_references_inline` is `True`, references to density
+        """When `True`, references to density
         functions in other files will be inlined, such that they are no longer
         different files but one combined abstract syntax tree instead.
+        """
+        self.fetch_reference_definition_from_context: bool = False
+        """When `True`, references will try to fetch their definitions from the datapack context on instantiation.
         """
 
         self.human_readable_names: bool = False

@@ -22,16 +22,26 @@ from rhombus.core.environment import DatapackVersion, VersionString, VersionTupl
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.density import Density, AnyDensity
 
-def _create_argument_resolver[**P, R](func: Callable[P, R]) -> Callable[P, R]:
-    """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
+def _create_argument_processor[**P, R](
+    func: Callable[P, R],
+) -> tuple[
+    Callable[..., tuple[tuple[Any, ...], dict[str, Any]]],
+    Callable[P, R],
+    inspect.Signature,
+]:
+    """Sets up argument resolution for AnyDensity arguments to Density objects."""
     sig = inspect.signature(func)
-    module = sys.modules[func.__module__]
+    module = sys.modules.get(func.__module__)
+    globalns = module.__dict__ if module is not None else None
 
-    hints = get_type_hints(
-        func,
-        globalns=module.__dict__,
-        include_extras=True,
-    )
+    try:
+        hints = get_type_hints(
+            func,
+            globalns=globalns,
+            include_extras=True,
+        )
+    except Exception:
+        hints = getattr(func, "__annotations__", {})
 
     def hints_AnyDensity(hint: Annotation) -> bool:
         if hint is AnyDensity:
@@ -48,12 +58,14 @@ def _create_argument_resolver[**P, R](func: Callable[P, R]) -> Callable[P, R]:
         return False
 
     def resolve_value(val: Any, hint: Annotation) -> Any:
-        origin = get_origin(hint)
-        args = get_args(hint)
-
         # Leaf: AnyDensity -> Density(...)
         if hints_AnyDensity(hint) or hint is Density or str(hint) == "Density" or str(hint) == "~Density":
+            if isinstance(val, Density):
+                return val
             return Density(val)
+
+        origin = get_origin(hint)
+        args = get_args(hint)
 
         # Union / |: try the first matching branch
         if origin is Union or isinstance(hint, UnionType):
@@ -97,11 +109,7 @@ def _create_argument_resolver[**P, R](func: Callable[P, R]) -> Callable[P, R]:
 
         return val
 
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        bound = sig.bind(*args, **kwargs)
-        bound.apply_defaults()
-
+    def _resolve_bound(bound: inspect.BoundArguments) -> None:
         for name, value in bound.arguments.items():
             hint = hints.get(name)
             if hint is not None:
@@ -115,10 +123,26 @@ def _create_argument_resolver[**P, R](func: Callable[P, R]) -> Callable[P, R]:
                 else:
                     bound.arguments[name] = resolve_value(value, hint)
 
+    def process_args(*args: Any, **kwargs: Any) -> tuple[tuple[Any, ...], dict[str, Any]]:
+        bound = sig.bind(*args, **kwargs)
+        _resolve_bound(bound)
+        return bound.args, bound.kwargs
+
+    @functools.wraps(func)
+    def resolved_func(*args: Any, **kwargs: Any) -> Any:
+        bound = sig.bind(*args, **kwargs)
+        bound.apply_defaults()
+        _resolve_bound(bound)
         return func(*bound.args, **bound.kwargs)
 
-    wrapper.__signature__ = sig
-    return wrapper
+    resolved_func.__signature__ = sig
+    return process_args, resolved_func, sig
+
+
+def _create_argument_resolver[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+    """Wraps a function to automatically resolve AnyDensity arguments to Density objects."""
+    return _create_argument_processor(func)[1]
+
 
 def _coerce_node(res: Density | AnyDensity):
     if not isinstance(res, Density):
@@ -172,7 +196,7 @@ def macro(
     def decorator(f: Callable) -> Callable:
         from rhombus.std.conditional.ast_parser import transform_ast # avoid circular import
         f_transformed = transform_ast(f)
-        f_resolved = _create_argument_resolver(f_transformed)
+        process_args, f_resolved, sig = _create_argument_processor(f_transformed)
         
         @functools.wraps(f)
         def base_wrapper(*args, **kwargs):
@@ -180,16 +204,17 @@ def macro(
             if has_implementation_registrations():
                 return res
             return _coerce_node(res)
-        base_wrapper.__signature__ = inspect.signature(f_resolved)
+        base_wrapper.__signature__ = sig
 
         core_dispatcher = LazyDispatcher(base_wrapper, repr_func=repr)
         
         @functools.wraps(f)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            ast_node = core_dispatcher(*args, **kwargs)
+            resolved_args, resolved_kwargs = process_args(*args, **kwargs)
+            ast_node = core_dispatcher(*resolved_args, **resolved_kwargs)
             return Density(ast_node)
             
-        wrapper.__signature__ = inspect.signature(f_resolved)
+        wrapper.__signature__ = sig
         return wrapper
     
     if func is not None:

@@ -82,7 +82,7 @@ class RhombusASTNode[T]:
         def identity():
             return val
 
-        repr: Callable[[RhombusASTNode, str]] = (
+        repr: Callable[[RhombusASTNode], str] = (
             lambda n: val.__repr__()
         )
         node = cls.defer(identity, repr=repr)

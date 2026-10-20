@@ -75,3 +75,15 @@ def test_default_implementation():
     
     rho.set_version(minecraft="1.20")
     assert dummy().build().value == 2.0
+
+
+def test_eager_argument_resolution():
+    from rhombus.std.density import Density
+
+    expr = Density(5).named("value") + "other"
+    assert repr(expr) == '((5.0).named("minecraft:value") + "minecraft:other")'
+
+    # Verify building works properly
+    rho.set_version(minecraft="1.21")
+    built = expr.build()
+    assert built is not None

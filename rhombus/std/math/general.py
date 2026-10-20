@@ -117,13 +117,13 @@ def prod(*dfs: AnyDensity) -> Density:
     return Density(result)
 
 
-@macro
+@macro(repr=lambda n: f"({' + '.join(repr(a) for a in n.args)})" if n.args else "0")
 def add(*dfs: AnyDensity) -> Density:
     """Calculates the sum of any number of arguments."""
     return sum(*dfs)
 
 
-@macro
+@macro(repr=lambda n: f"({n.args[0] if len(n.args) > 0 else n.kwargs["minuend"]!r} - {n.args[1] if len(n.args) > 1 else n.kwargs["subtrahend"]!r})")
 def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
     """Caluclates the difference of two arguments."""
     @implementation(until=111)
@@ -134,13 +134,13 @@ def sub(minuend: AnyDensity, subtrahend: AnyDensity) -> Density:
         return Density(vt.sub(minuend.build(), subtrahend.build()))
 
 
-@macro
+@macro(repr=lambda n: f"({' * '.join(repr(a) for a in n.args)})" if n.args else "0")
 def mul(*dfs: AnyDensity) -> Density:
     """Calculates the product of any number of arguments."""
     return prod(*dfs)
 
 
-@macro
+@macro(repr=lambda n: f"({n.args[0] if len(n.args) > 0 else n.kwargs["dividend"]!r} / {n.args[1] if len(n.args) > 1 else n.kwargs["divisor"]!r})")
 def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the quotient of two arguments."""
     @implementation(until=111)
@@ -163,7 +163,7 @@ def abs(df: AnyDensity) -> Density:
     return Density(vt.abs(df.build()))
 
 
-@macro
+@macro(repr=lambda n: f"- {n.args[0] if len(n.args) > 0 else n.kwargs["df"]!r}")
 def neg(df: AnyDensity) -> Density:
     """Negates the values of the input."""
     @implementation(until=111)
@@ -175,7 +175,7 @@ def neg(df: AnyDensity) -> Density:
         return Density(vt.negate(df.build()))
 
 
-@macro
+@macro(repr=lambda n: f"({n.args[0] if len(n.args) > 0 else n.kwargs["base"]!r} ** {n.args[1] if len(n.args) > 1 else n.kwargs["exponent"]!r})")
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     """Raises the input to an arbitrary power. Since `exponent` can be a fraction, roots can also be calculated.
     
@@ -402,13 +402,13 @@ def truncate(df: AnyDensity, decimals: int = 0) -> Density:
         return Density(vt.truncate(df.build(), 10**-decimals))
 
 
-@macro
+@macro(repr=lambda n: f"({n.args[0] if len(n.args) > 0 else n.kwargs["dividend"]!r} // {n.args[1] if len(n.args) > 1 else n.kwargs["divisor"]!r})")
 def floordiv(dividend: AnyDensity, divisor: AnyDensity) -> Density:
     """Calculates the quotient of two arguments and discards the remainder."""
     return floor(dividend / divisor)
 
 
-@macro
+@macro(repr=lambda n: f"({n.args[0] if len(n.args) > 0 else n.kwargs["dividend"]!r} % {n.args[1] if len(n.args) > 1 else n.kwargs["modulus"]!r})")
 def mod(dividend: AnyDensity, modulus: AnyDensity) -> Density:
     """Calculates the remainder of the division of two arguments."""
     return caching.optimize(

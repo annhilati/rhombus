@@ -73,7 +73,10 @@ class Density:
         elif isinstance(arg, str):
             if ":" not in arg:
                 arg = "minecraft:" + arg
-            self.AST = RhombusASTNode.value(Reference(arg)) # TODO: Fetch datapack context here? Maybe make it an option
+            definition = None
+            if rho.fetch_reference_definition_from_context and rho.datapack is not None:
+                definition = rho.datapack[beet_worldgen.WorldgenDensityFunction].get(arg)
+            self.AST = RhombusASTNode.value(Reference(arg, definition=DensityFunction.deserialize_toplevel(definition.data) if definition is not None else None))
     
         else:
             raise ValueError(
@@ -87,6 +90,7 @@ class Density:
             return hash(self.AST)
 
     # ======// Factories //=======================================================================//
+
 
     def named(self, identifier: str, /) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file with the given identifier."""
@@ -103,10 +107,10 @@ class Density:
 
         repr: Callable[[RhombusASTNode[Reference], str]] = (
             lambda n: f"({self!r}).named(\"{identifier}\")"
-        )
+        ) # TODO: If the content is constant or reference, add 'Density' to he representation
+        
         return Density(RhombusASTNode.defer(build_reference, repr=repr))
-            # TODO: Density(5).named("value") + "other" produces add((identity()).named("minecraft:value"), 'other')
-            #       why is 'other' in the example namespace-less?
+
 
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
@@ -126,6 +130,7 @@ class Density:
         return self.named(identifier)
 
 
+    # TODO: Check where to allow dp or version context parameters
     @classmethod
     @datapack_handler
     def from_dict(
@@ -208,16 +213,11 @@ class Density:
         """
         return self.AST.build()
 
-    def compile(self, identifier: str = "main", /, *, version: DatapackVersion = ...) -> set[tuple[str, BeetFile]]:
+    def compile(self, identifier: str = "main") -> set[tuple[str, BeetFile]]:
         """Compiles the Density into Beet file class instances.
         
         See the `BeetFile` protocol to find out how to use the file data without using Beet.
         """
-        
-        old_datapack_version = rho.datapack_version
-        if version is not ...:
-            rho.datapack_version = version
-
         files: set[tuple[str, BeetFile]] = set()
 
         if ":" not in identifier:
@@ -241,8 +241,6 @@ class Density:
                 beet_worldgen.WorldgenDensityFunction(df_build.serialize_toplevel()),
             )
         )
-
-        rho.datapack_version = old_datapack_version
 
         return files
 

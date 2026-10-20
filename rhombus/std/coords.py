@@ -53,6 +53,9 @@ def gradient(
         tiling (Literal["extrapolate", "clamp_to_edge", "repeat", "mirrored_repeat"]): The
             tiling method to use for coordinates outside the gradient range.
     """
+    if from_coordinate == to_coordinate: # we need this here to prevent ZeroDivisionError in extrapolation lol
+        raise ValueError("from_coordinate and to_coordinate must not be equal")
+
     if tiling == "extrapolate":
         m = (to_value - from_value) / (to_coordinate - from_coordinate)
         b = from_value - m * from_coordinate
@@ -70,9 +73,34 @@ def gradient(
             raise NotImplementedError(
                 "Cannot provide gradients with tiling other than 'clamp_to_edge' in datapack versions below 113"
             )
+
+        from_c, to_c = from_coordinate, to_coordinate
+        from_v, to_v = from_value, to_value
+
+        min_y = -4064
+        max_y = 4062
+
+        if from_c < min_y or from_c > max_y or to_c < min_y or to_c > max_y:
+            m = (to_v - from_v) / (to_c - from_c)
+            b = from_v - m * from_c
+
+            new_from_c = max(min_y, min(max_y, from_c))
+            new_to_c = max(min_y, min(max_y, to_c))
+
+            if new_from_c == new_to_c:
+                if from_c < min_y:
+                    const_v = to_v if from_c < to_c else from_v
+                else:
+                    const_v = from_v if from_c < to_c else to_v
+                return Density(const_v)
+
+            from_c, to_c = new_from_c, new_to_c
+            from_v = m * from_c + b
+            to_v = m * to_c + b
+
         return Density(
-            lt.y_clamped_gradient(from_coordinate, to_coordinate, from_value, to_value)
-        ) # TODO: norm to 4062
+            lt.y_clamped_gradient(from_c, to_c, from_v, to_v)
+        )
         
     @implementation
     def gradient():

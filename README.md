@@ -99,6 +99,103 @@ height_map = spline(erosion, [
 
 FINAL = maps.extrude_heightmap(height_map, (-1, 0.8), (64, 256))
 ```
+```py
+import beet
+import beet.contrib.worldgen
+import rhombus
+
+from .previous_code_block import FINAL
+
+def beet_default(ctx: beet.Context):
+
+    FINAL.implement(ctx.data, "minecraft:final_destiny")
+
+    print(FINAL.compile("minecraft:final_destiny"))
+```
+
+<details>
+<summary>Have a look at the results</summary>
+
+```py
+{
+    (
+        'minecraft:final_destiny', WorldgenDensityFunction({
+            'type': 'minecraft:sub',
+            'left': {
+                'type': 'minecraft:add',
+                'left': {
+                    'type': 'minecraft:mul',
+                    'left': {
+                        'type': 'minecraft:sub',
+                        'left': {
+                            'type': 'minecraft:spline',
+                            'spline': {
+                                'coordinate': {
+                                    'type': 'minecraft:clamp',
+                                    'input': {
+                                        'type': 'minecraft:sub',
+                                        'left': {
+                                            'type': 'minecraft:noise',
+                                            'noise': 'rhombus:generated/dark_drowned_7849',
+                                            'shift_x': 0.0,
+                                            'shift_y': 0.0,
+                                            'shift_z': 0.0,
+                                            'xz_scale': 1.3, 
+                                            'y_scale': 0
+                                        },
+                                        'right': 0.1
+                                    },
+                                    'max': 1.0,
+                                    'min': -1.0
+                                },
+                                'points': [
+                                    {'derivative': 0, 'location': -1,    'value': -1.0 },
+                                    {'derivative': 0, 'location': -0.6,  'value': -0.95},
+                                    {'derivative': 0, 'location': -0.61, 'value': -0.6 },
+                                    {'derivative': 0, 'location': -0.2,  'value': -0.55},
+                                    {'derivative': 0, 'location': -0.21, 'value': -0.2 },
+                                    {'derivative': 0, 'location':  0.05, 'value': -0.2 },
+                                    {'derivative': 0, 'location':  0.21, 'value':  0.2 }, 
+                                    {'derivative': 0, 'location':  0.6,  'value':  0.3 },
+                                    {'derivative': 0, 'location':  0.61, 'value':  0.8 },
+                                    {'derivative': 0, 'location':  1,    'value':  0.8 }
+                                ]
+                            }
+                        },
+                        'right': -1.0
+                    },
+                    'right': 106.66666666666666
+                },
+                'right': 64.0
+            },
+            'right': {
+                'type': 'minecraft:cache',
+                'input': {
+                    'type': 'minecraft:gradient',
+                    'axis': 'y',
+                    'from_coordinate': -30000000,
+                    'from_value': -30000000,
+                    'tiling': 'clamp_to_edge',
+                    'to_coordinate': 30000000,
+                    'to_value': 30000000
+                }
+            }
+        })
+    ),
+    (
+        'rhombus:generated/dark_drowned_7849', WorldgenNoise({
+            'base_octave': -9,
+            'base_amplitude': 1.0,
+            'normalize': True,
+            'octave_count': 7,
+            'amplitude_modifiers': (3.5, 0, 2, 4, 2, 2, 3)
+        })
+    )
+}
+```
+</details>
+
+<h2></h2>
 
 ![Preview](https://raw.githubusercontent.com/annhilati/rhombus/main/docs/images/preview.png)
 
