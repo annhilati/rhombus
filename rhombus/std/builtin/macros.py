@@ -20,7 +20,7 @@ import sys
 from rhombus.core.abstract import RhombusASTNode, LazyDispatcher, register_implementation, has_implementation_registrations
 from rhombus.core.environment import DatapackVersion, VersionString, VersionTuple
 from rhombus.core.utils import Annotation, Decorator
-from rhombus.std.density import Density, AnyDensity
+from rhombus.std.builtin.density import Density, AnyDensity
 
 def _create_argument_processor[**P, R](
     func: Callable[P, R],

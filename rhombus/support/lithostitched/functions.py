@@ -1,7 +1,7 @@
 from typing import Literal
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro
 
 from .fast_noise_config import FastNoiseConfig
 from . import types

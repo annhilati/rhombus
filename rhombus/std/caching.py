@@ -4,8 +4,8 @@ from typing import Literal, Callable, Iterable, Any
 import warnings
 
 from rhombus.core import DatapackNode, DensityFunction, Reference, RhombusASTNode, JSON_hash
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro, implementation
 
 import rhombus.support.vanilla.types as vt
 import rhombus.support.vanilla.legacy_types as lt

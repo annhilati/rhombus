@@ -9,8 +9,6 @@ from . import (
     caching,
     conditional,
     coords,
-    density,
-    macros,
     maps,
     noise as noises,
     math,
@@ -18,5 +16,7 @@ from . import (
 )
 
 # Convenience
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro
+
+from .builtin import density, macros

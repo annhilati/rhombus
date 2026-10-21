@@ -48,7 +48,7 @@ conditional composition, this macro reconstructs the coordinates using only vani
 density functions.
 """
 
-from rhombus.std.density import Density
+from rhombus.std.builtin.density import Density
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise

@@ -26,7 +26,7 @@ import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus.core import BeetFile, DatapackNode
-from rhombus.std.density import Density
+from rhombus.std.builtin.density import Density
 
 from rhombus.runtime import rho
 

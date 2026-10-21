@@ -11,8 +11,8 @@ iterative methods, such as Newton's method.
 from typing import Callable
 import math as py_math
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro
 from rhombus.std import math, caching
 
 

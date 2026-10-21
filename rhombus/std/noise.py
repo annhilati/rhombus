@@ -8,8 +8,8 @@ from typing import ClassVar, Literal
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
 import rhombus.support.vanilla.legacy_types as lt
 from rhombus.runtime import rho

@@ -62,7 +62,7 @@ import base64
 from typing import Literal
 
 from PIL import Image
-from rhombus.std.density import Density, AnyDensity; from rhombus.std.macros import macro
+from rhombus.std.builtin.density import Density, AnyDensity; from rhombus.std.builtin.macros import macro
 from . import types
 from .sub_parameters import (
     DistanceMetric,

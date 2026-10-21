@@ -5,7 +5,7 @@ import sys
 from beet.contrib import worldgen as beet_worldgen
 
 from rhombus.core import DatapackNode, DensityFunction, Reference, walk
-from rhombus.std.density import Density
+from rhombus.std.builtin.density import Density
 import rhombus.support.vanilla.types as vt
 
 # Datapack density functions can have exceptionally deep ASTs.

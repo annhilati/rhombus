@@ -1,8 +1,7 @@
 from rhombus import rho
 from rhombus.std.coords import x
 from rhombus.std.caching import optimize
-from rhombus.std.density import Density
-import rhombus.support.vanilla.types as vt
+from rhombus.std.builtin.density import Density
 
 def test_x_macro_size():
     rho.set_version(minecraft='1.21')

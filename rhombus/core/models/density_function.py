@@ -9,8 +9,9 @@ __all__ = [
 ]
 
 
-from typing import ClassVar, Self, TYPE_CHECKING
+from typing import ClassVar, Self
 import warnings
+import inspect
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
@@ -18,9 +19,6 @@ from rhombus.core.models.node import DatapackNode, FieldMeta, field
 from rhombus.core.models.serialization import deserialize_any_inline, serialize_any_inline
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 from rhombus.runtime import rho
-
-if TYPE_CHECKING:
-    from rhombus.core.abstract import RhombusASTNode
 
 
 # ======// DensityFunction Base Class //==========================================================//
@@ -50,21 +48,17 @@ class DensityFunction(DatapackNode):
                     break
 
         result = {"type": type_id}
-        
-        rhombus_fields = self.__class__.__rhombus_fields__
-        
+                
         for parameter, value in self.fields.items():
             if value is None:
                 continue
             
-            meta: FieldMeta = rhombus_fields.get(parameter)
             json_key = parameter
-            if meta:
+            if (meta := self.__class__.__rhombus_fields__.get(parameter)):
                 if not meta.is_present(active_env):
                     continue
                 json_key = meta.get_appropriate_key(active_env, default=parameter)
                 if meta.validate:
-                    import inspect
                     sig = inspect.signature(meta.validate)
                     if len(sig.parameters) == 1:
                         if not meta.validate(value):
@@ -115,11 +109,10 @@ class DensityFunction(DatapackNode):
                 )
 
         fields = annotated_fields(cls)
-        rhombus_fields = cls.__rhombus_fields__
         
         kwargs = {}
         for parameter, tp in fields.items():
-            meta: FieldMeta = rhombus_fields.get(parameter)
+            meta: FieldMeta = cls.__rhombus_fields__.get(parameter)
             json_key = parameter
             if meta:
                 json_key = meta.get_appropriate_key(rho, default=parameter)
@@ -183,11 +176,9 @@ class SimpleDensityFunction(DensityFunction):
 
     def serialize_toplevel(self) -> JSONDict:
         type_id = self.id
-        legacy_values = self.__class__.__rhombus_legacy_values__.get("id")
-        if legacy_values:
-            ns = self.__class__.__rhombus_namespace__
+        if (legacy_values := self.__class__.__rhombus_legacy_values__.get("id")):
             for threshold, val in sorted(legacy_values.items(), reverse=False):
-                if rho._check_version(threshold, namespace=ns) is False:
+                if rho._check_version(threshold, namespace=self.__class__.__rhombus_namespace__) is False:
                     type_id = val
                     break
         return {"type": type_id}
@@ -201,14 +192,12 @@ class MappedDensityFunction(DensityFunction):
     input: DensityFunction = field(legacy_keys={111.0: "argument"})
 
     def __repr__(self) -> str:
-        active_env = rho
-        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
         parts = [self.input.__repr__()]
         for param, value in self.fields.items():
             if param == "input" or value is None:
                 continue
-            meta = rhombus_fields.get(param)
-            if meta and not meta.is_present(active_env):
+            meta = self.__rhombus_fields__.get(param)
+            if meta and not meta.is_present(rho):
                 continue
             field_def = self.__dataclass_fields__.get(param)
             if field_def is not None and field_def.default == value:
@@ -226,14 +215,12 @@ class DoubleArgumentDensityFunction(DensityFunction):
     right: DensityFunction = field(legacy_keys={111.0: "argument2"})
 
     def __repr__(self) -> str:
-        active_env = rho
-        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
         parts = [self.left.__repr__(), self.right.__repr__()]
         for param, value in self.fields.items():
             if param in ("left", "right") or value is None:
                 continue
-            meta = rhombus_fields.get(param)
-            if meta and not meta.is_present(active_env):
+            meta = self.__class__.__rhombus_fields__.get(param)
+            if meta and not meta.is_present(rho):
                 continue
             field_def = self.__dataclass_fields__.get(param)
             if field_def is not None and field_def.default == value:

@@ -1,7 +1,7 @@
 import math as py_math
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std.math.general import spline
 from rhombus.std.math import _splinelib
 from rhombus.std import caching, math

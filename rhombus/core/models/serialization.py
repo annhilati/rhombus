@@ -65,16 +65,16 @@ def _deserialize_any[T](v: Any, t: type[T], *, top_level: bool) -> T:
                 return t.deserialize_inline(v)
 
             if t is str:
-                return str(v)  # type: ignore[return-value]
+                return str(v)
             if t is int:
-                return int(v)  # type: ignore[return-value]
+                return int(v)
             if t is float:
-                return float(v)  # type: ignore[return-value]
+                return float(v)
             if t is bool:
-                return bool(v)  # type: ignore[return-value]
+                return bool(v)
             if t is type(None):
                 if v is None:
-                    return None  # type: ignore[return-value]
+                    return None
                 raise ValueError(f"Expected None, got {v!r}")
 
         if t is Any:
@@ -86,7 +86,7 @@ def _deserialize_any[T](v: Any, t: type[T], *, top_level: bool) -> T:
 
     if origin is Literal:
         if v in args:
-            return v  # type: ignore[return-value]
+            return v
         raise ValueError(
             f"Value {v!r} is not one of the allowed Literal values {args!r}"
         )
@@ -94,20 +94,20 @@ def _deserialize_any[T](v: Any, t: type[T], *, top_level: bool) -> T:
     if origin in (list, set):
         inner_t = args[0] if len(args) == 1 else Union[*args]
         items = [_deserialize_any(m, inner_t, top_level=False) for m in v]
-        return origin(items)  # type: ignore[return-value]
+        return origin(items)
 
     if origin is tuple:
         if len(args) == 2 and args[1] is Ellipsis:
             inner_t = args[0]
-            return tuple(_deserialize_any(m, inner_t, top_level=False) for m in v)  # type: ignore[return-value]
+            return tuple(_deserialize_any(m, inner_t, top_level=False) for m in v)
         return tuple(
             _deserialize_any(m, arg, top_level=False) for m, arg in zip(v, args)
-        )  # type: ignore[return-value]
+        )
 
     if origin in (Union, UnionType):
         for arg in args:
             if arg is type(None) and v is None:
-                return None  # type: ignore[return-value]
+                return None
             if isinstance(arg, type) and isinstance(v, arg):
                 try:
                     return _deserialize_any(v, arg, top_level=top_level)
@@ -129,6 +129,6 @@ def _deserialize_any[T](v: Any, t: type[T], *, top_level: bool) -> T:
                 val, vt, top_level=False
             )
             for k, val in v.items()
-        }  # type: ignore[return-value]
+        }
 
     raise ValueError(f"No deserialization procedure for target type '{t}' known")

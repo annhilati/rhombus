@@ -1,7 +1,7 @@
 import pytest
 from rhombus import rho
-from rhombus.std.density import Density
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.density import Density
+from rhombus.std.builtin.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
 
 

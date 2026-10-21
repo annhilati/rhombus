@@ -7,7 +7,7 @@ from typing import Any, Never, Callable
 from enum import Enum
 
 from rhombus.core.models.density_function import DensityFunction
-from rhombus.std.density import Density, AnyDensity
+from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std import caching
 import rhombus.support.vanilla.types as vt
 
@@ -261,7 +261,7 @@ class ConditionSelector:
 
     def _coerce_input_and_value(self, value: Any) -> tuple["DensityFunction", float]:
         from rhombus.core.models.density_function import DensityFunction
-        from rhombus.std.density import Density
+        from rhombus.std.builtin.density import Density
         if isinstance(value, (DensityFunction, Density)):
             from rhombus.std.math.general import sub
             diff = sub(Density(self._subject), Density(value))

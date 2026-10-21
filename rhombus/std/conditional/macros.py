@@ -1,5 +1,5 @@
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
 
 

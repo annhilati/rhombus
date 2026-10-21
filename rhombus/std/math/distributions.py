@@ -9,8 +9,8 @@ __all__ = [
 import math as py_math
 from math import sqrt, pi
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro
 from rhombus.std.math import _splinelib
 from rhombus.std import math
 

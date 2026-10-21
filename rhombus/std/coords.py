@@ -16,8 +16,8 @@ __all__ = [
 
 from typing import Literal, Optional
 
-from rhombus.std.density import Density, AnyDensity
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std import math, caching
 import rhombus.support.vanilla.types as vt
 import rhombus.support.vanilla.legacy_types as lt

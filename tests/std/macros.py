@@ -1,7 +1,7 @@
 import pytest
 from rhombus import rho
 from rhombus.core.models import constant
-from rhombus.std.macros import macro, implementation
+from rhombus.std.builtin.macros import macro, implementation
 
 
 def test_version_selection():
@@ -78,7 +78,7 @@ def test_default_implementation():
 
 
 def test_eager_argument_resolution():
-    from rhombus.std.density import Density
+    from rhombus.std.builtin.density import Density
 
     expr = Density(5).named("value") + "other"
     assert repr(expr) == '(Density(5.0).named("minecraft:value") + "minecraft:other")'

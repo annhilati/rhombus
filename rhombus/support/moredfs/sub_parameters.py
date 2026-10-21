@@ -5,7 +5,7 @@ from rhombus.core import (
     DensityFunction,
     field
 )
-from rhombus.std.density import Density, AnyDensity
+from rhombus.std.builtin.density import Density, AnyDensity
 
 
 class RandomSampler(SubParameters):
