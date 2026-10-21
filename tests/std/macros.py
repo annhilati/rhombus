@@ -81,7 +81,7 @@ def test_eager_argument_resolution():
     from rhombus.std.density import Density
 
     expr = Density(5).named("value") + "other"
-    assert repr(expr) == '((5.0).named("minecraft:value") + "minecraft:other")'
+    assert repr(expr) == '(Density(5.0).named("minecraft:value") + "minecraft:other")'
 
     # Verify building works properly
     rho.set_version(minecraft="1.21")

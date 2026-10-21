@@ -6,7 +6,7 @@ from rhombus.core.models.density_function import DensityFunction as _DensityFunc
 
 __extension__ = _ModExtension(
     namespace="datapack",
-    version=(118, 0), # 26.3
+    version=(125, 0), # 26.3-snapshot-5
     density_functions=[
         cls
         for name, cls in {**types.__dict__, **legacy_types.__dict__}.items()

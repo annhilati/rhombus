@@ -46,3 +46,15 @@ def test_cache_conditions():
     cached_expr4 = optimize(expr_big, targets=[big_df], min_size=5, min_occurances=2)
     assert cached_expr4.info().unique_cached_nodes > 0
 
+
+
+def test_upscale_repr_versions():
+    from rhombus.std.caching import upscale
+    rho.datapack_version = 125
+    assert "upscale(" in repr(upscale("in").build())
+
+    rho.datapack_version = 124
+    assert repr(upscale("in").build()) == 'interpolated("minecraft:in", cell_size_xz=4, cell_size_y=8)'
+
+    rho.datapack_version = 117
+    assert repr(upscale("in").build()) == 'interpolated("minecraft:in")'

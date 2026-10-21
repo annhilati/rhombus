@@ -4,7 +4,8 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Self, Literal, Callable, overload, TYPE_CHECKING
+from typing import Self, Literal, overload, TYPE_CHECKING
+import re
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
@@ -12,7 +13,6 @@ import beet.contrib.worldgen as beet_worldgen
 from rhombus.core.abstract import RhombusASTNode
 from rhombus.core.models import DensityFunction, constant, Reference
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
-from rhombus.core.environment import DatapackVersion
 from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
 
 if TYPE_CHECKING:
@@ -40,7 +40,7 @@ class Density:
     users to configure your datapack or let other datapacks hook into your datapack, you
     can set a fixed name through this idiom:
     ```
-    df = "minecraft:my_variable" @ Density(5)
+    df = Density(5).named("minecraft:my_variable")
     ```
     """
 
@@ -105,10 +105,27 @@ class Density:
                 df_build = df_build.definition
             return Reference(identifier, definition=df_build)
 
-        repr: Callable[[RhombusASTNode[Reference], str]] = (
-            lambda n: f"({self!r}).named(\"{identifier}\")"
-        ) # TODO: If the content is constant or reference, add 'Density' to he representation
-        
+        def repr(node: RhombusASTNode[Reference]) -> str:
+            val = getattr(self.AST, "_value", None)
+            if isinstance(val, constant):
+                return f"Density({val.value!r}).named(\"{identifier}\")"
+            if isinstance(val, Reference):
+                return f"Density(\"{val.identifier}\").named(\"{identifier}\")"
+
+            s = f"{self!r}"
+            try:
+                f_val = float(s)
+                return f"Density({f_val!r}).named(\"{identifier}\")"
+            except (ValueError, TypeError):
+                pass
+
+            if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+                inner = s[1:-1]
+                if re.fullmatch(r"[a-z0-9_.-]+:[a-z0-9_./-]+", inner):
+                    return f"Density(\"{inner}\").named(\"{identifier}\")"
+
+            return f"{self!r}.named(\"{identifier}\")"
+
         return Density(RhombusASTNode.defer(build_reference, repr=repr))
 
 
@@ -124,10 +141,10 @@ class Density:
             h = JSON_hash(df_build.serialize_toplevel())
             return Reference(f"rhombus:generated/{h}", definition=df_build)
 
-        return Density(RhombusASTNode.defer(build_partitioned))
+        return Density(RhombusASTNode.defer(build_partitioned, repr=lambda n: value.__repr__()))
 
-    def __rmatmul__(self, identifier: str) -> Density:
-        return self.named(identifier)
+    # def __rmatmul__(self, identifier: str) -> Density:
+    #     return self.named(identifier)
 
 
     # TODO: Check where to allow dp or version context parameters

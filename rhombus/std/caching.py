@@ -40,7 +40,7 @@ def upscale(
     y_mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"] = "interpolate_linear",
     z_mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"] = "interpolate_linear",
 ) -> Density:
-    # TODO: extent technical explanation
+    # TODO: extend technical explanation
     """Samples the input function at a reduced resolution, and interpolates on each axis with the specified modes.
     
     ### Modes:
@@ -53,7 +53,7 @@ def upscale(
     **NOTE:** Upscaling is performed by axis in order: Z, X, then Y.
 
     **NOTE:** Cell size specifications only take effect starting with datapack version 118.
-    For versions below, the cell size is derived from the noise settings. The effective cell sizes for vanilla dimensions are:
+    For versions below, the cell size is derived from the noise settings. The effective cell sizes for the vanilla dimensions are (in X-Y-Z order):
     - Overworld: 4×8×4
     - Nether: 4×8×4
     - The End: 8×4×8

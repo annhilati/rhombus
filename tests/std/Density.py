@@ -15,7 +15,7 @@ def test_partitioning():
         )
     )
 
-    assert ("test" @ Density(1.0)).build() == (
+    assert (Density(1.0).named("test")).build() == (
         types.Reference("minecraft:test", definition=types.constant(value=1.0))
     )
 
@@ -25,7 +25,7 @@ def test_partitioning():
 
         dp.clear()
 
-        ("a:config" @ Density(3.14)).implement(dp, "main:function")
+        (Density(3.14).named("a:config")).implement(dp, "main:function")
         assert dp[worldgen.WorldgenDensityFunction][
             "a:config"
         ] == worldgen.WorldgenDensityFunction(3.14)
@@ -46,3 +46,11 @@ def test_unify_values():
 
     # DensityFunction
     assert Density(types.constant(1.0)).AST == Density(types.constant(1.0)).AST
+
+
+def test_named_repr():
+    assert repr(Density(5).named("value")) == 'Density(5.0).named("minecraft:value")'
+    assert repr(Density("in").named("value")) == 'Density("minecraft:in").named("minecraft:value")'
+    assert repr((Density(5) + 3).named("sum")) == '(5.0 + 3.0).named("minecraft:sum")'
+    assert repr(Density(5).named("value") + "other") == '(Density(5.0).named("minecraft:value") + "minecraft:other")'
+    assert repr(Density("in").named("value") - "other") == '(Density("minecraft:in").named("minecraft:value") - "minecraft:other")'

@@ -103,9 +103,9 @@ class RhombusEnvironment:
         """
 
         self.human_readable_names: bool = False
-        """When `human_readable_names` is `True`, automatically generated datapack
+        """When `True`, automatically generated datapack
         files will receive a human readable codename (e.g., "agile_warden_1234")
-        instead of a UUID hash.
+        instead of a UUID.
         """
 
         # Registries

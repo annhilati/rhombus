@@ -219,3 +219,59 @@ def end_outer_islands() -> Density:
     def end_outer_islands():
         return Density(vt.end_outer_islands())
 
+
+@macro
+def end_islands() -> Density:
+    @implementation(until=113)
+    def legacy():
+        return Density(lt.end_islands())
+
+    @implementation
+    def modern():
+        from rhombus.std.coords import distance_to_point, slice
+        from rhombus.std.math import clamp, max
+        dist = distance_to_point((0, 0, 0), metric="euclidean")
+        inner = (clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1.0 / 128.0)
+        inner_slice = slice(inner, y=0)
+            
+        return max(inner_slice, end_outer_islands())
+    
+    
+@macro
+def weird_scaled_sampler(
+    input: AnyDensity,
+    noise: Noise,
+    rarity_value_mapper: Literal["type_1", "type_2"],
+) -> Density:
+    @implementation(until=104)
+    def legacy():
+        return Density(lt.weird_scaled_sampler(
+            input=input.build(),
+            noise=noise,
+            rarity_value_mapper=rarity_value_mapper,
+        ))
+
+    @implementation
+    def modern():
+        from rhombus.std.math import abs
+        if rarity_value_mapper == "type_1":
+            thresholds = [-0.5, 0.0, 0.5]
+            factors = [0.75, 1.0, 1.5, 2.0]
+        else: # type_2
+            thresholds = [-0.75, -0.5, 0.5, 0.75]
+            factors = [0.5, 0.75, 1.0, 2.0, 3.0]
+
+        functions = [
+            factor * abs(Density(vt.noise(
+                noise=noise,
+                xz_scale=1.0 / factor,
+                y_scale=1.0 / factor,
+            )))
+            for factor in factors
+        ]
+
+        return Density(vt.interval_select(
+            input=input.build(),
+            thresholds=thresholds,
+            functions=[f.build() for f in functions],
+        ))

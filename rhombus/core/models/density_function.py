@@ -201,7 +201,20 @@ class MappedDensityFunction(DensityFunction):
     input: DensityFunction = field(legacy_keys={111.0: "argument"})
 
     def __repr__(self) -> str:
-        return type(self).__name__ + "(" + self.input.__repr__() + ")"
+        active_env = rho
+        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
+        parts = [self.input.__repr__()]
+        for param, value in self.fields.items():
+            if param == "input" or value is None:
+                continue
+            meta = rhombus_fields.get(param)
+            if meta and not meta.is_present(active_env):
+                continue
+            field_def = self.__dataclass_fields__.get(param)
+            if field_def is not None and field_def.default == value:
+                continue
+            parts.append(f"{param}={value!r}")
+        return f"{type(self).__name__}({', '.join(parts)})"
         
 
 class DoubleArgumentDensityFunction(DensityFunction):
@@ -213,14 +226,20 @@ class DoubleArgumentDensityFunction(DensityFunction):
     right: DensityFunction = field(legacy_keys={111.0: "argument2"})
 
     def __repr__(self) -> str:
-        return (
-            type(self).__name__
-            + "("
-            + self.left.__repr__()
-            + ", "
-            + self.right.__repr__()
-            + ")"
-        )
+        active_env = rho
+        rhombus_fields = getattr(self.__class__, "__rhombus_fields__", {})
+        parts = [self.left.__repr__(), self.right.__repr__()]
+        for param, value in self.fields.items():
+            if param in ("left", "right") or value is None:
+                continue
+            meta = rhombus_fields.get(param)
+            if meta and not meta.is_present(active_env):
+                continue
+            field_def = self.__dataclass_fields__.get(param)
+            if field_def is not None and field_def.default == value:
+                continue
+            parts.append(f"{param}={value!r}")
+        return f"{type(self).__name__}({', '.join(parts)})" 
 
 
 # ======// Primitives //==========================================================================//
