@@ -8,6 +8,9 @@ class invert(MappedDensityFunction):
     id: ClassVar[str] = "tectonic:invert"
 
 
+# TODO: tectonic:config_clamp
+    
+
 class config_constant(DensityFunction):
     id: ClassVar[str] = "tectonic:config_constant"
     key: str

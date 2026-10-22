@@ -1,11 +1,3 @@
-from typing import Literal
-
-from rhombus.std.builtin.density import Density, AnyDensity
-from rhombus.std.builtin.macros import macro
-
-from .fast_noise_config import FastNoiseConfig
-from . import types
-
 __all__ = [
     "axis",
     "ceil",
@@ -21,7 +13,16 @@ __all__ = [
     "wrapped_marker",
 ]
 
+from typing import Literal
 
+from rhombus.std.builtin.density import Density, AnyDensity
+from rhombus.std.builtin.macros import macro
+
+from .fast_noise_config import FastNoiseConfig
+from . import types
+
+
+@macro
 def axis(axis: Literal["x", "y", "z"]):
     return Density(types.axis(axis))
 
@@ -79,6 +80,7 @@ def mix(input: AnyDensity, argument1: AnyDensity, argument2: AnyDensity):
     return Density(types.mix(input.build(), argument1.build(), argument2.build()))
 
 
+@macro
 def original_marker():
     return Density(types.original_marker())
 
@@ -126,5 +128,6 @@ def sqrt(argument: AnyDensity):
     return Density(types.sqrt(argument.build()))
 
 
+@macro
 def wrapped_marker():
     return Density(types.wrapped_marker())

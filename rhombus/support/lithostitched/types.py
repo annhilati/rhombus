@@ -53,7 +53,6 @@ class original_marker(SimpleDensityFunction, versions=("1.3.1", ...)):
 
 class select(DensityFunction, versions=("1.6.0", ...)):
     id: ClassVar[str] = "lithostitched:select"
-
     input: DensityFunction
     fallback: DensityFunction
     selections: list[tuple[float | tuple[float, float], DensityFunction]]

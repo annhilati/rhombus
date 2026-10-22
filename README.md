@@ -63,6 +63,7 @@ While Rhombus follows an up-to-date-first approach, density functions can be com
   - Lithostitched
   - Tectonic
   - En-sityFunctions
+  - ikbLib
 - **Rhombus Preview**  
     A lightweight local frontend with file-watching for previewing density functions
   - Visualizer (built on deepslate)

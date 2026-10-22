@@ -11,6 +11,7 @@ def invert(argument: AnyDensity) -> Density:
     return Density(types.invert(argument.build()))
 
 
+@macro
 def config_constant(key: str) -> Density:
     "References a constant from the Tectonic configuration."
     return Density(types.config_constant(key))
