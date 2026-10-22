@@ -5,11 +5,11 @@ import functools
 import copy
 
 from rhombus.core.environment import (
-    get_module_extension_namespace,
-    parse_version_specifier,
     DatapackVersion,
     VersionString,
-    VersionTuple
+    VersionTuple,
+    get_module_extension_namespace,
+    parse_version_specifier,
 )
 from rhombus.core.models import DatapackNode
 from rhombus.runtime import rho
@@ -44,11 +44,12 @@ class RhombusASTNode[T]:
         self._cached_node: T | None = None
 
     @classmethod
-    def defer(
+    def defer[T](
         cls,
         fabric: Callable[[], T],
         repr: Optional[Callable[[Self], str]] = None,
     ) -> "RhombusASTNode[T]":
+        """Creates a `RhombusASTNode` that lazily produces a value from a fabric."""
 
         target_cls = cls
         if getattr(cls, "__parameters__", None):
@@ -76,8 +77,8 @@ class RhombusASTNode[T]:
 
 
     @classmethod
-    def value(cls, val: T) -> "RhombusASTNode[T]":
-        """Create a RhombusASTNode that simply contains a value when no lazy execution is needed."""
+    def value[T](cls, val: T) -> "RhombusASTNode[T]":
+        """Creates a `RhombusASTNode` that simply contains a value when no lazy execution is needed."""
 
         def identity():
             return val

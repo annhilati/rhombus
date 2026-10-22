@@ -15,8 +15,8 @@ These cases are listed here:
 
 Density Function Type                        | Where located
 -------------------------------------------- | --------------------------------------------------------------------
-`minecraft:cache_2d` (until 118)             | Will be reimplemented in the future
-`minecraft:cache_all_in_cell` (until 118)    | Will be reimplemented in the future
+`minecraft:cache_2d` (until 118)             | Present in `~.std.caching` as `cache_2d`
+`minecraft:cache_all_in_cell` (until 118)    | Present in `~.std.caching` as `cache_all_in_cell`
 `minecraft:cache_once` (until 118)           | Pre-118 Implementation of `~.std.caching.cache`
 `minecraft:end_islands` (until 113)          | Present in `~.std.noise` as `end_islands`
 `minecraft:flat_cache` (until 118)           | Pre-118 Implementation of `~.std.maps.flatten`

@@ -22,6 +22,7 @@ from rhombus.core.environment import DatapackVersion, VersionString, VersionTupl
 from rhombus.core.utils import Annotation, Decorator
 from rhombus.std.builtin.density import Density, AnyDensity
 
+
 def _create_argument_processor[**P, R](
     func: Callable[P, R],
 ) -> tuple[

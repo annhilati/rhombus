@@ -6,7 +6,6 @@ __all__ = ["extrude_heightmap", "flatten"]
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std import coords
-import rhombus.support.vanilla.legacy_types as lt
 
 
 @macro
@@ -14,10 +13,12 @@ def flatten(df: AnyDensity) -> Density:
     """Reduces a density function to two dimensions by uniforming the values in an XZ-column for all Y-coordinates."""
     @implementation(until=118)
     def flatten():
-        return Density(lt.flat_cache(df.build()))
+        from rhombus.std.caching import upscale, flat_cache
+        return upscale(flat_cache(df.build()))
+    
     @implementation
     def flatten():
-        return coords.slice(df, y=0)
+        return coords.slice(df, y=0) # flat_cache does this at Y=0
 
 
 @macro

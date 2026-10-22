@@ -4,19 +4,16 @@ __all__ = ["Density", "AnyDensity"]
 
 
 from dataclasses import dataclass
-from typing import Self, Literal, overload, TYPE_CHECKING
+from typing import Self, Literal, overload
 import re
 
 import beet
 import beet.contrib.worldgen as beet_worldgen
 
 from rhombus.core.abstract import RhombusASTNode
-from rhombus.core.models import DensityFunction, constant, Reference
+from rhombus.core.models import DatapackNode, DensityFunction, constant, Reference, transform
 from rhombus.core.utils import JSONDict, BeetFile, JSON_hash
-from rhombus.runtime import datapack_handler, rho, FROM_CONTEXT
-
-if TYPE_CHECKING:
-    from rhombus.std._implementations.optimization import DensityFunctionSizeInfo
+from rhombus.runtime import datapack_handler, rho
 
 
 type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | float | int | str
@@ -31,7 +28,7 @@ class Density:
     The `Density()` constructor accepts arguments of various types:
     - `int` and `float` for constant values
     - `str` for references
-    - `Density` and `DensityFunction`
+    - `Density`, `RhombusASTNode[DensityFunction]` and `DensityFunction`
 
     It does not accept `dict` objects, as they are ambiguous and can be interpreted
     in multiple ways. To deserialize such, use `~.from_dict()` instead.
@@ -99,10 +96,8 @@ class Density:
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
 
         def build_reference() -> Reference:
-            import rhombus.support.vanilla.types as vt
             df_build = self.build()
-            if isinstance(df_build, Reference) and isinstance(df_build.definition, vt.cache):
-                df_build = df_build.definition
+            df_build = self._unwrap_nested_partitions(df_build)
             return Reference(identifier, definition=df_build)
 
         def repr(node: RhombusASTNode[Reference]) -> str:
@@ -131,31 +126,56 @@ class Density:
 
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
-        """Creates a new `Density` object which value will be compiled to a separate file. This is mainly used to enable caching."""
-
+        """Creates a new `Density` object which value will be compiled to a separate file.
+        This is mainly used to enable caching in older versions.
+        """
         def build_partitioned() -> Reference:
-            import rhombus.support.vanilla.types as vt
             df_build = Density(value).build()
-            if isinstance(df_build, Reference) and isinstance(df_build.definition, vt.cache):
-                df_build = df_build.definition
+            df_build = cls._unwrap_nested_partitions(df_build)
             h = JSON_hash(df_build.serialize_toplevel())
             return Reference(f"rhombus:generated/{h}", definition=df_build)
 
         return Density(RhombusASTNode.defer(build_partitioned, repr=lambda n: value.__repr__()))
 
-    # def __rmatmul__(self, identifier: str) -> Density:
-    #     return self.named(identifier)
+
+    @staticmethod
+    def _unwrap_nested_partitions(df: DensityFunction) -> DensityFunction:
+        """Inlines intermediate auto-generated references (such as nested caching functions)
+        into the current node so they do not produce redundant separate files.
+        """
+        import rhombus.support.vanilla.types as vt
+        import rhombus.support.vanilla.legacy_types as lt
+
+        caching_types = (
+            vt.cache,
+            lt.cache_2d,
+            lt.flat_cache,
+            lt.cache_all_in_cell,
+            lt.interpolated,
+        )
+
+        while (
+            isinstance(df, Reference)
+            and df.target.startswith("rhombus:generated/")
+            and df.definition is not None
+        ):
+            df = df.definition
+
+        def _unwrap_caching_references(n: DatapackNode) -> DatapackNode:
+            if (
+                isinstance(n, Reference)
+                and n.target.startswith("rhombus:generated/")
+                and isinstance(n.definition, caching_types)
+            ):
+                return n.definition
+            return n
+
+        return transform(df, _unwrap_caching_references)
 
 
-    # TODO: Check where to allow dp or version context parameters
     @classmethod
-    @datapack_handler
-    def from_dict(
-        cls, d: JSONDict, /, dp: beet.DataPack | None = FROM_CONTEXT
-    ) -> Density:
+    def from_dict(cls, d: JSONDict) -> Density:
         """Creates a `Density` object from a dictionary.
-
-        A Beet datapack can be provided as context.
         """
         return Density(RhombusASTNode.defer(lambda: DensityFunction.deserialize_toplevel(d)))
 
@@ -226,7 +246,7 @@ class Density:
     def build(self) -> DensityFunction:
         """Creates a `DensityFunction` object from the `Density`.
         The returned `DensityFunction` contains the complete and valid data model of
-        the density function for the datapack and mod versions set in the environment.
+        the density function for the datapack version and mod versions set in the environment.
         """
         return self.AST.build()
 
@@ -276,7 +296,7 @@ class Density:
         The dictionary will not be fully inline. References that require separate files will be references."""
         return self.build().serialize_toplevel()
     
-    def info(self) -> DensityFunctionSizeInfo:
+    def info(self):
         from rhombus.std._implementations.optimization import df_size_info
         return df_size_info(self.build())
 

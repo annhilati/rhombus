@@ -384,13 +384,13 @@ def floor(df: AnyDensity, decimals: int = 0) -> Density:
 def ceil(df: AnyDensity, decimals: int = 0) -> Density:
     """Rounds the input up to the nearest integer or a given decimal place."""
     @implementation(until=111)
-    def floor():
+    def ceil():
         if decimals:
             return round((df + 0.5) * 10**decimals) / 10**decimals
         return round(df + 0.5)
     
     @implementation
-    def floor():
+    def ceil():
         return Density(vt.ceil(df.build(), 10**-decimals))
 
 

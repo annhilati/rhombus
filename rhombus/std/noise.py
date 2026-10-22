@@ -1,13 +1,23 @@
 """
 """
 
-__all__ = ["Noise", "noise", "blended_noise", "shift", "shift_a", "shift_b", "end_outer_islands"]
+__all__ = [
+    "Noise",
+    "noise",
+    "blended_noise",
+    "shift",
+    "shift_a",
+    "shift_b",
+    "end_outer_islands",
+    "end_islands",
+    "weird_scaled_sampler"
+]
 
 from typing import ClassVar, Literal
 
 from beet.contrib.worldgen import WorldgenNoise
 
-from rhombus.core import DatapackResource, BeetFile, JSONDict
+from rhombus.core import RhombusASTNode, DatapackResource, BeetFile, JSONDict
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
@@ -61,6 +71,7 @@ class Noise(DatapackResource):
     normalize: bool | Literal["legacy"] = True
 
     def serialize_toplevel(self) -> JSONDict:
+        # dont wonder, this method does not need to be lazy
         if rho.datapack_version is not None and rho.datapack_version < 113:
             return {
                 "firstOctave": self.base_octave,
@@ -254,6 +265,7 @@ def weird_scaled_sampler(
     @implementation
     def modern():
         from rhombus.std.math import abs
+        from rhombus.std.conditional import interval_select
         if rarity_value_mapper == "type_1":
             thresholds = [-0.5, 0.0, 0.5]
             factors = [0.75, 1.0, 1.5, 2.0]
@@ -262,16 +274,15 @@ def weird_scaled_sampler(
             factors = [0.5, 0.75, 1.0, 2.0, 3.0]
 
         functions = [
-            factor * abs(Density(vt.noise(
-                noise=noise,
+            factor * abs(Density(noise(
                 xz_scale=1.0 / factor,
                 y_scale=1.0 / factor,
             )))
             for factor in factors
         ]
 
-        return Density(vt.interval_select(
+        return Density(interval_select(
             input=input.build(),
             thresholds=thresholds,
-            functions=[f.build() for f in functions],
+            functions=functions,
         ))

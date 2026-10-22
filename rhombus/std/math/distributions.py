@@ -61,8 +61,7 @@ def normalPDF(
     [Wikipedia](https://en.wikipedia.org/wiki/Normal_distribution)
     """
     func = lambda x: (
-        1
-        / (standard_deviation * py_math.sqrt(2 * py_math.pi))
+        1 / (standard_deviation * py_math.sqrt(2 * py_math.pi))
         * py_math.exp(-0.5 * ((x - mean) / standard_deviation) ** 2)
     )
     return math.spline(
@@ -120,5 +119,3 @@ def smoothstep(
     return math.spline(
         argument, [(domain[0], range[0], 0), (domain[1], range[1], 0)]
     )
-
-

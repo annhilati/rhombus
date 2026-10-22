@@ -1,4 +1,11 @@
-__all__ = ["cache", "upscale", "optimize"]
+__all__ = [
+    "cache",
+    "cache_2d",
+    "flat_cache",
+    "cache_all_in_cell",
+    "upscale",
+    "optimize",
+]
 
 from typing import Literal, Callable, Iterable, Any
 import warnings
@@ -13,12 +20,12 @@ import rhombus.support.vanilla.legacy_types as lt
 from ._implementations.optimization import node_caching_transformer, df_size_info
 
 
-# NOTE: multiple nested caching functions are no longer auto-inlined. When adding compatability with older versions again, implement it again
 @macro
 def cache(df: AnyDensity) -> Density:
-    """If this density function is referenced twice, it is only computed once per block position.
+    """If this density function is referenced repeatedly, it is only computed once per block position.
 
     **NOTE:** Also consider `caching.optimize()` to automatically cache recurring parts in a `Density`.
+    
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache)
     """
@@ -28,6 +35,90 @@ def cache(df: AnyDensity) -> Density:
     @implementation
     def cache():
         return Density(vt.cache(df.build()))
+
+
+@macro
+def cache_2d(df: AnyDensity) -> Density:
+    """Memoizes the density function value for the last sampled horizontal (X, Z) column.
+
+    ### Value Influence
+    - **2D Functions:** Does not mathematically alter values if the wrapped function is purely
+      two-dimensional (independent of Y).
+    - **3D Functions:** When evaluated at multiple heights along the same vertical column, the
+      value of whichever Y-coordinate was sampled first is cached and returned for all subsequent
+      heights at that (X, Z) position.
+
+    ### Performance & Access Mechanism
+    - Maintains a single-entry cache storing the most recently evaluated horizontal position
+      and its computed value.
+    - As the terrain generator iterates vertically through a column, repeated evaluations at the
+      same horizontal coordinates result in an immediate O(1) cache hit, bypassing evaluation of
+      the underlying expression tree.
+    - Extremely lightweight memoization intended for expensive horizontal noise pipelines
+      (such as continentalness, erosion, ridges, or coordinate offsets) evaluated across many vertical blocks.
+
+    **NOTE:** Only available in datapack versions before 118.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
+    """
+    @implementation(until=118)
+    def cache_2d():
+        return Density.partitioned(lt.cache_2d(df.build()))
+
+
+@macro
+def flat_cache(df: AnyDensity) -> Density:
+    """Flattens the density function onto a horizontal 2D slice at Y = 0 and caches values in a chunk-wide quart grid.
+
+    ### Value Influence
+    - **Quart Quantization (4×4 blocks):** Evaluates coordinates at quart resolution (`QuartPos.fromBlock(x)`,
+      i.e. `x >> 2` and `z >> 2`). All blocks within the same 4×4 horizontal column receive identical values,
+      producing a stepped, blocky staircase pattern if sampled directly per block.
+
+    ### Performance & Access Mechanism
+    - Precomputes an array of size `(noiseSizeXZ + 1) * (noiseSizeXZ + 1)` covering the chunk's quart bounds
+      upon chunk noise sampler initialization.
+    - Subsequent samplings during chunk generation perform an O(1) array lookup with zero re-computation.
+    - Ideal for chunk-wide 2D terrain properties (continents, erosion, biome parameters) that are queried thousands
+      of times across the chunk.
+
+    **NOTE:** Only available in datapack versions before 118.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
+    """
+    @implementation(until=118)
+    def flat_cache():
+        return Density.partitioned(lt.flat_cache(df.build()))
+
+
+@macro
+def cache_all_in_cell(df: AnyDensity) -> Density:
+    """Precomputes and caches all density values for every block coordinate within the current interpolation cell.
+
+    ### Value Influence
+    - **No Value Change:** Does not alter the mathematical evaluation of the density function at any
+      3D position (X, Y, Z). Returns the exact underlying value for every block.
+
+    ### Performance & Access Mechanism
+    - In Minecraft's terrain generation pipeline, chunks are partitioned into 3D interpolation cells
+      (e.g. 4×8×4 blocks in the Overworld, 8×4×8 in The End).
+    - `cache_all_in_cell` allocates a cell-sized buffer (e.g. 4 × 8 × 4 = 128 doubles).
+    - Upon entering a cell (or on the first sample within it), values for all block coordinates inside the cell
+      are computed and cached. Subsequent queries at any coordinate inside that cell hit the buffer in O(1) time.
+    - Highly advantageous for complex, compute-intensive 3D density function subtrees that are referenced multiple
+      times per block during different stages within the same cell (such as carving, surface checks, or branching math).
+    - The buffer is invalidated and re-evaluated whenever the noise sampler transitions into a new interpolation cell.
+
+    **NOTE:** Only available in datapack versions before 118.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
+    """
+    @implementation(until=118)
+    def cache_all_in_cell():
+        return Density.partitioned(lt.cache_all_in_cell(df.build()))
 
 
 @macro
@@ -68,14 +159,16 @@ def upscale(
         if any(mode != "interpolate_linear" for mode in (x_mode, y_mode, z_mode)):
             warnings.warn("In datapack versions before 125 the interpolation mode cannot be set. A procedure identical to the 'interpolate_linear' mode will be used instead.")
         warnings.warn("In datapack versions before 118 the interpolation cell size is derived from the noise settings. Passed cell size parameters will not take effect.")
-        return Density(lt.interpolated(df.build()))
+        return Density.partitioned(lt.interpolated(df.build())) # this should not be cached because it worsens performance
+    
     @implementation(until=125)
     def interpolated():
         if any(mode != "interpolate_linear" for mode in (x_mode, y_mode, z_mode)):
             warnings.warn("In datapack versions before 125 the interpolation mode cannot be set. A procedure identical to the 'interpolate_linear' mode will be used instead.")
         if x_cell_size != z_cell_size:
             raise ValueError("In datapack versions before 125 the cell sizes for the X and Z axes must be identical.")
-        return Density(lt.interpolated(df.build(), cell_size_xz=x_cell_size, cell_size_y=y_cell_size))
+        return Density.partitioned(lt.interpolated(df.build(), cell_size_xz=x_cell_size, cell_size_y=y_cell_size)) # this should not be cached because it worsens performance
+    
     @implementation
     def upscale():
         return Density(vt.upscale(

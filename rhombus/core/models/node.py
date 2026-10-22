@@ -382,7 +382,7 @@ def walk(node: DatapackNode | Any) -> Iterator[DatapackNode]:
             yield from walk(v)
 
 
-def transform(node: DatapackNode | Any, func: Callable[[DatapackNode], DatapackNode]) -> Any:
+def transform[T](node: DatapackNode | T, func: Callable[[DatapackNode], DatapackNode]) -> DatapackNode | T:
     """Traverses the AST and applies the given function to each RhombusASTNode.
     This creates a new tree if any child node is modified, while preserving nodes that are unchanged.
     """

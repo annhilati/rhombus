@@ -10,6 +10,8 @@ _test*
 .beet_cache/
 beet.*
 
+.github/cache
+
 # Test Suite
 .pytest_cache/
 !tests/

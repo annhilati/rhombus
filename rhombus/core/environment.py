@@ -133,6 +133,7 @@ class RhombusEnvironment:
 
     @property
     def datapack_version(self) -> DatapackVersion:
+        """The current datapack version."""
         val = self.versions.get("datapack", (118, 0))
         return float(".".join(str(part) for part in val))
 
