@@ -13,7 +13,7 @@ def range_choice(
 ) -> Density:
     """Computes the input value, and depending on that result returns one of two other density functions.
     
-    `range_choice` can be used like if-else-statements, but to build large conditionality trees use `~.when` instead.    
+    `range_choice` can be used like if-else-statements, but to build large conditionality trees use Pythons `if / elif / else` keywords instead.    
     ```
     if input >= min_inclucive:
         if input < max_exclusive:

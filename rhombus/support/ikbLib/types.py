@@ -13,7 +13,7 @@ class voronoi(DensityFunction):
     flat: bool = True
     jitter: float = field(0.4, validate=lambda x: 0 <= x <= 0.5)
     metric: int = field(1, validate=lambda x: 0 <= x <= 5)
-    mode: int = field(0, lambda x: 0 <= x <= 6)
+    mode: int = field(0, validate=lambda x: 0 <= x <= 6)
     ordinal: int = field(1, validate=lambda x: 1 <= x <= 9)
     
     
@@ -31,7 +31,7 @@ class pull_cached_voronoi(DensityFunction):
     id: ClassVar[str] = "ikblibrary:pull_cached_voronoi"
     cache: DensityFunction # cached_voronoi
     ordinal: int = field(1, validate=lambda x: 1 <= x <= 9)
-    mode: int = field(0, lambda x: 0 <= x <= 6)
+    mode: int = field(0, validate=lambda x: 0 <= x <= 6)
     
     
 class voronoi_dist(DensityFunction):

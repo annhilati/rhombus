@@ -8,14 +8,17 @@ import copy
 import beet
 
 from rhombus.core.models.node import DatapackNode
-from rhombus.core.models.serialization import deserialize_any_inline, serialize_any_inline
+from rhombus.core.models.serialization import (
+    deserialize_any_inline,
+    serialize_any_inline,
+)
 from rhombus.core.utils import (
     JSONDict,
     BeetFile,
     JSON_hash,
     annotated_fields,
 )
-from rhombus.runtime import rho, datapack_handler
+from rhombus.runtime import datapack_handler, rho
 
 
 class DatapackResource(DatapackNode):
@@ -30,10 +33,12 @@ class DatapackResource(DatapackNode):
     fileclass: ClassVar[type[BeetFile]]
     _reference: str | None = field(init=False, default=None)
 
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
         return self.identifier == other.identifier
+
 
     @property
     def is_reference(self) -> bool:
@@ -42,10 +47,12 @@ class DatapackResource(DatapackNode):
             and self._reference is not None
         )
 
+
     def __copy__(self) -> Self:
         if self.is_reference:
             return self.refer(self._reference)
         return self.__class__(**self.fields)
+
 
     def __deepcopy__(self, memo: dict[int, Any]) -> Self:
         if self._reference is not None:
@@ -55,16 +62,20 @@ class DatapackResource(DatapackNode):
         }
         return self.__class__(**new_fields)
 
+
     def __repr__(self) -> str:
         if self.is_reference and self._reference is not None:
             return type(self).__name__ + '.refer("' + self.identifier + '")'
         return super().__repr__()
 
+
     def __hash__(self):
         # We need to explicitely set it here again, because defining __eq__ sets __hash__ to None
         return super().__hash__()
 
+
     # ======// Serialization //===================================================================//
+
 
     @property
     def inscribed_toplevel_nodes(self) -> set[DatapackNode]:
@@ -76,8 +87,9 @@ class DatapackResource(DatapackNode):
                     nodes |= value.inscribed_toplevel_nodes
         return nodes
 
+
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         if self._reference is not None:
             return (
                 self._reference
@@ -86,6 +98,7 @@ class DatapackResource(DatapackNode):
             )
         return "rhombus:generated/" + JSON_hash(self.serialize_toplevel())
 
+
     def serialize_toplevel(self) -> JSONDict:
         return {
             parameter: serialize_any_inline(value)
@@ -93,11 +106,13 @@ class DatapackResource(DatapackNode):
             if value is not None
         }
 
+
     def serialize_inline(self) -> str:
         return self.identifier
 
+
     @classmethod
-    def deserialize_toplevel(cls, data: JSONDict):
+    def deserialize_toplevel(cls, data: JSONDict) -> Self:
         fields = annotated_fields(cls)
 
         return cls(
@@ -109,24 +124,28 @@ class DatapackResource(DatapackNode):
             }
         )
 
+
     @classmethod
-    def deserialize_inline(cls, data: str):
+    def deserialize_inline(cls, data: str) -> Self:
         id = "minecraft:" + data if ":" not in data else data
         dp = rho.datapack
         if dp is not None and (file := dp[cls.fileclass].get(id)) is not None:
             return cls.deserialize_toplevel(file.data)
         return cls.refer(id)
 
+
     # ======// Workflow //========================================================================//
+
 
     @classmethod
     def from_dict(cls, data: JSONDict) -> Self:
         """Creates an instance of this datapack resource node class from a dictionary."""
         return cls.deserialize_toplevel(data)
 
+
     @classmethod
     @datapack_handler
-    def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Self | None:
+    def from_datapack(cls, dp: beet.DataPack, identifier: str, *, keep_identifier: bool = True) -> Self | None:
         """Extracts an instance of this datapack resource node class from a Beet datapack."""
 
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
@@ -136,7 +155,8 @@ class DatapackResource(DatapackNode):
             return None
 
         instance = cls.from_dict(file.data)
-        return identifier @ instance
+        return instance.named(identifier) if keep_identifier else instance
+
 
     @classmethod
     def refer(cls, identifier: str, /) -> Self:
@@ -146,7 +166,9 @@ class DatapackResource(DatapackNode):
         object.__setattr__(instance, "_reference", identifier)
         return instance
 
-    def __rmatmul__(self, identifier: str) -> Self:
+
+    def named(self, identifier: str) -> Self:
+        """Creates a new datapack resource object with a specific identifier."""
         if not isinstance(identifier, str):
             raise TypeError("Can only assign string identifiers")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
@@ -154,7 +176,7 @@ class DatapackResource(DatapackNode):
         object.__setattr__(instance, "_reference", identifier)
         return instance
 
+
     def as_dict(self) -> JSONDict:
         "Returns the resource as a serialized dictionary, like it would be found in a resource definition file."
         return self.serialize_toplevel()
-

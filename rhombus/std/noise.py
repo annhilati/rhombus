@@ -17,16 +17,18 @@ from typing import ClassVar, Literal
 
 from beet.contrib.worldgen import WorldgenNoise
 
-from rhombus.core import RhombusASTNode, DatapackResource, BeetFile, JSONDict
+from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
-import rhombus.support.vanilla.types as vt
-import rhombus.support.vanilla.legacy_types as lt
 from rhombus.runtime import rho
 
 
+import rhombus.support.vanilla.types as vt
+import rhombus.support.vanilla.legacy_types as lt
+
+
 class Noise(DatapackResource):
-    """Defines a perlin noise.
+    """Defines a normal noise.
 
     **NOTE:** To reference an existing noise, use `~.refer()`.
 
@@ -34,7 +36,7 @@ class Noise(DatapackResource):
     the seed does not change when modifying the values of the noise, use the
     following idiom to fix the id of the noise:
     ```
-    n = "minecraft:be_fixed" @ Noise(-9, [1, 2, 3]) # respective your values
+    n = Noise(-9, [1, 2, 3]).named("minecraft:be_fixed")
     ```
 
     Parameters:
@@ -44,7 +46,7 @@ class Noise(DatapackResource):
             If `legacy_random_source` in the noise settings is true, it must be an integer less than or equal to 1,
             otherwise the value range is not unlimited.
 
-        amplitudes (list[float]): Formerly `amplitudes` (now serialized as `amplitude_modifiers`). Controls how detailed the noise is.
+        amplitudes (list[float]): Controls how detailed the noise is.
             Every amplitude adds an overlayed copy ("octave") of the noise half the scale of the octave before.
             The magnitude of the amplitudes are relative weight factors. A `0` skips the octave.
             The length of this list implicitly defines the `octave_count` of the noise.
@@ -65,6 +67,7 @@ class Noise(DatapackResource):
     fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
 
     # We are not using the field versioning here to keep the API clean
+    # We are not using a lazy wrapper because we don't expect noises to need to be complex versioned in any way
     base_octave: int
     amplitudes: list[float]
     base_amplitude: float = 1.0
@@ -218,6 +221,13 @@ def shift_b(argument: Noise) -> Density:
 
 @macro
 def end_outer_islands() -> Density:
+    @implementation(since=113)
+    def end_outer_islands():
+        return Density(vt.end_outer_islands())
+
+
+@macro
+def end_islands() -> Density:
     """Samples a noise using a
     [special algorithm](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
     that is used for the outer end islands. The minimum value is set to `-0.84375`,
@@ -226,13 +236,6 @@ def end_outer_islands() -> Density:
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands)
     """
-    @implementation(since=113)
-    def end_outer_islands():
-        return Density(vt.end_outer_islands())
-
-
-@macro
-def end_islands() -> Density:
     @implementation(until=113)
     def legacy():
         return Density(lt.end_islands())

@@ -180,7 +180,7 @@ class NodeDataclassTransformer(type):
                     object.__setattr__(self, field.name, _freeze_field_value(val))
 
         ns["__post_init__"] = __post_init__
-        cls = super().__new__(mcls, name, bases, ns)
+        cls: DatapackNode = super().__new__(mcls, name, bases, ns)
 
         init = kwargs.pop("init", True)
 
@@ -230,7 +230,7 @@ class NodeDataclassTransformer(type):
 
 class DatapackNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     """The **`DatapackNode`** class defines the common behaviour for all nodes
-    in the abstract syntax tree for data already built for daapacks
+    in the abstract syntax tree of datapack data.
 
     [Rhombus Documentation Reference](https://annhilati.github.io/rhombus/devs/abstraction/)
     """

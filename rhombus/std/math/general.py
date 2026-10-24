@@ -34,6 +34,7 @@ __all__ = [
     "sample_spline_points",
     "poly_spline_points",
     "spline_points_to_cubics",
+    "smoothstep",
 ]
 
 import builtins as py_builtins
@@ -492,3 +493,28 @@ def spline(
 
 # Redirect imports
 from rhombus.std.math._splinelib import sample_spline_points, poly_spline_points, spline_points_to_cubics
+
+
+@macro
+def smoothstep(
+    argument: AnyDensity,
+    domain: tuple[float, float] = (-1, 1),
+    range: tuple[float, float] = (-1, 1),
+) -> Density:
+    """Performs a smoothstep transition of the input.
+
+    The smoothstep curve rises smoothly from `yRange[0]` to `yRange[1]` while the
+    input moves from `domain[0]` to `domain[1]`. Outside the latter interval the output
+    is clamped to the respective boundary value.
+
+    Parameters:
+        domain ((float, float)): The input interval over which the smooth transition occurs.
+        range ((float, float)): The output range of the transition.
+            The function smoothly interpolates between these values inside domain.
+
+    ---
+    [Wikipedia](https://en.wikipedia.org/wiki/Smoothstep)
+    """
+    return spline(
+        argument, [(domain[0], range[0], 0), (domain[1], range[1], 0)]
+    )

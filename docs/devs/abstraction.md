@@ -33,7 +33,7 @@ in these cases.).
 
 All nodes derive from a common class:
 
-<h3>RhombusASTNode (<code>rhombus.core.node.RhombusASTNode</code>)</h3>
+<h3>DatapackNode (<code>rhombus.core.node.DatapackNode</code>)</h3>
 This class defines the common interface for alle nodes. This includes these:
 
 - `fields()` essentially returns all values of the node instance as a mapping. No matter how

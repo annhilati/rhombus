@@ -142,7 +142,7 @@ _NOUNS = [
     "bat", "blaze", "breeze", "camel", "chicken", "cod", "cow", "dolphin",
     "donkey", "drowned", "evoker", "glowsquid", "goat",
     "hoglin", "husk", "illusioner", "magmacube", "mooshroom",
-    "mule", "ocelot", "parrot", "pig", "pillager", "polarbear", "pufferfish",
+    "mule", "ocelot", "parrot", "pig", "pillager", "pufferfish",
     "rabbit", "ravager", "salmon", "shulker", "silverfish", "skeleton",
     "sniffer", "snowgolem", "stray", "strider", "tadpole", "vex",
     "villager", "vindicator", "witch", "wither", "zoglin"
