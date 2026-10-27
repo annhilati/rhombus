@@ -228,6 +228,7 @@ class NodeDataclassTransformer(type):
         return cls
 
 
+# TODO: Add legacy types and refine vanilla.types.gradient
 class DatapackNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
     """The **`DatapackNode`** class defines the common behaviour for all nodes
     in the abstract syntax tree of datapack data.

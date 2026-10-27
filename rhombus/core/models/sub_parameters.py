@@ -1,8 +1,9 @@
 __all__ = ["SubParameters"]
 
 
-import warnings
 from typing import Self, ClassVar
+import warnings
+import inspect
 
 from rhombus.core.utils import JSONDict, annotated_fields
 from rhombus.core.models.node import DatapackNode
@@ -53,7 +54,6 @@ class SubParameters(DatapackNode):
             if found_key:
                 val = deserialize_any_inline(data[found_key], tp)
                 if meta and meta.validate and val is not None:
-                    import inspect
                     sig = inspect.signature(meta.validate)
                     if len(sig.parameters) == 1:
                         if not meta.validate(val):
@@ -77,7 +77,6 @@ class SubParameters(DatapackNode):
                     continue
                 json_key = meta.get_appropriate_key(rho, default=parameter)
                 if meta.validate:
-                    import inspect
                     sig = inspect.signature(meta.validate)
                     if len(sig.parameters) == 1:
                         if not meta.validate(value):

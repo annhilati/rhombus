@@ -10,6 +10,7 @@ from rhombus.core import (
     Reference,
     constant,
     SubParameters,
+    JSONDict,
     field,
 )
 from rhombus.runtime import rho
@@ -86,6 +87,14 @@ class div(DoubleArgumentDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:div"
 
 
+class domain_warp(DensityFunction, versions=(125.1, ...)):
+    id: ClassVar[str] = "minecraft:domain_warp"
+    input: DensityFunction
+    offset_x: DensityFunction | None = field(None, validate=lambda x, df: any(o is not None for o in (df.offset_x, df.offset_y, df.offset_z)))
+    offset_y: DensityFunction | None = None
+    offset_z: DensityFunction | None = None
+
+
 class end_outer_islands(SimpleDensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:end_outer_islands"
 
@@ -102,12 +111,41 @@ class floor(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:floor"
 
 
+class VerticalAnchor(SubParameters):
+    type: Literal["absolute", "above_bottom", "below_top", "relative_to_sea_level"]
+    value: int = field(validate=lambda x: -2032 <= x <= 2031)
+
+    @classmethod
+    def Absolute(cls, height: int):
+        return cls(type="absolute", value=height)
+
+    @classmethod
+    def Above_bottom(cls, height: int):
+        return cls(type="above_bottom", value=height)
+
+    @classmethod
+    def Below_top(cls, depth: int):
+        return cls(type="below_top", value=depth)
+
+    @classmethod
+    def Relative_to_sea_level(cls, height: int):
+        return cls(type="relative_to_sea_level", value=height)
+
+    def serialize_toplevel(self) -> JSONDict:
+        return {
+            self.type: self.value
+        }
+
+    @classmethod
+    def deserialize_toplevel(cls, data: JSONDict):
+        return cls(type=list(data.keys())[0], value=list(data.values())[0])
+
 class gradient(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:gradient"
     axis: Literal["x", "y", "z"]
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
-    from_coordinate: int
-    to_coordinate: int = field(validate=lambda x, df: x != df.from_coordinate)
+    from_coordinate: int | VerticalAnchor = field(validate=lambda x, df: False if isinstance(x, VerticalAnchor) and (rho.datapack_version < 125.1 or df.axis != "y") else True)
+    to_coordinate: int | VerticalAnchor = field(validate=lambda x, df: False if (isinstance(x, VerticalAnchor) and (rho.datapack_version < 125.1 or df.axis != "y")) or x == df.from_coordinate else True)
     from_value: float
     to_value: float
 

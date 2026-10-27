@@ -1,8 +1,10 @@
 __all__ = [
     "gradient",
+    "VerticalAnchor",
     "distance_to_point",
     "find_top_surface",
     "slice",
+    "domain_shift",
     "x",
     "z",
     "y",
@@ -19,6 +21,7 @@ from typing import Literal, Optional
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std import math, caching
+from rhombus.support.vanilla.types import VerticalAnchor
 import rhombus.support.vanilla.types as vt
 import rhombus.support.vanilla.legacy_types as lt
 
@@ -32,8 +35,8 @@ _coord_limit = 3 * 10**7
 @macro
 def gradient(
     axis: Literal["x", "y", "z"],
-    from_coordinate: int,
-    to_coordinate: int,
+    from_coordinate: int | VerticalAnchor,
+    to_coordinate: int | VerticalAnchor,
     from_value: float,
     to_value: float,
     tiling: Literal[
@@ -41,13 +44,15 @@ def gradient(
     ] = "extrapolate",
 ):
     """Creates a gradient between two coordinates along a given axis.
-    
-    **NOTE**: In datapack versions before 113 only the Y-axis and the `clamp_to_edge` and `extrapolate` tiling modes can be used.
 
+    **NOTE**: In datapack versions before 125.1 VerticalAnchor specifications cannot be used for coordinates.
+
+    **NOTE**: In datapack versions before 113 only the Y-axis and the `clamp_to_edge` and `extrapolate` tiling modes can be used.
+    
     Parameters:
         axis (Literal["x", "y", "z"]): The axis along which the gradient is defined.
-        from_coordinate (int): The starting coordinate of the gradient.
-        to_coordinate (int): The ending coordinate of the gradient.
+        from_coordinate (int | VerticalAnchor): The starting coordinate of the gradient.
+        to_coordinate (int | VerticalAnchor): The ending coordinate of the gradient.
         from_value (float): The value at the starting coordinate.
         to_value (float): The value at the ending coordinate.
         tiling (Literal["extrapolate", "clamp_to_edge", "repeat", "mirrored_repeat"]): The
@@ -56,22 +61,35 @@ def gradient(
     if from_coordinate == to_coordinate: # we need this here to prevent ZeroDivisionError in extrapolation lol
         raise ValueError("from_coordinate and to_coordinate must not be equal")
 
-    if tiling == "extrapolate":
+    if (isinstance(from_coordinate, VerticalAnchor) or isinstance(to_coordinate, VerticalAnchor)) and axis != "y":
+        raise ValueError("Vertical anchors can only be used with the Y-axis")
+    
+    if isinstance(from_coordinate, VerticalAnchor) and from_coordinate.type == "absolute":
+        from_coordinate = from_coordinate.value
+    if isinstance(to_coordinate, VerticalAnchor) and to_coordinate.type == "absolute":
+        to_coordinate = to_coordinate.value
+
+    # TODO: Can we enable ValueAnchors in extrapolation?
+    if tiling == "extrapolate" and not (isinstance(from_coordinate, VerticalAnchor) or isinstance(to_coordinate, VerticalAnchor)):
         m = (to_value - from_value) / (to_coordinate - from_coordinate)
         b = from_value - m * from_coordinate
         from_coordinate, to_coordinate = -_coord_limit, _coord_limit
         from_value, to_value = m * from_coordinate + b, m * to_coordinate + b
         tiling = "clamp_to_edge"
-        
+
     @implementation(until=113)
     def y_clamped_gradient():
         if axis != "y":
             raise NotImplementedError(
-                "Cannot provide gradients for the x- and z-axis in datapack versions below 113"
+                "Cannot provide gradients for the X- and Z-axis in datapack versions below 113"
             )
         if tiling != "clamp_to_edge":
             raise NotImplementedError(
                 "Cannot provide gradients with tiling other than 'clamp_to_edge' in datapack versions below 113"
+            )
+        if isinstance(from_coordinate, VerticalAnchor) or isinstance(to_coordinate, VerticalAnchor):
+            raise NotImplementedError(
+                "Cannot provide gradients with vertical anchors in datapack versions below 125.1"
             )
 
         from_c, to_c = from_coordinate, to_coordinate
@@ -104,6 +122,7 @@ def gradient(
         
     @implementation
     def gradient():
+        # VerticalAnchor validation is done by the gradient and VerticalAnchor models
         return Density(
             vt.gradient(axis, tiling, from_coordinate, to_coordinate, from_value, to_value)
         )
@@ -176,6 +195,23 @@ def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: O
         if z:
             out = vt.slice(input=out, axis="z", coordinate=z)
         return Density(out)
+
+
+@macro
+def domain_shift(df: AnyDensity, x: AnyDensity = 0, y: AnyDensity = 0, z: AnyDensity = 0):
+    """Calculates the value for the input, but with shifted input coordinates for its evaluation."""
+    @implementation(since=125.1)
+    def domain_warp():
+        if all(isinstance(o.build(), vt.constant) and o.build().value == 0 for o in (x, y, z)):
+            return df
+        return Density(
+            vt.domain_warp(
+                input=df.build(),
+                offset_x=x.build() if not (isinstance(x.build(), vt.constant) and x.build().value == 0) else None,
+                offset_y=y.build() if not (isinstance(y.build(), vt.constant) and y.build().value == 0) else None,
+                offset_z=z.build() if not (isinstance(z.build(), vt.constant) and z.build().value == 0) else None,
+            )
+        )
 
 
 # ======// Coordinates //=========================================================================//
