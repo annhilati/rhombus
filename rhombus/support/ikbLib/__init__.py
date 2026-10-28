@@ -1,6 +1,6 @@
 """### [ikbLib](https://modrinth.com/mod/ikblib) by ikkyblob
 
-ikbLib is a library mod featuring a family of new voronoi/cellular noise density functions, plus API for seeded density functions and new fluid behaviours.
+ikbLib is a library mod featuring a family of new voronoi/cellular noise density functions, plus API for seeded density functions.
 
 ---
 [Wiki](https://github.com/ikkyblob/ikbLib/wiki)

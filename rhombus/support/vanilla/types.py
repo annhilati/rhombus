@@ -144,8 +144,8 @@ class gradient(DensityFunction, versions=(113, ...)):
     id: ClassVar[str] = "minecraft:gradient"
     axis: Literal["x", "y", "z"]
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
-    from_coordinate: int | VerticalAnchor = field(validate=lambda x, df: False if isinstance(x, VerticalAnchor) and (rho.datapack_version < 125.1 or df.axis != "y") else True)
-    to_coordinate: int | VerticalAnchor = field(validate=lambda x, df: False if (isinstance(x, VerticalAnchor) and (rho.datapack_version < 125.1 or df.axis != "y")) or x == df.from_coordinate else True)
+    from_coordinate: int | VerticalAnchor = field(legacy_types={125.1: int}, validate=lambda x, df: False if isinstance(x, VerticalAnchor) and df.axis != "y" else True)
+    to_coordinate: int | VerticalAnchor = field(legacy_types={125.1: int}, validate=lambda x, df: False if (isinstance(x, VerticalAnchor) and df.axis != "y") or x == df.from_coordinate else True)
     from_value: float
     to_value: float
 

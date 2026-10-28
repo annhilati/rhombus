@@ -1804,5 +1804,4 @@ if __name__ == "__main__":
     # dp.save(overwrite=True)
     preview.serve(("main", final_destiny))
 
-# TODO: Reset-Method needed?
-rho.set_version(datapack=118)
+rho.require({vanilla: ...})

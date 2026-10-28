@@ -38,22 +38,27 @@ def test_versioning():
         new_field: str | None = field(default=None, added_with="1.20")
         old_field: str | None = field(default=None, removed_with="1.19.4")
         renamed_field: str | None = field(default=None, legacy_keys={"1.18": "old_name"})
+        typed_field: int | str = field(default="test", legacy_types={"1.18": int})
 
     meta_new = VersionedNode.__rhombus_fields__["new_field"]
     meta_old = VersionedNode.__rhombus_fields__["old_field"]
     meta_renamed = VersionedNode.__rhombus_fields__["renamed_field"]
+    meta_typed = VersionedNode.__rhombus_fields__["typed_field"]
 
     rho.set_version(minecraft="1.19")
     assert not meta_new.is_present(rho)
     assert meta_old.is_present(rho)
     assert meta_renamed.get_appropriate_key(rho, "renamed_field") == "renamed_field"
+    assert meta_typed.get_appropriate_type(rho, int | str) == int | str
 
     rho.set_version(minecraft="1.17")
     assert meta_renamed.get_appropriate_key(rho, "renamed_field") == "old_name"
+    assert meta_typed.get_appropriate_type(rho, int | str) is int
 
     rho.set_version(minecraft="1.20")
     assert meta_new.is_present(rho)
     assert not meta_old.is_present(rho)
+    assert meta_typed.get_appropriate_type(rho, int | str) == int | str
 
 
 def test_validation():
@@ -73,6 +78,23 @@ def test_validation():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         ValidatedNode(count=1, complex=5, other_field=5)
+
+    class TypedVersionNode(DatapackNode):
+        coord: int | str = field(default=0, legacy_types={"1.18": int})
+
+    rho.set_version(minecraft="1.17")
+    with pytest.warns(UserWarning, match="Type mismatch in 'TypedVersionNode.coord'"):
+        TypedVersionNode(coord="legacy_string")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        TypedVersionNode(coord=42)
+
+    rho.set_version(minecraft="1.20")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        TypedVersionNode(coord="modern_string")
+        TypedVersionNode(coord=42)
 
 
 def test_defer_parametrization():

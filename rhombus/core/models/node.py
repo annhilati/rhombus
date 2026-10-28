@@ -10,7 +10,7 @@ import inspect
 import copy
 import warnings
 
-from rhombus.core.utils import JSONValue, BeetFile, fields, JSON_hash, check_type, annotated_fields
+from rhombus.core.utils import JSONValue, BeetFile, Annotation, fields, JSON_hash, check_type, annotated_fields
 from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, get_module_extension_namespace, parse_version_specifier
 
 
@@ -19,6 +19,7 @@ class FieldMeta:
     added_with: DatapackVersion | VersionString | VersionTuple | EllipsisType = ...,
     removed_with: DatapackVersion | VersionString | VersionTuple | EllipsisType = ...,
     legacy_keys: dict[DatapackVersion | VersionString | VersionTuple, str] = dataclasses.field(default_factory=dict)
+    legacy_types: dict[DatapackVersion | VersionString | VersionTuple, Annotation] = dataclasses.field(default_factory=dict)
     legacy_values: dict[DatapackVersion | VersionString | VersionTuple, Any] = dataclasses.field(default_factory=dict)
     validate: Callable[[Any], bool] | Callable[[Any, Any], bool] | None = None
     dependency_namespace: str = "datapack"
@@ -27,6 +28,12 @@ class FieldMeta:
         for threshold, key in sorted(self.legacy_keys.items(), reverse=False):
             if env._check_version(threshold, namespace=self.dependency_namespace) is False:
                 return key
+        return default
+
+    def get_appropriate_type(self, env: RhombusEnvironment, default: Annotation) -> Annotation:
+        for threshold, typ in sorted(self.legacy_types.items(), reverse=False):
+            if env._check_version(threshold, namespace=self.dependency_namespace) is False:
+                return typ
         return default
 
     def is_present(self, env: RhombusEnvironment) -> bool:
@@ -43,18 +50,19 @@ def field[Node, Value](
     added_with: DatapackVersion | VersionString | VersionTuple = ...,
     removed_with: DatapackVersion | VersionString | VersionTuple = ...,
     legacy_keys: dict[DatapackVersion | VersionString | VersionTuple, str] = {},
+    legacy_types: dict[DatapackVersion | VersionString | VersionTuple, Annotation] = {},
     legacy_values: dict[DatapackVersion | VersionString | VersionTuple, Value] = {},
     validate: Callable[[Value], bool] | Callable[[Value, Node], bool] | None = None,
-    **kwargs
+    **dataclass_field_kwargs
 ) -> dataclasses.Field:
-    meta = FieldMeta(added_with=added_with, removed_with=removed_with, legacy_keys=legacy_keys, legacy_values=legacy_values, validate=validate)
-    metadata = kwargs.get("metadata", {})
+    meta = FieldMeta(added_with=added_with, removed_with=removed_with, legacy_keys=legacy_keys, legacy_types=legacy_types, legacy_values=legacy_values, validate=validate)
+    metadata = dataclass_field_kwargs.get("metadata", {})
     metadata["rhombus_meta"] = meta
-    kwargs["metadata"] = metadata
+    dataclass_field_kwargs["metadata"] = metadata
     
     if default is not ...:
-        return dataclasses.field(default=default, **kwargs)
-    return dataclasses.field(**kwargs)
+        return dataclasses.field(default=default, **dataclass_field_kwargs)
+    return dataclasses.field(**dataclass_field_kwargs)
 
 
 @dataclass_transform(field_specifiers=(dataclasses.Field, dataclasses.field))
@@ -99,6 +107,12 @@ class NodeDataclassTransformer(type):
                     k_norm = parse_version_specifier(k, interpret_as_game_version_convert_to_datapack_version=is_dp) if k is not ... else k
                     new_legacy_keys[k_norm] = v
                 meta.legacy_keys = new_legacy_keys
+
+                new_legacy_types = {}
+                for k, v in meta.legacy_types.items():
+                    k_norm = parse_version_specifier(k, interpret_as_game_version_convert_to_datapack_version=is_dp) if k is not ... else k
+                    new_legacy_types[k_norm] = v
+                meta.legacy_types = new_legacy_types
                 
                 new_legacy_values = {}
                 for k, v in meta.legacy_values.items():
@@ -170,11 +184,17 @@ class NodeDataclassTransformer(type):
                     if hints is None:
                         hints = annotated_fields(self.__class__)
                         self.__class__.__rhombus_type_hints__ = hints
-                        
+
                     if field.name in hints:
+                        expected_type = hints[field.name]
+                        if "rhombus_meta" in field.metadata:
+                            meta: FieldMeta = field.metadata["rhombus_meta"]
+                            from rhombus.runtime import rho
+                            expected_type = meta.get_appropriate_type(rho, expected_type)
+
                         from rhombus.core.abstract import RhombusASTNode
-                        if not isinstance(val, RhombusASTNode) and not check_type(val, hints[field.name]):
-                            warnings.warn(f"Type mismatch in '{self.__class__.__name__}.{field.name}': Expected {hints[field.name]}, got {type(val).__name__} ({val!r})")
+                        if not isinstance(val, RhombusASTNode) and not check_type(val, expected_type):
+                            warnings.warn(f"Type mismatch in '{self.__class__.__name__}.{field.name}': Expected {expected_type}, got {type(val).__name__} ({val!r})")
 
                     # Freeze the node value (e.g. lists/dicts) to ensure immutability
                     object.__setattr__(self, field.name, _freeze_field_value(val))
