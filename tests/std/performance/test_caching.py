@@ -53,7 +53,7 @@ def test_upscale_repr_versions():
     assert "upscale(" in repr(upscale("in").build())
 
     rho.datapack_version = 124
-    assert repr(upscale("in").build()) == 'interpolated("minecraft:in", cell_size_xz=4, cell_size_y=8)'
+    assert repr(upscale("in").build()) == 'Reference(\'rhombus:generated/3d207221cee027f832f28fa316a4c87e\', definition=interpolated("minecraft:in", cell_size_xz=4, cell_size_y=8))'
 
     rho.datapack_version = 117
-    assert repr(upscale("in").build()) == 'interpolated("minecraft:in")'
+    assert repr(upscale("in").build()) == 'Reference(\'rhombus:generated/532e01174941d32b3b06e19a8a0c9b8b\', definition=interpolated("minecraft:in"))'

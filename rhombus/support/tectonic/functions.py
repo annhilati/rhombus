@@ -6,10 +6,16 @@ from . import types
 
 
 @macro
-def invert(argument: AnyDensity) -> Density:
+def invert(df: AnyDensity) -> Density:
     """Calculates the reciprocal value of the input."""
-    return Density(types.invert(argument.build()))
+    return Density(types.invert(df.build()))
 
+
+@macro
+def clamp(df: AnyDensity, min: AnyDensity, max: AnyDensity) -> Density:
+    """Clamps the input between two density functions."""
+    return Density(types.config_clamp(df.build(), min.build(), max.build()))
+    
 
 @macro
 def config_constant(key: str) -> Density:

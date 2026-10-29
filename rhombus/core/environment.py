@@ -141,7 +141,7 @@ class RhombusEnvironment:
     def datapack_version(self, value: DatapackVersion):
         if value is None:
             raise ValueError("datapack_version cannot be None.")
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, (int, float, str, tuple)):
             raise TypeError("datapack_version must be a float, int, str, or a tuple.")
         self.versions["datapack"] = parse_version_specifier(value)
 
@@ -202,29 +202,39 @@ class RhombusEnvironment:
                 
             elif isinstance(extension_target, str):
                 extension_ns = extension_target
+                is_dp = (extension_ns == "datapack")
                 if version is ...:
-                    if (known_extension := next(extension for extension in self._extensions if extension.namespace == extension_ns)) and known_extension.version is not None:
-                        extension_version = parse_version_specifier(known_extension.version)
+                    if (known_extension := next((extension for extension in self._extensions if extension.namespace == extension_ns), None)) and known_extension.version is not None:
+                        extension_version = parse_version_specifier(known_extension.version, interpret_as_game_version_convert_to_datapack_version=is_dp)
                     else:
                         raise ValueError(f"Cannot use default version for extension '{extension_ns}'. No ModExtension was provided")
                 else:
-                    extension_version = parse_version_specifier(version)
+                    extension_version = parse_version_specifier(version, interpret_as_game_version_convert_to_datapack_version=is_dp)
                 
             elif isinstance(extension_target, ModExtension):
                 extension_obj = extension_target
                 extension_ns = extension_obj.namespace
-                extension_version = parse_version_specifier(extension_obj.version) if extension_obj.version is not None else None
+                is_dp = (extension_ns == "datapack")
+                ver = version if version is not ... else extension_obj.version
+                if ver is None:
+                    extension_version = None
+                else:
+                    extension_version = parse_version_specifier(ver, interpret_as_game_version_convert_to_datapack_version=is_dp)
                 
             else:
                 raise ValueError(
                     f"Extension target {extension_target!r} is neither a module nor a ModExtension instance."
                 )
 
+            if extension_version is not None:
+                self.versions[extension_ns] = extension_version
+
             if extension_obj is not None:
                 extension_obj.apply(self)
                 self._extensions.add(extension_obj)
 
-            self.versions[extension_ns] = extension_version
+            if extension_version is not None:
+                self.versions[extension_ns] = extension_version
 
 
     def _check_version(

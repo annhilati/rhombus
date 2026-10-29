@@ -14,7 +14,7 @@ def test_referencing():
 
 
 def test_naming():
-    res = "my:reference" @ DummyResource(5)
+    res = DummyResource(5).named("my:reference")
     assert not res.is_reference
     assert res.identifier == "my:reference"
     assert res.val == 5

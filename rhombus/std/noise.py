@@ -127,7 +127,7 @@ class Noise(DatapackResource):
         return noise(self, xz_scale=xz_scale, y_scale=y_scale, shift_x=shift_x, shift_y=shift_y, shift_z=shift_z)
 
 
-lt.Noise = Noise # TODO: Remove this monkey patch. Opt to move the Noise class to core.models. Use a wrapper like the Density class for it here?
+lt.Noise = Noise
 @macro
 def noise(
     noise: Noise,

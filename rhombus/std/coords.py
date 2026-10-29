@@ -69,8 +69,7 @@ def gradient(
     if isinstance(to_coordinate, VerticalAnchor) and to_coordinate.type == "absolute":
         to_coordinate = to_coordinate.value
 
-    # TODO: Can we enable ValueAnchors in extrapolation?
-    if tiling == "extrapolate" and not (isinstance(from_coordinate, VerticalAnchor) or isinstance(to_coordinate, VerticalAnchor)):
+    if tiling == "extrapolate" and isinstance(from_coordinate, int) and isinstance(to_coordinate, int):
         m = (to_value - from_value) / (to_coordinate - from_coordinate)
         b = from_value - m * from_coordinate
         from_coordinate, to_coordinate = -_coord_limit, _coord_limit
@@ -134,7 +133,7 @@ def distance_to_point(
     metric: Literal[
         "euclidean", "euclidean_squared", "manhattan", "chebyshev"
     ] = "euclidean",
-):
+) -> Density:
     """Returns the distance between the current coordinates and given point coordinates.
 
     Parameters:

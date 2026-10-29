@@ -223,7 +223,6 @@ class LazyDispatcher:
         return hash(self.func)
 
     def _execute_for_version(self, *args: Any, **kwargs: Any) -> Any:
-        # TODO: Make this thread-safe
         _implementation_registrations.clear()
 
         result = self.func(*args, **kwargs)
