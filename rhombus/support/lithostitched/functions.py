@@ -28,15 +28,15 @@ def axis(axis: Literal["x", "y", "z"]):
 
 
 @macro
-def ceil(argument: AnyDensity):
+def ceil(df: AnyDensity):
     "Rounds the input to the nearest integer above the input."
-    return Density(types.ceil(argument.build()))
+    return Density(types.ceil(df.build()))
 
 
 @macro
-def cos(argument: AnyDensity):
+def cos(df: AnyDensity):
     "Returns the cosine value of the input."
-    return Density(types.cos(argument.build()))
+    return Density(types.cos(df.build()))
 
 
 @macro
@@ -63,21 +63,21 @@ def fast_noise(
 
 
 @macro
-def floor(argument: AnyDensity):
+def floor(df: AnyDensity):
     "Rounds the input to the nearest integer below the input."
-    return Density(types.floor(argument.build()))
+    return Density(types.floor(df.build()))
 
 
 @macro
-def mix(input: AnyDensity, argument1: AnyDensity, argument2: AnyDensity):
-    """Smoothly transitions between `argument1` and `argument2` using `input` as the delta between them.
+def mix(input: AnyDensity, df1: AnyDensity, df2: AnyDensity):
+    """Smoothly transitions between two density functions using `input` as the delta between them.
 
-    When `input` is negative, returns `argument1`, when it is negative, returns `argument2`.
+    When `input` is negative returns `df1`, when it is positive returns `df2`.
 
     ---
     [Lithostitched Wiki Reference](https://github.com/Apollounknowndev/lithostitched/wiki/Density-Function-Types#mix)
     """
-    return Density(types.mix(input.build(), argument1.build(), argument2.build()))
+    return Density(types.mix(input.build(), df1.build(), df2.build()))
 
 
 @macro
@@ -107,25 +107,25 @@ def select(
 
 @macro
 def shift(
-    input: AnyDensity,
+    df: AnyDensity,
     shift_x: AnyDensity = 0,
     shift_y: AnyDensity = 0,
     shift_z: AnyDensity = 0,
 ):
     "Returns the values of the input from shifted coordinates."
-    return Density(types.shift(input.build(), shift_x.build(), shift_y.build(), shift_z.build()))
+    return Density(types.shift(df.build(), shift_x.build(), shift_y.build(), shift_z.build()))
 
 
 @macro
-def sin(argument: AnyDensity):
-    "Returns the sine value of the input."
-    return Density(types.sin(argument.build()))
+def sin(df: AnyDensity):
+    "Calculates the sine value of the input."
+    return Density(types.sin(df.build()))
 
 
 @macro
-def sqrt(argument: AnyDensity):
-    "Returns the square root of the input."
-    return Density(types.sqrt(argument.build()))
+def sqrt(df: AnyDensity):
+    "Calculates the square root of the input."
+    return Density(types.sqrt(df.build()))
 
 
 @macro

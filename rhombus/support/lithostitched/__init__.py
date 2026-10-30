@@ -17,10 +17,6 @@ from rhombus.core.models.density_function import DensityFunction as _DensityFunc
 __extension__ = _ModExtension(
     namespace="lithostitched",
     version=(1, 6, 0),
-    preview_scripts=[
-        _ModExtension.resource("rhombus.support.lithostitched", "fastnoise-lite.ts"),
-        _ModExtension.resource("rhombus.support.lithostitched", "deepslate.ts"),
-    ],
     preview_beet_file_extensions={LithostitchedFastNoiseConfig},
     density_functions={
         cls.id: cls

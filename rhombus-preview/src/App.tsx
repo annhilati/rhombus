@@ -49,7 +49,6 @@ export default function App() {
 
         /** Loads the files from endpoint and vanilla resources */
         async function initializeData() {
-
             try {
                 // Files
                 const [loadedFiles] = await Promise.all([
@@ -59,38 +58,12 @@ export default function App() {
                         showToast('Failed fetching vanilla resources from Misode.')
                     })
                 ])
-                
-                // Scripts
-                try {
-                    const response = await fetch(`${endpoint}/addons/scripts`)
-                    if (response.ok) {
-                        const scripts = await response.json()
-                        const { transform } = await import('sucrase')
-                        for (const script of scripts) {
-                            try {
-                                if (script.name.endsWith('.ts')) {
-                                    const tsCode = await fetch(`${endpoint}${script.url}?t=${Date.now()}`).then(r => r.text())
-                                    const jsCode = transform(tsCode, { transforms: ['typescript'] }).code
-                                    const blob = new Blob([jsCode], { type: 'application/javascript' })
-                                    const url = URL.createObjectURL(blob)
-                                    await import(/* @vite-ignore */ url)
-                                } else {
-                                    await import(/* @vite-ignore */ `${endpoint}${script.url}?t=${Date.now()}`)
-                                }
-                            } catch (e) {
-                                console.error(`Failed to load addon script: ${script.url}`, e)
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Failed to fetch addons from service', e)
-                }
 
                 if (cancelled) return
-                
+
                 setFiles(loadedFiles)
                 showToast('✨ Files were changed')
-                
+
                 setSelectedFileKey((current) => current ?? null)
                 setStatus('ready')
                 setError(null)

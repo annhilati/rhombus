@@ -5,6 +5,7 @@ import './styles.scss'
 import './lib/deepslate-patch'
 import * as deepslate from 'deepslate'
 import * as pako from 'pako'
+import { registerAll } from 'deepslate-worldgen-mods'
 import DensityVisualizer from './components/DensityVisualizer'
 import TerrainVisualizer from './components/TerrainVisualizer'
 
@@ -19,6 +20,9 @@ window.rhombus = {
     ['worldgen/noise_settings', TerrainVisualizer]
   ]),
 }
+
+// Register all custom mod density functions and registries:
+registerAll(window.rhombus.densityFunctions)
 
 const originalFromJson = deepslate.DensityFunction.fromJson
 deepslate.DensityFunction.fromJson = function (obj: any, inputParser?: any) {

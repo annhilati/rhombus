@@ -23,7 +23,6 @@ from rhombus.core.models.density_function import DensityFunction as _DensityFunc
 __extension__ = _ModExtension(
     namespace="moredfs",
     version=(2, 2, 1),
-    preview_scripts=[_ModExtension.resource("rhombus.support.moredfs", "deepslate.ts")],
     density_functions={
         cls.id: cls
         for name, cls in types.__dict__.items()
