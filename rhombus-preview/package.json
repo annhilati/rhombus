@@ -11,7 +11,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@types/pako": "^2.0.4",
-    "deepslate": "^0.27.1",
+    "deepslate": "^0.27.2",
     "deepslate-worldgen-mods": "github:annhilati/deepslate-worldgen-mods",
     "flexlayout-react": "^0.9.1",
     "pako": "^3.0.0",
@@ -26,5 +26,8 @@
     "sass": "^1.101.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.12"
+  },
+  "overrides": {
+    "dompurify": "^3.4.17"
   }
 }
