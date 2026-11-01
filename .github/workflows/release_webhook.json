@@ -7,6 +7,7 @@
       "color": 6703855,
       "fields": [
         {
+          "name": "GitHub Actions",
           "value": "[View Run]({{RUN_URL}})"
         }
       ]

@@ -77,7 +77,7 @@ jobs:
             PAYLOAD="${PAYLOAD//\{\{VERSION\}\}/$VERSION}"
             PAYLOAD="${PAYLOAD//\{\{RUN_URL\}\}/${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}"
 
-            curl -X POST -H "Content-Type: application/json" -d "$PAYLOAD" $DISCORD_WEBHOOK
+            curl --fail-with-body -sS -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK"
           else
             echo "No DISCORD_WEBHOOK secret found. Skipping notification."
           fi
