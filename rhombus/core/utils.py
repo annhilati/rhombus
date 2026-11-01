@@ -67,6 +67,10 @@ def check_type(value: Any, annotation: Annotation) -> bool:
         return True
     if annotation is typing.Any:
         return True
+
+    from rhombus.core.abstract import RhombusASTNode
+    if isinstance(value, RhombusASTNode):
+        return True
         
     origin = typing.get_origin(annotation)
     args = typing.get_args(annotation)

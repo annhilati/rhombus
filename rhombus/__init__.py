@@ -29,8 +29,9 @@ _install(width=120, show_locals=True)
 
 
 import warnings as _warnings
+from rich.markup import escape as _escape
 
 def _warn(message, category, filename, lineno, file=None, line=None):
-    print(f"[bold #dc9650]Rhombus Warning\n╰─×[/] {message}\n")
+    print(f"[bold #dc9650]Rhombus Warning\n╰─×[/] {_escape(str(message))}\n")
 
 _warnings.showwarning = _warn

@@ -53,7 +53,7 @@ def interval_select(
     """
     @implementation(until=104.0)
     def _legacy():
-        result = functions[-1].AST
+        result = functions[-1].build()
         for i in range(len(thresholds) - 1, -1, -1):
             result = vt.range_choice(input.build(), -vt.literal_number_limit, thresholds[i], functions[i].build(), result)
         return result
@@ -61,5 +61,5 @@ def interval_select(
     @implementation()
     def _impl():
         return vt.interval_select(
-            input.build(), thresholds, [function.AST for function in functions]
+            input.build(), thresholds, [function.build() for function in functions]
         )
