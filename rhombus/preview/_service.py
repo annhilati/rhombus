@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Literal, Iterable
 from importlib.resources import files
 from contextlib import asynccontextmanager
+import contextvars
 import threading
 import time
 import sys
@@ -260,7 +261,8 @@ class RhombusPreviewService:
         sys.stdout.write("\033]0;Rhombus Preview Service\007")
         sys.stdout.flush()
 
-        thread = threading.Thread(target=self.rebuild_worker, daemon=True)
+        ctx = contextvars.copy_context()
+        thread = threading.Thread(target=ctx.run, args=(self.rebuild_worker,), daemon=True)
         thread.start()
 
         with self.compile_lock:

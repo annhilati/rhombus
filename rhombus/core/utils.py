@@ -217,11 +217,16 @@ class GlobalBinding[T]:
         self._ctxvar: contextvars.ContextVar[T | None] = contextvars.ContextVar(
             f"{factory.__name__}_binding", default=None
         )
+        self._default_instance: T | None = None
 
     def _get_instance(self) -> T:
         instance = self._ctxvar.get()
         if instance is None:
-            instance = self._factory()
+            if self._default_instance is None:
+                instance = self._factory()
+                self._default_instance = instance
+            else:
+                instance = self._default_instance
             self._ctxvar.set(instance)
         return instance
 
