@@ -355,11 +355,11 @@ def round(df: AnyDensity, decimals: int = 0) -> Density:
         if decimals:
             return (
                 df * 10**decimals
-                + constant(1.5) * constant(2**52)
-                - constant(1.5) * constant(2**52)
+                + constant(1.5 * 2**52)
+                - constant(1.5 * 2**52)
             ) / 10**decimals
         return (
-            df + constant(1.5) * constant(2**52) - constant(1.5) * constant(2**52)
+            df + constant(1.5 * 2**52) - constant(1.5 * 2**52)
         )
     
     @implementation

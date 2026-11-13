@@ -162,6 +162,23 @@ def noise(
         return Density(vt.noise(noise, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
 
 
+@macro
+def seed_random(key: str = None) -> Density:
+    """Samples a random value that is equal for all coordinates in the world. 
+    
+    The value is approximately between `-1` and `1` and follows a normal distribution
+    like any ordinary noise values too with a standard deviation of `1/3`.
+    
+    **ATTENTION:** Every call to this function produces a new seed-random.
+    To use the same seed-random twice without using a transient variable, set the `key` parameter equally.
+    """
+    import uuid
+    key = key or str(uuid.uuid4()).replace("-", "")
+    if not ":" in key:
+        key = "rhombus:generated/" + key
+    return noise(Noise(1, [1], base_amplitude=1, normalize=True).named(key), xz_scale=0, y_scale=0)
+
+
 def blended_noise(
     xz_scale: float,
     y_scale: float,
