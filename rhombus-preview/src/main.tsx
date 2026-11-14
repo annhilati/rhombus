@@ -26,7 +26,7 @@ registerAll(window.rhombus.densityFunctions)
 
 const originalFromJson = deepslate.DensityFunction.fromJson
 deepslate.DensityFunction.fromJson = function (obj: any, inputParser?: any) {
-  const parser = inputParser ?? deepslate.DensityFunction.fromJson
+  const parser = typeof inputParser === 'function' ? inputParser : deepslate.DensityFunction.fromJson
   const type = obj?.type?.replace(/^minecraft:/, '')
   if (type && window.rhombus.densityFunctions.has(type)) {
     return window.rhombus.densityFunctions.get(type)!(obj, parser)

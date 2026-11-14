@@ -174,7 +174,7 @@ def find_top_surface(
 
 
 @macro
-def slice(df: AnyDensity, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density:
+def slice(df: AnyDensity, *, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density:
     """Fixes the coordinate of one or more axes for the given density function.
 
     When evaluating the resulting density, the specified `x`, `y`, or `z` coordinates will be used
@@ -201,14 +201,14 @@ def domain_shift(df: AnyDensity, x: AnyDensity = 0, y: AnyDensity = 0, z: AnyDen
     """Calculates the value for the input, but with shifted input coordinates for its evaluation."""
     @implementation(since=125.1)
     def domain_warp():
-        if all(isinstance(o.build(), vt.constant) and o.build().value == 0 for o in (x, y, z)):
+        if all(o.build() == Density(0).build() for o in (x, y, z)):
             return df
         return Density(
             vt.domain_warp(
                 input=df.build(),
-                offset_x=x.build() if not (isinstance(x.build(), vt.constant) and x.build().value == 0) else None,
-                offset_y=y.build() if not (isinstance(y.build(), vt.constant) and y.build().value == 0) else None,
-                offset_z=z.build() if not (isinstance(z.build(), vt.constant) and z.build().value == 0) else None,
+                offset_x=x.build() if not (x.build() == Density(0).build()) else None,
+                offset_y=y.build() if not (y.build() == Density(0).build()) else None,
+                offset_z=z.build() if not (z.build() == Density(0).build()) else None,
             )
         )
 

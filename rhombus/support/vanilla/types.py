@@ -14,15 +14,13 @@ from rhombus.core import (
     field,
 )
 from rhombus.runtime import rho
-
-if TYPE_CHECKING:
-    from rhombus.std.noise import Noise
-
 literal_number_limit: Literal[1000000] = 1000000.0
 """The maximum literal value allowed as a density function shorthand and
 in the `argument` field of the `minecraft:constant` density function type.
 """
 # This corresponds to net.minecraft.world.level.levelgen.DensityFunctions.NOISE_VALUE_CODEC
+
+from rhombus.std.noise import Noise
 
 _ = Reference, constant
 

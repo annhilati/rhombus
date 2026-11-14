@@ -21,6 +21,7 @@ import inspect
 import hashlib
 import uuid
 import json
+import builtins
 import dataclasses
 import contextvars
 import urllib.request
@@ -127,7 +128,7 @@ _ADJECTIVES = [
     "fierce", "fluffy", "flying", "frosty", "golden", "happy", "hidden",
     "jolly", "lazy", "lucky", "magic", "mighty", "mystic", "noble", "proud",
     "quiet", "rapid", "secret", "silent", "smart", "sneaky", "solid", "swift",
-    "wild", "wise", "wooden", "yellow", "ancient", "angry", "awesome", "bold",
+    "wild", "wise", "wooden", "ancient", "angry", "awesome", "bold",
     "bouncy", "bright", "broken", "bumpy", "busy", "careful", "chilly", "chunky",
     "classic", "clean", "clumsy", "creepy", "crispy", "curious", "cute", "dark",
     "deadly", "deep", "dizzy", "dry", "dusty", "empty", "evil", "fancy", "fast",
@@ -197,6 +198,12 @@ def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
         hints = get_type_hints(o)
         return {f.name: hints[f.name] for f in flds if f.init and f.name in hints}
     except (NameError, TypeError):
+        try:
+            from rhombus.core.models.node import get_known_datapack_types
+            hints = get_type_hints(o, localns=get_known_datapack_types())
+            return {f.name: hints[f.name] for f in flds if f.init and f.name in hints}
+        except Exception:
+            pass
         hints = inspect.get_annotations(o if isinstance(o, type) else type(o), eval_str=False)
         return {f.name: hints.get(f.name, typing.Any) for f in flds if f.init}
 

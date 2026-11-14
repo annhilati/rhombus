@@ -57,3 +57,11 @@ def test_upscale_repr_versions():
 
     rho.datapack_version = 117
     assert repr(upscale("in").build()) == 'Reference(\'rhombus:generated/532e01174941d32b3b06e19a8a0c9b8b\', definition=interpolated("minecraft:in"))'
+
+
+def test_optimize_noise():
+    from rhombus.std.noise import Noise, noise
+    rho.set_version(minecraft='1.21')
+    d = noise(Noise(-9, [1.0]))
+    compiled = optimize(d).compile()
+    assert any("minecraft:noise" in str(f) for _, f in compiled)

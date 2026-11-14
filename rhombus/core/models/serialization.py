@@ -6,10 +6,10 @@ __all__ = [
 ]
 
 
-from typing import Union, TypeAliasType, Literal, Any, get_origin, get_args
+from typing import Union, TypeAliasType, Literal, Any, ForwardRef, get_origin, get_args
 from types import UnionType
 
-from rhombus.core.models.node import DatapackNode
+from rhombus.core.models.node import DatapackNode, get_known_datapack_types
 from rhombus.core.utils import JSONValue
 
 
@@ -52,6 +52,18 @@ def deserialize_any_inline[T](v: Any, t: type[T]) -> T:
 
 
 def _deserialize_any[T](v: Any, t: type[T], *, top_level: bool) -> T:
+    if isinstance(t, (str, ForwardRef)):
+        type_str = t.__forward_arg__ if isinstance(t, ForwardRef) else t
+        types_map = get_known_datapack_types()
+        resolved = types_map.get(type_str)
+        if resolved is None:
+            try:
+                resolved = eval(type_str, types_map)
+            except Exception:
+                resolved = None
+        if resolved is not None:
+            return _deserialize_any(v, resolved, top_level=top_level)
+
     origin = get_origin(t)
 
     if origin is None:

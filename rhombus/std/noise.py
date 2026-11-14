@@ -1,9 +1,9 @@
-"""
-"""
+"""Macros for working with noises."""
 
 __all__ = [
     "Noise",
     "noise",
+    "seed_random",
     "blended_noise",
     "shift",
     "shift_a",
@@ -21,10 +21,6 @@ from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 from rhombus.runtime import rho
-
-
-import rhombus.support.vanilla.types as vt
-import rhombus.support.vanilla.legacy_types as lt
 
 
 class Noise(DatapackResource):
@@ -126,8 +122,13 @@ class Noise(DatapackResource):
     ) -> Density:
         return noise(self, xz_scale=xz_scale, y_scale=y_scale, shift_x=shift_x, shift_y=shift_y, shift_z=shift_z)
 
+import rhombus.support.vanilla.types as vt
+import rhombus.support.vanilla.legacy_types as lt
 
+vt.Noise = Noise
 lt.Noise = Noise
+
+
 @macro
 def noise(
     noise: Noise,
@@ -164,7 +165,7 @@ def noise(
 
 @macro
 def seed_random(key: str = None) -> Density:
-    """Samples a random value that is equal for all coordinates in the world. 
+    """Creates a random value that is equal for all coordinates in the world. 
     
     The value is approximately between `-1` and `1` and follows a normal distribution
     like any ordinary noise values too with a standard deviation of `1/3`.
@@ -262,7 +263,7 @@ def end_islands() -> Density:
         from rhombus.std.coords import distance_to_point, slice
         from rhombus.std.math import clamp, max
         dist = distance_to_point((0, 0, 0), metric="euclidean")
-        inner = (clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1.0 / 128.0)
+        inner = (clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1 / 128)
         inner_slice = slice(inner, y=0)
             
         return max(inner_slice, end_outer_islands())

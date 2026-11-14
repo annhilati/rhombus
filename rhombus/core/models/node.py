@@ -1,4 +1,4 @@
-__all__ = ["DatapackNode", "field", "FieldMeta", "walk", "transform"]
+__all__ = ["DatapackNode", "field", "FieldMeta", "walk", "transform", "get_known_datapack_types"]
 
 
 from typing import Self, Any, ClassVar, Callable, dataclass_transform 
@@ -9,6 +9,7 @@ import dataclasses
 import inspect
 import copy
 import warnings
+import builtins
 
 from rhombus.core.utils import JSONValue, BeetFile, Annotation, fields, JSON_hash, check_type, annotated_fields
 from rhombus.core.environment import RhombusEnvironment, DatapackVersion, VersionString, VersionTuple, get_module_extension_namespace, parse_version_specifier
@@ -384,6 +385,29 @@ class DatapackNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
         dictionary) like it would be found within a nested file structure.
         """
         return cls.deserialize_toplevel(data)
+
+
+def get_known_datapack_types() -> dict[str, Any]:
+    """Dynamically returns a mapping of built-in types and all subclasses of DatapackNode.
+
+    This is used to dynamically resolve string annotations and forward references
+    without hardcoding any specific domain or standard library types.
+    """
+    types_map: dict[str, Any] = {
+        name: getattr(builtins, name)
+        for name in dir(builtins)
+        if isinstance(getattr(builtins, name), type)
+    }
+    types_map["None"] = type(None)
+    types_map["Any"] = Any
+
+    queue = [DatapackNode]
+    while queue:
+        curr = queue.pop(0)
+        types_map[curr.__name__] = curr
+        queue.extend(curr.__subclasses__())
+
+    return types_map
 
 
 def walk(node: DatapackNode | Any) -> Iterator[DatapackNode]:

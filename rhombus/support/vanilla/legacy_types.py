@@ -7,9 +7,7 @@ from rhombus.core import (
     SimpleDensityFunction,
     field
 )
-
-if TYPE_CHECKING:
-    from rhombus.std.noise import Noise
+from rhombus.std.noise import Noise
 
 
 class cache_2d(MappedDensityFunction, versions=(9, 118)):

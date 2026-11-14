@@ -53,7 +53,7 @@ class RhombusFilewatcher(FileSystemEventHandler):
     def trigger(
         self, action: Literal["Created", "Deleted", "Changed", "Moved"], path: str
     ):
-        if ".git" in Path(path).parts:
+        if any(part in Path(path).parts for part in [".git", "__pycache__"]):
             return
 
         if self.watch_file and Path(path).name != self.watch_file:
