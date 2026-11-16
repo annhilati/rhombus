@@ -1,4 +1,4 @@
-from typing import ClassVar, Self, Literal, Optional
+from typing import ClassVar, Literal, Optional
 
 from rhombus.core import (
     DensityFunction,

@@ -492,7 +492,7 @@ def spline(
 
 
 # Redirect imports
-from rhombus.std.math._splinelib import sample_spline_points, poly_spline_points, spline_points_to_cubics
+from rhombus.std.math.splines import sample_spline_points, poly_spline_points, spline_points_to_cubics
 
 
 @macro

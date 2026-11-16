@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-__all__ = ["when"]
+__all__ = ["when", "ConditionSelector", "Condition", "Causality"]
 
 from dataclasses import dataclass, field
-from typing import Any, Never, Callable
+from typing import Any, Callable
 from enum import Enum
 
 from rhombus.core.models.density_function import DensityFunction
@@ -11,7 +11,7 @@ from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std import caching
 import rhombus.support.vanilla.types as vt
 
-from .macros import range_choice, interval_select
+from .functions import range_choice, interval_select
 
 EPSILON = 1e-7
 OMEGA = vt.literal_number_limit

@@ -115,8 +115,6 @@ class RhombusEnvironment:
         # Preview
         self.preview_beet_file_extensions: set[type["BeetFile"]] = set()
         "Set of `BeetFile` representing datapack files to include when previewing a datapack."  # This was introduces for the CLI, so extensions can be stated
-        self.preview_file_icons: dict[str, str] = {}
-        "Mapping of svg file icons and corresponding Regex expressions that are tested on the registry ids (without namespace)"
         self.preview_scripts: list[str | Path] = []
         """Paths of JavaScript or TypeScript files in this attribute will be loaded by
         Rhombus Preview and patched into Deepslate.

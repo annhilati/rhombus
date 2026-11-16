@@ -2,6 +2,7 @@ from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 import rhombus.support.vanilla.types as vt
 
+__all__ = ["range_choice", "interval_select", "half_negative", "quarter_negative"]
 
 @macro
 def range_choice(
@@ -24,15 +25,13 @@ def range_choice(
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#range_choice)
     """
-    @implementation()
-    def _impl():
-        return vt.range_choice(
-            input.build(),
-            min_inclusive,
-            max_exclusive,
-            when_in_range.build(),
-            when_out_of_range.build(),
-        )
+    return vt.range_choice(
+        input.build(),
+        min_inclusive,
+        max_exclusive,
+        when_in_range.build(),
+        when_out_of_range.build(),
+    )
 
 
 @macro
@@ -52,14 +51,25 @@ def interval_select(
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interval_select)
     """
     @implementation(until=104.0)
-    def _legacy():
+    # we primarily have this legacy implementation here to simplify building conditional trees with the interfaces from ~.fluent
+    def backwards_compat():
         result = functions[-1].build()
         for i in range(len(thresholds) - 1, -1, -1):
             result = vt.range_choice(input.build(), -vt.literal_number_limit, thresholds[i], functions[i].build(), result)
         return result
 
     @implementation()
-    def _impl():
+    def interval_select():
         return vt.interval_select(
             input.build(), thresholds, [function.build() for function in functions]
         )
+
+@macro
+def half_negative(input: AnyDensity):
+    """Returns half of the input if it is negative and the input itself otherwise."""
+    return Density(vt.half_negative(input.build()))
+
+@macro
+def quarter_negative(input: AnyDensity):
+    """Returns a quarter of the input if it is negative and the input itself otherwise."""
+    return Density(vt.quarter_negative(input.build()))

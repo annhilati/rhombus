@@ -20,4 +20,4 @@ out = (
 """
 
 from .fluent import *
-from .macros import range_choice, interval_select
+from .functions import range_choice, interval_select

@@ -1,4 +1,4 @@
-# Infrastructure-relevant symbols
+# Infrastructure-relevant symbols and macro collections
 from rhombus.std import *
 
 # Standard Library

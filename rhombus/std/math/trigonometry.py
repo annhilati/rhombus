@@ -3,7 +3,7 @@ import math as py_math
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std.math.general import spline
-from rhombus.std.math import _splinelib
+from rhombus.std.math import splines
 from rhombus.std import caching, math
 
 
@@ -15,11 +15,11 @@ pi = 3.1415926535897932 # 384626433832795028841971693993751058209749445923078164
 
 @macro
 def sin(df: AnyDensity) -> Density:
-    return spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.sin, (0, 2 * pi), 5))
+    return spline(df % (2 * pi), splines.sample_spline_points(py_math.sin, (0, 2 * pi), 5))
 
 @macro
 def cos(df: AnyDensity) -> Density:
-    return spline(df % (2 * pi), _splinelib.sample_spline_points(py_math.cos, (0, 2 * pi), 5))
+    return spline(df % (2 * pi), splines.sample_spline_points(py_math.cos, (0, 2 * pi), 5))
 
 # ======// Derived Trigonometric Functions //====================================================//
 
@@ -54,7 +54,7 @@ def arccos(df: AnyDensity) -> Density:
 
 @macro
 def arctan(df: AnyDensity) -> Density:
-    return spline(df, _splinelib.sample_spline_points(py_math.atan, (-8, 8), points=7))
+    return spline(df, splines.sample_spline_points(py_math.atan, (-8, 8), points=7))
 
 @macro
 def arccot(df: AnyDensity) -> Density:
@@ -97,7 +97,7 @@ def cosh(df: AnyDensity) -> Density:
 def tanh(df: AnyDensity) -> Density:
     @implementation(until=113)
     def tanh():
-        return spline(df, _splinelib.sample_spline_points(py_math.tanh, (-3.5, 3.5), points=5))
+        return spline(df, splines.sample_spline_points(py_math.tanh, (-3.5, 3.5), points=5))
     @implementation
     def tanh():
         return (math.e**df - math.e**(-df)) / (math.e**df + math.e**(-df))
@@ -129,7 +129,7 @@ def csch(df: AnyDensity) -> Density:
 def arsinh(df: AnyDensity) -> Density:
     @implementation(until=113)
     def arcsinh():
-        spline(df, _splinelib.sample_spline_points(py_math.asinh, (-60, 60), points=14))
+        spline(df, splines.sample_spline_points(py_math.asinh, (-60, 60), points=14))
     @implementation
     def arcsinh():
         return math.log(df + math.sqrt(df**2 + 1))

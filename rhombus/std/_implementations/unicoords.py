@@ -98,9 +98,7 @@ def coord_component(
     value = innermost
     for i in range(25):
         value = add(
-            2**i
-            if 2**i < 1_000_000
-            else (mul(65536.0, 2**i / 65536.0 if i != 24 else -(2**i) / 65536.0)),
+            2**i if 2**i < 1_000_000 else (mul(65536.0, 2**i / 65536.0 if i != 24 else -(2**i) / 65536.0)),
             mul(
                 range_choice(
                     input=(

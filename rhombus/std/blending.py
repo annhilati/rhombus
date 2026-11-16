@@ -6,6 +6,7 @@ from rhombus.std.builtin.macros import macro
 import rhombus.support.vanilla.types as vt
 
 
+@macro
 def beardifier() -> Density:
     """Adds [beards](https://minecraft.wiki/w/Structure_definition) for structures.
     Its value is already added to `final_density` in the noise settings by the game.
@@ -17,6 +18,7 @@ def beardifier() -> Density:
     return Density(vt.beardifier())
 
 
+@macro
 def blend_alpha() -> Density:
     """Gets the alpha (weight) value used for blending old and new chunks.
 
@@ -44,6 +46,7 @@ def blend_density(df: AnyDensity) -> Density:
     return Density(vt.blend_density(df.build()))
 
 
+@macro
 def blend_offset() -> Density:
     """Gets the height offset used for blending old and new terrain.
 

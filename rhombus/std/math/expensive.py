@@ -20,13 +20,13 @@ from rhombus.std import math, caching
 def sqrt(
     df: AnyDensity,
     iterations: int = 3,
-    guess: Callable[[Density], Density] = lambda df: df * 0.5,
+    guess: Density | Callable[[Density], Density] = lambda df: df * 0.5,
 ) -> Density:
     """Approximates the square root of the input."""
     if iterations < 1:
             raise ValueError("Need one iteration at least")
     
-    x = guess(df)
+    x = guess if isinstance(guess, Density) else guess(df)
 
     for _ in range(iterations):
         x = 0.5 * (x + (df / x))

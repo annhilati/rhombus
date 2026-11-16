@@ -10,7 +10,7 @@ from math import sqrt, pi
 
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro
-from rhombus.std.math import _splinelib
+from rhombus.std.math import splines
 from rhombus.std import math
 
 
@@ -18,7 +18,7 @@ from rhombus.std import math
 def erf(argument: AnyDensity) -> Density:
     """Calculates the value of the input on the Gaussian error function."""
     return math.spline(
-        argument, _splinelib.sample_spline_points(py_math.erf, (-2.5, 2.5), 5)
+        argument, splines.sample_spline_points(py_math.erf, (-2.5, 2.5), 5)
     )
 
 
@@ -61,7 +61,7 @@ def logistic(
 
     return math.spline(
         argument,
-        _splinelib.sample_spline_points(func, domain, 7)
+        splines.sample_spline_points(func, domain, 7)
     )
 
 
@@ -84,7 +84,7 @@ def normalPDF(
     )
     return math.spline(
         argument,
-        _splinelib.sample_spline_points(
+        splines.sample_spline_points(
             func, (mean - 3.5 * standard_deviation, mean + 3.5 * standard_deviation), 13
         ),
     )
@@ -108,7 +108,7 @@ def normalCDF(
     )
     return math.spline(
         argument,
-        _splinelib.sample_spline_points(
+        splines.sample_spline_points(
             func, (mean - 3.5 * standard_deviation, mean + 3.5 * standard_deviation), 13
         ),
     )

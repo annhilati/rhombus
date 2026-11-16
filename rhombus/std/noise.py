@@ -14,12 +14,15 @@ __all__ = [
 ]
 
 from typing import ClassVar, Literal
+import uuid
 
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
+from rhombus.std.coords import distance_to_point, slice
+from rhombus.std.math import clamp, max
 from rhombus.runtime import rho
 
 
@@ -173,7 +176,6 @@ def seed_random(key: str = None) -> Density:
     **ATTENTION:** Every call to this function produces a new seed-random.
     To use the same seed-random twice without using a transient variable, set the `key` parameter equally.
     """
-    import uuid
     key = key or str(uuid.uuid4()).replace("-", "")
     if not ":" in key:
         key = "rhombus:generated/" + key
@@ -260,8 +262,6 @@ def end_islands() -> Density:
 
     @implementation
     def modern():
-        from rhombus.std.coords import distance_to_point, slice
-        from rhombus.std.math import clamp, max
         dist = distance_to_point((0, 0, 0), metric="euclidean")
         inner = (clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1 / 128)
         inner_slice = slice(inner, y=0)

@@ -15,13 +15,15 @@ These cases are listed here:
 
 Density Function Type                        | Where located
 -------------------------------------------- | --------------------------------------------------------------------
-`minecraft:cache_2d` (until 118)             | Present in `~.std.caching` as `cache_2d`
-`minecraft:cache_all_in_cell` (until 118)    | Present in `~.std.caching` as `cache_all_in_cell`
+`minecraft:cache_2d` (until 118)             | Present in `~.std.caching`
+`minecraft:cache_all_in_cell` (until 118)    | Present in `~.std.caching`
 `minecraft:cache_once` (until 118)           | Pre-118 Implementation of `~.std.caching.cache`
-`minecraft:end_islands` (until 113)          | Present in `~.std.noise` as `end_islands`
+`minecraft:end_islands` (until 113)          | Present in `~.std.noise`
 `minecraft:flat_cache` (until 118)           | Pre-118 Implementation of `~.std.maps.flatten`
+`minecraft:half_negative`                    | Present in `~.std.conditional`
 `minecraft:interpolated` (until 125)         | Pre-125 Implementations of `~.std.caching.upscale`
 `minecraft:invert` (until 111)               | Automatically used in exchange for `minecraft:reciprocal` in pre-111 versions
+`minecraft:quarter_negative`                 | Present in `~.std.conditional`
 `minecraft:shifted_noise` (until 118)        | Pre-118 Implementation of `~.std.noise.noise`
 `minecraft:slide` (until 10)                 | Not present and not planned
 `minecraft:terrain_shaper_spline` (until 10) | Not present and not planned
