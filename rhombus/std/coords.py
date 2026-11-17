@@ -187,32 +187,29 @@ def x() -> Density:
             quad_shift_x=0.9821958456973294,
             quad_shift_z=0,
         )
+        
     @implementation
     def x():
-        return caching.cache(
-            gradient(
-                "x",
-                -_coord_limit,
-                _coord_limit,
-                -_coord_limit,
-                _coord_limit,
-                tiling="clamp_to_edge",
-            )
+        return gradient(
+            "x",
+            from_coordinate=-_coord_limit,
+            to_coordinate=_coord_limit,
+            from_value=-_coord_limit,
+            to_value=_coord_limit,
+            tiling="clamp_to_edge",
         )
 
 
 @macro
 def y() -> Density:
     """Returns the Y-coordinate of the current block."""
-    return caching.cache(
-        gradient(
-            "y",
-            -_coord_limit,
-            _coord_limit,
-            -_coord_limit,
-            _coord_limit,
-            tiling="clamp_to_edge",
-        )
+    return gradient(
+        "y",
+        from_coordinate=-_coord_limit,
+        to_coordinate=_coord_limit,
+        from_value=-_coord_limit,
+        to_value=_coord_limit,
+        tiling="clamp_to_edge",
     )
 
 
@@ -230,17 +227,15 @@ def z() -> Density:
 
     @implementation
     def z():
-        return caching.cache(
-            gradient(
-                "z",
-                -_coord_limit,
-                _coord_limit,
-                -_coord_limit,
-                _coord_limit,
-                tiling="clamp_to_edge",
-            )
+        return gradient(
+            "z",
+            from_coordinate=-_coord_limit,
+            to_coordinate=_coord_limit,
+            from_value=-_coord_limit,
+            to_value=_coord_limit,
+            tiling="clamp_to_edge",
         )
-
+        
 
 # ======// Derived Coordinates //================================================================//
 
