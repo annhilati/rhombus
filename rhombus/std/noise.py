@@ -21,7 +21,6 @@ from beet.contrib.worldgen import WorldgenNoise
 from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
-from rhombus.std.coords import distance_to_point, slice
 from rhombus.std.math import clamp, max
 from rhombus.runtime import rho
 
@@ -195,6 +194,7 @@ def blended_noise(
 
     A scale of `1` corresponds to `12 blocks` of region width. At `0.5` the regions are almost indistinguishable.
     At higher scales, the repetition becomes clearly visible.
+
     Parameters:
         xz_scale (float between `0.001` and `1000.0`): Controls how often the block-like structures repeat in the XZ-plane.
         y_scale (float between `0.001` and `1000.0`): Controls how often the block-like structures repeat in the Y-axis.
@@ -262,6 +262,7 @@ def end_islands() -> Density:
 
     @implementation
     def modern():
+        from rhombus.std.coords import distance_to_point, slice
         dist = distance_to_point((0, 0, 0), metric="euclidean")
         inner = (clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1 / 128)
         inner_slice = slice(inner, y=0)

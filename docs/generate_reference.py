@@ -75,9 +75,29 @@ def format_type_parameters(obj) -> str:
     return f"[{', '.join(parts)}]"
 
 
+SECTION_NAMES = (
+    r"args|arguments|params|parameters|keyword args|keyword arguments|"
+    r"other args|other arguments|other params|other parameters|"
+    r"type args|type arguments|type params|type parameters|"
+    r"raises|exceptions|returns|yields|receives|examples|attributes|"
+    r"functions|methods|classes|type aliases|modules|warns|warnings"
+)
+SECTION_HEADER_RE = re.compile(
+    rf"(?m)^(?P<prev>.+\S)[ \t]*\n(?P<header>[ \t]*(?:{SECTION_NAMES}):[ \t]*)$",
+    re.IGNORECASE,
+)
+
+
 def render_docstring(docstring: Docstring) -> str:
     if not docstring:
         return ""
+
+    if docstring.value:
+        fixed_value = SECTION_HEADER_RE.sub(r"\g<prev>\n\n\g<header>", docstring.value)
+        if fixed_value != docstring.value:
+            docstring.value = fixed_value
+            if "parsed" in docstring.__dict__:
+                del docstring.parsed
 
     parsed = docstring.parsed or None
     if not parsed:
@@ -143,32 +163,33 @@ def render_docstring(docstring: Docstring) -> str:
 
                 parts.append(out)
 
-            elif kind == "parameters":
-                parts.append("**Parameters:**\n")
+            elif kind in ("parameters", "other parameters"):
+                title = "Other Parameters" if kind == "other parameters" else "Parameters"
+                parts.append(f"**{title}:**\n")
                 for param in section.value:
-                    type_str = (
-                        f" (`{param.annotation}`)"
-                        if getattr(param, "annotation", None)
-                        else ""
-                    )
+                    if getattr(param, "annotation", None):
+                        ann = str(param.annotation)
+                        type_str = f" ({ann})" if "`" in ann else f" (`{ann}`)"
+                    else:
+                        type_str = ""
                     parts.append(f"- `{param.name}`{type_str}: {param.description}")
             elif kind == "returns":
                 parts.append("**Returns:**\n")
                 for ret in section.value:
-                    type_str = (
-                        f"`{ret.annotation}`: "
-                        if getattr(ret, "annotation", None)
-                        else ""
-                    )
+                    if getattr(ret, "annotation", None):
+                        ann = str(ret.annotation)
+                        type_str = f"{ann}: " if "`" in ann else f"`{ann}`: "
+                    else:
+                        type_str = ""
                     parts.append(f"- {type_str}{ret.description}")
             elif kind == "raises":
                 parts.append("**Raises:**\n")
                 for exc in section.value:
-                    type_str = (
-                        f"`{exc.annotation}`: "
-                        if getattr(exc, "annotation", None)
-                        else ""
-                    )
+                    if getattr(exc, "annotation", None):
+                        ann = str(exc.annotation)
+                        type_str = f"{ann}: " if "`" in ann else f"`{ann}`: "
+                    else:
+                        type_str = ""
                     parts.append(f"- {type_str}{exc.description}")
             else:
                 parts.append(f"**{kind.capitalize()}:**\n")
