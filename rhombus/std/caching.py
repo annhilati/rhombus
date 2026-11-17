@@ -186,15 +186,16 @@ def optimize(
     targets: Iterable[AnyDensity] = Any,
     min_size: int = 5,
     min_occurances: int = 2,
-    caching_function: DensityFunction | Callable[[DensityFunction], DensityFunction | Density] = vt.cache
+    caching_function: DensityFunction | Callable[[DensityFunction], AnyDensity] = vt.cache
 ) -> Density:
     """The caching optimizer transforms a `Density`, such that it performs better by
     wrapping certain parts of the density function's abstract syntax tree in a caching function.
     
-    The wrapper `caching_function` is applied to all AST-parts that
-    - consist of at least `min_size` nodes,
-    - occur at least `min_occurances` times in `df` and
-    - are specified in `targets` if it has been set at all.
+    Parameters:
+        targets (Iterable[AnyDensity]): If specified only nodes identical to one of these will be wrapped.
+        min_size (int): Minimum number of subnodes a node needs to have for the wrapper to be applied.
+        min_occurances (int): Minimum number of occurances a node needs to have in the density tree for the wrapper to be applied.
+        caching_function (Callable[[DensityFunction], AnyDensity]): Wrapper that is applied around applicable nodes.
     """
     if targets is Any:
         targets: Iterable[AnyDensity] = ()
@@ -211,7 +212,7 @@ def optimize(
         
     transformer: Callable[[DensityFunction], DensityFunction] = lambda node: Reference(
         "rhombus:generated/" + JSON_hash(node.serialize_toplevel()),
-        definition=caching_function(node) if not isinstance(caching_function(node), Density) else caching_function(node).build(),
+        definition=Density(caching_function(node)).build()
     )
         
     return Density(

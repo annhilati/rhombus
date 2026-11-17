@@ -18,6 +18,7 @@ Density Function Type                        | Where located
 `minecraft:cache_2d` (until 118)             | Present in `~.std.caching`
 `minecraft:cache_all_in_cell` (until 118)    | Present in `~.std.caching`
 `minecraft:cache_once` (until 118)           | Pre-118 Implementation of `~.std.caching.cache`
+`minecraft:domain_warp` (from 125.1)         | Present in `~.std.coords` as `domain_shift`
 `minecraft:end_islands` (until 113)          | Present in `~.std.noise`
 `minecraft:flat_cache` (until 118)           | Pre-118 Implementation of `~.std.maps.flatten`
 `minecraft:half_negative`                    | Present in `~.std.conditional`
@@ -27,5 +28,5 @@ Density Function Type                        | Where located
 `minecraft:shifted_noise` (until 118)        | Pre-118 Implementation of `~.std.noise.noise`
 `minecraft:slide` (until 10)                 | Not present and not planned
 `minecraft:terrain_shaper_spline` (until 10) | Not present and not planned
-`minecraft:weird_scaled_sampler` (until 104) | Present in `~.std.noise` as `weird_scaled_sampler`
+`minecraft:weird_scaled_sampler` (until 104) | Present in `~.std.noise`
 `minecraft:y_clamped_gradient` (until 125)   | Pre-113 Implementation of `~.std.coords.gradient`

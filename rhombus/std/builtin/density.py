@@ -2,6 +2,7 @@ from __future__ import annotations
 
 __all__ = ["Density", "AnyDensity"]
 
+# TODO: Add Tools for type checking like Density.is_of_type(t: DensityFunction)
 
 from dataclasses import dataclass
 from typing import Self, Literal, overload

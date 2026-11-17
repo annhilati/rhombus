@@ -173,46 +173,6 @@ def find_top_surface(
         )
 
 
-@macro
-def slice(df: AnyDensity, *, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density:
-    """Fixes the coordinate of one or more axes for the given density function.
-
-    When evaluating the resulting density, the specified `x`, `y`, or `z` coordinates will be used
-    instead of the context's actual position in the world. This effectively extracts a 2D plane, a
-    1D line, or a single point from the original density and projects it continuously along the sliced axes.
-
-    ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#slice)
-    """
-    @implementation(since=113)
-    def slice():
-        out = df.AST
-        if x:
-            out = vt.slice(input=out, axis="x", coordinate=x)
-        if y:
-            out = vt.slice(input=out, axis="y", coordinate=y)
-        if z:
-            out = vt.slice(input=out, axis="z", coordinate=z)
-        return Density(out)
-
-
-@macro
-def domain_shift(df: AnyDensity, x: AnyDensity = 0, y: AnyDensity = 0, z: AnyDensity = 0):
-    """Calculates the value for the input, but with shifted input coordinates for its evaluation."""
-    @implementation(since=125.1)
-    def domain_warp():
-        if all(o.build() == Density(0).build() for o in (x, y, z)):
-            return df
-        return Density(
-            vt.domain_warp(
-                input=df.build(),
-                offset_x=x.build() if not (x.build() == Density(0).build()) else None,
-                offset_y=y.build() if not (y.build() == Density(0).build()) else None,
-                offset_z=z.build() if not (z.build() == Density(0).build()) else None,
-            )
-        )
-
-
 # ======// Coordinates //=========================================================================//
 
 
@@ -313,3 +273,71 @@ def chunk_relative_y():
 def chunk_relative_z():
     """Returns the Z-coordinate inside of the current chunk."""
     return math.mod(z(), 16)
+
+
+
+# ======// Domain Warping //=====================================================================//
+
+
+@macro
+def slice(df: AnyDensity, *, x: Optional[int] = None, y: Optional[int] = None, z: Optional[int] = None) -> Density:
+    """Fixes the coordinate of one or more axes for the given density function.
+
+    When evaluating the resulting density, the specified `x`, `y`, or `z` coordinates will be used
+    instead of the context's actual position in the world. This effectively extracts a 2D plane, a
+    1D line, or a single point from the original density and projects it continuously along the sliced axes.
+
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#slice)
+    """
+    @implementation(since=113)
+    def slice():
+        out = df.AST
+        if x:
+            out = vt.slice(input=out, axis="x", coordinate=x)
+        if y:
+            out = vt.slice(input=out, axis="y", coordinate=y)
+        if z:
+            out = vt.slice(input=out, axis="z", coordinate=z)
+        return Density(out)
+
+
+@macro
+def domain_shift(df: AnyDensity, *, dx: AnyDensity = 0, dy: AnyDensity = 0, dz: AnyDensity = 0) -> Density:
+    """Calculates the value for the input, but with shifted input coordinates for its evaluation."""
+    # TODO: What happens for fractional shifts?
+    @implementation(since=125.1)
+    def domain_warp():
+        if all(o.build() == Density(0).build() for o in (dx, dy, dz)):
+            return df
+        return Density(
+            vt.domain_warp(
+                input=df.build(),
+                offset_x=dx.build() if not (dx.build() == Density(0).build()) else None,
+                offset_y=dy.build() if not (dy.build() == Density(0).build()) else None,
+                offset_z=dz.build() if not (dz.build() == Density(0).build()) else None,
+            )
+        )
+
+
+_x, _y, _z = x, y, z
+
+@macro
+def domain_pin(df: AnyDensity, *, x: Optional[AnyDensity] = None, y: Optional[AnyDensity] = None, z: Optional[AnyDensity] = None) -> Density:
+    """
+    Calculates the value for the input, but for the specified input coordinates.
+    Omitted axes will use the coordinate values from the current block.
+    """
+    if all(a is None or isinstance(a.build(), vt.constant) for a in (x, y, z)):
+        return slice(
+            df,
+            x=x.build().value if x is not None else None,
+            y=y.build().value if y is not None else None,
+            z=z.build().value if z is not None else None
+        )
+    return domain_shift(
+        df,
+        dx=x-_x() if x is not None else 0,
+        dy=y-_y() if y is not None else 0,
+        dz=z-_z() if z is not None else 0
+    )
