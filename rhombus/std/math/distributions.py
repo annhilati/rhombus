@@ -69,7 +69,7 @@ def logistic(
 def normalPDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
 ) -> Density:
-    """Calculates the value of the input on a normal distributed probability density function.
+    """Calculates the value of the input on a normally distributed probability density function.
 
     Parameters:
         mean (float): The center of the normal distribution.
@@ -94,7 +94,7 @@ def normalPDF(
 def normalCDF(
     argument: AnyDensity, mean: float = 0, standard_deviation: float = 1 / sqrt(2 * pi)
 ) -> Density:
-    """Calculates the value of the input on a normal distributed cumulative distribution function.
+    """Calculates the value of the input on a normally distributed cumulative distribution function.
 
     Parameters:
         mean (float): The center of the normal distribution.

@@ -3,9 +3,8 @@
 __all__ = [
     "Noise",
     "noise",
-    "seed_random",
-    "block_random",
-    "random_range",
+    "random",
+    "random_seeded",
     "blended_noise",
     "shift",
     "shift_a",
@@ -134,6 +133,7 @@ vt.Noise = Noise
 lt.Noise = Noise
 
 
+# TODO: Rename to sample?
 @macro
 def noise(
     noise: Noise,
@@ -166,44 +166,6 @@ def noise(
     @implementation
     def noise_modern():
         return Density(vt.noise(noise, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
-
-
-@macro
-def seed_random(key: str = None) -> Density:
-    """Creates a random value that is equal for all coordinates in the world. 
-    
-    The value is approximately between `-1` and `1` and follows a normal distribution
-    like any ordinary noise values too with a standard deviation of `1/3`.
-    
-    **ATTENTION:** Every call to this function produces a new seed-random.
-    To use the same seed-random twice without using a transient variable, set the `key` parameter equally.
-    """
-    key = key or str(uuid.uuid4()).replace("-", "")
-    if not ":" in key:
-        key = "rhombus:generated/" + key
-    return noise(Noise(1, [1], base_amplitude=1, normalize=True).named(key), xz_scale=0, y_scale=0)
-
-
-@macro
-def block_random(key: str = None) -> Density:
-    """Creates a random value that is different for all coordinates in the world. 
-    
-    The value is approximately between `-1` and `1` and follows a normal distribution
-    like any ordinary noise values too with a standard deviation of `1/3`.
-    
-    **ATTENTION:** Every call to this function produces a new block-random.
-    To use the same block-random twice without using a transient variable, set the `key` parameter equally.
-    """
-    key = key or str(uuid.uuid4()).replace("-", "")
-    if not ":" in key:
-        key = "rhombus:generated/" + key
-    return noise(Noise(0, [1], base_amplitude=1, normalize=True).named(key), xz_scale=1, y_scale=1)
-
-
-@macro
-def random_range(a: AnyDensity, b: AnyDensity) -> Density:
-    cdf = lambda x: (1 + py_math.erf(x/py_math.sqrt(2))) / 2
-    return a + (b - a) * ((distributions.normalCDF(3 * block_random()) - cdf(-3)) / (cdf(3)-cdf(-3)))
 
 
 def blended_noise(
@@ -266,6 +228,14 @@ def shift_b(argument: Noise) -> Density:
 
 @macro
 def end_outer_islands() -> Density:
+    """Samples a noise using a
+    [special algorithm](https://mcsrc.dev/2/26.3/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
+    that is used for the outer end islands. The minimum value is set to `-0.84375`,
+    the maximum value to `0.5625`.
+    
+    ---
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_outer_islands)
+    """
     @implementation(since=113)
     def end_outer_islands():
         return Density(vt.end_outer_islands())
@@ -274,12 +244,9 @@ def end_outer_islands() -> Density:
 @macro
 def end_islands() -> Density:
     """Samples a noise using a
-    [special algorithm](https://mcsrc.dev/2/26.3-snapshot-9/net/minecraft/world/level/levelgen/densityfunction/generator/EndIslandFunction#L52)
+    [special algorithm](https://mcsrc.dev/2/26.2/net/minecraft/world/level/levelgen/DensityFunctions#L532)
     that is used for the outer end islands. The minimum value is set to `-0.84375`,
     the maximum value to `0.5625`.
-
-    ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#end_islands)
     """
     @implementation(until=113)
     def legacy():
@@ -333,3 +300,47 @@ def weird_scaled_sampler(
             thresholds=thresholds,
             functions=functions,
         ))
+        
+        
+# ======// Random Samplers //================================================================//
+
+
+@macro
+def random(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> Density:
+    """Returns a uniformly random number that is different for all coordinates.
+    
+    **ATTENTION:** Every call to this function produces a new independent random generator.
+    To use the same random generator twice without using a transient variable, set the `key` parameter equally.
+    """
+    # NOTE: The order of a and b is irrelevant
+    key = key if key is not ... else str(uuid.uuid4()).replace("-", "")
+    if not ":" in key:
+        key = "rhombus:generated/" + key
+        
+    # We sample a noise whose values differ significantly for each block without following a pattern
+    n = noise(Noise(0, [1], base_amplitude=1, normalize=True).named(key), xz_scale=1, y_scale=1)
+    
+    sqrt2 = py_math.sqrt(2)
+    
+    # The noise's values are distributed normally with a standard deviation of 1/3.
+    # Normally distributed values can be transformed to be distributed uniformly by
+    #     a + (b - a) * ( 1/2 + (erf(3/sqrt(2) * n)) / (2 * erf(3/sqrt(2))) )
+    uniform_random = a + (b - a) * (1/2 + (distributions.erf(3/sqrt2 * n)) / (2 * py_math.erf(3/sqrt2)))
+    return uniform_random
+
+
+@macro
+def random_seeded(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> Density:
+    """Creates a random value that is equal for all coordinates in a world. 
+    
+    Values are approximately between `a` and `b` and follow a normal distribution
+    with a standard deviation of `(b-a) * 1/3`.
+    
+    **ATTENTION:** Every call to this function produces a new seed-random.
+    To use the same seed-random twice without using a transient variable, set the `key` parameter equally.
+    """
+    # NOTE: The order of a and b is irrelevant
+    key = key if key is not ... else str(uuid.uuid4()).replace("-", "")
+    if not ":" in key:
+        key = "rhombus:generated/" + key
+    return a + (b - a) * noise(Noise(1, [1], base_amplitude=1, normalize=True).named(key), xz_scale=0, y_scale=0)

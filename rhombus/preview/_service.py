@@ -338,7 +338,7 @@ class RhombusPreviewService:
 
 
 def serve(
-    *items: tuple[str, Density | DatapackNode | BeetFile],
+    *items: Density | tuple[str, Density | DatapackNode | BeetFile],
     watch_path: str | Path | None = Path.cwd(),
     **uvicorn_args: Any,
 ) -> None:
@@ -372,7 +372,7 @@ def serve(
 
     preview_service = RhombusPreviewService(
         watch_path=Path(watch_path) if watch_path is not None else None,
-        items=[item for item in items],
+        items=[(item if not isinstance(item, Density) else (item.build().identifier, item)) for item in items],
     )
 
     default_args = dict(host="127.0.0.1", port=8000, access_log=False)

@@ -179,6 +179,7 @@ def upscale(
         ))
 
 
+# TODO: Add density function type criterium
 @macro
 def optimize(
     df: AnyDensity,
