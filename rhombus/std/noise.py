@@ -4,6 +4,8 @@ __all__ = [
     "Noise",
     "noise",
     "seed_random",
+    "block_random",
+    "random_range",
     "blended_noise",
     "shift",
     "shift_a",
@@ -15,13 +17,14 @@ __all__ = [
 
 from typing import ClassVar, Literal
 import uuid
+import math as py_math
 
 from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import DatapackResource, BeetFile, JSONDict
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
-from rhombus.std.math import clamp, max
+from rhombus.std.math import clamp, max, distributions
 from rhombus.runtime import rho
 
 
@@ -195,6 +198,12 @@ def block_random(key: str = None) -> Density:
     if not ":" in key:
         key = "rhombus:generated/" + key
     return noise(Noise(0, [1], base_amplitude=1, normalize=True).named(key), xz_scale=1, y_scale=1)
+
+
+@macro
+def random_range(a: AnyDensity, b: AnyDensity) -> Density:
+    cdf = lambda x: (1 + py_math.erf(x/py_math.sqrt(2))) / 2
+    return a + (b - a) * ((distributions.normalCDF(3 * block_random()) - cdf(-3)) / (cdf(3)-cdf(-3)))
 
 
 def blended_noise(
