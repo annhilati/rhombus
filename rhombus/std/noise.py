@@ -181,6 +181,22 @@ def seed_random(key: str = None) -> Density:
     return noise(Noise(1, [1], base_amplitude=1, normalize=True).named(key), xz_scale=0, y_scale=0)
 
 
+@macro
+def block_random(key: str = None) -> Density:
+    """Creates a random value that is different for all coordinates in the world. 
+    
+    The value is approximately between `-1` and `1` and follows a normal distribution
+    like any ordinary noise values too with a standard deviation of `1/3`.
+    
+    **ATTENTION:** Every call to this function produces a new block-random.
+    To use the same block-random twice without using a transient variable, set the `key` parameter equally.
+    """
+    key = key or str(uuid.uuid4()).replace("-", "")
+    if not ":" in key:
+        key = "rhombus:generated/" + key
+    return noise(Noise(0, [1], base_amplitude=1, normalize=True).named(key), xz_scale=1, y_scale=1)
+
+
 def blended_noise(
     xz_scale: float,
     y_scale: float,
