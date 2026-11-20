@@ -179,12 +179,12 @@ def upscale(
         ))
 
 
-# TODO: Add density function type criterium
 @macro
 def optimize(
     df: AnyDensity,
     *,
     targets: Iterable[AnyDensity] = Any,
+    target_types: Iterable[type[DensityFunction]] = Any,
     min_size: int = 5,
     min_occurances: int = 2,
     caching_function: DensityFunction | Callable[[DensityFunction], AnyDensity] = vt.cache
@@ -194,22 +194,26 @@ def optimize(
     
     Parameters:
         targets (Iterable[AnyDensity]): If specified only nodes identical to one of these will be wrapped.
+        target_types (Iterable[AnyDensity]): If specified only nodes that are of one of these types will be wrapped.
         min_size (int): Minimum number of subnodes a node needs to have for the wrapper to be applied.
         min_occurances (int): Minimum number of occurances a node needs to have in the density tree for the wrapper to be applied.
         caching_function (Callable[[DensityFunction], AnyDensity]): Wrapper that is applied around applicable nodes.
     """
     if targets is Any:
-        targets: Iterable[AnyDensity] = ()
-        
-    targets_list = [n.AST for n in targets if isinstance(n, Density)]
+        targets = ()
+    if target_types is Any:
+        target_types = ()
     
     conditions = [
         Conditions.size_satisfies(lambda n: n >= min_size),
-        Conditions.occurrences_satisfy(lambda n: n >= min_occurances)
+        Conditions.occurrences_satisfy(lambda n: n >= min_occurances),
     ]
     
-    if targets_list:
+    if (targets_list := [n.AST for n in targets if isinstance(n, Density)]):
         conditions.append(Conditions.is_one_of(targets_list))
+        
+    if (target_types_list := [t for t in target_types]):
+        conditions.append(Conditions.is_of_type(target_types_list))
         
     transformer: Callable[[DensityFunction], DensityFunction] = lambda node: Reference(
         "rhombus:generated/" + JSON_hash(node.serialize_toplevel()),

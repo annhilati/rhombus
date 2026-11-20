@@ -299,8 +299,11 @@ def slice(df: AnyDensity, *, x: Optional[int] = None, y: Optional[int] = None, z
 
 @macro
 def domain_shift(df: AnyDensity, *, dx: AnyDensity = 0, dy: AnyDensity = 0, dz: AnyDensity = 0) -> Density:
-    """Calculates the value for the input, but with shifted input coordinates for its evaluation."""
-    # TODO: What happens for fractional shifts?
+    """Calculates the value for the input, but with shifted input coordinates for its evaluation.
+    
+    **NOTE:** The fractional parts of the shifts are truncated,
+    such that computation context does not leave discrete block coordinates.
+    """
     @implementation(since=125.1)
     def domain_warp():
         if all(o.build() == Density(0).build() for o in (dx, dy, dz)):

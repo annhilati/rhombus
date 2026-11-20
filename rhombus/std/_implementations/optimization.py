@@ -233,3 +233,10 @@ class Conditions:
         def condition(node: DensityFunction, occurrences: dict[DatapackNode, int]) -> bool:
             return validator(df_size_info(node).toplevel_nodes)
         return condition
+    
+    @staticmethod
+    def is_of_type(*types: DatapackNode) -> Callable[[DensityFunction, dict[DatapackNode, int]], bool]:
+        """Applies if the node is of one of specified types."""
+        def condition(node: DensityFunction, occurrences: dict[DatapackNode, int]) -> bool:
+            return isinstance(node, types)
+        return condition
