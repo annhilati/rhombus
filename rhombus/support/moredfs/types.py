@@ -263,34 +263,6 @@ class vector_angle(DoubleArgumentDensityFunction):
     id: ClassVar[str] = "moredfs:vector_angle"
 
 
-class x(SimpleDensityFunction):
-    id: ClassVar[str] = "moredfs:x"
-
-
-class x_clamped_gradient(DensityFunction):
-    id: ClassVar[str] = "moredfs:x_clamped_gradient"
-    from_x: int
-    to_x: int
-    from_value: float
-    to_value: float
-
-
-class y(SimpleDensityFunction):
-    id: ClassVar[str] = "moredfs:y"
-
-
-class z(SimpleDensityFunction):
-    id: ClassVar[str] = "moredfs:z"
-
-
-class z_clamped_gradient(DensityFunction):
-    id: ClassVar[str] = "moredfs:z_clamped_gradient"
-    from_z: int
-    to_z: int
-    from_value: float
-    to_value: float
-
-
 class voronoi_cells(DensityFunction):
     id: ClassVar[str] = "moredfs:voronoi_cells"
     value_sampler: RandomSampler
@@ -317,3 +289,31 @@ class worley_noise(DensityFunction):
     invertValue: bool
     extra_octaves: ExtraOctaves
     salt: int
+
+
+class x(SimpleDensityFunction):
+    id: ClassVar[str] = "moredfs:x"
+
+
+class x_clamped_gradient(DensityFunction):
+    id: ClassVar[str] = "moredfs:x_clamped_gradient"
+    from_x: int
+    to_x: int
+    from_value: float
+    to_value: float
+
+
+class y(SimpleDensityFunction):
+    id: ClassVar[str] = "moredfs:y"
+
+
+class z(SimpleDensityFunction):
+    id: ClassVar[str] = "moredfs:z"
+
+
+class z_clamped_gradient(DensityFunction):
+    id: ClassVar[str] = "moredfs:z_clamped_gradient"
+    from_z: int
+    to_z: int
+    from_value: float
+    to_value: float

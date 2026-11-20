@@ -3,6 +3,7 @@ from typing import Literal
 from rhombus.core import (
     SubParameters,
     DensityFunction,
+    JSONDict,
     field
 )
 from rhombus.std.builtin.density import Density, AnyDensity
@@ -33,24 +34,24 @@ class RandomSampler(SubParameters):
         "normal",
         "poisson",
         "uniform",
-    ] = field(legacy_values={
-        "2.1.2": {
-            "beta": "moredfs:beta",
-            "binomial": "moredfs:binomial",
-            "exponential": "moredfs:exponential",
-            "gamma": "moredfs:gamma",
-            "geometric": "moredfs:geometric",
-            "normal": "moredfs:normal",
-            "poisson": "moredfs:poisson",
-            "uniform": "moredfs:uniform",
-        }
+    ] = field(legacy_types={
+        "2.1.2": Literal[
+            "moredfs:beta",
+            "moredfs:binomial",
+            "moredfs:exponential",
+            "moredfs:gamma",
+            "moredfs:geometric",
+            "moredfs:normal",
+            "moredfs:poisson",
+            "moredfs:uniform"
+        ] | str # to not trigger a validation error, because we will always use the new type format in the factories
     })
 
     # beta
     alpha: float = field(None, validate=lambda x: x > 0)
     beta: float = field(None, validate=lambda x: x > 0)
     # binomial
-    trials: int = field(None, validate=lambda x: 0 < x < 1000000) # Check whether < or <=
+    trials: int = field(None, validate=lambda x: 0 <= x <= 1000000)
     # binomial / geometric
     probability: float = field(None, validate=lambda x: 0 <= x <= 1)
     # exponential / poisson
@@ -64,6 +65,17 @@ class RandomSampler(SubParameters):
     # uniform
     min: float = None
     max: float = field(None, validate=lambda x, s: x > s.min)
+    
+    def serialize_toplevel(self) -> JSONDict:
+        data = super().serialize_toplevel()
+
+        from rhombus.runtime import rho
+        if rho._check_version("2.1.2", namespace="moredfs") is False:
+            sampler_type = data.get("type")
+            if sampler_type and not sampler_type.startswith("moredfs:"):
+                data["type"] = f"moredfs:{sampler_type}"
+
+        return data
 
     @classmethod
     def Beta(cls, alpha: float, beta: float):
