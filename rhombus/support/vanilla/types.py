@@ -13,14 +13,15 @@ from rhombus.core import (
     JSONDict,
     field,
 )
-from rhombus.runtime import rho
-literal_number_limit: Literal[1000000] = 1000000.0
+literal_number_limit: float = 1000000.0
 """The maximum literal value allowed as a density function shorthand and
-in the `argument` field of the `minecraft:constant` density function type.
+in the value field of the `minecraft:constant` density function type.
 """
 # This corresponds to net.minecraft.world.level.levelgen.DensityFunctions.NOISE_VALUE_CODEC
 
 from rhombus.std.noise import Noise
+from rhombus.runtime import rho
+
 
 _ = Reference, constant
 

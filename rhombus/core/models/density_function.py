@@ -170,19 +170,6 @@ class SimpleDensityFunction(DensityFunction):
     density function types with no arguments.
     """
 
-    @classmethod
-    def deserialize_toplevel(cls, data: dict = {}) -> Self:
-        return cls()
-
-    def serialize_toplevel(self) -> JSONDict:
-        type_id = self.id
-        if (legacy_values := self.__class__.__rhombus_legacy_values__.get("id")):
-            for threshold, val in sorted(legacy_values.items(), reverse=False):
-                if rho._check_version(threshold, namespace=self.__class__.__rhombus_namespace__) is False:
-                    type_id = val
-                    break
-        return {"type": type_id}
-
 
 class MappedDensityFunction(DensityFunction):
     """The **`MappedDensityFunction`** base class implements functionality for
@@ -192,18 +179,7 @@ class MappedDensityFunction(DensityFunction):
     input: DensityFunction = field(legacy_keys={111.0: "argument"})
 
     def __repr__(self) -> str:
-        parts = [self.input.__repr__()]
-        for param, value in self.fields.items():
-            if param == "input" or value is None:
-                continue
-            meta = self.__rhombus_fields__.get(param)
-            if meta and not meta.is_present(rho):
-                continue
-            field_def = self.__dataclass_fields__.get(param)
-            if field_def is not None and field_def.default == value:
-                continue
-            parts.append(f"{param}={value!r}")
-        return f"{type(self).__name__}({', '.join(parts)})"
+        return f"{type(self).__name__}({self.input.__repr__()})"
         
 
 class DoubleArgumentDensityFunction(DensityFunction):
@@ -215,18 +191,7 @@ class DoubleArgumentDensityFunction(DensityFunction):
     right: DensityFunction = field(legacy_keys={111.0: "argument2"})
 
     def __repr__(self) -> str:
-        parts = [self.left.__repr__(), self.right.__repr__()]
-        for param, value in self.fields.items():
-            if param in ("left", "right") or value is None:
-                continue
-            meta = self.__class__.__rhombus_fields__.get(param)
-            if meta and not meta.is_present(rho):
-                continue
-            field_def = self.__dataclass_fields__.get(param)
-            if field_def is not None and field_def.default == value:
-                continue
-            parts.append(f"{param}={value!r}")
-        return f"{type(self).__name__}({', '.join(parts)})" 
+        return f"{type(self).__name__}({self.left.__repr__()}, {self.right.__repr__()})" 
 
 
 # ======// Primitives //==========================================================================//
@@ -297,6 +262,7 @@ class Reference(DensityFunction):
 class constant(DensityFunction):
     id: ClassVar[str] = "minecraft:constant"
     value: float = field(legacy_keys={111: "argument"})
+        # values are technically restricted, but we split them on serialization so no need to validate them here
 
     @classmethod
     def deserialize_toplevel(cls, data: dict | int | float):

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import ClassVar, Literal, TYPE_CHECKING
+from typing import ClassVar, Literal
 
 from rhombus.core import (
     DensityFunction,
