@@ -66,7 +66,7 @@ class cosh(MappedDensityFunction, versions=("2.2.0", ...)):
     id: ClassVar[str] = "moredfs:cosh"
 
 
-class derivative:
+class derivative(DensityFunction):
     id: ClassVar[str] = "moredfs:derivative"
     argument: DensityFunction
     component_x: Optional[DerivativeComponent] = field(None, validate=lambda x, df: len([v for v in [df.component_x, df.component_y, df.component_z] if v is None]) < 3)
@@ -201,7 +201,7 @@ class round(MappedDensityFunction):
     id: ClassVar[str] = "moredfs:round"
 
 
-class shift:
+class shift(DensityFunction):
     id: ClassVar[str] = "moredfs:shift"
     argument: DensityFunction
     shift_x: DensityFunction
@@ -293,7 +293,6 @@ class z_clamped_gradient(DensityFunction):
 
 class voronoi_cells(DensityFunction):
     id: ClassVar[str] = "moredfs:voronoi_cells"
-    
     value_sampler: RandomSampler
     size_x: int
     size_y: int
@@ -308,7 +307,6 @@ class voronoi_cells(DensityFunction):
 
 class worley_noise(DensityFunction):
     id: ClassVar[str] = "moredfs:worley_noise"
-    
     size_x: int
     size_y: int
     size_z: int
