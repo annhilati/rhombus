@@ -159,6 +159,19 @@ def div(dividend: AnyDensity, divisor: AnyDensity) -> Density:
 
 
 @macro
+def lerp(first: AnyDensity, second: AnyDensity, alpha: AnyDensity) -> Density:
+    """Performs linear interpolation between two values.
+    Returns the value that is to `first` and `second` as `alpha` is to `0` and `1`.
+    """
+    @implementation(until=111)
+    def lerp():
+        return first + alpha * (second - first)
+    @implementation
+    def lerp():
+        return Density(vt.lerp(alpha=alpha.build(), first=first.build(), second=second.build()))
+
+
+@macro
 def abs(df: AnyDensity) -> Density:
     """Returns the absolute value of the input."""
     return Density(vt.abs(df.build()))

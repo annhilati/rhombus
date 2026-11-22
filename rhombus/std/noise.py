@@ -323,10 +323,8 @@ def random(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> Density:
     sqrt2 = py_math.sqrt(2)
     
     # The noise's values are distributed normally with a standard deviation of 1/3.
-    # Normally distributed values can be transformed to be distributed uniformly by
-    #     a + (b - a) * ( 1/2 + (erf(3/sqrt(2) * n)) / (2 * erf(3/sqrt(2))) )
-    uniform_random = a + (b - a) * (1/2 + (distributions.erf(3/sqrt2 * n)) / (2 * py_math.erf(3/sqrt2)))
-    return uniform_random
+    # We perform Inverse Transform Sampling to redistribute the random values uniformly.
+    return a + (b - a) * (1/2 + (distributions.erf(3/sqrt2 * n)) / (2 * py_math.erf(3/sqrt2)))
 
 
 @macro
