@@ -42,29 +42,30 @@ While Rhombus follows an up-to-date-first approach, density functions can be com
 *This list only includes features that are principally not necessary, but make up the real strengths of Rhombus.*
 
 - **Macro Library**
-  - Adaptation of all density function types and noise features in recent versions
+  - Adaptation of all density function types and noise features across all game versions
   - Caching optimizer
+  - Expressive construction of conditionalities
+    - Usage of the `if / elif / else` keywords in condition blocks and the ternary operator 
+    - Fluent interface
   - General Math
-    - Implementations of core functions for older versions: sign, rounding, modulo, etc.
+    - Implementations of core functions for old versions: sign, rounding, modulo, etc.
     - Smooth max and min functions
     - Infinity, NaN
     - Sign, Heaviside, ramp and smoothstep functions
     - Spline and exponentiation-based trigonometric functions
     - Spline approximations for some distribution functions: normalPDF, normalCDF, erf, logistic
     - Spline point sampler for arbitrary Python functions
+  - Random number generators
   - Working with Maps
     - Heightmap extrusion
-  - Expressive construction of conditionalities
-    - Use of the `if / elif / else` keywords in condition blocks and the ternary operator 
-    - Fluent Interface
-  - Coordinate reconstruction for older versions
+  - Coordinate reconstruction for old versions
 - **Mod Support**
   - More Density Functions
   - Lithostitched
   - Tectonic
   - En-sityFunctions
   - ikbLib
-- **Rhombus Preview**  
+- **Rhombus Preview** (Complete rewrite ongoing)
     A lightweight local frontend with file-watching for previewing density functions
   - Visualizer (built on deepslate)
     - Supports all major worldgen mods (see *Mod Support*)
