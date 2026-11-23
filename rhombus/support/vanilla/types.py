@@ -271,16 +271,8 @@ class SplineConfig(SubParameters):
 class spline(DensityFunction):
     id: ClassVar[str] = "minecraft:spline"
     spline: SplineConfig
-    min_value: float = field(removed_with=10.0, default=0.0)
-    max_value: float = field(removed_with=10.0, default=0.0)
-
-    def show(self):
-        "Only for debugging. Opens the spline in a pyplot."
-        from rhombus.std.math.splines import show_spline
-
-        if any((not isinstance(p.value, constant) for p in self.spline.points)):
-            raise ValueError("Can only show splines with numeric values")
-        show_spline([(p.location, p.value.argument, p.derivative) for p in self.spline.points])
+    min_value: float = field(0, removed_with=10.0)
+    max_value: float = field(0, removed_with=10.0)
 
 
 class square(MappedDensityFunction):
