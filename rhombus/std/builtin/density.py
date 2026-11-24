@@ -2,10 +2,8 @@ from __future__ import annotations
 
 __all__ = ["Density", "AnyDensity"]
 
-# TODO: Add Tools for type checking like Density.is_of_type(t: DensityFunction)
-
 from dataclasses import dataclass
-from typing import Self, Literal, overload
+from typing import Any, Self, Literal, overload
 import re
 
 import beet
@@ -87,8 +85,8 @@ class Density:
     def __hash__(self) -> int:
             return hash(self.AST)
 
-    # ======// Factories //=======================================================================//
 
+    # ======// Factories //=======================================================================//
 
     def named(self, identifier: str, /) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file with the given identifier."""
@@ -290,7 +288,7 @@ class Density:
             dp[id] = file
 
 
-    # ======// Debug //===========================================================================//
+    # ======// Indev //===========================================================================//
 
     def as_dict(self) -> JSONDict:
         """Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.
@@ -300,6 +298,26 @@ class Density:
     def info(self):
         from rhombus.std._implementations.optimization import df_size_info
         return df_size_info(self.build())
+
+
+    # =====// Safety //==========================================================================//
+
+    @classmethod
+    def is_any_density(cls, v: AnyDensity | Any) -> bool:
+        try:
+            cls(v)
+            return True
+        except:
+            return False
+
+    @overload
+    def is_of_type(self) -> DensityFunction: ...
+    @overload
+    def is_of_type(self, t: DensityFunction) -> bool: ...
+    def is_of_type(self, *args):
+        if len(args) == 0:
+            return type(self.build())
+        return isinstance(self.build(), args[0])
 
 
     # ======// Arithmetic Magic //================================================================//
