@@ -23,7 +23,7 @@ nav = [
     {"Rhombus Developers" = [
         "devs/development.md",
         "devs/brand.md",
-        "devs/macros.md",
+        "devs/guide.md",
         "devs/preview_endpoints.md",
         {"Adding Mod Support" = [
             "devs/abstraction.md",

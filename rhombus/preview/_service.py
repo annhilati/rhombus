@@ -344,7 +344,7 @@ def serve(
 ) -> None:
     """Starts the Rhombus Preview service ASGI application.
     
-    **NOTE**: The Rhombus Preview is still experimental.
+    **WARNING**: The Rhombus Preview is still experimental.
 
     The Preview service includes the frontend and a file-watching backend.
     One can be used without the other or with another instance of the other.

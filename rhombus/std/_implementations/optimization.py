@@ -14,7 +14,7 @@ if sys.getrecursionlimit() < 10000:
     sys.setrecursionlimit(10000)
 
 
-class DensityFunctionSizeInfo(NamedTuple):
+class DensityFunctionComplexityInfo(NamedTuple):
     toplevel_nodes: int
     unique_cached_nodes: int
     unique_unknown_references: int
@@ -37,7 +37,7 @@ def count_node_values(node: DatapackNode) -> dict[DatapackNode, int]:
     return counts
 
 
-def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
+def df_size_info(node: DensityFunction) -> DensityFunctionComplexityInfo:
 
     if not isinstance(node, DensityFunction):
         raise TypeError("Expected DensityFunction instance")
@@ -120,7 +120,7 @@ def df_size_info(node: DensityFunction) -> DensityFunctionSizeInfo:
 
     visit(Density.from_dict(files["rhombus:main"].data).build())
 
-    return DensityFunctionSizeInfo(
+    return DensityFunctionComplexityInfo(
         toplevel_nodes=count_toplevel_nodes,
         unique_cached_nodes=count_unique_cached_nodes,
         unique_unknown_references=len(collect_unique_unknown_references),

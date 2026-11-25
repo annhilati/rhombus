@@ -45,9 +45,9 @@ def gradient(
 ):
     """Creates a gradient between two coordinates along a given axis.
 
-    **NOTE**: In datapack versions before 125.1 VerticalAnchor specifications cannot be used for coordinates.
+    **INFO**: In datapack versions before 125.1 VerticalAnchor specifications cannot be used for coordinates.
 
-    **NOTE**: In datapack versions before 113 only the Y-axis and the `clamp_to_edge` and `extrapolate` tiling modes can be used.
+    **INFO**: In datapack versions before 113 only the Y-axis and the `clamp_to_edge` and `extrapolate` tiling modes can be used.
     
     Parameters:
         axis (Literal["x", "y", "z"]): The axis along which the gradient is defined.

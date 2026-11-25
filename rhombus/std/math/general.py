@@ -193,7 +193,7 @@ def neg(df: AnyDensity) -> Density:
 def pow(base: AnyDensity, exponent: AnyDensity) -> Density:
     """Raises the input to an arbitrary power. Since `exponent` can be a fraction, roots can also be calculated.
     
-    **NOTE:** In datapack versions below 113, only integer exponents are supported.
+    **INFO:** In datapack versions below 113, only integer exponents are supported.
     """
     @implementation(until=113)
     def pow():

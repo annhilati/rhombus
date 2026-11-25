@@ -16,44 +16,52 @@ from rhombus.runtime import datapack_handler, rho
 
 
 type AnyDensity = Density | RhombusASTNode[DensityFunction] | DensityFunction | float | int | str
-"Type for denoting that any straightforward shorthand for a `Density` value can be used."
+"Type for denoting that any straightforward shorthand for a density function value can be used."
 
 
 @dataclass(frozen=False)
 class Density:
-    """The **`Density`** class is the main interface for writing density functions
-    with Rhombus.
+    """The **`Density`** class is the central type that represents a density function.
 
-    The `Density()` constructor accepts arguments of various types:
-    - `int` and `float` for constant values
-    - `str` for references
-    - `Density`, `RhombusASTNode[DensityFunction]` and `DensityFunction`
+    ## Creation
+    Primitive density values can be constructed from various types:
+    - literal numbers for constant values,
+    - strings for references,
+    - other `Density`, `DensityFunction` or `RhombusASTNode` objects.
 
-    It does not accept `dict` objects, as they are ambiguous and can be interpreted
-    in multiple ways. To deserialize such, use `~.from_dict()` instead.
+    To create a `Density` object from a dictionary, use `~.from_dict()` instead
+    of the constructor.
 
-    By default, file names for density functions are not chosen but generated. To allow
-    users to configure your datapack or let other datapacks hook into your datapack, you
-    can set a fixed name through this idiom:
-    ```
-    df = Density(5).named("minecraft:my_variable")
-    ```
+    ## Naming & Partitioning
+    By default, file names are generated randomly (based on the content).
+    Although an identifier can be assigned to a `Density` object to facilitate
+    debugging or to provide configurable values or compatability with other packs:
+
+        df = Density(5).named("minecraft:my_variable")
+
+    Naming a density function partitiones it from the otherwise monolithic
+    density function tree. To partition without naming use `Density.partitioned()`.
     """
 
     AST: RhombusASTNode[DensityFunction]
-    "The lazy AST represented by this Density."
+    "The abstract syntax tree of macros of the density."
 
+    # remove overloads to remove clutter?
     @overload
     def __init__(self, reference: str): ...
     @overload
-    def __init__(self, value: int | float): ...
+    def __init__(self, constant: int | float): ...
     @overload
-    def __init__(self, ast: Density): ...
+    def __init__(self, d: Density): ...
     @overload
     def __init__(self, ast: RhombusASTNode[DensityFunction] | DensityFunction): ...
     @overload
     def __init__(self, arg: AnyDensity): ...
-    def __init__(self, arg: AnyDensity):
+    def __init__(self, *args: AnyDensity, **kwargs):
+        if len(args) == len(kwargs.values()) == 0:
+            raise TypeError("Density() takes exactly one argument (0 given)")
+        arg = (list(args) + list(kwargs.values()))[0]
+
         if isinstance(arg, Density):
             self.AST = arg.AST
 
@@ -72,11 +80,13 @@ class Density:
             definition = None
             if rho.fetch_reference_definition_from_context and rho.datapack is not None:
                 definition = rho.datapack[beet_worldgen.WorldgenDensityFunction].get(arg)
-            self.AST = RhombusASTNode.value(Reference(arg, definition=DensityFunction.deserialize_toplevel(definition.data) if definition is not None else None))
+            self.AST = RhombusASTNode.value(
+                Reference(arg, definition=DensityFunction.deserialize_toplevel(definition.data) if definition is not None else None)
+            )
     
         else:
             raise ValueError(
-                f"Cannot resolve object of type {type(arg).__name__!r} to a density function"
+                f"Cannot resolve object of type {type(arg).__name__} to a density function"
             )
 
     def __repr__(self) -> str:
@@ -86,10 +96,10 @@ class Density:
             return hash(self.AST)
 
 
-    # ======// Factories //=======================================================================//
+    # ======// Factories //======================================================================//
 
-    def named(self, identifier: str, /) -> Density:
-        """Creates a new `Density` object which value will be compiled to a separate file with the given identifier."""
+    def named(self, identifier: str, /) -> Self:
+        """Specifies a resource identifier with which the density function will be compiled."""
         if not isinstance(identifier, str):
             raise TypeError("identifier has to be of string type")
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
@@ -123,6 +133,7 @@ class Density:
         return Density(RhombusASTNode.defer(build_reference, repr=repr))
 
 
+    # TODO: make this an instance method?
     @classmethod
     def partitioned(cls, value: AnyDensity) -> Density:
         """Creates a new `Density` object which value will be compiled to a separate file.
@@ -173,16 +184,24 @@ class Density:
 
 
     @classmethod
-    def from_dict(cls, d: JSONDict) -> Density:
-        """Creates a `Density` object from a dictionary.
-        """
-        return Density(RhombusASTNode.defer(lambda: DensityFunction.deserialize_toplevel(d)))
+    def from_dict(cls, dict: JSONDict) -> Density:
+        """Creates a `Density` object from a density function definition dictionary."""
+        return Density(RhombusASTNode.defer(lambda: DensityFunction.deserialize_toplevel(dict)))
 
 
     @classmethod
     @datapack_handler
     def from_datapack(cls, dp: beet.DataPack, identifier: str) -> Density | None:
-        "Creates a `Density` object from a density function in a Beet datapack."
+        """Creates a `Density` object from a density function in a Beet datapack.
+        
+        Parameters:
+            dp (DataPack): A Beet datapack.
+            identifier (str): Resource identifier of the density function.
+
+        Returns:
+            Density: The density function as a `Density` object if it is present in the datapack.
+            None: otherwise. (won't raise if no density function is present)
+        """
 
         identifier = "minecraft:" + identifier if ":" not in identifier else identifier
 
@@ -218,7 +237,17 @@ class Density:
             "vein_toggle",
         ],
     ) -> Density | None:
-        "Creates a `Density` object from a noise router entry of a noise settings file in a Beet datapack."
+        """Creates a `Density` object from a noise router entry from noise settings in a Beet datapack.
+        
+        Parameters:
+            dp (DataPack): A Beet datapack.
+            noise_settings (str): Resource identifier of the noise settings.
+            noise_router (str): Noise router entry with a density function.
+
+        Returns:
+            Density: The noise router entry as a `Density` object if it is present in the datapack.
+            None: otherwise. (won't raise if no noise router entry is present)
+        """
 
         identifier = (
             "minecraft:" + noise_settings
@@ -227,32 +256,31 @@ class Density:
         )
 
         file = dp[beet_worldgen.WorldgenNoiseSettings].get(identifier)
-        if file is None:
-            return None
 
         if (
-            file.data.get("noise_router") is None
+            file is None
+            or file.data.get("noise_router") is None
             or file.data.get("noise_router").get(noise_router) is None
         ):
             return None
 
-        return Density.from_dict(file.data["noise_router"][noise_router], dp=dp)
+        return Density.from_dict(file.data["noise_router"][noise_router])
 
 
 # ======// Processing //=========================================================================//
 
-
     def build(self) -> DensityFunction:
-        """Creates a `DensityFunction` object from the `Density`.
-        The returned `DensityFunction` contains the complete and valid data model of
-        the density function for the datapack version and mod versions set in the environment.
+        """Builds a `DensityFunction` data model from the `Density` object.
+        
+        Lazy macros will be resolved. Thus the result depends on the datapack
+        and mod versions **currently** present in the environment.
         """
         return self.AST.build()
 
     def compile(self, identifier: str = "main") -> set[tuple[str, BeetFile]]:
-        """Compiles the Density into Beet file class instances.
+        """Compiles the `Density` into Beet file instances.
         
-        See the `BeetFile` protocol to find out how to use the file data without using Beet.
+        **TIP:** To process the file data without using Beet see the `BeetFile` protocol.
         """
         files: set[tuple[str, BeetFile]] = set()
 
@@ -291,11 +319,11 @@ class Density:
     # ======// Indev //===========================================================================//
 
     def as_dict(self) -> JSONDict:
-        """Returns the density function AST as a key-value-mapping like it can be used in a density function definition file.
-        The dictionary will not be fully inline. References that require separate files will be references."""
+        """Builds the density function model and returns the top-level as a dictionary."""
         return self.build().serialize_toplevel()
     
     def info(self):
+        """Build the density function model and Provides information about the number of nodes it contains."""
         from rhombus.std._implementations.optimization import df_size_info
         return df_size_info(self.build())
 

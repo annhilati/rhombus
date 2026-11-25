@@ -170,14 +170,19 @@ def macro(
     *,
     repr: Callable[["RhombusASTNode"], str] | None = None
 ) -> Callable:
-    """The **`macro`** decorator allows functions to use special behaviour beneficial for writing density functions:
+    """The **`macro`** decorator allows functions to use special behaviour beneficial
+    for writing density functions:
     
-    - Values for parameters annotated with `AnyDensity` will automatically be coerced to the `Density` type.
-    - Allows defining functions decorated with the `@implementation` decorator inside the function to provide lazily chosen version-dependent implementations.
-    - Allows using Python's `if / elif / else` syntax as well as special macros with `with`-statements inside the function.
+    - Values for parameters annotated with `AnyDensity` will automatically be coerced
+        to the `Density` type.
+    - Allows defining functions decorated with the `@implementation` decorator inside
+        the function to provide lazily chosen version-dependent implementations.
+    - Allows using Python's `if / elif / else` syntax as well as special macros with
+        `with`-statements inside the function.
     
-    **NOTE:** All macros are pricipially lazy and will not be executed until the build process is issued.
-    Thus `~.build()` can be called on `Density` type arguments without any problems to allow finer manipulation of the density function nodes.
+    All macros are pricipially lazy and will not be executed until the build process is issued.
+    Thus `~.build()` can be called on `Density` objects within macros without any
+    problems to allow finer manipulation of the density function nodes.
     
     ## Usage:
     ```

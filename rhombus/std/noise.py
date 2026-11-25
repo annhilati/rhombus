@@ -30,14 +30,14 @@ from rhombus.runtime import rho
 class Noise(DatapackResource):
     """Defines a normal noise.
 
-    **NOTE:** To reference an existing noise, use `~.refer()`.
-
     **NOTE:** The id of a noise affects the seed for calculation. To ensure that
     the seed does not change when modifying the values of the noise, use the
     following idiom to fix the id of the noise:
     ```
     n = Noise(-9, [1, 2, 3]).named("minecraft:be_fixed")
     ```
+    
+    **TIP:** To reference an existing noise, use `~.refer()`.
 
     Parameters:
         base_octave (int): Formerly `firstOctave`. Controls the base frequency of the noise. More negative values lead to more vast regions.
@@ -126,12 +126,12 @@ class Noise(DatapackResource):
     ) -> Density:
         return noise(self, xz_scale=xz_scale, y_scale=y_scale, shift_x=shift_x, shift_y=shift_y, shift_z=shift_z)
 
+
 import rhombus.support.vanilla.types as vt
 import rhombus.support.vanilla.legacy_types as lt
 
 vt.Noise = Noise
-lt.Noise = Noise
-
+lt.Noise = Noise # do we really need this?
 
 # TODO: Rename to sample?
 @macro

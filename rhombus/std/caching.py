@@ -24,7 +24,7 @@ from ._implementations.optimization import node_caching_transformer, Conditions
 def cache(df: AnyDensity) -> Density:
     """If this density function is referenced repeatedly, it is only computed once per block position.
 
-    **NOTE:** Also consider `caching.optimize()` to automatically cache recurring parts in a `Density`.
+    **TIP:** Also consider `caching.optimize()` to automatically cache recurring parts in a `Density`.
     
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache)
@@ -57,7 +57,7 @@ def cache_2d(df: AnyDensity) -> Density:
     - Extremely lightweight memoization intended for expensive horizontal noise pipelines
       (such as continentalness, erosion, ridges, or coordinate offsets) evaluated across many vertical blocks.
 
-    **NOTE:** Only available in datapack versions before 118.
+    **INFO:** Only available in datapack versions before 118.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_2d)
@@ -83,7 +83,7 @@ def flat_cache(df: AnyDensity) -> Density:
     - Ideal for chunk-wide 2D terrain properties (continents, erosion, biome parameters) that are queried thousands
       of times across the chunk.
 
-    **NOTE:** Only available in datapack versions before 118.
+    **INFO:** Only available in datapack versions before 118.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#flat_cache)
@@ -111,7 +111,7 @@ def cache_all_in_cell(df: AnyDensity) -> Density:
       times per block during different stages within the same cell (such as carving, surface checks, or branching math).
     - The buffer is invalidated and re-evaluated whenever the noise sampler transitions into a new interpolation cell.
 
-    **NOTE:** Only available in datapack versions before 118.
+    **INFO:** Only available in datapack versions before 118.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#cache_all_in_cell)
@@ -141,15 +141,15 @@ def upscale(
     - `interpolate_cubic` (4 samples) 
     - `b_spline_cubic` (4 samples) 
     
-    **NOTE:** Upscaling is performed by axis in order: Z, X, then Y.
+    Upscaling is performed by axis in order: X, Z, then Y (Z, X, then Y before datapack version 128.1).
 
-    **NOTE:** Cell size specifications only take effect starting with datapack version 118.
+    **INFO:** Cell size specifications only take effect starting with datapack version 118.
     For versions below, the cell size is derived from the noise settings. The effective cell sizes for the vanilla dimensions are (in X-Y-Z order):
     - Overworld: 4×8×4
     - Nether: 4×8×4
     - The End: 8×4×8
     
-    **NOTE:** Mode specifications only take effect starting with datapack version 125.
+    **INFO:** Mode specifications only take effect starting with datapack version 125.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
