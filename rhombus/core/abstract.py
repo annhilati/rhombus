@@ -146,9 +146,17 @@ class RhombusASTNode[T]:
         else:
             result = self.dispatcher(*self.args, **self.kwargs)
 
+        memo: dict[int, Any] = {}
+
         def _deep_build(node: Any) -> Any:
+            node_id = id(node)
+            if node_id in memo:
+                return memo[node_id]
+
             if isinstance(node, RhombusASTNode):
-                return node.build()
+                res = node.build()
+                memo[node_id] = res
+                return res
             
             if isinstance(node, DatapackNode):
                 changes = {}
@@ -164,24 +172,36 @@ class RhombusASTNode[T]:
                         object.__setattr__(new_node, k, v)
                     object.__setattr__(new_node, "_rhombus_frozen", True)
                     node = new_node
+                memo[node_id] = node
                 return node
                 
             if isinstance(node, list):
                 new_list = [_deep_build(item) for item in node]
-                return new_list if new_list != node else node
+                res = new_list if new_list != node else node
+                memo[node_id] = res
+                return res
             if isinstance(node, tuple):
                 new_tuple = tuple(_deep_build(item) for item in node)
-                return new_tuple if new_tuple != node else node
+                res = new_tuple if new_tuple != node else node
+                memo[node_id] = res
+                return res
             if isinstance(node, dict):
                 new_dict = {_deep_build(k): _deep_build(v) for k, v in node.items()}
-                return new_dict if new_dict != node else node
+                res = new_dict if new_dict != node else node
+                memo[node_id] = res
+                return res
             if isinstance(node, set):
                 new_set = {_deep_build(item) for item in node}
-                return new_set if new_set != node else node
+                res = new_set if new_set != node else node
+                memo[node_id] = res
+                return res
             if isinstance(node, frozenset):
                 new_frozenset = frozenset(_deep_build(item) for item in node)
-                return new_frozenset if new_frozenset != node else node
+                res = new_frozenset if new_frozenset != node else node
+                memo[node_id] = res
+                return res
 
+            memo[node_id] = node
             return node
 
         result = _deep_build(result)

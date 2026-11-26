@@ -11,7 +11,7 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@types/pako": "^2.0.4",
-    "deepslate": "^0.27.2",
+    "deepslate": "^0.27.3",
     "deepslate-worldgen-mods": "github:annhilati/deepslate-worldgen-mods",
     "flexlayout-react": "^0.9.1",
     "pako": "^3.0.0",

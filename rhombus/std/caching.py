@@ -205,8 +205,9 @@ def optimize(
         target_types = ()
     
     conditions = [
-        Conditions.size_satisfies(lambda n: n >= min_size),
         Conditions.occurrences_satisfy(lambda n: n >= min_occurances),
+            # check number of occurances first because it is a lot cheaper and can break by short circuit
+        Conditions.size_satisfies(lambda n: n >= min_size),
     ]
     
     if (targets_list := [n.AST for n in targets if isinstance(n, Density)]):

@@ -135,11 +135,16 @@ def node_caching_transformer(
 ) -> tuple[DensityFunction, dict[DensityFunction, int]]:
     occurrences = count_node_values(root)
     replacement_info: dict[DensityFunction, int] = {}
+    memo: dict[tuple[int, frozenset], Any] = {}
 
     def visit_and_replace_if_needed(
         value: DensityFunction | Any,
         nodes_being_cached: frozenset[DensityFunction] = frozenset(),
     ) -> DensityFunction | Any:
+        memo_key = (id(value), nodes_being_cached)
+        if memo_key in memo:
+            return memo[memo_key]
+
         if isinstance(value, DensityFunction):
             is_already_cached_ref = isinstance(value, Reference) and isinstance(
                 value.definition, vt.cache
@@ -158,37 +163,47 @@ def node_caching_transformer(
                 new_nodes_being_cached = nodes_being_cached | frozenset([value.definition.input])
 
             # Recursively optimize children
-            optimized_value = dataclasses.replace(
-                value,
-                **{
-                    field_name: visit_and_replace_if_needed(field_value, new_nodes_being_cached)
-                    for field_name, field_value in value.fields.items()
-                },
-            )
+            current_fields = value.fields
+            new_fields = {
+                field_name: visit_and_replace_if_needed(field_value, new_nodes_being_cached)
+                for field_name, field_value in current_fields.items()
+            }
+            if any(new_fields[fn] is not fv for fn, fv in current_fields.items()):
+                optimized_value = dataclasses.replace(value, **new_fields)
+            else:
+                optimized_value = value
 
             if should_cache:
                 replacement_info[value] = replacement_info.get(value, 0) + 1
-                return transformer(optimized_value)
+                res = transformer(optimized_value)
+            else:
+                res = optimized_value
 
-            return optimized_value
+            memo[memo_key] = res
+            return res
 
         # If the value is a standard Python collection, we simply traverse the elements recursively.
         elif isinstance(value, dict):
-            return {
+            res = {
                 visit_and_replace_if_needed(
                     k, nodes_being_cached
                 ): visit_and_replace_if_needed(v, nodes_being_cached)
                 for k, v in value.items()
             }
+            memo[memo_key] = res
+            return res
 
         elif isinstance(value, (list, tuple, set, frozenset)):
-            return type(value)(
+            res = type(value)(
                 [
                     visit_and_replace_if_needed(item, nodes_being_cached)
                     for item in value
                 ]
             )
+            memo[memo_key] = res
+            return res
 
+        memo[memo_key] = value
         return value
 
     return visit_and_replace_if_needed(root), replacement_info
@@ -231,7 +246,8 @@ class Conditions:
     def size_satisfies(validator: Callable[[int], bool]) -> Callable[[DensityFunction, dict[DatapackNode, int]], bool]:
         """Applies if the node has at least a specified number of toplevel nodes."""
         def condition(node: DensityFunction, occurrences: dict[DatapackNode, int]) -> bool:
-            return validator(df_size_info(node).toplevel_nodes)
+            count = sum(1 for sub in walk(node) if isinstance(sub, DensityFunction) and not isinstance(sub, Reference))
+            return validator(count)
         return condition
     
     @staticmethod

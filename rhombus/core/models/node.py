@@ -294,12 +294,18 @@ class DatapackNode(metaclass=NodeDataclassTransformer, versions=(..., ...)):
         )
 
     def __eq__(self, other) -> bool:
+        if self is other:
+            return True
         if isinstance(other, type(self)):
             return self.fields == other.fields
         return False
 
     def __hash__(self) -> int:
-        return hash(self.identifier)
+        h = getattr(self, "_cached_hash", None)
+        if h is None:
+            h = hash((self.__class__, tuple(self.fields.items())))
+            object.__setattr__(self, "_cached_hash", h)
+        return h
 
     def __copy__(self) -> Self:
         return self.__class__(**self.fields)
