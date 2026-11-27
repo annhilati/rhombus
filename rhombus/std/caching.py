@@ -152,7 +152,7 @@ def upscale(
     **INFO:** Mode specifications only take effect starting with datapack version 125.
 
     ---
-    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#interpolated)
+    [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#upscale)
     """
     @implementation(until=118)
     def interpolated():

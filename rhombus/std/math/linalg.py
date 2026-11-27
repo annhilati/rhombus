@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Classes and functions for working with vectors and matrices.
 
 Since density functions are definitions for scalar fields there are no direct applications for vectors.
@@ -18,7 +20,7 @@ __all__ = [
 
 
 from collections.abc import Iterable
-from typing import overload
+from typing import Callable, Self, overload
 
 from rhombus.std.builtin import Density, AnyDensity
 
@@ -58,6 +60,10 @@ class DensityVector:
     
     def __repr__(self) -> str:
         return f"{type(self).__name__}({', '.join(repr(d) for d in self.values)})"
+
+    def element_transform(self, df: Callable[[Density], Density]) -> Self:
+        """Transforms each value of the vector separately."""
+        return DensityVector(df(d) for d in self.values)
 
 
     # ======// Operations //=====================================================================//

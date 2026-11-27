@@ -1,4 +1,9 @@
 import { DensityFunction, Interval } from 'deepslate'
+import { DomainWarp } from './domain-warp'
+import { Upscale } from './upscale'
+
+export { DomainWarp } from './domain-warp'
+export { Upscale } from './upscale'
 
 /**
  * Global state for collecting Deepslate parsing errors that do not throw exceptions.
@@ -71,6 +76,10 @@ DensityFunction.fromJson = function (obj: unknown, inputParser?: (obj: unknown) 
         const thresholds = Array.isArray(root.thresholds) ? root.thresholds.map((e: any) => Number(e) || 0) : [];
         const functions = Array.isArray(root.functions) ? root.functions.map((fn: any) => parserToUse(fn)) : [];
         return new FixedIntervalSelect(parserToUse(root.input), thresholds, functions);
+      } else if (typeId === 'domain_warp') {
+        return DomainWarp.fromJson(obj, parserToUse);
+      } else if (typeId === 'upscale') {
+        return Upscale.fromJson(obj, parserToUse);
       }
     }
   }

@@ -201,7 +201,7 @@ class RhombusPreviewService:
 
             if any(f.endswith(".py") for f in changed):
                 print(
-                    "[#553bd9]RHOMBUS[reset]:  Checking for errors before reloading modules..."
+                    "[#553bd9]SERVICE[reset]:  Checking for errors before reloading modules..."
                 )
                 env = os.environ.copy()
                 env["RHOMBUS_CHECK_ONLY"] = "1"
@@ -213,7 +213,7 @@ class RhombusPreviewService:
                 if result.returncode != 0:
                     err_msg = result.stderr.strip() or result.stdout.strip()
                     print(
-                        f"[red]RHOMBUS:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n"
+                        f"[red]SERVICE:  Failed to reload modules due to an error:[/red]\n\n{err_msg}\n"
                     )
                     self.last_error_message = (
                         f"Failed to reload Python modules:\n{err_msg}"
@@ -222,7 +222,7 @@ class RhombusPreviewService:
                     continue
 
                 print(
-                    "[#553bd9]RHOMBUS[reset]:  Restarting process to reload modules..."
+                    "[#553bd9]SERVICE[reset]:  Restarting process to reload modules..."
                 )
                 if self.observer is not None:
                     self.observer.stop()
@@ -252,11 +252,11 @@ class RhombusPreviewService:
         if self.watch_path is not None:
             self.start_watcher(self.watch_path)
             print(
-                f"[#553bd9]RHOMBUS[reset]:  Preview service is now watching {self.watch_path}"
+                f"[#553bd9]SERVICE[reset]:  Preview service is now watching {self.watch_path}"
             )
         else:
             print(
-                "[#553bd9]RHOMBUS[reset]:  Preview service started (no file watching)"
+                "[#553bd9]SERVICE[reset]:  Preview service started (no file watching)"
             )
         sys.stdout.write("\033]0;Rhombus Preview Service\007")
         sys.stdout.flush()

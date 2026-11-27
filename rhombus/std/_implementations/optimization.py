@@ -2,8 +2,6 @@ from typing import NamedTuple, Any, Iterable, Callable
 import dataclasses
 import sys
 
-from beet.contrib import worldgen as beet_worldgen
-
 from rhombus.core import DatapackNode, RhombusASTNode, DensityFunction, Reference, walk
 from rhombus.std.builtin.density import Density
 import rhombus.support.vanilla.types as vt
@@ -38,7 +36,6 @@ def count_node_values(node: DatapackNode) -> dict[DatapackNode, int]:
 
 
 def df_size_info(node: DensityFunction) -> DensityFunctionComplexityInfo:
-
     if not isinstance(node, DensityFunction):
         raise TypeError("Expected DensityFunction instance")
 
@@ -47,11 +44,6 @@ def df_size_info(node: DensityFunction) -> DensityFunctionComplexityInfo:
     count_total_unknown_references: int = 0
     collect_unique_unknown_references: set[str] = set()
 
-    files = {
-        f[0]: f[1]
-        for f in Density(node).compile("rhombus:main")
-        if isinstance(f[1], beet_worldgen.WorldgenDensityFunction)
-    }
     reference_definitions: dict[str, DensityFunction] = {
         ref.identifier: ref.definition
         for ref in node.inscribed_toplevel_nodes
@@ -92,15 +84,8 @@ def df_size_info(node: DensityFunction) -> DensityFunctionComplexityInfo:
                 if value.identifier in visited_references:
                     return
 
-                if files.get(value.identifier):
-                    visited_references.add(value.identifier)
-                    visit(
-                        Density.from_dict(files[value.identifier].data).build(),
-                        we_are_in_cached=we_are_in_cached,
-                    )
-                else:
-                    collect_unique_unknown_references.add(value.identifier)
-                    count_total_unknown_references += 1
+                collect_unique_unknown_references.add(value.identifier)
+                count_total_unknown_references += 1
                 return
 
             if isinstance(value, vt.cache):
@@ -118,7 +103,10 @@ def df_size_info(node: DensityFunction) -> DensityFunctionComplexityInfo:
             for item in value:
                 visit(item, we_are_in_cached)
 
-    visit(Density.from_dict(files["rhombus:main"].data).build())
+    root = node
+    while isinstance(root, Reference) and root.identifier.startswith("rhombus:generated/") and root.definition is not None:
+        root = root.definition
+    visit(root, we_are_in_cached=False)
 
     return DensityFunctionComplexityInfo(
         toplevel_nodes=count_toplevel_nodes,
