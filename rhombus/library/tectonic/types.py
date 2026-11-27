@@ -1,7 +1,7 @@
 from typing import ClassVar
 
 from rhombus.core.models.density_function import MappedDensityFunction, DensityFunction
-from rhombus.std.noise import Noise
+from rhombus.library.vanilla import types as vt
 
 
 class invert(MappedDensityFunction):
@@ -22,7 +22,7 @@ class config_constant(DensityFunction):
 
 class config_noise(DensityFunction):
     id: ClassVar[str] = "tectonic:config_noise"
-    noise: Noise
+    noise: vt.NoiseDefinition
     key: str
     shift_x: DensityFunction
     shift_z: DensityFunction

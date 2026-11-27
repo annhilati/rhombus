@@ -9,7 +9,7 @@ from enum import Enum
 from rhombus.core.models.density_function import DensityFunction
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std import caching
-import rhombus.support.vanilla.types as vt
+import rhombus.library.vanilla.types as vt
 
 from .functions import range_choice, interval_select
 

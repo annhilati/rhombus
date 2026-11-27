@@ -1,6 +1,6 @@
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
-import rhombus.support.vanilla.types as vt
+import rhombus.library.vanilla.types as vt
 
 __all__ = ["range_choice", "interval_select", "half_negative", "quarter_negative"]
 

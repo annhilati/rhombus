@@ -265,7 +265,6 @@ class RhombusEnvironment:
         return tuple(current_padded) >= tuple(req_padded)
 
 
-
 # ======// Extension //===============================================================================//
 
 class ModExtensionModule(Protocol):

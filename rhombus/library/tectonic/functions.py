@@ -28,4 +28,4 @@ def config_noise(
     noise: Noise, key: str, shift_x: AnyDensity, shift_z: AnyDensity
 ) -> Density:
     ""
-    return Density(types.config_noise(noise, key, shift_x.build(), shift_z.build()))
+    return Density(types.config_noise(noise.build(), key, shift_x.build(), shift_z.build()))

@@ -14,10 +14,10 @@ from rhombus.core import DensityFunction, Reference, JSON_hash
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 
-import rhombus.support.vanilla.types as vt
-import rhombus.support.vanilla.legacy_types as lt
+import rhombus.library.vanilla.types as vt
+import rhombus.library.vanilla.legacy_types as lt
 
-from ._implementations.optimization import node_caching_transformer, Conditions
+from rhombus.engine import node_caching_transformer, Conditions
 
 
 @macro

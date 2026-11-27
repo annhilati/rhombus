@@ -15,8 +15,13 @@ import inspect
 
 from beet.contrib.worldgen import WorldgenDensityFunction
 
-from rhombus.core.models.node import DatapackNode, FieldMeta, field 
-from rhombus.core.models.serialization import deserialize_any_inline, serialize_any_inline
+from rhombus.core.node import (
+    DatapackNode,
+    FieldMeta,
+    field,
+    deserialize_any_inline,
+    serialize_any_inline,
+)
 from rhombus.core.utils import JSONDict, JSONValue, BeetFile, annotated_fields
 from rhombus.runtime import rho
 
@@ -233,7 +238,7 @@ class Reference(DensityFunction):
         if self.definition is not None:
             return self.definition.serialize_toplevel()
 
-        import rhombus.support.vanilla.types as vt
+        import rhombus.library.vanilla.types as vt
         return vt.add(self, constant(0.0)).serialize_toplevel()
 
     def serialize_inline(self) -> str:
@@ -271,7 +276,7 @@ class constant(DensityFunction):
         return cls(float(data))
 
     def serialize_toplevel(self) -> float | JSONDict:
-        import rhombus.support.vanilla.types as vt 
+        import rhombus.library.vanilla.types as vt 
 
         def ensure_not_exceeding_limit(value: float) -> JSONValue:
             if abs(value) <= vt.literal_number_limit:

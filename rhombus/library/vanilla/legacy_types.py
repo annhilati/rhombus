@@ -7,7 +7,7 @@ from rhombus.core import (
     SimpleDensityFunction,
     field
 )
-from rhombus.std.noise import Noise
+from rhombus.library.vanilla import types as vt
 
 
 class cache_2d(MappedDensityFunction, versions=(9, 118)):
@@ -17,8 +17,10 @@ class cache_2d(MappedDensityFunction, versions=(9, 118)):
 class cache_all_in_cell(MappedDensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:cache_all_in_cell"
 
+
 class end_islands(SimpleDensityFunction, versions=(9, 113)):
     id: ClassVar[str] = "minecraft:end_islands"
+
 
 class flat_cache(MappedDensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:flat_cache"
@@ -32,7 +34,7 @@ class interpolated(MappedDensityFunction, versions=(9, 125)):
 
 class shifted_noise(DensityFunction, versions=(9, 118)):
     id: ClassVar[str] = "minecraft:shifted_noise"
-    noise: Noise
+    noise: vt.NoiseDefinition
     xz_scale: float
     y_scale: float
     shift_x: DensityFunction
@@ -57,7 +59,7 @@ class terrain_shaper_spline(DensityFunction, versions=(9, 10)):
 class weird_scaled_sampler(DensityFunction, versions=(9, 104)):
     id: ClassVar[str] = "minecraft:weird_scaled_sampler"
     input: DensityFunction
-    noise: Noise
+    noise: vt.NoiseDefinition
     rarity_value_mapper: Literal["type_1", "type_2"]
 
 

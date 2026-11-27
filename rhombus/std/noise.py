@@ -14,20 +14,19 @@ __all__ = [
     "weird_scaled_sampler"
 ]
 
-from typing import ClassVar, Literal
+from typing import Literal
 import uuid
 import math as py_math
 
-from beet.contrib.worldgen import WorldgenNoise
-
-from rhombus.core import DatapackResource, BeetFile, JSONDict
+from rhombus.library.vanilla import types as vt, legacy_types as lt
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
+from rhombus.std.builtin.dsl_config import DSLConfig, field
 from rhombus.std.math import clamp, max, distributions
 from rhombus.runtime import rho
 
 
-class Noise(DatapackResource):
+class Noise(DSLConfig):
     """Defines a normal noise.
 
     **NOTE:** The id of a noise affects the seed for calculation. To ensure that
@@ -64,74 +63,38 @@ class Noise(DatapackResource):
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Noise) • [Wikipedia](https://en.wikipedia.org/wiki/Perlin_noise)
     """
 
-    fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
-
-    # We are not using the field versioning here to keep the API clean
-    # We are not using a lazy wrapper because we don't expect noises to need to be complex versioned in any way
     base_octave: int
     amplitudes: list[float]
     base_amplitude: float = 1.0
     normalize: bool | Literal["legacy"] = True
-
-    def serialize_toplevel(self) -> JSONDict:
-        # dont wonder, this method does not need to be lazy
-        if rho.datapack_version is not None and rho.datapack_version < 113:
-            return {
-                "firstOctave": self.base_octave,
-                "amplitudes": self.amplitudes
-            }
-        
-        data: JSONDict = {
-            "base_octave": self.base_octave,
-            "base_amplitude": self.base_amplitude,
-            "normalize": self.normalize,
-            "octave_count": len(self.amplitudes)
-        }
-        
-        if any(a != 1.0 for a in self.amplitudes):
-            data["amplitude_modifiers"] = self.amplitudes
-            
-        return data
-
+    _reference: str | None = field(default=None, init=False)
+    
+    
     @classmethod
-    def deserialize_toplevel(cls, data: JSONDict) -> "Noise":
-        if "firstOctave" in data:
-            return cls(
-                base_octave=data["firstOctave"],
-                amplitudes=data["amplitudes"]
-            )
+    def refer(cls, identifier: str) -> Noise:
+        # TODO: Standardize refering for DSLConfig and add back naming
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        instance = Noise(base_octave=None, amplitudes=None)
+        instance._reference = identifier
+        return instance
+
+
+    def build(self) -> vt.NoiseDefinition:
         
-        base_octave = data["base_octave"]
-        octave_count = data.get("octave_count", 1)
-        amplitudes = data.get("amplitude_modifiers", [1.0] * octave_count)
+        if self._reference is not None:
+            return vt.NoiseDefinition.refer(self._reference)
         
-        kwargs = {
-            "base_octave": base_octave,
-            "amplitudes": amplitudes,
-        }
-        if "base_amplitude" in data:
-            kwargs["base_amplitude"] = data["base_amplitude"]
-        if "normalize" in data:
-            kwargs["normalize"] = data["normalize"]
-            
-        return cls(**kwargs)
+        if rho.datapack_version is not None and rho.datapack_version < 113:
+            return vt.NoiseDefinition(base_octave=self.base_octave, amplitude_modifiers=self.amplitudes) 
 
-    def __call__(
-        self,
-        xz_scale: float = 1,
-        y_scale: float = 1,
-        shift_x: AnyDensity = 0,
-        shift_y: AnyDensity = 0,
-        shift_z: AnyDensity = 0,
-    ) -> Density:
-        return noise(self, xz_scale=xz_scale, y_scale=y_scale, shift_x=shift_x, shift_y=shift_y, shift_z=shift_z)
+        return vt.NoiseDefinition(
+            base_octave=self.base_octave,
+            base_amplitude=self.base_amplitude,
+            normalize=self.normalize,
+            octave_count=len(self.amplitudes),
+            amplitude_modifiers=self.amplitudes if any(a != 1.0 for a in self.amplitudes) else []
+        )
 
-
-import rhombus.support.vanilla.types as vt
-import rhombus.support.vanilla.legacy_types as lt
-
-vt.Noise = Noise
-lt.Noise = Noise # do we really need this?
 
 # TODO: Rename to sample?
 @macro
@@ -160,12 +123,12 @@ def noise(
     @implementation(until=113)
     def noise_legacy():
         if shift_x.AST == shift_y.AST == shift_z.AST == Density(0).AST:
-            return Density(vt.noise(noise, xz_scale, y_scale))
-        return Density(lt.shifted_noise(noise, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
+            return Density(vt.noise(noise.build(), xz_scale, y_scale))
+        return Density(lt.shifted_noise(noise.build(), xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
     
     @implementation
     def noise_modern():
-        return Density(vt.noise(noise, xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
+        return Density(vt.noise(noise.build(), xz_scale, y_scale, shift_x.build(), shift_y.build(), shift_z.build()))
 
 
 def blended_noise(
@@ -199,31 +162,34 @@ def blended_noise(
     )
 
 
+@macro
 def shift(argument: Noise) -> Density:
     """Samples a noise at `(x/4, y/4, z/4)`, then multiplies it by `4`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift)
     """
-    return Density(vt.shift(argument))
+    return Density(vt.shift(argument.build()))
 
 
+@macro
 def shift_a(argument: Noise) -> Density:
     """Samples a noise at `(x/4, 0, z/4)`, then multiplies it by `4`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_a)
     """
-    return Density(vt.shift_a(argument))
+    return Density(vt.shift_a(argument.build()))
 
 
+@macro
 def shift_b(argument: Noise) -> Density:
     """Samples a noise at `(z/4, x/4, 0)`, then multiplies it by `4`.
 
     ---
     [Minecraft Wiki Reference](https://minecraft.wiki/w/Density_function#shift_b)
     """
-    return Density(vt.shift_b(argument))
+    return Density(vt.shift_b(argument.build()))
 
 
 @macro
@@ -272,7 +238,7 @@ def weird_scaled_sampler(
     def legacy():
         return Density(lt.weird_scaled_sampler(
             input=input.build(),
-            noise=noise,
+            noise=noise.build(),
             rarity_value_mapper=rarity_value_mapper,
         ))
 
@@ -305,6 +271,7 @@ def weird_scaled_sampler(
 # ======// Random Samplers //================================================================//
 
 
+# TODO: make uniform distribution optional?
 @macro
 def random(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> Density:
     """Returns a uniformly random number that is different for all coordinates.

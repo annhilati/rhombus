@@ -1,5 +1,5 @@
 from rhombus import Density
-from rhombus.support.vanilla import types
+from rhombus.library.vanilla import types
 from rhombus.runtime import rho
 
 import beet

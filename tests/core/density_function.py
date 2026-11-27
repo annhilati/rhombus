@@ -73,13 +73,13 @@ def test_Unknown_type():
 
 def test_deserialize_noise_types():
     from rhombus.std.noise import Noise
-    import rhombus.support.vanilla.types as vt
+    import rhombus.library.vanilla.types as vt
 
     df = DensityFunction.deserialize_toplevel(
         {"type": "minecraft:noise", "noise": "minecraft:cave_cheese", "xz_scale": 1.0, "y_scale": 2.0}
     )
     assert isinstance(df, vt.noise)
-    assert df.noise == Noise.refer("minecraft:cave_cheese")
+    assert df.noise == Noise.refer("minecraft:cave_cheese").build()
     assert df.xz_scale == 1.0
     assert df.y_scale == 2.0
 
@@ -87,4 +87,4 @@ def test_deserialize_noise_types():
         {"type": "minecraft:shift", "noise": "minecraft:cave_cheese"}
     )
     assert isinstance(df_shift, vt.shift)
-    assert df_shift.noise == Noise.refer("minecraft:cave_cheese")
+    assert df_shift.noise == Noise.refer("minecraft:cave_cheese").build()

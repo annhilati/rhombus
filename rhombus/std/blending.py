@@ -3,7 +3,7 @@ __all__ = ["beardifier", "blend_alpha", "blend_density", "blend_offset"]
 
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro
-import rhombus.support.vanilla.types as vt
+import rhombus.library.vanilla.types as vt
 
 
 @macro

@@ -198,7 +198,7 @@ def annotated_fields(o: Dataclass) -> dict[str, Annotation]:
         return {f.name: hints[f.name] for f in flds if f.init and f.name in hints}
     except (NameError, TypeError):
         try:
-            from rhombus.core.models.node import get_known_datapack_types
+            from rhombus.core.node import get_known_datapack_types
             hints = get_type_hints(o, localns=get_known_datapack_types())
             return {f.name: hints[f.name] for f in flds if f.init and f.name in hints}
         except Exception:

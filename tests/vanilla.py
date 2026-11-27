@@ -4,12 +4,12 @@ from rhombus.std.conditional import range_choice
 rho.set_version(datapack=104)
 
 
-flat_cache       = macro(lambda df: Density(support.vanilla.legacy_types.flat_cache(Density(df).build())))
-cache_2d         = macro(lambda df: Density(support.vanilla.legacy_types.cache_2d(Density(df).build())))
-quarter_negative = macro(lambda df: Density(support.vanilla.types.quarter_negative(Density(df).build())))
-half_negative    = macro(lambda df: Density(support.vanilla.types.half_negative(Density(df).build())))
-squeeze          = macro(lambda df: Density(support.vanilla.types.squeeze(Density(df).build())))
-weird_scaled_sampler = macro(lambda df, n, rvm: Density(support.vanilla.legacy_types.weird_scaled_sampler(Density(df).build(), n, rvm)))
+flat_cache       = macro(lambda df: Density(library.vanilla.legacy_types.flat_cache(Density(df).build())))
+cache_2d         = macro(lambda df: Density(library.vanilla.legacy_types.cache_2d(Density(df).build())))
+quarter_negative = macro(lambda df: Density(library.vanilla.types.quarter_negative(Density(df).build())))
+half_negative    = macro(lambda df: Density(library.vanilla.types.half_negative(Density(df).build())))
+squeeze          = macro(lambda df: Density(library.vanilla.types.squeeze(Density(df).build())))
+weird_scaled_sampler = macro(lambda df, n, rvm: Density(library.vanilla.legacy_types.weird_scaled_sampler(Density(df).build(), n, rvm)))
 # NOTE: This is may seem stupid, but for a patch-like solution with lambdas this is actually quite expressive
 
 noise_jagged = Noise(

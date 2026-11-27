@@ -194,4 +194,4 @@ def cellular_noise_optimized(
 
 
 # preview.serve(("main", Noise(-8,[1,1,1,1,1,1,1,1,1,1,1,1,1,1])()))
-# preview.serve(("main", cellular_noise_optimized(dim=2, return_type="value", upscale_cell_size=16)))
+preview.serve(("main", cellular_noise_optimized(dim=2, return_type="value")))

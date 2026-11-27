@@ -1,6 +1,6 @@
 from rhombus import *
-from rhombus.support.vanilla import types
-from rhombus.support.vanilla.types import range_choice
+from rhombus.library.vanilla import types
+from rhombus.library.vanilla.types import range_choice
 from rhombus.std.conditional import when
 
 EPS = 1e-7

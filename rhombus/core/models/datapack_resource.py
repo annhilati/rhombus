@@ -7,8 +7,8 @@ import copy
 
 import beet
 
-from rhombus.core.models.node import DatapackNode
-from rhombus.core.models.serialization import (
+from rhombus.core.node import (
+    DatapackNode,
     deserialize_any_inline,
     serialize_any_inline,
 )

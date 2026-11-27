@@ -18,7 +18,7 @@ from rhombus._prelude import *
 
 from rhombus.runtime import rho
 
-from rhombus.support import vanilla as _vanilla
+from rhombus.library import vanilla as _vanilla
 rho.require({_vanilla: ...})
 
 

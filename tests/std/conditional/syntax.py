@@ -2,7 +2,7 @@ import pytest
 from rhombus import rho
 from rhombus.std.builtin.density import Density
 from rhombus.std.builtin.macros import macro, implementation
-import rhombus.support.vanilla.types as vt
+import rhombus.library.vanilla.types as vt
 
 
 EPS = 1e-7

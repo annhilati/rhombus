@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import ClassVar, Literal
+from typing import ClassVar, Literal, Optional
+
+from beet.contrib.worldgen import WorldgenNoise
 
 from rhombus.core import (
     DensityFunction,
@@ -9,8 +11,10 @@ from rhombus.core import (
     DoubleArgumentDensityFunction,
     Reference,
     constant,
+    DatapackResource,
     SubParameters,
     JSONDict,
+    BeetFile,
     field,
 )
 literal_number_limit: float = 1000000.0
@@ -19,7 +23,6 @@ in the value field of the `minecraft:constant` density function type.
 """
 # This corresponds to net.minecraft.world.level.levelgen.DensityFunctions.NOISE_VALUE_CODEC
 
-from rhombus.std.noise import Noise
 from rhombus.runtime import rho
 
 
@@ -187,9 +190,18 @@ class negate(MappedDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:negate"
     
 
+class NoiseDefinition(DatapackResource):
+    fileclass: ClassVar[type[BeetFile]] = WorldgenNoise
+    
+    base_octave: int = field(legacy_keys={113: "firstOctave"}, validate=lambda x: True if rho.datapack_version < 113 or -32 <= x <= 32 else False) # If legacy_random_source in the noise settings is true, it must be an integer between -32 and 0 (inclusive).
+    amplitude_modifiers: Optional[list[float]] = field(legacy_keys={113: "amplitudes"}, legacy_types={113: list[float]})
+    base_amplitude: float = field(1.0, added_with=113)
+    octave_count: int = field(1, added_with=113) # If legacy_random_source in the noise settings is true, octave_count + base_octave needs to be less than or equal to 1.
+    normalize: bool | Literal["legacy"] = field(True, added_with=113)
+
 class noise(DensityFunction):
     id: ClassVar[str] = "minecraft:noise"
-    noise: Noise
+    noise: NoiseDefinition
     xz_scale: float
     y_scale: float
     shift_x: DensityFunction = field(constant(0), added_with=118)
@@ -235,17 +247,17 @@ class round(RoundingDensityFunction, versions=(111, ...)):
 
 class shift(DensityFunction):
     id: ClassVar[str] = "minecraft:shift"
-    noise: Noise = field(legacy_keys={111.0: "argument"})
+    noise: NoiseDefinition = field(legacy_keys={111.0: "argument"})
 
 
 class shift_a(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_a"
-    noise: Noise = field(legacy_keys={111.0: "argument"})
+    noise: NoiseDefinition = field(legacy_keys={111.0: "argument"})
 
 
 class shift_b(DensityFunction):
     id: ClassVar[str] = "minecraft:shift_b"
-    noise: Noise = field(legacy_keys={111.0: "argument"})
+    noise: NoiseDefinition = field(legacy_keys={111.0: "argument"})
 
 
 class sign(MappedDensityFunction, versions=(113, ...)):

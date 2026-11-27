@@ -21,9 +21,9 @@ from typing import Literal, Optional
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std import math, caching
-from rhombus.support.vanilla.types import VerticalAnchor
-import rhombus.support.vanilla.types as vt
-import rhombus.support.vanilla.legacy_types as lt
+from rhombus.library.vanilla.types import VerticalAnchor
+import rhombus.library.vanilla.types as vt
+import rhombus.library.vanilla.legacy_types as lt
 
 from ._implementations import unicoords
 

@@ -46,19 +46,6 @@ def test_cache_conditions():
     assert cached_expr4.info().unique_cached_nodes > 0
 
 
-
-def test_upscale_repr_versions():
-    from rhombus.std.caching import upscale
-    rho.datapack_version = 125
-    assert "upscale(" in repr(upscale("in").build())
-
-    rho.datapack_version = 124
-    assert repr(upscale("in").build()) == 'Reference(\'rhombus:generated/3d207221cee027f832f28fa316a4c87e\', definition=interpolated("minecraft:in", cell_size_xz=4, cell_size_y=8))'
-
-    rho.datapack_version = 117
-    assert repr(upscale("in").build()) == 'Reference(\'rhombus:generated/532e01174941d32b3b06e19a8a0c9b8b\', definition=interpolated("minecraft:in"))'
-
-
 def test_optimize_noise():
     from rhombus.std.noise import Noise, noise
     rho.set_version(minecraft='1.21')

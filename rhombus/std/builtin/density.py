@@ -153,8 +153,8 @@ class Density:
         """Inlines intermediate auto-generated references (such as nested caching functions)
         into the current node so they do not produce redundant separate files.
         """
-        import rhombus.support.vanilla.types as vt
-        import rhombus.support.vanilla.legacy_types as lt
+        import rhombus.library.vanilla.types as vt
+        import rhombus.library.vanilla.legacy_types as lt
 
         caching_types = (
             vt.cache,
@@ -324,7 +324,7 @@ class Density:
     
     def info(self):
         """Build the density function model and Provides information about the number of nodes it contains."""
-        from rhombus.std._implementations.optimization import df_size_info
+        from rhombus.engine import df_size_info
         return df_size_info(self.build())
 
 

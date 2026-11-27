@@ -6,8 +6,11 @@ import warnings
 import inspect
 
 from rhombus.core.utils import JSONDict, annotated_fields
-from rhombus.core.models.node import DatapackNode
-from rhombus.core.models.serialization import deserialize_any_inline, serialize_any_inline
+from rhombus.core.node import (
+    DatapackNode,
+    deserialize_any_inline,
+    serialize_any_inline,
+)
 from rhombus.runtime import rho
 
 

@@ -39,9 +39,9 @@ from rhombus.std.maps import extrude_heightmap
 
 # Extended Library Modules
 from rhombus.std.math import distributions
-from rhombus.support import *
+from rhombus.library import *
 
 # Workflow
 import rhombus.preview as preview
-import rhombus.support as support
+import rhombus.library as library
 import rhombus as rhombus
