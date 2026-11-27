@@ -1,4 +1,4 @@
-__all__ = ["SubParameters"]
+__all__ = ["CodecStruct"]
 
 
 from typing import Self, ClassVar
@@ -14,8 +14,8 @@ from rhombus.core.node import (
 from rhombus.runtime import rho
 
 
-class SubParameters(DatapackNode):
-    """The **`SubParameters`** base class implements functionality for nodes
+class CodecStruct(DatapackNode):
+    """The **`CodecStruct`** base class implements functionality for nodes
     in the abstract syntax tree of Rhombus that simply represent a grouping
     of parameters. This is a concept very similar to Pythons `TypedDict` class.
 

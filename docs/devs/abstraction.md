@@ -71,4 +71,4 @@ Rhombus provides various base classes for nodes with common usecases.
     - <h5>DoubleArgumentDensityFunction (<code>rhombus.core.density_function.DoubleArgumentDensityFunction</code>)<h5>
   
 - <h3>DatapackResources (<code>rhombus.core.datapack_resources.DatapackResource</code>)<h3>
-- <h3>SubParameters (<code>rhombus.core.sub_parameters.SubParameters</code>)<h3>
+- <h3>CodecStruct (<code>rhombus.core.codec_struct.CodecStruct</code>)<h3>

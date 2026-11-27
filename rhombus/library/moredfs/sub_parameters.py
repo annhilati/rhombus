@@ -1,7 +1,7 @@
 from typing import Literal
 
 from rhombus.core import (
-    SubParameters,
+    CodecStruct,
     DensityFunction,
     JSONDict,
     field
@@ -9,7 +9,7 @@ from rhombus.core import (
 from rhombus.std.builtin.density import Density, AnyDensity
 
 
-class RandomSampler(SubParameters):
+class RandomSampler(CodecStruct):
     """Describes a sampler for random values.
 
     **TIP:** Use these factories for instanciating:
@@ -110,7 +110,7 @@ class RandomSampler(SubParameters):
         return cls(type="uniform", min=min, max=max)
 
 
-class DistanceMetric(SubParameters):
+class DistanceMetric(CodecStruct):
     """Describes a procedure to determine distances between n-dimensional points.
 
     **TIP:** Use these factories for instanciating:
@@ -144,7 +144,7 @@ class DistanceMetric(SubParameters):
         return cls("minkowski", p=p)
 
 
-class ExtraOctaves(SubParameters):
+class ExtraOctaves(CodecStruct):
     """
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#value-noise)
     """
@@ -154,7 +154,7 @@ class ExtraOctaves(SubParameters):
     persistence: float
 
 
-class DerivativeComponent(SubParameters):
+class DerivativeComponent(CodecStruct):
     """
     [More Density Functions Wiki Reference](https://github.com/klinbee/More-Density-Functions/wiki#derivative)
     """
@@ -167,7 +167,7 @@ class DerivativeComponent(SubParameters):
         self.direction = Density(direction).AST
 
 
-class JitterSampler(SubParameters):
+class JitterSampler(CodecStruct):
     """Sampler for adding positional jitter, e.g. in voronoi cells."""
     x: RandomSampler
     y: RandomSampler

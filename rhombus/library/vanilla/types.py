@@ -12,7 +12,7 @@ from rhombus.core import (
     Reference,
     constant,
     DatapackResource,
-    SubParameters,
+    CodecStruct,
     JSONDict,
     BeetFile,
     field,
@@ -113,7 +113,7 @@ class floor(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:floor"
 
 
-class VerticalAnchor(SubParameters):
+class VerticalAnchor(CodecStruct):
     type: Literal["absolute", "above_bottom", "below_top", "relative_to_sea_level"]
     value: int = field(validate=lambda x: -2032 <= x <= 2031)
 
@@ -271,12 +271,12 @@ class slice(DensityFunction, versions=(113, ...)):
     coordinate: int
 
 
-class SplinePoint(SubParameters):
+class SplinePoint(CodecStruct):
     location: float
     value: DensityFunction | SplineConfig
     derivative: float
 
-class SplineConfig(SubParameters):
+class SplineConfig(CodecStruct):
     coordinate: DensityFunction
     points: list[SplinePoint]
 
@@ -307,7 +307,7 @@ class truncate(RoundingDensityFunction, versions=(111, ...)):
     id: ClassVar[str] = "minecraft:truncate"
 
 
-class AxisScaling(SubParameters, versions=(125, ...)):
+class AxisScaling(CodecStruct, versions=(125, ...)):
     mode: Literal["nearest_neighbor", "interpolate_linear", "interpolate_cosine", "interpolate_cubic", "b_spline_cubic"]
     cell_size: int = field(validate=lambda x: 1 <= x <= 64)
 

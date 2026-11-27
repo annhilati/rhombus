@@ -52,15 +52,15 @@ from rhombus.std.builtin.density import Density
 from rhombus.std.math import mul, add
 from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
-from rhombus.std.caching import upscale, optimize
+from rhombus.std.caching import upscale, optimize, flat_cache, cache_2d
 
 import rhombus.library.vanilla.legacy_types as lt
 
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])
-_coord_base = Density(lt.flat_cache(
-    lt.cache_2d((
+_coord_base = Density(flat_cache(
+    cache_2d(
         -1
         * noise(
             noise=_coord_stripe_noise,
@@ -70,7 +70,7 @@ _coord_base = Density(lt.flat_cache(
             shift_y=0,
             shift_z=1.01,
         )
-    ).build())
+    )
 ))
 
 
@@ -139,4 +139,4 @@ def coord_component(
         value,
     )
 
-    return optimize(upscale(lt.flat_cache(lt.cache_2d(outermost_mul.build()))), min_size=5)
+    return optimize(upscale(flat_cache(cache_2d(outermost_mul.build()))), min_size=5)
