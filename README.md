@@ -56,6 +56,7 @@ While Rhombus follows an up-to-date-first approach, density functions can be com
     - Spline approximations for some distribution functions: normalPDF, normalCDF, erf, logistic
     - Spline point sampler for arbitrary Python functions
   - Random number generators
+  - Cellular Noise
   - Working with Maps
     - Heightmap extrusion
   - Coordinate reconstruction for old versions

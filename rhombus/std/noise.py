@@ -332,37 +332,22 @@ def cellular_noise(
     scale: int = 32,
     *,
     dim: Literal["xz", "xyz"] = "xz",
-    return_type: Literal["distance", "value"] = "distance",
+    return_type: Literal["distance", "value"] = "value",
     jitter: float = 0.9,
     upscale_cell_size: int = 1,
 ) -> Density:
-    """Optimized vanilla cellular (Voronoi / Worley) noise for Rhombus.
+    """Samples a jittered Worley / Voronoi Noise.
 
-    Features:
-    - dim=2 (default, 9 neighbor cells for terrain/biomes) or dim=3 (27 cells).
-    - Squared-distance comparisons (avoids expensive sqrt calls in distance minimization).
-    - Uncorrelated, amplified jitter per axis breaking square grid alignment without crossing cell bounds.
-    - return_type="distance" (Worley F1 distance, zero conditionals!) or "value" (flat Voronoi cell plateaus).
-    - Lossless block-level `cache()` on coordinates, `dist_sq`, and `min_dist_sq`.
-    - Lossless `nearest_neighbor` `upscale()` on per-cell jitter/values (`gcd(d, 16)` horizontally,
-      and `y_cell_size=64` vertically for 2D) plus optional `upscale_cell_size` on the output.
-
-    Technical notes (verified in Minecraft 26.4-pre-1):
-    1. Coordinate precision: `coords.x/y/z()` must stay within [-1e6, 1e6] and be rounded
-       (`math.round`), because `minecraft:gradient` uses 32-bit float intermediate math
-       (larger bounds like ±3e7 quantize coordinates to 3-4 block steps) and
-       `minecraft:domain_warp` truncates offsets via `(int)` cast.
-    2. No `cache()` inside `domain_pin`: `domain_pin` (`minecraft:domain_warp`) samples
-       its input at a warped context; wrapping the inner `noise(n)` in `cache()` is
-       counterproductive and can cause stale cache hits. Partitioning/caching belongs
-       on the outer shared nodes (`base_*`, `dist_sq`, `min_dist_sq`, `val`).
-    3. Distinct noise seeds: Until `Noise.named()` is re-added to `DSLConfig`, each
-       noise uses a slightly distinct `base_amplitude` so content-hashing generates
-       independent Minecraft noise IDs/seeds instead of correlating `jx`, `jz`, `jy`, `val`.
+    Parameters:
+        scale (int): Average diameter of a cell.
+        dim ("xz" | "xyz"): Whether to sample the noise only on the horizontal plane or in all three dimensions.
+        return_type ("distance" | "value"): Whether the sampled value is the distance to the cell center or the cell's value.
+        jitter (float between 0 and 1): What portion of the scale cell centers can deviate.
+        upscale_cell_size (int): Reduces the number of samples to increase performance, but in trade for precision.
     """
     from rhombus.std import coords # avoid circular import
 
-    if jitter >= 1:
+    if not 0 <= jitter <= 1:
         raise ValueError("Jitter has to be betweeen 0 and 1")
 
     max_jitter = (scale / 2) * jitter
@@ -398,7 +383,10 @@ def cellular_noise(
     )
     
     def get_jitter(n: Density, cx: AnyDensity, cy: AnyDensity, cz: AnyDensity) -> Density:
-        # Do NOT wrap noise(n) in cache() inside domain_pin (domain_warp)!
+        # No `cache()` inside `domain_pin`: `domain_pin` (`minecraft:domain_warp`) samples
+        # its input at a warped context; wrapping the inner `noise(n)` in `cache()` is  
+        # counterproductive and can cause stale cache hits. Partitioning/caching belongs
+        # on the outer shared nodes (`base_*`, `dist_sq`, `min_dist_sq`, `val`).
         raw = coords.domain_pin(n, x=cx, y=cy, z=cz)
         return nn_upscale(math.clamp(raw * 2.5, -1.0, 1.0) * max_jitter, cell_xz, cell_y, cell_xz)
 

@@ -20,30 +20,14 @@ from typing import Literal, Optional
 
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
-from rhombus.std import math, caching
+from rhombus.std import math
 from rhombus.library.vanilla.types import VerticalAnchor
-import rhombus.library.vanilla.types as vt
-import rhombus.library.vanilla.legacy_types as lt
+from rhombus.library.vanilla import types as vt, legacy_types as lt
 
 from ._implementations import unicoords
 
-_coord_limit = 3 * 10**7
-_gradient_value_limit = 10**6
-
-
-def _axis_coordinate(axis: Literal["x", "y", "z"]) -> Density:
-    # Keep gradient bounds within [-1e6, 1e6] so 32-bit float intermediate math in
-    # Minecraft's gradient implementation preserves single-block precision.
-    return math.round(
-        gradient(
-            axis,
-            from_coordinate=-_gradient_value_limit,
-            to_coordinate=_gradient_value_limit,
-            from_value=-_gradient_value_limit,
-            to_value=_gradient_value_limit,
-            tiling="clamp_to_edge",
-        )
-    )
+_coord_limit = 30 * 10**6
+_gradient_value_limit = vt.literal_number_limit
 
 
 # ======// Vanilla Coverage //====================================================================//
@@ -206,14 +190,54 @@ def x() -> Density:
         
     @implementation
     def x():
-        return _axis_coordinate("x")
+        # Note that minecraft:gradient only accepts values between ± 1'000'000
+        # We cannot pair the ± 1'000'000 values with the ± 30'000'000 coordinates because that causes rounding errors
+        P = 2**19
+        fine = math.round(gradient(
+            axis="x",
+            from_coordinate=0,
+            to_coordinate=P,
+            from_value=0,
+            to_value=P,
+            tiling="repeat"
+        ))
+        k = math.round((gradient(
+            axis="x",
+            from_coordinate=-30_000_000,
+            to_coordinate=30_000_000,
+            from_value=-937_500,
+            to_value=937_500,
+            tiling="clamp_to_edge"
+        ) * 32.0 - fine) / P)
+        return k * P + fine
 
 
 @macro
 def y() -> Density:
     """Returns the Y-coordinate of the current block."""
-    return _axis_coordinate("y")
+    @implementation(until=113)
+    def y():
+        return gradient(
+            axis="y",
+            from_coordinate=-4062,
+            to_coordinate=4062,
+            from_value=-4062,
+            to_value=4062,
+            tiling="clamp_to_edge",
+        )
 
+    @implementation
+    def y():
+        # We don't use the implementation from x() and z() because worlds are not higher or lower than 1'000'000
+        return gradient(
+            axis="y",
+            from_coordinate=-_gradient_value_limit,
+            to_coordinate=_gradient_value_limit,
+            from_value=-_gradient_value_limit,
+            to_value=_gradient_value_limit,
+            tiling="clamp_to_edge",
+        )
+        
 
 @macro
 def z() -> Density:
@@ -229,7 +253,26 @@ def z() -> Density:
 
     @implementation
     def z():
-        return _axis_coordinate("z")
+        # Note that minecraft:gradient only accepts values between ± 1'000'000
+        # We cannot pair the ± 1'000'000 values with the ± 30'000'000 coordinates because that causes rounding errors
+        P = 2**19
+        fine = math.round(gradient(
+            axis="z",
+            from_coordinate=0,
+            to_coordinate=P,
+            from_value=0,
+            to_value=P,
+            tiling="repeat"
+        ))
+        k = math.round((gradient(
+            axis="z",
+            from_coordinate=-30_000_000,
+            to_coordinate=30_000_000,
+            from_value=-937_500,
+            to_value=937_500,
+            tiling="clamp_to_edge"
+        ) * 32.0 - fine) / P)
+        return k * P + fine
         
 
 # ======// Derived Coordinates //================================================================//
