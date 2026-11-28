@@ -13,6 +13,7 @@ class _DSLConfigMeta(type):
         return dataclass(cls)
 
 
+# TODO: hashable
 class DSLConfig(metaclass=_DSLConfigMeta):
     def build(self) -> Any:
         raise NotImplementedError

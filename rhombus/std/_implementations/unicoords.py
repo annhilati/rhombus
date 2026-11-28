@@ -54,8 +54,6 @@ from rhombus.std.conditional import range_choice
 from rhombus.std.noise import Noise, noise
 from rhombus.std.caching import upscale, optimize, flat_cache, cache_2d
 
-import rhombus.library.vanilla.legacy_types as lt
-
 
 _coord_stripe_noise = Noise(78, [1])
 _coord_quad_noise = Noise(88, [1])

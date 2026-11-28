@@ -11,18 +11,20 @@ __all__ = [
     "shift_b",
     "end_outer_islands",
     "end_islands",
-    "weird_scaled_sampler"
+    "weird_scaled_sampler",
+    "cellular_noise"
 ]
 
 from typing import Literal
 import uuid
 import math as py_math
 
+from rhombus.core import fields
 from rhombus.library.vanilla import types as vt, legacy_types as lt
 from rhombus.std.builtin.density import Density, AnyDensity
 from rhombus.std.builtin.macros import macro, implementation
 from rhombus.std.builtin.dsl_config import DSLConfig, field
-from rhombus.std.math import clamp, max, distributions
+from rhombus.std import caching, math, conditional
 from rhombus.runtime import rho
 
 
@@ -67,22 +69,30 @@ class Noise(DSLConfig):
     amplitudes: list[float]
     base_amplitude: float = 1.0
     normalize: bool | Literal["legacy"] = True
-    _reference: str | None = field(default=None, init=False)
+    identifier: str | None = field(default=None, init=False)
     
     
     @classmethod
     def refer(cls, identifier: str) -> Noise:
-        # TODO: Standardize refering for DSLConfig and add back naming
+        # TODO: Standardize refering and naming for DSLConfig 
         identifier = "minecraft:" + identifier if not ":" in identifier else identifier
-        instance = Noise(base_octave=None, amplitudes=None)
-        instance._reference = identifier
+        instance = Noise(base_octave=None, amplitudes=None, base_amplitude=None, normalize=None)
+        instance.identifier = identifier
         return instance
+    
+    def named(self, identifier: str) -> Noise:
+        identifier = "minecraft:" + identifier if not ":" in identifier else identifier
+        self.identifier = identifier
+        return self
 
 
     def build(self) -> vt.NoiseDefinition:
         
-        if self._reference is not None:
-            return vt.NoiseDefinition.refer(self._reference)
+        if self.identifier is not None:
+            if all(v is None for k, v in fields(self).items() if k != "identifier"):
+                return vt.NoiseDefinition.refer(self.identifier)
+            identifier, self.identifier = self.identifier, None
+            return self.build().named(identifier)
         
         if rho.datapack_version is not None and rho.datapack_version < 113:
             return vt.NoiseDefinition(base_octave=self.base_octave, amplitude_modifiers=self.amplitudes) 
@@ -222,10 +232,10 @@ def end_islands() -> Density:
     def modern():
         from rhombus.std.coords import distance_to_point, slice
         dist = distance_to_point((0, 0, 0), metric="euclidean")
-        inner = (clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1 / 128)
+        inner = (math.clamp(100.0 - dist, min=-100.0, max=80.0) - 8.0) * (1 / 128)
         inner_slice = slice(inner, y=0)
             
-        return max(inner_slice, end_outer_islands())
+        return math.max(inner_slice, end_outer_islands())
     
     
 @macro
@@ -273,7 +283,7 @@ def weird_scaled_sampler(
 
 # TODO: make uniform distribution optional?
 @macro
-def random(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> Density:
+def random(a: AnyDensity = 0, b: AnyDensity = 1, *, uniform: bool = True, key: str = ...) -> Density:
     """Returns a uniformly random number that is different for all coordinates.
     
     **ATTENTION:** Every call to this function produces a new independent random generator.
@@ -289,9 +299,11 @@ def random(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> Density:
     
     sqrt2 = py_math.sqrt(2)
     
-    # The noise's values are distributed normally with a standard deviation of 1/3.
-    # We perform Inverse Transform Sampling to redistribute the random values uniformly.
-    return a + (b - a) * (1/2 + (distributions.erf(3/sqrt2 * n)) / (2 * py_math.erf(3/sqrt2)))
+    if uniform:
+        # The noise's values are distributed normally with a standard deviation of 1/3.
+        # We perform Inverse Transform Sampling to redistribute the random values uniformly.
+        return a + (b - a) * (1/2 + (math.distributions.erf(3/sqrt2 * n)) / (2 * py_math.erf(3/sqrt2)))
+    return a + (b - a) * (0.5 * n + 0.5)
 
 
 @macro
@@ -308,4 +320,159 @@ def random_seeded(a: AnyDensity = 0, b: AnyDensity = 1, *, key: str = ...) -> De
     key = key if key is not ... else str(uuid.uuid4()).replace("-", "")
     if not ":" in key:
         key = "rhombus:generated/" + key
-    return a + (b - a) * noise(Noise(1, [1], base_amplitude=1, normalize=True).named(key), xz_scale=0, y_scale=0)
+    return a + (b - a) * noise(Noise(1, [1], base_amplitude=1, normalize=True).named(key), xz_scale=0, y_scale=0)#
+
+
+# ======// Cellular Noise //=====================================================================//
+
+
+# Original implementation by Annhilati
+@macro
+def cellular_noise(
+    scale: int = 32,
+    *,
+    dim: Literal["xz", "xyz"] = "xz",
+    return_type: Literal["distance", "value"] = "distance",
+    jitter: float = 0.9,
+    upscale_cell_size: int = 1,
+) -> Density:
+    """Optimized vanilla cellular (Voronoi / Worley) noise for Rhombus.
+
+    Features:
+    - dim=2 (default, 9 neighbor cells for terrain/biomes) or dim=3 (27 cells).
+    - Squared-distance comparisons (avoids expensive sqrt calls in distance minimization).
+    - Uncorrelated, amplified jitter per axis breaking square grid alignment without crossing cell bounds.
+    - return_type="distance" (Worley F1 distance, zero conditionals!) or "value" (flat Voronoi cell plateaus).
+    - Lossless block-level `cache()` on coordinates, `dist_sq`, and `min_dist_sq`.
+    - Lossless `nearest_neighbor` `upscale()` on per-cell jitter/values (`gcd(d, 16)` horizontally,
+      and `y_cell_size=64` vertically for 2D) plus optional `upscale_cell_size` on the output.
+
+    Technical notes (verified in Minecraft 26.4-pre-1):
+    1. Coordinate precision: `coords.x/y/z()` must stay within [-1e6, 1e6] and be rounded
+       (`math.round`), because `minecraft:gradient` uses 32-bit float intermediate math
+       (larger bounds like ±3e7 quantize coordinates to 3-4 block steps) and
+       `minecraft:domain_warp` truncates offsets via `(int)` cast.
+    2. No `cache()` inside `domain_pin`: `domain_pin` (`minecraft:domain_warp`) samples
+       its input at a warped context; wrapping the inner `noise(n)` in `cache()` is
+       counterproductive and can cause stale cache hits. Partitioning/caching belongs
+       on the outer shared nodes (`base_*`, `dist_sq`, `min_dist_sq`, `val`).
+    3. Distinct noise seeds: Until `Noise.named()` is re-added to `DSLConfig`, each
+       noise uses a slightly distinct `base_amplitude` so content-hashing generates
+       independent Minecraft noise IDs/seeds instead of correlating `jx`, `jz`, `jy`, `val`.
+    """
+    from rhombus.std import coords # avoid circular import
+
+    if jitter >= 1:
+        raise ValueError("Jitter has to be betweeen 0 and 1")
+
+    max_jitter = (scale / 2) * jitter
+
+    # deactivate uniform to save performance
+    jx_noise  = random(-1, 1, uniform=False)
+    jz_noise  = random(-1, 1, uniform=False)
+    jy_noise  = random(-1, 1, uniform=False) # only needed if dim == 3
+    val_noise = random(-1, 1, uniform=False) # only needed if return_type == "value"
+
+    def nn_upscale(df: Density, cx: int, cy: int, cz: int) -> Density:
+        if cx == 1 and cy == 1 and cz == 1:
+            return df
+        return caching.upscale(
+            df,
+            x_cell_size=cx,
+            y_cell_size=cy,
+            z_cell_size=cz,
+            x_mode="nearest_neighbor",
+            y_mode="nearest_neighbor",
+            z_mode="nearest_neighbor",
+        )
+
+    # Lossless upscale cell size: any divisor of both d and 16 never crosses a grid or chunk boundary
+    cell_xz = py_math.gcd(scale, 16)
+    cell_y = 64 if dim == "xz" else py_math.gcd(scale, 16)
+
+    # Cached coordinates (~30 reuses per block)
+    coords_cached = math.linalg.DensityVector(
+        caching.cache(coords.x()),
+        caching.cache(coords.y()) if dim == "xyz" else 0,
+        caching.cache(coords.z()),
+    )
+    
+    def get_jitter(n: Density, cx: AnyDensity, cy: AnyDensity, cz: AnyDensity) -> Density:
+        # Do NOT wrap noise(n) in cache() inside domain_pin (domain_warp)!
+        raw = coords.domain_pin(n, x=cx, y=cy, z=cz)
+        return nn_upscale(math.clamp(raw * 2.5, -1.0, 1.0) * max_jitter, cell_xz, cell_y, cell_xz)
+
+    # Pre-partition cell origins so all 9 / 27 neighbor lookups share the floor division
+    base = coords_cached.map(lambda vc: Density.partitioned(nn_upscale((vc // scale) * scale, cell_xz, cell_y, cell_xz)))
+
+    distances_sq: list[Density] = []
+    cell_values: list[Density] = []
+
+    if dim == "xz":
+        for i in (-1, 0, 1):
+            for k in (-1, 0, 1):
+
+                center = base.xz + math.linalg.DensityVector(
+                    i * scale + scale / 2,
+                    k * scale + scale / 2,
+                )
+
+                dj = math.linalg.DensityVector(
+                    get_jitter(jx_noise, center.u, 0, center.v),
+                    get_jitter(jz_noise, center.u, 0, center.v),
+                )
+
+                delta = center + dj - coords_cached.xz
+
+                # Squared Euclidean distance avoids sqrt in min(); cache for min() + equals()
+                dist_sq = Density.partitioned(caching.cache(delta.u ** 2 + delta.v ** 2))
+                distances_sq.append(dist_sq)
+
+                if return_type == "value":
+                    val = nn_upscale(coords.domain_pin(val_noise, x=center.u, y=0, z=center.v), cell_xz, cell_y, cell_xz)
+                    cell_values.append(Density.partitioned(val))
+                    
+    else:
+        for i in (-1, 0, 1):
+            for j in (-1, 0, 1):
+                for k in (-1, 0, 1):
+
+                    center = base + math.linalg.DensityVector(
+                        i * scale + scale / 2,
+                        j * scale + scale / 2,
+                        k * scale + scale / 2,
+                    )
+                    
+                    dj = math.linalg.DensityVector(
+                        get_jitter(jx_noise, center.x, center.y, center.z),
+                        get_jitter(jy_noise, center.x, center.y, center.z),
+                        get_jitter(jz_noise, center.x, center.y, center.z),
+                    )
+
+                    delta = center + dj - coords_cached
+
+                    # Squared Euclidean distance avoids sqrt in min(); cache for min() + equals()
+                    dist_sq = Density.partitioned(caching.cache(delta.x ** 2 + delta.y ** 2 + delta.z ** 2))
+                    distances_sq.append(dist_sq)
+
+                    if return_type == "value":
+                        val = nn_upscale(coords.domain_pin(val_noise, x=center.x, y=center.y, z=center.z), cell_xz, cell_y, cell_xz)
+                        cell_values.append(Density.partitioned(val))
+
+    min_dist_sq = Density.partitioned(caching.cache(math.min(*distances_sq)))
+
+    if return_type == "distance":
+        # Normalized Worley distance (0 at center, ~1 at borders)
+        res = math.sqrt(min_dist_sq) / (scale / 2)
+    else:
+        # Skip the final comparison by using the last cell as .otherwise() fallback
+        cond = conditional.when(1).equals(0).then(0)
+        for dist_sq, val in zip(distances_sq[:-1], cell_values[:-1]):
+            cond.elsewhen(dist_sq).equals(min_dist_sq).then(val)
+        res = cond.otherwise(cell_values[-1])
+
+    out_y_cell = 64 if dim == "xz" else upscale_cell_size
+    if upscale_cell_size > 1 or dim == "xz":
+        res = nn_upscale(res, upscale_cell_size, out_y_cell, upscale_cell_size)
+
+    return res

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Classes and functions for working with vectors and matrices.
 
 Since density functions are definitions for scalar fields there are no direct applications for vectors.
@@ -61,9 +59,48 @@ class DensityVector:
     def __repr__(self) -> str:
         return f"{type(self).__name__}({', '.join(repr(d) for d in self.values)})"
 
-    def element_transform(self, df: Callable[[Density], Density]) -> Self:
+    def map(self, df: Callable[[Density], Density]) -> Self:
         """Transforms each value of the vector separately."""
         return DensityVector(df(d) for d in self.values)
+    
+    
+    # ======// Attribute Sugar //================================================================//
+    
+    @property
+    def x(self) -> Density:
+        if self.dims != 3:
+            raise SyntaxError("Please refrain from using .x if the vector is not three-dimensional")
+        return self.values[0]
+    
+    @property
+    def y(self) -> Density:
+        if self.dims != 3:
+            raise SyntaxError("Please refrain from using .y if the vector is not three-dimensional")
+        return self.values[1]
+        
+    @property
+    def z(self) -> Density:
+        if self.dims != 3:
+            raise SyntaxError("Please refrain from using .z if the vector is not three-dimensional")
+        return self.values[2]
+        
+    @property
+    def u(self) -> Density:
+        if self.dims != 2:
+            raise SyntaxError("Please refrain from using .u if the vector is not two-dimensional")
+        return self.values[0]
+        
+    @property
+    def v(self) -> Density:
+        if self.dims != 2:
+            raise SyntaxError("Please refrain from using .v if the vector is not two-dimensional")
+        return self.values[1]
+    
+    @property
+    def xz(self) -> DensityVector:
+        if self.dims != 3:
+            raise SyntaxError("Please refrain from using .xz if the vector is not three-dimensional")
+        return DensityVector(self.values[0], self.values[2])
 
 
     # ======// Operations //=====================================================================//

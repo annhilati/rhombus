@@ -6,6 +6,7 @@ from typing import NamedTuple, Any
 from rhombus.core import DatapackNode, DensityFunction, Reference, walk
 import rhombus.library.vanilla.types as vt
 
+# TODO: Count octaves
 # TODO: Add path-like nested number statistics
 class DensityFunctionComplexityInfo(NamedTuple):
     toplevel_nodes: int

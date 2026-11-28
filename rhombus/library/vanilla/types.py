@@ -148,8 +148,8 @@ class gradient(DensityFunction, versions=(113, ...)):
     tiling: Literal["clamp_to_edge", "repeat", "mirrored_repeat"]
     from_coordinate: int | VerticalAnchor = field(legacy_types={125.1: int}, validate=lambda x, df: False if isinstance(x, VerticalAnchor) and df.axis != "y" else True)
     to_coordinate: int | VerticalAnchor = field(legacy_types={125.1: int}, validate=lambda x, df: False if (isinstance(x, VerticalAnchor) and df.axis != "y") or x == df.from_coordinate else True)
-    from_value: float
-    to_value: float
+    from_value: float = field(validate=lambda x: -literal_number_limit <= x <= literal_number_limit)
+    to_value: float = field(validate=lambda x: -literal_number_limit <= x <= literal_number_limit)
 
 
 class half_negative(MappedDensityFunction):

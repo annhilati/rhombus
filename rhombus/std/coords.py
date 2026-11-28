@@ -28,6 +28,22 @@ import rhombus.library.vanilla.legacy_types as lt
 from ._implementations import unicoords
 
 _coord_limit = 3 * 10**7
+_gradient_value_limit = 10**6
+
+
+def _axis_coordinate(axis: Literal["x", "y", "z"]) -> Density:
+    # Keep gradient bounds within [-1e6, 1e6] so 32-bit float intermediate math in
+    # Minecraft's gradient implementation preserves single-block precision.
+    return math.round(
+        gradient(
+            axis,
+            from_coordinate=-_gradient_value_limit,
+            to_coordinate=_gradient_value_limit,
+            from_value=-_gradient_value_limit,
+            to_value=_gradient_value_limit,
+            tiling="clamp_to_edge",
+        )
+    )
 
 
 # ======// Vanilla Coverage //====================================================================//
@@ -190,27 +206,13 @@ def x() -> Density:
         
     @implementation
     def x():
-        return gradient(
-            "x",
-            from_coordinate=-_coord_limit,
-            to_coordinate=_coord_limit,
-            from_value=-_coord_limit,
-            to_value=_coord_limit,
-            tiling="clamp_to_edge",
-        )
+        return _axis_coordinate("x")
 
 
 @macro
 def y() -> Density:
     """Returns the Y-coordinate of the current block."""
-    return gradient(
-        "y",
-        from_coordinate=-_coord_limit,
-        to_coordinate=_coord_limit,
-        from_value=-_coord_limit,
-        to_value=_coord_limit,
-        tiling="clamp_to_edge",
-    )
+    return _axis_coordinate("y")
 
 
 @macro
@@ -227,14 +229,7 @@ def z() -> Density:
 
     @implementation
     def z():
-        return gradient(
-            "z",
-            from_coordinate=-_coord_limit,
-            to_coordinate=_coord_limit,
-            from_value=-_coord_limit,
-            to_value=_coord_limit,
-            tiling="clamp_to_edge",
-        )
+        return _axis_coordinate("z")
         
 
 # ======// Derived Coordinates //================================================================//
